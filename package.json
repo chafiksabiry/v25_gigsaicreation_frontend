@@ -1,0 +1,23 @@
+{
+  "name": "gig-platform",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "build:qiankun": "vite build --mode qiankun",
+    "start": "vite"
+  },
+  "devDependencies": {
+    "turbo": "^1.12.4"
+  },
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.48.1",
+    "openai": "^4.81.0"
+  }
+}
