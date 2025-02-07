@@ -1,10 +1,52 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import qiankun from 'vite-plugin-qiankun';
 
-// https://vitejs.dev/config/
+const isQiankun = process.env.QIANKUN === 'true'; // Use an environment variable to differentiate modes
+
 export default defineConfig({
-  plugins: [react()],
+  base: isQiankun ? './' : '/', // Set base path dynamically for qiankun compatibility
+  plugins: [
+    react({
+      // Disable React Fast Refresh in production build
+      jsxRuntime: process.env.NODE_ENV === 'development' ? 'automatic' : 'classic', // Use jsxRuntime instead of fastRefresh
+    }),
+    qiankun('app-name', { useDevMode: true }), // Plugin Qiankun, si utilisé
+  ],
+  server: {
+    port: 5179,
+    cors: true, // Enable CORS to allow cross-origin requests
+    headers: {
+      'Access-Control-Allow-Origin': '*', // Required for Qiankun cross-origin isolation
+    },
+    hmr: false, // Disable Hot Module Replacement (HMR) to prevent issues with Qiankun
+  },
+  build: {
+    target: 'esnext', // Ensure compatibility with modern browsers for qiankun
+    modulePreload: true,
+    cssCodeSplit: true, // Enable CSS splitting for modular builds
+    rollupOptions: {
+      output: {
+        format: 'es', // Necessary for Qiankun integration
+        entryFileNames : '[name].js',
+        chunkFileNames: '[name].js',
+        assetFileNames: '[name].[ext]',
+      },
+      external: isQiankun
+        ? ['react', 'react-dom'] // Treat React and ReactDOM as external to avoid duplication in host and microfrontend
+        : [],
+    },
+    outDir: 'dist', // Output directory for the build files
+    sourcemap: true, // Generate source maps for debugging (optional)
+    
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'), // Alias for cleaner imports
+    },
+  },
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    exclude: isQiankun ? ['react', 'react-dom'] : [], // Exclude dependencies to prevent duplication in Qiankun
   },
 });

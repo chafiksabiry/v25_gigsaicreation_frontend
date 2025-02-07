@@ -1,5 +1,3 @@
-import { Database } from './database.types';
-
 export interface Profile {
   id: string;
   username: string | null;

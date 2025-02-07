@@ -1,6 +1,7 @@
-import React from 'react';
-import { CheckCircle, AlertCircle } from 'lucide-react';
-import type { ParsedGig } from '../lib/types';
+import React from "react";
+import Swal from "sweetalert2";
+import { CheckCircle, AlertCircle } from "lucide-react";
+import type { ParsedGig } from "../lib/types";
 
 interface ConfirmGigProps {
   gig: ParsedGig;
@@ -9,13 +10,51 @@ interface ConfirmGigProps {
 }
 
 export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
+  const handleConfirm = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/gigs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(gig),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Échec de la publication du gig");
+      }
+
+      // 🎉 Afficher une notification de succès
+      Swal.fire({
+        title: "Succès!",
+        text: "Votre gig a été publié avec succès.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      onConfirm(); // Indiquer que l'opération a réussi
+    } catch (error: any) {
+      console.error("Erreur lors de la confirmation du gig:", error);
+
+      // ❌ Afficher une notification d'erreur
+      Swal.fire({
+        title: "Erreur!",
+        text: error.message || "Une erreur s'est produite.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
         <div className="flex items-center">
           <AlertCircle className="h-5 w-5 text-blue-400 mr-2" />
           <p className="text-sm text-blue-700">
-            Please review your gig details before publishing
+            Veuillez vérifier les détails de votre gig avant de le publier.
           </p>
         </div>
       </div>
@@ -23,15 +62,19 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-500">Title</label>
+            <label className="text-sm font-medium text-gray-500">Titre</label>
             <p className="text-lg font-medium text-gray-900">{gig.title}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-500">Quantity</label>
-            <p className="text-lg font-medium text-gray-900">{gig.quantity} actions</p>
+            <label className="text-sm font-medium text-gray-500">
+              Quantité
+            </label>
+            <p className="text-lg font-medium text-gray-900">
+              {gig.quantity} actions
+            </p>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-500">Timeline</label>
+            <label className="text-sm font-medium text-gray-500">Durée</label>
             <p className="text-lg font-medium text-gray-900">{gig.timeline}</p>
           </div>
         </div>
@@ -41,8 +84,12 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
             <p className="text-lg font-medium text-gray-900">{gig.type}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-500">Description</label>
-            <p className="text-lg font-medium text-gray-900">{gig.description}</p>
+            <label className="text-sm font-medium text-gray-500">
+              Description
+            </label>
+            <p className="text-lg font-medium text-gray-900">
+              {gig.description}
+            </p>
           </div>
         </div>
       </div>
@@ -52,14 +99,14 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
           onClick={onEdit}
           className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
         >
-          Edit Details
+          Modifier
         </button>
         <button
-          onClick={onConfirm}
+          onClick={handleConfirm}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
         >
           <CheckCircle className="w-4 h-4 mr-2" />
-          Confirm & Publish
+          Confirmer & Publier
         </button>
       </div>
     </div>
