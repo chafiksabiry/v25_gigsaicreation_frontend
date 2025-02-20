@@ -1,52 +1,70 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import path from 'path';
 import qiankun from 'vite-plugin-qiankun';
+import * as cheerio from 'cheerio';
 
-const isQiankun = process.env.QIANKUN === 'true'; // Use an environment variable to differentiate modes
-
-export default defineConfig({
-  base: isQiankun ? './' : '/', // Set base path dynamically for qiankun compatibility
-  plugins: [
-    react({
-      // Disable React Fast Refresh in production build
-      jsxRuntime: process.env.NODE_ENV === 'development' ? 'automatic' : 'classic', // Use jsxRuntime instead of fastRefresh
-    }),
-    qiankun('app-name', { useDevMode: true }), // Plugin Qiankun, si utilisé
-  ],
-  server: {
-    port: 5179,
-    cors: true, // Enable CORS to allow cross-origin requests
-    headers: {
-      'Access-Control-Allow-Origin': '*', // Required for Qiankun cross-origin isolation
+// Plugin to remove React Refresh preamble
+const removeReactRefreshScript = () => {
+  return {
+    name: 'remove-react-refresh',
+    transformIndexHtml(html: any) {
+      const $ = cheerio.load(html);
+      $('script[src="/@react-refresh"]').remove();
+      return $.html();
     },
-    hmr: false, // Disable Hot Module Replacement (HMR) to prevent issues with Qiankun
-  },
-  build: {
-    target: 'esnext', // Ensure compatibility with modern browsers for qiankun
-    modulePreload: true,
-    cssCodeSplit: true, // Enable CSS splitting for modular builds
-    rollupOptions: {
-      output: {
-        format: 'es', // Necessary for Qiankun integration
-        entryFileNames : '[name].js',
-        chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]',
+  };
+};
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    base: 'http://38.242.208.242:5179/',
+    plugins: [
+      react({
+        jsxRuntime: 'classic',
+      }),
+      qiankun('app6', {
+        useDevMode: true,
+      }),
+      removeReactRefreshScript(), // Add the script removal plugin
+    ],
+
+    define: {
+      'import.meta.env': env,
+    },
+    server: {
+      port: 5179,
+      cors: true,
+      hmr: false,
+      fs: {
+        strict: true, // Ensure static assets are correctly resolved
       },
-      external: isQiankun
-        ? ['react', 'react-dom'] // Treat React and ReactDOM as external to avoid duplication in host and microfrontend
-        : [],
     },
-    outDir: 'dist', // Output directory for the build files
-    sourcemap: true, // Generate source maps for debugging (optional)
-    
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'), // Alias for cleaner imports
+    build: {
+      target: 'esnext',
+      cssCodeSplit: false,
+      rollupOptions: {
+        output: {
+          format: 'umd',
+          name: 'app6',
+          entryFileNames: 'index.js', // Fixed name for the JS entry file
+          chunkFileNames: 'chunk-[name].js', // Fixed name for chunks
+          assetFileNames: (assetInfo) => {
+            // Ensure CSS files are consistently named
+            if (assetInfo.name.endsWith('.css')) {
+              return 'index.css';
+            }
+            return '[name].[ext]'; // Default for other asset types
+          },
+        },
+      },
     },
-  },
-  optimizeDeps: {
-    exclude: isQiankun ? ['react', 'react-dom'] : [], // Exclude dependencies to prevent duplication in Qiankun
-  },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+      },
+    },
+  };
 });
