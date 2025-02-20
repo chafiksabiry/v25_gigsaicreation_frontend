@@ -29,6 +29,7 @@
     "@tailwindcss/postcss7-compat": "^2.2.17",
     "@tanstack/react-query": "^5.66.0",
     "axios": "^1.6.7",
+    "cheerio": "^1.0.0",
     "cloudinary": "^2.5.1",
     "cloudinary-core": "^2.13.1",
     "lucide-react": "^0.344.0",
