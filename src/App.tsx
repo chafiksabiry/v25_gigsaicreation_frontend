@@ -14,7 +14,6 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-
   const parseGigDescription = (input: string) => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -108,7 +107,8 @@ function App() {
 
                     {/* <div className="flex justify-between items-center mb-6"> */}
                     <button
-                    type="button"
+                      type="button"
+                      onClick={() => (window.location.href="/app5")}
                       className="text-green-600 hover:text-green-700 flex items-center text-sm"
                     >
                       <PlusCircle className="w-5 h-5 mr-1" />
