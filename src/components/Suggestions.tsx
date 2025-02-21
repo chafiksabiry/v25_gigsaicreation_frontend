@@ -682,19 +682,16 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
         suggestions
       );
 
-      // Si la création de la "gig" a réussi
       if (response.status === 201) {
         console.log("Gig créé avec succès:", response.data);
 
-        // Afficher un popup de succès avec SweetAlert2
         await Swal.fire({
           title: "Succès",
-          text: 'La "gig" a été créée avec succès!',
+          text: 'Le "gig" a été créée avec succès!',
           icon: "success",
           confirmButtonText: "Retourner à la création de gig",
         });
 
-        // Appeler la fonction onBack après le popup
         onBack();
       }
     } catch (error) {
