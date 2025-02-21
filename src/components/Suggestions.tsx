@@ -236,6 +236,7 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
     }
   };
 
+
   const removeItem = (section: keyof GigSuggestion, index: number) => {
     if (editableSuggestions) {
       const updatedSuggestions = {
@@ -243,7 +244,7 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
         [section]: editableSuggestions[section].filter((_, i) => i !== index),
       };
       setEditableSuggestions(updatedSuggestions);
-      setSuggestions(updatedSuggestions);
+      setSuggestions(updatedSuggestions); // Assurez-vous que l'état est mis à jour
     }
   };
 
@@ -686,10 +687,10 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
         console.log("Gig créé avec succès:", response.data);
 
         await Swal.fire({
-          title: "Succès",
-          text: 'Le "gig" a été créée avec succès!',
+          title: "Success",
+          text: 'The "gig" has been successfully created!',
           icon: "success",
-          confirmButtonText: "Retourner à la création de gig",
+          confirmButtonText: "Return to gig creation",
         });
 
         onBack();
