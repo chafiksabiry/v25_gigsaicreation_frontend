@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { Send, Briefcase, Brain, HelpCircle } from 'lucide-react';
-import { GigWorkflow } from './components/GigWorkflow';
-import { Suggestions } from './components/Suggestions';
-import { GigForm } from './components/GigForm';
-import { ConfirmGig } from './components/ConfirmGig';
-import type { ParsedGig } from './lib/types';
+import React, { useState } from "react";
+import { Send, Briefcase, Brain, HelpCircle, PlusCircle } from "lucide-react";
+import { GigWorkflow } from "./components/GigWorkflow";
+import { Suggestions } from "./components/Suggestions";
+import { GigForm } from "./components/GigForm";
+import { ConfirmGig } from "./components/ConfirmGig";
+import type { ParsedGig } from "./lib/types";
 
 function App() {
-  const [naturalInput, setNaturalInput] = useState('');
+  const [naturalInput, setNaturalInput] = useState("");
   const [parsedGig, setParsedGig] = useState<ParsedGig | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showGuidance, setShowGuidance] = useState(false);
@@ -18,17 +18,19 @@ function App() {
   const parseGigDescription = (input: string) => {
     setIsProcessing(true);
     setTimeout(() => {
-      const quantity = input.match(/\d+/)?.[0] || '0';
-      const timeline = input.includes('week') ? 'Weekly' : 'Flexible';
-      const type = input.toLowerCase().includes('sales') ? 'Sales' : 'Customer Service';
-      
+      const quantity = input.match(/\d+/)?.[0] || "0";
+      const timeline = input.includes("week") ? "Weekly" : "Flexible";
+      const type = input.toLowerCase().includes("sales")
+        ? "Sales"
+        : "Customer Service";
+
       setParsedGig({
         title: `${type} Campaign - ${quantity} Actions`,
         quantity: parseInt(quantity),
         timeline: timeline,
         type: type,
         description: input,
-        status: 'draft'
+        status: "draft",
       });
       setIsProcessing(false);
     }, 1500);
@@ -49,13 +51,18 @@ function App() {
 
   const handlePublish = () => {
     if (parsedGig) {
-      setParsedGig({ ...parsedGig, status: 'published' });
+      setParsedGig({ ...parsedGig, status: "published" });
       setIsConfirming(false);
     }
   };
 
   if (showSuggestions) {
-    return <Suggestions input={naturalInput} onBack={() => setShowSuggestions(false)} />;
+    return (
+      <Suggestions
+        input={naturalInput}
+        onBack={() => setShowSuggestions(false)}
+      />
+    );
   }
 
   return (
@@ -75,7 +82,10 @@ function App() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Describe your needs naturally
                   </label>
                   <div className="flex items-center space-x-4">
@@ -87,26 +97,56 @@ function App() {
                       <HelpCircle className="w-4 h-4 mr-1" />
                       Writing Tips
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       onClick={() => setShowSuggestions(true)}
                       className="text-green-600 hover:text-green-700 flex items-center text-sm"
                     >
                       <Brain className="w-4 h-4 mr-1" />
                       View Suggestions
+                    </button> */}
+
+                    {/* <div className="flex justify-between items-center mb-6"> */}
+                    <button
+                    type="button"
+                      className="text-green-600 hover:text-green-700 flex items-center text-sm"
+                    >
+                      <PlusCircle className="w-5 h-5 mr-1" />
+                      <span>Create Manually</span>
                     </button>
+                    {/* </div> */}
                   </div>
                 </div>
-                
+
                 {showGuidance && (
                   <div className="mb-4 p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
-                    <h4 className="font-medium mb-2">How to describe your gig effectively:</h4>
+                    <h4 className="font-medium mb-2">
+                      How to describe your gig effectively:
+                    </h4>
                     <ul className="space-y-2 list-disc pl-5">
-                      <li><span className="font-medium">Desired Outcome:</span> Specify the expected results (e.g., "I need 100 sales calls that convert at least 20% to qualified leads")</li>
-                      <li><span className="font-medium">Timeline:</span> Include your timeframe (e.g., "within the next 2 weeks" or "over a 3-month period")</li>
-                      <li><span className="font-medium">Requirements:</span> Mention any specific skills or qualifications (e.g., "must have insurance sales experience and speak fluent Spanish")</li>
-                      <li><span className="font-medium">Example:</span> 
-                      "I need an experienced insurance sales representative to make 50 calls per week for 3 months, targeting Spanish-speaking customers. Looking for 25% conversion rate to qualified leads."</li>
+                      <li>
+                        <span className="font-medium">Desired Outcome:</span>{" "}
+                        Specify the expected results (e.g., "I need 100 sales
+                        calls that convert at least 20% to qualified leads")
+                      </li>
+                      <li>
+                        <span className="font-medium">Timeline:</span> Include
+                        your timeframe (e.g., "within the next 2 weeks" or "over
+                        a 3-month period")
+                      </li>
+                      <li>
+                        <span className="font-medium">Requirements:</span>{" "}
+                        Mention any specific skills or qualifications (e.g.,
+                        "must have insurance sales experience and speak fluent
+                        Spanish")
+                      </li>
+                      <li>
+                        <span className="font-medium">Example:</span>
+                        "I need an experienced insurance sales representative to
+                        make 50 calls per week for 3 months, targeting
+                        Spanish-speaking customers. Looking for 25% conversion
+                        rate to qualified leads."
+                      </li>
                     </ul>
                   </div>
                 )}
@@ -121,6 +161,16 @@ function App() {
                   />
                   <button
                     type="submit"
+                    onClick={() => setShowSuggestions(true)}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter" &&
+                        naturalInput.trim() &&
+                        !isProcessing
+                      ) {
+                        setShowSuggestions(true);
+                      }
+                    }}
                     disabled={!naturalInput.trim() || isProcessing}
                     className="absolute bottom-3 right-3 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                   >
@@ -173,33 +223,53 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Title</label>
-                      <p className="text-lg font-medium text-gray-900">{parsedGig.title}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Title
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {parsedGig.title}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Quantity</label>
-                      <p className="text-lg font-medium text-gray-900">{parsedGig.quantity} actions</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Quantity
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {parsedGig.quantity} actions
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Timeline</label>
-                      <p className="text-lg font-medium text-gray-900">{parsedGig.timeline}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Timeline
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {parsedGig.timeline}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Type</label>
-                      <p className="text-lg font-medium text-gray-900">{parsedGig.type}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Type
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {parsedGig.type}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Description</label>
-                      <p className="text-lg font-medium text-gray-900">{parsedGig.description}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Description
+                      </label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {parsedGig.description}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {parsedGig.status === 'draft' && (
+                {parsedGig.status === "draft" && (
                   <div className="mt-8">
-                    <button 
+                    <button
                       onClick={() => setIsConfirming(true)}
                       className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                     >
@@ -209,7 +279,7 @@ function App() {
                   </div>
                 )}
 
-                {parsedGig.status === 'published' && (
+                {parsedGig.status === "published" && (
                   <div className="mt-8">
                     <GigWorkflow gig={parsedGig} onUpdate={setParsedGig} />
                   </div>
