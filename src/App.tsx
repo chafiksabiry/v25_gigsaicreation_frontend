@@ -14,6 +14,7 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+
   const parseGigDescription = (input: string) => {
     setIsProcessing(true);
     setTimeout(() => {
@@ -66,6 +67,15 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
+      {/* Button at the top left */}
+      <button
+        type="button"
+        onClick={() => (window.location.href = "/app7")}
+        className="absolute top-4 left-4 text-black-600 hover:text-black-700 flex items-center text-sm z-10"
+      >
+        <span>Back to Dashboard</span>
+      </button>
+
       <div className="max-w-4xl mx-auto pt-16 px-4">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -96,25 +106,14 @@ function App() {
                       <HelpCircle className="w-4 h-4 mr-1" />
                       Writing Tips
                     </button>
-                    {/* <button
-                      type="button"
-                      onClick={() => setShowSuggestions(true)}
-                      className="text-green-600 hover:text-green-700 flex items-center text-sm"
-                    >
-                      <Brain className="w-4 h-4 mr-1" />
-                      View Suggestions
-                    </button> */}
-
-                    {/* <div className="flex justify-between items-center mb-6"> */}
                     <button
                       type="button"
-                      onClick={() => (window.location.href="/app5")}
+                      onClick={() => (window.location.href = "/app5")}
                       className="text-green-600 hover:text-green-700 flex items-center text-sm"
                     >
                       <PlusCircle className="w-5 h-5 mr-1" />
                       <span>Create Manually</span>
                     </button>
-                    {/* </div> */}
                   </div>
                 </div>
 
