@@ -70,10 +70,10 @@ function App() {
       {/* Button at the top left */}
       <button
         type="button"
-        onClick={() => (window.location.href = "/app7")}
+        onClick={() => (window.location.href = "/gigs")}
         className="absolute top-4 left-4 text-black-600 hover:text-black-700 flex items-center text-sm z-10"
       >
-        <span>Back to Dashboard</span>
+        <span>Back to Gigs</span>
       </button>
 
       <div className="max-w-4xl mx-auto pt-16 px-4">
