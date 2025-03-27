@@ -69,12 +69,22 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
       {/* Button at the top left */}
       <button
-        type="button"
-        onClick={() => (window.location.href = "/gigs")}
-        className="absolute top-4 left-4 text-black-600 hover:text-black-700 flex items-center text-sm z-10"
-      >
-        <span>Back to Gigs</span>
-      </button>
+  type="button"
+  onClick={() => (window.location.href = "/gigs")}
+  className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 bg-white shadow-md rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 z-10"
+>
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"></path>
+  </svg>
+  <span>Back to Gigs</span>
+</button>
 
       <div className="max-w-4xl mx-auto pt-16 px-4">
         <div className="text-center mb-12">

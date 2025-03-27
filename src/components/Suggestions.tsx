@@ -693,7 +693,7 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
           confirmButtonText: "Return to gig creation",
         });
 
-        onBack();
+        window.location.href = "/gigs"
       }
     } catch (error) {
       console.error("Erreur lors de la création de la gig:", error);
@@ -1101,7 +1101,7 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
                     className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
                   >
                     <CheckCircle className="w-5 h-5 mr-2" />
-                    Complete & Return to Gig Creation
+                    Complete 
                   </button>
                 </div>
               </div>
