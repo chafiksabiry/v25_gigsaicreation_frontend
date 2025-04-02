@@ -118,7 +118,7 @@ function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => (window.location.href = "/app5")}
+                      onClick={() => (window.location.href = "/gigsmanual")}
                       className="text-green-600 hover:text-green-700 flex items-center text-sm"
                     >
                       <PlusCircle className="w-5 h-5 mr-1" />
