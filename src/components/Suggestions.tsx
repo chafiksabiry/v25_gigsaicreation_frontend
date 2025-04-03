@@ -690,7 +690,7 @@ export function Suggestions({ input, onBack }: SuggestionsProps) {
           title: "Success",
           text: 'The "gig" has been successfully created!',
           icon: "success",
-          confirmButtonText: "Return to gig creation",
+          confirmButtonText: "go to Gigs",
         });
 
         window.location.href = "/gigs"
