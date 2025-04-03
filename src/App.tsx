@@ -69,12 +69,22 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
       {/* Button at the top left */}
       <button
-        type="button"
-        onClick={() => (window.location.href = "/app7")}
-        className="absolute top-4 left-4 text-black-600 hover:text-black-700 flex items-center text-sm z-10"
-      >
-        <span>Back to Dashboard</span>
-      </button>
+  type="button"
+  onClick={() => (window.location.href = "/gigs")}
+  className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 bg-white shadow-md rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 z-10"
+>
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"></path>
+  </svg>
+  <span>Back to Gigs</span>
+</button>
 
       <div className="max-w-4xl mx-auto pt-16 px-4">
         <div className="text-center mb-12">
@@ -108,7 +118,7 @@ function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => (window.location.href = "/app5")}
+                      onClick={() => (window.location.href = "/gigsmanual")}
                       className="text-green-600 hover:text-green-700 flex items-center text-sm"
                     >
                       <PlusCircle className="w-5 h-5 mr-1" />
@@ -119,34 +129,37 @@ function App() {
 
                 {showGuidance && (
                   <div className="mb-4 p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
-                    <h4 className="font-medium mb-2">
-                      How to describe your gig effectively:
-                    </h4>
-                    <ul className="space-y-2 list-disc pl-5">
-                      <li>
-                        <span className="font-medium">Desired Outcome:</span>{" "}
-                        Specify the expected results (e.g., "I need 100 sales
-                        calls that convert at least 20% to qualified leads")
-                      </li>
-                      <li>
-                        <span className="font-medium">Timeline:</span> Include
-                        your timeframe (e.g., "within the next 2 weeks" or "over
-                        a 3-month period")
-                      </li>
-                      <li>
-                        <span className="font-medium">Requirements:</span>{" "}
-                        Mention any specific skills or qualifications (e.g.,
-                        "must have insurance sales experience and speak fluent
-                        Spanish")
-                      </li>
-                      <li>
-                        <span className="font-medium">Example:</span>
-                        "I need an experienced insurance sales representative to
-                        make 50 calls per week for 3 months, targeting
-                        Spanish-speaking customers. Looking for 25% conversion
-                        rate to qualified leads."
-                      </li>
-                    </ul>
+                    <h4 className="font-medium mb-2">Writing Tips:</h4>
+                      <ul className="space-y-2 list-disc pl-5">
+                        <li>
+                          <span className="font-medium">Desired Outcome:</span>{" "}
+                          Specify the expected results (e.g., "I need 100 sales
+                          calls that convert at least 20% to qualified leads").
+                        </li>
+                        <li>
+                          <span className="font-medium">Timeline:</span> Include
+                          your timeframe (e.g., "within the next 2 weeks" or "over
+                          a 3-month period").
+                        </li>
+                        <li>
+                          <span className="font-medium">Requirements:</span>{" "}
+                          Mention any specific skills or qualifications (e.g.,
+                          "must have insurance sales experience and speak fluent
+                          Spanish").
+                        </li>
+                        <li>
+                          <span className="font-medium">Mandatory Commissions:</span>{" "}
+                          Make sure you add mandatory commissions and any important conditions to avoid
+                          misunderstandings.
+                        </li>
+                        <li>
+                          <span className="font-medium">Example:</span> "I need an experienced insurance 
+                          sales representative to make 50 calls per week for 3 months, targeting
+                          Spanish-speaking customers. Looking for a 25% conversion rate to qualified leads. 
+                          A commission of $50 per closed deal will be provided in addition to the base pay."
+                        </li>
+                      </ul>
+
                   </div>
                 )}
 
@@ -155,7 +168,7 @@ function App() {
                     id="description"
                     value={naturalInput}
                     onChange={(e) => setNaturalInput(e.target.value)}
-                    placeholder="Example: I need an experienced sales representative to make 50 calls per week for 3 months, targeting Spanish-speaking customers. Looking for 25% conversion rate to qualified leads."
+                    placeholder="Example: I need an experienced insurance sales representative to make 50 calls per week for 3 months, targeting Spanish-speaking customers. Looking for a 25% conversion rate to qualified leads. A commission of $50 per closed deal will be provided in addition to the base pay."
                     className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <button
