@@ -36,7 +36,7 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
         icon: "success",
         confirmButtonText: "OK",
       }).then(() => {
-        navigate("/dashboardcompany"); // 🔄 Redirection après confirmation
+        navigate("/app7"); // 🔄 Redirection après confirmation
       });
 
       onConfirm(); // Indiquer que l'opération a réussi
