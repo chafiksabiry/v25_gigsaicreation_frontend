@@ -6,6 +6,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
+import Cookies from 'js-cookie';
+const userId = Cookies.get('userId');
+console.log('Stored userId from cookie:', userId);
 
 // Store the root instance for proper unmounting
 let root: ReturnType<typeof createRoot> | null = null;
