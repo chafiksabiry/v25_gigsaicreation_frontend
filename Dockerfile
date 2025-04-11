@@ -18,6 +18,6 @@ RUN npm run build
 
 RUN npm install -g serve
 
-EXPOSE 5178
+EXPOSE 5179
 
-CMD ["serve", "-s", "dist", "-l", "5178"]
+CMD ["serve", "-s", "dist", "-l", "5179"]
