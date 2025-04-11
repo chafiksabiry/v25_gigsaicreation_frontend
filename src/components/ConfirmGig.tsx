@@ -12,7 +12,7 @@ interface ConfirmGigProps {
 export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
   const handleConfirm = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/gigs", {
+      const response = await fetch("http://localhost:5004/api/gigs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

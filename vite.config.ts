@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    base: 'https://gigsai.harx.ai/',
+    base: 'https://gigsmanual.harx.ai/',
     plugins: [
       react({
         jsxRuntime: 'classic',
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env': env,
     },
     server: {
-      port: 5179,
+      port: 5178,
       cors: true,
       hmr: false,
       fs: {
