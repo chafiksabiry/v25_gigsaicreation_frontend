@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import type { ParsedGig } from "../lib/types";
@@ -11,8 +10,6 @@ interface ConfirmGigProps {
 }
 
 export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
-  const navigate = useNavigate();
-
   const handleConfirm = async () => {
     try {
       const response = await fetch("http://localhost:5004/api/gigs", {
@@ -35,8 +32,6 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
         text: "Votre gig a été publié avec succès.",
         icon: "success",
         confirmButtonText: "OK",
-      }).then(() => {
-        navigate("/app7"); // 🔄 Redirection après confirmation
       });
 
       onConfirm(); // Indiquer que l'opération a réussi
