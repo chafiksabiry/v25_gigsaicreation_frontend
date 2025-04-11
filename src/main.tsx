@@ -1,73 +1,81 @@
 import React from 'react';
+import './public-path';  // For proper Qiankun integration
+import { qiankunWindow } from 'vite-plugin-qiankun/dist/helper';
+
 import { StrictMode } from 'react';
-import { createRoot, Root } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
-import './public-path'; // For Qiankun public path setup
-import 'systemjs';
+import Cookies from 'js-cookie';
+const userId = Cookies.get('userId');
+console.log('Stored userId from cookie:', userId);
 
-// Keep a reference to the React Root instance
-let root: Root | null = null;
+// Store the root instance for proper unmounting
+let root: ReturnType<typeof createRoot> | null = null;
 
-// Function to render the React app
 function render(props: { container?: HTMLElement }) {
   const { container } = props;
   const rootElement = container
-    ? container.querySelector('#root') // Use the container provided by Qiankun
-    : document.getElementById('root'); // Fallback for standalone mode
+    ? container.querySelector('#root')
+    : document.getElementById('root');
 
-  if (!rootElement) {
-    console.warn('[App] Root element not found!');
-    return;
+  if (rootElement) {
+    console.log('[App6] Rendering in container:', rootElement);
+    // Create the root instance if it doesn't exist
+    if (!root) {
+      root = createRoot(rootElement);
+    }
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+  } else {
+    console.warn('[App6] Root element not found!');
   }
-
-  console.log('[App] Rendering in container:', rootElement);
-
-  // Initialize React root if not already created
-  if (!root) {
-    root = createRoot(rootElement);
-  }
-
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
 }
 
-// Standalone mode check (if running outside Qiankun)
-if (!window.__POWERED_BY_QIANKUN__) {
-  console.log('[App] Running in standalone mode');
-  render({});
-}
-
-// Qiankun lifecycle methods
 export async function bootstrap() {
-  console.log('[App] Bootstrapping...');
-  console.log('beforeLoad hook triggered');
-  // You can add any setup needed for bootstrapping here
+  console.time('[App6] bootstrap');
+  console.log('[App6] Bootstrapping...');
+  return Promise.resolve();
 }
 
 export async function mount(props: any) {
-  console.log('[App] Mounting...', props);
-  console.log('beforeMount hook triggered');
-  render(props); // Mount the app
+  console.log('[App6] Mounting...', props);
+  const { container } = props;
+  if (container) {
+    console.log('[App6] Found container for mounting:', container);
+  } else {
+    console.warn('[App6] No container found for mounting');
+  }
+  render(props);
+  return Promise.resolve();
 }
 
 export async function unmount(props: any) {
-  console.log('[App] Unmounting...', props);
-  console.log('afterUnmount hook triggered');
-
+  console.log('[App6] Unmounting...', props);
   const { container } = props;
   const rootElement = container
-    ? container.querySelector('#root') // Find root in the container
-    : document.getElementById('root'); // Fallback for standalone mode
+    ? container.querySelector('#root')
+    : document.getElementById('root');
 
-  if (root) {
-    console.log('[App] Unmounting from container:', rootElement);
+  if (rootElement && root) {
+    console.log('[App6] Unmounting from container:', rootElement);
     root.unmount();
-    root = null;
+    root = null;  // Reset the root instance
   } else {
-    console.warn('[App] React Root instance not found for unmounting!');
+    console.warn('[App6] Root element not found for unmounting!');
   }
+  return Promise.resolve();
+}
+
+// Standalone mode: If the app is running outside Qiankun, it will use this code
+if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
+  console.log('[App6] Running in standalone mode');
+  render({});
+} else {
+  console.log('[App6] Running inside Qiankun');
+  // Qiankun will control the lifecycle
+  render({});
 }
