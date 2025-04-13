@@ -1107,9 +1107,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         // Check if it's a rate limit error (429)
         if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded') {
           await Swal.fire({
-            title: "API Limit Reached",
-            text: "You have exceeded your OpenAI API quota. Redirecting to manual creation...",
-            icon: "warning",
+            title: "Service Temporarily Unavailable",
+            text: "The AI assistance service is temporarily unavailable. We will continue in manual mode.",
+            icon: "info",
             timer: 3000,
             timerProgressBar: true,
             showConfirmButton: false,
