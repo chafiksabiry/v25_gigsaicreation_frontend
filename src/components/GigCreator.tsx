@@ -389,20 +389,26 @@ export function GigCreator({ children }: GigCreatorProps) {
   };
 
   const handleReview = () => {
+    console.log('GigCreator - handleReview - Setting isReviewing to true');
     setIsReviewing(true);
   };
 
   if (isReviewing) {
+    console.log('GigCreator - Rendering GigReview component');
     return (
       <GigReview
         data={gigData}
         onEdit={(section) => {
+          console.log('GigCreator - onEdit - Setting section to:', section);
           setCurrentSection(section);
           setIsReviewing(false);
         }}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
-        onBack={() => setIsReviewing(false)}
+        onBack={() => {
+          console.log('GigCreator - onBack - Setting isReviewing to false');
+          setIsReviewing(false);
+        }}
         skipValidation={skipValidation}
       />
     );

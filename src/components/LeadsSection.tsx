@@ -94,7 +94,7 @@ export function LeadsSection({
     }
   };
 
-  const totalPercentage = data.types.reduce((sum, type) => sum + type.percentage, 0);
+  const totalPercentage = data.types?.reduce((sum, type) => sum + type.percentage, 0) || 0;
 
   return (
     <div className="space-y-8">
@@ -122,7 +122,7 @@ export function LeadsSection({
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          {data.types.map((lead, index) => {
+          {data.types?.map((lead, index) => {
             const colors = getLeadTypeColor(lead.type);
             return (
               <div 
@@ -244,33 +244,33 @@ export function LeadsSection({
               key={source}
               onClick={() => handleSourceToggle(source)}
               className={`flex items-center gap-3 p-4 rounded-xl text-left transition-colors ${
-                data.sources.includes(source)
+                data.sources?.includes(source)
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                data.sources.includes(source)
+                data.sources?.includes(source)
                   ? 'bg-emerald-600'
                   : 'border-2 border-gray-300'
               }`}>
-                {data.sources.includes(source) && (
+                {data.sources?.includes(source) && (
                   <CheckCircle className="w-4 h-4 text-white" />
                 )}
               </div>
               <span className="flex-1">{source}</span>
-              {data.sources.includes(source) && (
+              {data.sources?.includes(source) && (
                 <Users className="w-4 h-4 text-emerald-600" />
               )}
             </button>
           ))}
         </div>
 
-        {data.sources.length > 0 && (
+        {data.sources?.length > 0 && (
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Selected Sources:</span>
-              <span className="font-medium text-gray-900">{data.sources.length}</span>
+              <span className="font-medium text-gray-900">{data.sources?.length || 0}</span>
             </div>
           </div>
         )}

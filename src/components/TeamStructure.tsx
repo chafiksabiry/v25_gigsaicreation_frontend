@@ -38,7 +38,16 @@ interface TeamStructureProps {
 
 export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStructureProps) {
   // Ensure team.structure is always an array
-  const teamStructure = team.structure || [];
+  const teamStructure = team?.structure || [];
+  
+  // Ensure team.territories is always an array
+  const territories = team?.territories || [];
+  
+  // Ensure team.reporting is always an object
+  const reporting = team?.reporting || { to: '', frequency: '' };
+
+  // Ensure team.collaboration is always an array
+  const collaboration = team?.collaboration || [];
   
   const handleAddRole = () => {
     const availableRole = predefinedOptions.team.roles.find(
@@ -108,9 +117,9 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
   };
 
   const handleTerritoryToggle = (territory: string) => {
-    const newTerritories = team.territories.includes(territory)
-      ? team.territories.filter(t => t !== territory)
-      : [...team.territories, territory];
+    const newTerritories = territories.includes(territory)
+      ? territories.filter(t => t !== territory)
+      : [...territories, territory];
     onChange({
       ...team,
       territories: newTerritories
@@ -137,7 +146,7 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
             <label className="block text-sm font-medium text-gray-700">Target Team Size</label>
             <input
               type="text"
-              value={team.size}
+              value={team?.size || ''}
               onChange={(e) => onChange({ ...team, size: e.target.value })}
               placeholder="e.g., 5-10 people"
               className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
@@ -284,36 +293,42 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {predefinedOptions.team.territories.map((territory) => (
-            <button
-              key={territory}
-              onClick={() => handleTerritoryToggle(territory)}
-              className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                team.territories.includes(territory)
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                team.territories.includes(territory)
-                  ? 'bg-emerald-600'
-                  : 'border-2 border-gray-300'
-              }`}>
-                {team.territories.includes(territory) && (
-                  <Check className="w-4 h-4 text-white" />
-                )}
-              </div>
-              <span className="flex-1">{territory}</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </button>
-          ))}
+          {predefinedOptions?.team?.territories ? (
+            predefinedOptions.team.territories.map((territory) => (
+              <button
+                key={territory}
+                onClick={() => handleTerritoryToggle(territory)}
+                className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                  territories.includes(territory)
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                  territories.includes(territory)
+                    ? 'bg-emerald-600'
+                    : 'border-2 border-gray-300'
+                }`}>
+                  {territories.includes(territory) && (
+                    <Check className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                <span className="flex-1">{territory}</span>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            ))
+          ) : (
+            <div className="col-span-2 text-center text-gray-500">
+              Loading territories...
+            </div>
+          )}
         </div>
 
-        {team.territories.length > 0 && (
+        {territories.length > 0 && (
           <div className="mt-4 p-3 bg-white rounded-lg border border-emerald-200">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Selected Territories:</span>
-              <span className="font-medium text-emerald-600">{team.territories.length}</span>
+              <span className="font-medium text-emerald-600">{territories.length}</span>
             </div>
           </div>
         )}
@@ -336,11 +351,11 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
             <label className="block text-sm font-medium text-gray-700">Reports To</label>
             <input
               type="text"
-              value={team.reporting?.to || ''}
+              value={reporting.to}
               onChange={(e) => onChange({
                 ...team,
                 reporting: {
-                  ...team.reporting,
+                  ...reporting,
                   to: e.target.value
                 }
               })}
@@ -353,11 +368,11 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
             <label className="block text-sm font-medium text-gray-700">Reporting Frequency</label>
             <input
               type="text"
-              value={team.reporting?.frequency || ''}
+              value={reporting.frequency}
               onChange={(e) => onChange({
                 ...team,
                 reporting: {
-                  ...team.reporting,
+                  ...reporting,
                   frequency: e.target.value
                 }
               })}
@@ -384,7 +399,7 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
           <div className="flex items-center gap-2">
             <input
               type="text"
-              value={team.collaboration?.join(', ') || ''}
+              value={collaboration.join(', ')}
               onChange={(e) => onChange({
                 ...team,
                 collaboration: e.target.value.split(',').map(item => item.trim()).filter(Boolean)
@@ -394,9 +409,9 @@ export function TeamStructure({ team, onChange, onNext, onPrevious }: TeamStruct
             />
           </div>
 
-          {team.collaboration && team.collaboration.length > 0 && (
+          {collaboration.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {team.collaboration.map((item, index) => (
+              {collaboration.map((item, index) => (
                 <span
                   key={index}
                   className="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-sm"

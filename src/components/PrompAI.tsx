@@ -48,45 +48,39 @@ const PrompAI: React.FC = () => {
       days: [],
       hours: "",
       timeZones: [],
-      flexibility: [],
-      minimumHours: {
-        daily: 0,
-        weekly: 0,
-        monthly: 0,
-      },
     },
     commission: {
-      base: "",
-      baseAmount: "",
-      bonus: "",
-      bonusAmount: "",
-      structure: "",
       currency: "",
+      base: false,
+      baseAmount: 0,
       minimumVolume: {
-        amount: "",
-        period: "",
+        amount: 0,
         unit: "",
-      },
-      transactionCommission: {
-        type: "",
-        amount: "",
+        period: "",
       },
     },
     leads: {
       types: [],
       sources: [],
-      quality: [],
     },
-    skills: [],
+    skills: {
+      languages: [],
+      professional: [],
+    },
     team: {
-      size: 0,
-      structure: "",
+      size: "",
+      structure: [],
       territories: [],
+      reporting: {
+        to: "",
+        frequency: "",
+      },
+      collaboration: [],
     },
     documentation: {
-      product: [],
-      process: [],
       training: [],
+      reference: [],
+      templates: [],
     },
   });
 
@@ -129,19 +123,6 @@ const PrompAI: React.FC = () => {
         hours: suggestions.schedule?.hours || prevData.schedule.hours,
         timeZones:
           suggestions.schedule?.timeZones || prevData.schedule.timeZones,
-        flexibility:
-          suggestions.schedule?.flexibility || prevData.schedule.flexibility,
-        minimumHours: {
-          daily:
-            suggestions.schedule?.minimumHours?.daily ||
-            prevData.schedule.minimumHours.daily,
-          weekly:
-            suggestions.schedule?.minimumHours?.weekly ||
-            prevData.schedule.minimumHours.weekly,
-          monthly:
-            suggestions.schedule?.minimumHours?.monthly ||
-            prevData.schedule.minimumHours.monthly,
-        },
       },
       // Section Commission
       commission: {
@@ -184,12 +165,23 @@ const PrompAI: React.FC = () => {
         },
       },
       // Section Skills
-      skills: suggestions.skills || prevData.skills,
+      skills: {
+        languages: suggestions.skills?.languages || prevData.skills.languages,
+        professional:
+          suggestions.skills?.professional || prevData.skills.professional,
+      },
       // Section Team
       team: {
         size: parseInt(suggestions.team?.size?.toString() || "0"),
         structure: suggestions.team?.structure || prevData.team.structure,
         territories: suggestions.team?.territories || prevData.team.territories,
+        reporting: {
+          to: suggestions.team?.reporting?.to || prevData.team.reporting.to,
+          frequency:
+            suggestions.team?.reporting?.frequency ||
+            prevData.team.reporting.frequency,
+        },
+        collaboration: suggestions.team?.collaboration || prevData.team.collaboration,
       },
       // Section Documentation
       documentation: {
@@ -200,6 +192,10 @@ const PrompAI: React.FC = () => {
         training:
           suggestions.documentation?.training ||
           prevData.documentation.training,
+        reference:
+          suggestions.documentation?.reference || prevData.documentation.reference,
+        templates:
+          suggestions.documentation?.templates || prevData.documentation.templates,
       },
     }));
   };

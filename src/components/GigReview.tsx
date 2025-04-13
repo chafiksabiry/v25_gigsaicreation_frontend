@@ -29,6 +29,7 @@ import {
 import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { validateGigData } from "../lib/validation";
+import { saveGigData } from '../lib/api';
 
 interface GigReviewProps {
   data: GigData;
@@ -42,6 +43,7 @@ interface GigReviewProps {
 export function GigReview({
   data,
   onEdit,
+  onSubmit,
   isSubmitting,
   onBack,
   skipValidation = false,
@@ -51,6 +53,9 @@ export function GigReview({
   const hasWarnings = Object.keys(validation.warnings).length > 0;
 
   const getCurrencySymbol = () => {
+    if (!data.commission) {
+      return "$";
+    }
     return data.commission.currency
       ? predefinedOptions.commission.currencies.find(
           (c) => c.code === data.commission.currency
@@ -59,46 +64,20 @@ export function GigReview({
   };
 
   const handlePublish = async () => {
-    console.log("Sending data:", data);
-
     try {
-      // Envoi de la requête POST
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      // Vérification du statut HTTP de la réponse
-      if (!response.ok) {
-        // Si la réponse n'est pas correcte (code HTTP 2xx), on lève une erreur
-        throw new Error(
-          `Error: ${response.statusText} (Status: ${response.status})`
-        );
-      }
-
-      // Récupération des données de la réponse
-      const responseData = await response.json();
-
-      console.log("Gig published successfully:", responseData);
-
-      // Affichage d'un message de succès avec Swal
+      await saveGigData(data);
+      await onSubmit();
       Swal.fire({
         title: "Success!",
-        text: "Gig published successfully!",
+        text: "Your gig has been published successfully.",
         icon: "success",
-        confirmButtonText: "Great!",
+        confirmButtonText: "OK",
       });
     } catch (error) {
-      // Gestion des erreurs, qu'elles viennent du serveur ou du réseau
-      console.error("Error:", error);
-
+      console.error('Error publishing gig:', error);
       Swal.fire({
         title: "Error!",
-        text:
-          error instanceof Error ? error.message : "An unknown error occurred.",
+        text: error instanceof Error ? error.message : "An unknown error occurred.",
         icon: "error",
         confirmButtonText: "Try Again",
       });
@@ -230,10 +209,10 @@ export function GigReview({
               </div>
               <div className="text-2xl font-bold text-gray-900">
                 {getCurrencySymbol()}
-                {data.commission.baseAmount || "0"}
+                {data.commission?.baseAmount || "0"}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.commission.base}
+                {data.commission?.base || "No base commission"}
               </p>
             </div>
 
@@ -563,7 +542,7 @@ export function GigReview({
               </div>
               <div className="p-6 space-y-6">
                 {/* Languages */}
-                {data.skills.languages.length > 0 && (
+                {data.skills?.languages?.length > 0 && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                       <Languages className="w-4 h-4 text-gray-400" />
@@ -586,7 +565,7 @@ export function GigReview({
                 )}
 
                 {/* Professional Skills */}
-                {data.skills.professional.length > 0 && (
+                {data.skills?.professional?.length > 0 && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                       <BookOpen className="w-4 h-4 text-gray-400" />
@@ -607,7 +586,7 @@ export function GigReview({
                 )}
 
                 {/* Technical Skills */}
-                {data.skills.technical.length > 0 && (
+                {data.skills?.technical?.length > 0 && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                       <Laptop className="w-4 h-4 text-gray-400" />
@@ -627,7 +606,7 @@ export function GigReview({
                 )}
 
                 {/* Certifications */}
-                {data.skills.certifications.length > 0 && (
+                {data.skills?.certifications?.length > 0 && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                       <Award className="w-4 h-4 text-gray-400" />
@@ -655,8 +634,8 @@ export function GigReview({
             </div>
 
             {/* Documentation */}
-            {Object.entries(data.documentation).map(([type, docs]) => {
-              if (docs.length === 0) return null;
+            {Object.entries(data.documentation || {}).map(([type, docs]) => {
+              if (!docs || docs.length === 0) return null;
               return (
                 <div key={type}>
                   <h3 className="text-sm font-medium text-gray-700 capitalize mb-2">

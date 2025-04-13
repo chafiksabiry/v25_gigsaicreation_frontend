@@ -30,49 +30,61 @@ export function validateGigData(data: GigData): ValidationResult {
   }
 
   // Schedule
-  if (!data.schedule.days?.length) {
-    errors.schedule = [...(errors.schedule || []), 'Working days are required'];
-  }
+  if (!data.schedule) {
+    errors.schedule = [...(errors.schedule || []), 'Schedule information is required'];
+  } else {
+    if (!data.schedule.days?.length) {
+      errors.schedule = [...(errors.schedule || []), 'Working days are required'];
+    }
 
-  if (!data.schedule.hours?.trim()) {
-    errors.schedule = [...(errors.schedule || []), 'Working hours are required'];
-  }
+    if (!data.schedule.hours?.trim()) {
+      errors.schedule = [...(errors.schedule || []), 'Working hours are required'];
+    }
 
-  if (!data.schedule.timeZones?.length) {
-    errors.schedule = [...(errors.schedule || []), 'At least one time zone is required'];
+    if (!data.schedule.timeZones?.length) {
+      errors.schedule = [...(errors.schedule || []), 'At least one time zone is required'];
+    }
   }
 
   // Commission
-  if (!data.commission.currency) {
-    errors.commission = [...(errors.commission || []), 'Currency is required'];
-  }
+  if (!data.commission) {
+    errors.commission = [...(errors.commission || []), 'Commission information is required'];
+  } else {
+    if (!data.commission.currency) {
+      errors.commission = [...(errors.commission || []), 'Currency is required'];
+    }
 
-  if (data.commission.base) {
-    if (!data.commission.baseAmount) {
-      errors.commission = [...(errors.commission || []), 'Base commission amount is required'];
-    }
-    if (!data.commission.minimumVolume?.amount) {
-      errors.commission = [...(errors.commission || []), 'Minimum volume amount is required'];
-    }
-    if (!data.commission.minimumVolume?.unit) {
-      errors.commission = [...(errors.commission || []), 'Minimum volume unit is required'];
-    }
-    if (!data.commission.minimumVolume?.period) {
-      errors.commission = [...(errors.commission || []), 'Minimum volume period is required'];
+    if (data.commission.base) {
+      if (!data.commission.baseAmount) {
+        errors.commission = [...(errors.commission || []), 'Base commission amount is required'];
+      }
+      if (!data.commission.minimumVolume?.amount) {
+        errors.commission = [...(errors.commission || []), 'Minimum volume amount is required'];
+      }
+      if (!data.commission.minimumVolume?.unit) {
+        errors.commission = [...(errors.commission || []), 'Minimum volume unit is required'];
+      }
+      if (!data.commission.minimumVolume?.period) {
+        errors.commission = [...(errors.commission || []), 'Minimum volume period is required'];
+      }
     }
   }
 
   // Team
-  if (typeof data.team.size !== 'number' || data.team.size <= 0) {
-    errors.team = [...(errors.team || []), 'Team size is required and must be greater than 0'];
-  }
+  if (!data.team) {
+    errors.team = [...(errors.team || []), 'Team information is required'];
+  } else {
+    if (typeof data.team.size !== 'number' || data.team.size < 0) {
+      errors.team = [...(errors.team || []), 'Team size is required and must be a non-negative number'];
+    }
 
-  if (!data.team.structure?.length) {
-    errors.team = [...(errors.team || []), 'Team structure is required'];
-  }
+    if (!data.team.structure?.length) {
+      warnings.team = [...(warnings.team || []), 'Consider adding team structure'];
+    }
 
-  if (!data.team.territories?.length) {
-    errors.team = [...(errors.team || []), 'At least one territory is required'];
+    if (!data.team.territories?.length) {
+      warnings.team = [...(warnings.team || []), 'Consider adding at least one territory'];
+    }
   }
 
   // Non-Critical Validations (Warnings)

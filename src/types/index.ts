@@ -76,8 +76,10 @@ export interface GigData {
     }>;
   };
   seniority: {
+    years: string;
     level: string;
     yearsExperience: string;
+    aiGenerated?: boolean;
   };
   team: {
     size: string;

@@ -8,6 +8,7 @@ import { LeadsSection } from "./LeadsSection";
 import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
 import { DocumentationSection } from "./DocumentationSection";
+import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
 
 interface SectionContentProps {
@@ -26,7 +27,21 @@ export function SectionContent({
   errors,
   onSectionChange,
 }: SectionContentProps) {
-  const validation = validateGigData(data);
+  console.log('SectionContent - Initial data:', data);
+
+  // Ensure seniority object is properly initialized
+  const initializedData = React.useMemo(() => ({
+    ...data,
+    seniority: {
+      level: data.seniority?.level || '',
+      yearsExperience: data.seniority?.yearsExperience || '',
+      aiGenerated: data.seniority?.aiGenerated
+    }
+  }), [data]);
+
+  console.log('SectionContent - Initialized data:', initializedData);
+
+  const validation = validateGigData(initializedData);
 
   const sections = [
     "basic",
@@ -36,6 +51,7 @@ export function SectionContent({
     "skills",
     "team",
     "docs",
+    "review",
   ];
 
   const handlePrevious = () => {
@@ -75,81 +91,138 @@ export function SectionContent({
       case "basic":
         return (
           <BasicSection
-            data={data}
+            data={initializedData}
             onChange={onChange}
             errors={errors}
+            onPrevious={() => onSectionChange?.('')}
+            onNext={() => onSectionChange?.('schedule')}
+            onSave={() => {}}
+            onAIAssist={() => {}}
             currentSection={section}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-            onSectionChange={onSectionChange}
           />
         );
 
       case "schedule":
         return (
           <ScheduleSection
-            data={data.schedule}
-            onChange={(schedule) => onChange({ ...data, schedule })}
+            data={initializedData.schedule || {
+              days: [],
+              hours: "",
+              timeZones: [],
+              flexibility: [],
+              minimumHours: {
+                daily: undefined,
+                weekly: undefined,
+                monthly: undefined,
+              },
+              startTime: "09:00",
+              endTime: "17:00",
+            }}
+            onChange={(scheduleData) => onChange({
+              ...initializedData,
+              schedule: scheduleData
+            })}
             errors={errors}
-            hasBaseCommission={!!data.commission.base}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
+            onPrevious={() => onSectionChange?.('basic')}
+            onNext={() => onSectionChange?.('commission')}
+            onSave={() => {}}
+            onAIAssist={() => {}}
+            currentSection={section}
           />
         );
 
       case "commission":
         return (
           <CommissionSection
-            data={data.commission}
-            onChange={(commission) => onChange({ ...data, commission })}
+            data={initializedData}
+            onChange={onChange}
             errors={errors}
-            warnings={validation.warnings}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
+            onPrevious={() => onSectionChange?.('schedule')}
+            onNext={() => onSectionChange?.('leads')}
+            onSave={() => {}}
+            onAIAssist={() => {}}
+            currentSection={section}
           />
         );
 
       case "leads":
         return (
           <LeadsSection
-            data={data.leads}
-            onChange={(leads) => onChange({ ...data, leads })}
+            data={initializedData}
+            onChange={onChange}
             errors={errors}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
+            onPrevious={() => onSectionChange?.('commission')}
+            onNext={() => onSectionChange?.('skills')}
+            onSave={() => {}}
+            onAIAssist={() => {}}
+            currentSection={section}
           />
         );
 
       case "skills":
         return (
           <SkillsSection
-            data={data.skills}
-            onChange={(skills) => onChange({ ...data, skills })}
+            data={initializedData}
+            onChange={onChange}
             errors={errors}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
+            onPrevious={() => onSectionChange?.('leads')}
+            onNext={() => onSectionChange?.('team')}
+            onSave={() => {}}
+            onAIAssist={() => {}}
+            currentSection={section}
           />
         );
 
       case "team":
         return (
           <TeamStructure
-            team={data.team}
-            onChange={(team) =>
-              onChange({ ...data, team: { ...data.team, ...team } })
-            }
-            onPrevious={handlePrevious}
-            onNext={handleNext}
+            data={initializedData}
+            onChange={onChange}
+            errors={errors}
+            onPrevious={() => onSectionChange?.('skills')}
+            onNext={() => onSectionChange?.('docs')}
+            onSave={() => {}}
+            onAIAssist={() => {}}
+            currentSection={section}
           />
         );
 
       case "docs":
+        console.log('SectionContent - Rendering DocumentationSection');
         return (
           <DocumentationSection
-            data={data.documentation}
-            onChange={(documentation) => onChange({ ...data, documentation })}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
+            data={initializedData.documentation}
+            onChange={(newDocs) => onChange({ ...initializedData, documentation: newDocs })}
+            errors={errors}
+            onPrevious={() => onSectionChange?.('team')}
+            onNext={() => {}}
+            onReview={() => {
+              console.log('SectionContent - Calling onReview');
+              onSectionChange?.('review');
+            }}
+            isLastSection={true}
+          />
+        );
+
+      case "review":
+        console.log('SectionContent - Rendering GigReview');
+        return (
+          <GigReview
+            data={initializedData}
+            onEdit={(section) => {
+              console.log('SectionContent - onEdit - Setting section to:', section);
+              onSectionChange?.(section);
+            }}
+            onSubmit={async () => {
+              console.log('SectionContent - onSubmit - Submitting gig');
+              // Handle submission here
+            }}
+            isSubmitting={false}
+            onBack={() => {
+              console.log('SectionContent - onBack - Going back to docs section');
+              onSectionChange?.('docs');
+            }}
+            skipValidation={false}
           />
         );
 

@@ -40,6 +40,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onSectionChange,
   currentSection = 'basic'
 }) => {
+  console.log('BasicSection - Current data:', data);
+  console.log('BasicSection - Seniority data:', data.seniority);
+  console.log('BasicSection - Years of Experience:', data.seniority.years);
+
   // Add Material Icons
   useEffect(() => {
     const link = document.createElement('link');
@@ -59,6 +63,15 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     }
     return Array.from(categories);
   }, [data.category]);
+
+  // Get all seniority levels including the one from data if it's not in predefined options
+  const allSeniorityLevels = React.useMemo(() => {
+    const levels = new Set(predefinedOptions.basic.seniorityLevels);
+    if (data.seniority?.level && !levels.has(data.seniority.level)) {
+      levels.add(data.seniority.level);
+    }
+    return Array.from(levels);
+  }, [data.seniority?.level]);
 
   return (
     <div className="w-full bg-white p-6">
@@ -222,11 +235,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           )}
         </div>
 
-        {/* Seniority */}
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6">
+        {/* Experience Level Section */}
+        <div className="bg-green-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <GraduationCap className="w-5 h-5 text-emerald-600" />
+            <div className="p-2 bg-green-100 rounded-lg">
+              <GraduationCap className="w-5 h-5 text-green-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Experience Level</h3>
@@ -234,21 +247,28 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Seniority Level</label>
               <select
                 value={data.seniority?.level || ''}
-                onChange={(e) =>
-                  onChange({
+                onChange={(e) => {
+                  const newData = {
                     ...data,
-                    seniority: { ...data.seniority, level: e.target.value }
-                  })
-                }
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                    seniority: { 
+                      level: e.target.value,
+                      years: data.seniority?.years || '',
+                      yearsExperience: data.seniority?.yearsExperience || '',
+                      aiGenerated: data.seniority?.aiGenerated
+                    }
+                  };
+                  console.log('Seniority Level Changed:', newData.seniority);
+                  onChange(newData);
+                }}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">Select seniority level</option>
-                {predefinedOptions.basic.seniorityLevels.map((level) => (
+                {allSeniorityLevels.map((level) => (
                   <option key={level} value={level}>
                     {level}
                   </option>
@@ -260,29 +280,30 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <label className="block text-sm font-medium text-gray-700">Years of Experience</label>
               <input
                 type="text"
-                value={data.seniority?.yearsExperience || ''}
-                onChange={(e) =>
-                  onChange({
+                value={data.seniority?.years || ''}
+                onChange={(e) => {
+                  const newData = {
                     ...data,
-                    seniority: { ...data.seniority, yearsExperience: e.target.value }
-                  })
-                }
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                    seniority: { 
+                      level: data.seniority?.level || '',
+                      years: e.target.value,
+                      yearsExperience: e.target.value,
+                      aiGenerated: data.seniority?.aiGenerated
+                    }
+                  };
+                  console.log('Years of Experience Changed:', newData.seniority);
+                  onChange(newData);
+                }}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
                 placeholder="e.g., 2-3 years"
               />
             </div>
           </div>
 
-          {data.seniority?.level && data.seniority?.yearsExperience && (
-            <div className="mt-4 p-4 bg-white rounded-lg border border-emerald-200">
-              <div className="flex items-center gap-3">
-                <Brain className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <span className="font-medium text-gray-900">{data.seniority.level}</span>
-                  <span className="text-gray-600 mx-2">•</span>
-                  <span className="text-gray-700">{data.seniority.yearsExperience} experience</span>
-                </div>
-              </div>
+          {data.seniority?.aiGenerated && (
+            <div className="mt-2 text-sm text-green-600 flex items-center gap-1">
+              <Brain className="w-4 h-4" />
+              <span>AI-generated recommendation</span>
             </div>
           )}
         </div>
@@ -300,11 +321,14 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         <button
           onClick={() => {
             console.log('Next button clicked');
-            if (onNext) {
+            if (onSectionChange) {
+              console.log('Calling onSectionChange with schedule');
+              onSectionChange('schedule');
+            } else if (onNext) {
               console.log('Calling onNext');
               onNext();
             } else {
-              console.warn('onNext is not defined');
+              console.warn('Neither onSectionChange nor onNext is defined');
             }
           }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"

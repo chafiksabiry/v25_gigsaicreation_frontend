@@ -53,8 +53,20 @@ export function DocumentationSection({
     name: string;
   } | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [showGuidance, setShowGuidance] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({});
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [errors, setErrors] = useState<{ [key: string]: string[] }>({});
+  const [warnings, setWarnings] = useState<{ [key: string]: string[] }>({});
 
-  const handleFileUpload = async (type: keyof typeof data, file: File) => {
+  // Ensure data is always an object with the required properties
+  const safeData = {
+    product: data?.product || [],
+    process: data?.process || [],
+    training: data?.training || [],
+  };
+
+  const handleFileUpload = async (type: keyof typeof safeData, file: File) => {
     setUploadError(null);
     console.log("Uploading file:", file);
 
@@ -145,7 +157,7 @@ export function DocumentationSection({
         };
 
         // Ajouter le document avec l'URL vide à l'UI
-        onChange({ ...data, [type]: [...data[type], newDoc] });
+        onChange({ ...safeData, [type]: [...safeData[type], newDoc] });
         setCurrentUpload({ type, name: file.name });
 
         // Mise à jour de l'URL du document
@@ -164,8 +176,8 @@ export function DocumentationSection({
           : "Failed to upload file. Please try again."
       );
       onChange({
-        ...data,
-        [type]: data[type].filter(
+        ...safeData,
+        [type]: safeData[type].filter(
           (doc) => doc.name !== file.name || !doc.uploading
         ),
       });
@@ -174,16 +186,16 @@ export function DocumentationSection({
     }
   };
 
-  const handleRemove = async (type: keyof typeof data, index: number) => {
-    const newDocs = [...data[type]];
+  const handleRemove = async (type: keyof typeof safeData, index: number) => {
+    const newDocs = [...safeData[type]];
     newDocs.splice(index, 1);
     onChange({
-      ...data,
+      ...safeData,
       [type]: newDocs,
     });
   };
 
-  const triggerFileUpload = (type: keyof typeof data) => {
+  const triggerFileUpload = (type: keyof typeof safeData) => {
     setUploadError(null);
     if (fileInputRef.current) {
       fileInputRef.current.setAttribute("data-type", type);
@@ -193,7 +205,7 @@ export function DocumentationSection({
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    const type = e.target.getAttribute("data-type") as keyof typeof data;
+    const type = e.target.getAttribute("data-type") as keyof typeof safeData;
 
     if (files && files.length > 0 && type) {
       handleFileUpload(type, files[0]);
@@ -204,7 +216,7 @@ export function DocumentationSection({
     }
   };
 
-  const getDocTypeIcon = (type: keyof typeof data) => {
+  const getDocTypeIcon = (type: keyof typeof safeData) => {
     switch (type) {
       case "product":
         return <BookOpen className="w-5 h-5 text-blue-600" />;
@@ -215,7 +227,7 @@ export function DocumentationSection({
     }
   };
 
-  const getDocTypeColor = (type: keyof typeof data) => {
+  const getDocTypeColor = (type: keyof typeof safeData) => {
     switch (type) {
       case "product":
         return "from-blue-50 to-indigo-50";
@@ -226,7 +238,7 @@ export function DocumentationSection({
     }
   };
 
-  const renderDocumentList = (type: keyof typeof data, title: string) => (
+  const renderDocumentList = (type: keyof typeof safeData, title: string) => (
     <div className={`bg-gradient-to-r ${getDocTypeColor(type)} rounded-xl p-6`}>
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-white/60 backdrop-blur-sm rounded-lg">
@@ -244,7 +256,7 @@ export function DocumentationSection({
       </div>
 
       <div className="space-y-3">
-        {data[type].map((doc, index) => (
+        {safeData[type].map((doc, index) => (
           <div
             key={index}
             className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm"
@@ -291,12 +303,12 @@ export function DocumentationSection({
         </button>
       </div>
 
-      {data[type].length > 0 && (
+      {safeData[type].length > 0 && (
         <div className="mt-4 p-3 bg-white/80 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Total Documents:</span>
             <span className="font-medium text-gray-900">
-              {data[type].length}
+              {safeData[type].length}
             </span>
           </div>
         </div>
@@ -304,16 +316,16 @@ export function DocumentationSection({
     </div>
   );
 
-  const isValid = Object.values(data).some((docs) => docs.length > 0);
+  const isValid = Object.values(safeData).some((docs) => docs.length > 0);
 
   const handlePublishGig = async () => {
     try {
       setIsPublishing(true);
+      console.log('DocumentationSection - handlePublishGig - Starting publication');
       const gigData = {
-        title: "Gig Documentation", // You might want to get this from props or state
-        description:
-          "Documentation for products, processes, and training materials",
-        documents: data,
+        title: "Gig Documentation",
+        description: "Documentation for products, processes, and training materials",
+        documents: safeData,
       };
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
@@ -330,9 +342,9 @@ export function DocumentationSection({
       }
 
       const result = await response.json();
-      console.log("Gig published successfully:", result);
+      console.log('DocumentationSection - handlePublishGig - Publication successful:', result);
     } catch (error) {
-      console.error("Error publishing gig:", error);
+      console.error('DocumentationSection - handlePublishGig - Error:', error);
       setUploadError(
         error instanceof Error
           ? error.message
@@ -377,17 +389,17 @@ export function DocumentationSection({
       </div>
 
       {/* Summary */}
-      {Object.values(data).some((docs) => docs.length > 0) && (
+      {Object.values(safeData).some((docs) => docs.length > 0) && (
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
           <h4 className="text-sm font-medium text-gray-900 mb-3">
             Documentation Summary
           </h4>
           <div className="space-y-2">
-            {Object.entries(data).map(
+            {Object.entries(safeData).map(
               ([type, docs]) =>
                 docs.length > 0 && (
                   <div key={type} className="flex items-center gap-2">
-                    {getDocTypeIcon(type as keyof typeof data)}
+                    {getDocTypeIcon(type as keyof typeof safeData)}
                     <span className="text-sm text-gray-600">
                       {docs.length} {type} document{docs.length > 1 ? "s" : ""}{" "}
                       uploaded
@@ -409,12 +421,18 @@ export function DocumentationSection({
           Previous
         </button>
         <button
-          // onClick={handlePublishGig}
-          onClick={() => (window.location.href = "/gigs")}
-          // disabled={isPublishing}
+          onClick={() => {
+            console.log('DocumentationSection - Review button clicked');
+            console.log('onReview prop:', onReview);
+            if (onReview) {
+              onReview();
+            } else {
+              console.error('onReview prop is not defined');
+            }
+          }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Publish Gig
+          Review Gig Details
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>

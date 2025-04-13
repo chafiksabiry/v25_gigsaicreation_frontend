@@ -1101,8 +1101,31 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             setEditableSuggestions(fallbackSuggestions);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error generating suggestions:", error);
+        
+        // Check if it's a rate limit error (429)
+        if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded') {
+          await Swal.fire({
+            title: "API Limit Reached",
+            text: "You have exceeded your OpenAI API quota. Redirecting to manual creation...",
+            icon: "warning",
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            customClass: {
+              popup: "rounded-lg shadow-lg",
+              title: "text-xl font-semibold text-gray-800",
+              htmlContainer: "text-gray-600"
+            }
+          });
+          
+          // Redirect to manual creation page
+          window.location.href = "/gigsmanual";
+          return;
+        }
+
+        // For other errors, use fallback suggestions
         setSuggestions(fallbackSuggestions);
         setEditableSuggestions(fallbackSuggestions);
       }
