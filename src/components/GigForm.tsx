@@ -1,110 +1,256 @@
-import React, { useState } from 'react';
-import { Save, X, Edit2 } from 'lucide-react';
-import type { ParsedGig } from '../lib/types';
+import React from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { supabase } from '../lib/supabase';
+import { 
+  Calendar, Clock, DollarSign, Users, Globe2, 
+  Brain, Briefcase, FileText, Building2
+} from 'lucide-react';
 
-interface GigFormProps {
-  gig: ParsedGig;
-  onSave: (updatedGig: ParsedGig) => void;
-  onCancel: () => void;
-}
+type GigFormData = {
+  title: string;
+  description: string;
+  category: string;
+  callTypes: string[];
+  schedule: {
+    days: string[];
+    hours: string;
+    timeZones: string[];
+    flexibility: string;
+  };
+  commission: {
+    base: string;
+    bonus: string;
+    structure: string;
+  };
+  leads: {
+    types: {
+      type: 'hot' | 'warm' | 'cold';
+      percentage: number;
+      description: string;
+    }[];
+    sources: string[];
+  };
+  skills: {
+    languages: { name: string; level: string; }[];
+    soft: string[];
+    professional: string[];
+    industry: string[];
+  };
+  seniority: {
+    level: string;
+    yearsExperience: string;
+  };
+  team: {
+    size: string;
+    structure: string[];
+    territories: string[];
+  };
+  prerequisites: string[];
+  documentation: {
+    product: string[];
+    sales: string[];
+  };
+};
 
-export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
-  const [formData, setFormData] = useState(gig);
+export function GigForm() {
+  const { register, control, handleSubmit, formState: { errors } } = useForm<GigFormData>();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+  const onSubmit = async (data: GigFormData) => {
+    try {
+      // Insert main gig data
+      const { data: gig, error: gigError } = await supabase
+        .from('gigs')
+        .insert({
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          call_types: data.callTypes,
+          schedule_days: data.schedule.days,
+          schedule_hours: data.schedule.hours,
+          schedule_timezone: data.schedule.timeZones,
+          schedule_flexibility: data.schedule.flexibility,
+          commission_base: data.commission.base,
+          commission_bonus: data.commission.bonus,
+          commission_structure: data.commission.structure,
+          seniority_level: data.seniority.level,
+          years_experience: data.seniority.yearsExperience,
+          team_size: data.team.size,
+          team_structure: data.team.structure,
+          team_territories: data.team.territories,
+          prerequisites: data.prerequisites
+        })
+        .select()
+        .single();
+
+      if (gigError) throw gigError;
+
+      // Insert skills
+      const skillsPromises = [
+        ...data.skills.languages.map(lang => ({
+          gig_id: gig.id,
+          category: 'language',
+          name: lang.name,
+          level: lang.level
+        })),
+        ...data.skills.soft.map(skill => ({
+          gig_id: gig.id,
+          category: 'soft',
+          name: skill
+        })),
+        ...data.skills.professional.map(skill => ({
+          gig_id: gig.id,
+          category: 'professional',
+          name: skill
+        })),
+        ...data.skills.industry.map(skill => ({
+          gig_id: gig.id,
+          category: 'industry',
+          name: skill
+        }))
+      ];
+
+      const { error: skillsError } = await supabase
+        .from('gig_skills')
+        .insert(skillsPromises);
+
+      if (skillsError) throw skillsError;
+
+      // Insert leads
+      const { error: leadsError } = await supabase
+        .from('gig_leads')
+        .insert(data.leads.types.map(lead => ({
+          gig_id: gig.id,
+          lead_type: lead.type,
+          percentage: lead.percentage,
+          description: lead.description,
+          sources: data.leads.sources
+        })));
+
+      if (leadsError) throw leadsError;
+
+      // Insert documentation
+      const docsPromises = [
+        ...data.documentation.product.map(doc => ({
+          gig_id: gig.id,
+          doc_type: 'product',
+          name: doc
+        })),
+        ...data.documentation.sales.map(doc => ({
+          gig_id: gig.id,
+          doc_type: 'sales',
+          name: doc
+        }))
+      ];
+
+      const { error: docsError } = await supabase
+        .from('gig_documentation')
+        .insert(docsPromises);
+
+      if (docsError) throw docsError;
+
+      alert('Gig created successfully!');
+    } catch (error) {
+      console.error('Error creating gig:', error);
+      alert('Error creating gig. Please try again.');
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-          Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto py-8 px-4">
+      <div className="space-y-8">
+        {/* Basic Information */}
+        <section className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-semibold mb-4">Basic Information</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Title</label>
+              <input
+                type="text"
+                {...register('title', { required: true })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                {...register('description', { required: true })}
+                rows={4}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </section>
 
-      <div>
-        <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-          Quantity
-        </label>
-        <input
-          type="number"
-          id="quantity"
-          value={formData.quantity}
-          onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+        {/* Schedule */}
+        <section className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center mb-4">
+            <Calendar className="w-6 h-6 text-blue-600 mr-2" />
+            <h2 className="text-2xl font-semibold">Schedule</h2>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Working Hours</label>
+              <input
+                type="text"
+                {...register('schedule.hours', { required: true })}
+                placeholder="e.g., 9:00 AM - 6:00 PM EST"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Time Zones</label>
+              <input
+                type="text"
+                {...register('schedule.timeZones', { required: true })}
+                placeholder="e.g., EST, CST, PST"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </section>
 
-      <div>
-        <label htmlFor="timeline" className="block text-sm font-medium text-gray-700">
-          Timeline
-        </label>
-        <select
-          id="timeline"
-          value={formData.timeline}
-          onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="Weekly">Weekly</option>
-          <option value="Monthly">Monthly</option>
-          <option value="Flexible">Flexible</option>
-        </select>
-      </div>
+        {/* Skills */}
+        <section className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center mb-4">
+            <Brain className="w-6 h-6 text-purple-600 mr-2" />
+            <h2 className="text-2xl font-semibold">Required Skills</h2>
+          </div>
+          <div className="space-y-6">
+            {/* Languages */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Languages</h3>
+              <div className="space-y-2">
+                {/* Add dynamic language fields */}
+              </div>
+            </div>
 
-      <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-          Type
-        </label>
-        <select
-          id="type"
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        >
-          <option value="Sales">Sales</option>
-          <option value="Customer Service">Customer Service</option>
-          <option value="Business Development">Business Development</option>
-        </select>
-      </div>
+            {/* Soft Skills */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Soft Skills</h3>
+              <div className="space-y-2">
+                {/* Add dynamic soft skills fields */}
+              </div>
+            </div>
 
-      <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Description
-        </label>
-        <textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
+            {/* Professional Skills */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Professional Skills</h3>
+              <div className="space-y-2">
+                {/* Add dynamic professional skills fields */}
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <div className="flex justify-end space-x-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-        >
-          <X className="w-4 h-4 mr-2" />
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          Save Changes
-        </button>
+        {/* Submit Button */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Create Gig
+          </button>
+        </div>
       </div>
     </form>
   );
