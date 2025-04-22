@@ -72,6 +72,8 @@ export function GigReview({
         text: "Your gig has been published successfully.",
         icon: "success",
         confirmButtonText: "OK",
+      }).then(() => {
+        window.location.href = "/gigs";
       });
     } catch (error) {
       console.error('Error publishing gig:', error);
