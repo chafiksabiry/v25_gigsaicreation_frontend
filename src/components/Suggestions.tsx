@@ -1306,7 +1306,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         };
       }
 
-      const response = await fetch("http://localhost:5004/api/gigs", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1457,7 +1457,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
       console.log('Sending data to API:', apiData);
 
-      const response = await fetch("http://localhost:5004/api/gigs", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
