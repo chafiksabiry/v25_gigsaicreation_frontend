@@ -1,5 +1,6 @@
 import type { Gig, GigHistory } from './types';
 import { GigData } from '../types';
+import Cookies from 'js-cookie';
 
 // TODO: Implement these functions with your preferred storage solution
 export async function createGig(gigData: Partial<Gig>) {
@@ -26,9 +27,70 @@ export async function getGigHistory(gigId: string) {
   throw new Error('Not implemented');
 }
 
+export async function fetchCompanies() {
+  try {
+    const response = await fetch('https://preprod-api-companysearchwizard.harx.ai/api/companies');
+    if (!response.ok) {
+      throw new Error('Failed to fetch companies');
+    }
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch companies');
+    }
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching companies:', error);
+    throw error;
+  }
+}
+
+interface Company {
+  _id: string;
+  userId: string;
+  name: string;
+  industry: string;
+  // Add other company fields as needed
+}
+
+export async function getCompanyIdByUserId(userId: string): Promise<string> {
+  try {
+    const companies = await fetchCompanies();
+    const company = companies.find((company: Company) => company.userId === userId);
+    
+    if (!company) {
+      throw new Error(`No company found for userId: ${userId}`);
+    }
+    
+    return company._id;
+  } catch (error) {
+    console.error('Error getting companyId by userId:', error);
+    throw error;
+  }
+}
+
 export async function saveGigData(gigData: GigData): Promise<void> {
   try {
-    console.log('Starting to save gig data:', gigData);
+    const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
+    console.log('ConfirmGig - isStandalone 3 :', isStandalone);
+    const userId = isStandalone ? import.meta.env.VITE_USER_ID : Cookies.get('userId');
+    
+    if (!userId) {
+      throw new Error('User ID not found in cookies');
+    }
+
+    // Get companyId based on userId
+    const companyId = await getCompanyIdByUserId(userId);
+
+    console.log('userId:', userId);
+    console.log('companyId:', companyId);
+
+    const gigDataWithIds = {
+      ...gigData,
+      userId,
+      companyId
+    };
+
+    console.log('Starting to save gig data:', gigDataWithIds);
     
     const apiUrl = import.meta.env.VITE_API_URL;
     console.log('Using API URL:', apiUrl);
@@ -38,7 +100,7 @@ export async function saveGigData(gigData: GigData): Promise<void> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(gigData),
+      body: JSON.stringify(gigDataWithIds),
     });
 
     console.log('API Response status:', response.status);

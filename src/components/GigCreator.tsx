@@ -21,6 +21,8 @@ import { AIDialog } from "./AIDialog";
 import { supabase } from "../lib/supabase";
 import BasicSection from './BasicSection';
 import { SectionContent } from './SectionContent';
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
@@ -33,6 +35,8 @@ const sections = [
 ];
 
 const initialGigData: GigData = {
+  userId: "",
+  companyId: "",
   title: "",
   description: "",
   category: "",
@@ -94,6 +98,7 @@ const initialGigData: GigData = {
   },
   seniority: {
     level: "",
+    years: "",
     yearsExperience: "",
   },
   team: {
@@ -145,6 +150,8 @@ const initialGigData: GigData = {
     required: [],
     provided: [],
   },
+  userId: "",
+  companyId: ""
 };
 
 // Update the constants structure
@@ -230,35 +237,101 @@ export function GigCreator({ children }: GigCreatorProps) {
     setSubmitError(null);
 
     try {
+      let userId: string;
+      let companyId: string;
+
+      // Vérifier si on est en mode standalone
+      const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
+      console.log('ConfirmGig - isStandalone 2 :', isStandalone);
+
+      if (isStandalone) {
+        // Valeurs par défaut pour le mode standalone
+        userId = '680a27ffefa3d29d628d0016';
+        companyId = '680bec7495ee2e5862009486';
+        console.log('GigCreator - Standalone Mode - userId:', userId, 'companyId:', companyId);
+      } else {
+        // Récupérer depuis les cookies
+        const cookieUserId = Cookies.get("userId");
+        if (!cookieUserId) {
+          throw new Error("User ID not found in cookies");
+        }
+        userId = cookieUserId;
+
+        // Récupérer le companyId associé à l'utilisateur
+        const { data: userData, error: userError } = await saveGigData(gigData);
+
+        if (userError) {
+          throw new Error("Failed to fetch user company");
+        }
+
+        if (!userData?.company_id) {
+          throw new Error("Company ID not found for user");
+        }
+        companyId = userData.company_id;
+        console.log('GigCreator - Normal Mode - userId:', userId, 'companyId:', companyId);
+      }
+
+      const gigDataToSave = {
+        title: gigData.title,
+        description: gigData.description,
+        category: gigData.category,
+        userId: userId,
+        companyId: companyId,
+        seniority: {
+          level: gigData.seniority.level,
+          yearsExperience: gigData.seniority.yearsExperience
+        },
+        skills: {
+          professional: gigData.skills.professional,
+          languages: gigData.skills.languages,
+          technical: gigData.skills.technical,
+          soft: gigData.skills.soft
+        },
+        schedule: {
+          days: gigData.schedule.days,
+          hours: gigData.schedule.hours,
+          timeZones: gigData.schedule.timeZones,
+          flexibility: gigData.schedule.flexibility
+        },
+        commission: {
+          base: gigData.commission.base,
+          baseAmount: gigData.commission.baseAmount,
+          bonus: gigData.commission.bonus,
+          bonusAmount: gigData.commission.bonusAmount,
+          currency: gigData.commission.currency,
+          minimumVolume: {
+            amount: gigData.commission.minimumVolume.amount,
+            period: gigData.commission.minimumVolume.period,
+            unit: gigData.commission.minimumVolume.unit
+          },
+          transactionCommission: {
+            type: gigData.commission.transactionCommission.type,
+            amount: gigData.commission.transactionCommission.amount
+          }
+        },
+        leads: {
+          types: gigData.leads.types,
+          sources: gigData.leads.sources
+        },
+        team: {
+          size: gigData.team.size,
+          structure: gigData.team.structure,
+          territories: gigData.team.territories
+        },
+        documentation: {
+          training: gigData.documentation.training,
+          product: gigData.documentation.product,
+          process: gigData.documentation.process
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log('GigCreator - Final gigDataToSave:', gigDataToSave);
+
       const { data, error } = await supabase
         .from("gigs")
-        .insert({
-          title: gigData.title,
-          description: gigData.description,
-          category: gigData.category,
-          seniority_level: gigData.seniority.level,
-          years_experience: gigData.seniority.yearsExperience,
-          schedule_days: gigData.schedule.days,
-          schedule_hours: gigData.schedule.hours,
-          schedule_timezone: gigData.schedule.timeZones,
-          schedule_flexibility: gigData.schedule.flexibility.join(", "),
-          commission_base: gigData.commission.base,
-          commission_base_amount: gigData.commission.baseAmount,
-          commission_bonus: gigData.commission.bonus,
-          commission_bonus_amount: gigData.commission.bonusAmount,
-          commission_currency: gigData.commission.currency,
-          commission_structure: gigData.commission.structure,
-          commission_minimum_volume_amount: gigData.commission.minimumVolume.amount,
-          commission_minimum_volume_period: gigData.commission.minimumVolume.period,
-          commission_minimum_volume_unit: gigData.commission.minimumVolume.unit,
-          commission_transaction_type: gigData.commission.transactionCommission.type,
-          commission_transaction_amount: gigData.commission.transactionCommission.amount,
-          team_size: gigData.team.size,
-          team_structure: gigData.team.structure,
-          team_territories: gigData.team.territories,
-          prerequisites: [],
-          call_types: gigData.callTypes,
-        })
+        .insert(gigDataToSave)
         .select()
         .single();
 

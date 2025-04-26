@@ -1,4 +1,6 @@
 export interface GigData {
+  userId: string;
+  companyId: string;
   title: string;
   description: string;
   category: string;

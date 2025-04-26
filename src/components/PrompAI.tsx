@@ -42,11 +42,14 @@ const PrompAI: React.FC = () => {
     category: "",
     seniority: {
       level: "",
-      years: 0,
+      years: "", // Changed to string to match type
     },
     schedule: {
-      days: [],
+      days: [] as string[], // Added type annotation
       hours: "",
+      flexibility: [], // Added missing required property
+      minimumHours: {}, // Added missing required property
+      timeZones: [] as string[], // Will be defined outside selection
       timeZones: [],
     },
     commission: {

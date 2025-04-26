@@ -1,4 +1,6 @@
 export interface Profile {
+  userId: string;
+  companyId: string;
   id: string;
   username: string | null;
   full_name: string | null;

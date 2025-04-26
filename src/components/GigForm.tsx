@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { supabase } from '../lib/supabase';
+import { saveGigData } from '../lib/api';
 import { 
   Calendar, Clock, DollarSign, Users, Globe2, 
   Brain, Briefcase, FileText, Building2
@@ -58,29 +58,27 @@ export function GigForm() {
   const onSubmit = async (data: GigFormData) => {
     try {
       // Insert main gig data
-      const { data: gig, error: gigError } = await supabase
-        .from('gigs')
-        .insert({
-          title: data.title,
-          description: data.description,
-          category: data.category,
-          call_types: data.callTypes,
-          schedule_days: data.schedule.days,
-          schedule_hours: data.schedule.hours,
-          schedule_timezone: data.schedule.timeZones,
-          schedule_flexibility: data.schedule.flexibility,
-          commission_base: data.commission.base,
-          commission_bonus: data.commission.bonus,
-          commission_structure: data.commission.structure,
-          seniority_level: data.seniority.level,
-          years_experience: data.seniority.yearsExperience,
-          team_size: data.team.size,
-          team_structure: data.team.structure,
-          team_territories: data.team.territories,
-          prerequisites: data.prerequisites
-        })
-        .select()
-        .single();
+      const gigData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        call_types: data.callTypes,
+        schedule_days: data.schedule.days,
+        schedule_hours: data.schedule.hours,
+        schedule_timezone: data.schedule.timeZones,
+        schedule_flexibility: data.schedule.flexibility,
+        commission_base: data.commission.base,
+        commission_bonus: data.commission.bonus,
+        commission_structure: data.commission.structure,
+        seniority_level: data.seniority.level,
+        years_experience: data.seniority.yearsExperience,
+        team_size: data.team.size,
+        team_structure: data.team.structure,
+        team_territories: data.team.territories,
+        prerequisites: data.prerequisites
+      };
+
+      const { data: gig, error: gigError } = await saveGigData(gigData);
 
       if (gigError) throw gigError;
 
