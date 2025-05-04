@@ -1,10 +1,11 @@
 import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { supabase } from '../lib/supabase';
+import { saveGigData } from '../lib/api';
 import { 
   Calendar, Clock, DollarSign, Users, Globe2, 
   Brain, Briefcase, FileText, Building2
 } from 'lucide-react';
+import axios from 'axios';
 
 type GigFormData = {
   title: string;
@@ -52,35 +53,35 @@ type GigFormData = {
   };
 };
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export function GigForm() {
   const { register, control, handleSubmit, formState: { errors } } = useForm<GigFormData>();
 
   const onSubmit = async (data: GigFormData) => {
     try {
       // Insert main gig data
-      const { data: gig, error: gigError } = await supabase
-        .from('gigs')
-        .insert({
-          title: data.title,
-          description: data.description,
-          category: data.category,
-          call_types: data.callTypes,
-          schedule_days: data.schedule.days,
-          schedule_hours: data.schedule.hours,
-          schedule_timezone: data.schedule.timeZones,
-          schedule_flexibility: data.schedule.flexibility,
-          commission_base: data.commission.base,
-          commission_bonus: data.commission.bonus,
-          commission_structure: data.commission.structure,
-          seniority_level: data.seniority.level,
-          years_experience: data.seniority.yearsExperience,
-          team_size: data.team.size,
-          team_structure: data.team.structure,
-          team_territories: data.team.territories,
-          prerequisites: data.prerequisites
-        })
-        .select()
-        .single();
+      const gigData = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        call_types: data.callTypes,
+        schedule_days: data.schedule.days,
+        schedule_hours: data.schedule.hours,
+        schedule_timezone: data.schedule.timeZones,
+        schedule_flexibility: data.schedule.flexibility,
+        commission_base: data.commission.base,
+        commission_bonus: data.commission.bonus,
+        commission_structure: data.commission.structure,
+        seniority_level: data.seniority.level,
+        years_experience: data.seniority.yearsExperience,
+        team_size: data.team.size,
+        team_structure: data.team.structure,
+        team_territories: data.team.territories,
+        prerequisites: data.prerequisites
+      };
+
+      const { data: gig, error: gigError } = await saveGigData(gigData);
 
       if (gigError) throw gigError;
 
@@ -109,22 +110,20 @@ export function GigForm() {
         }))
       ];
 
-      const { error: skillsError } = await supabase
-        .from('gig_skills')
-        .insert(skillsPromises);
+      const { data: skillsData } = await axios.post(`${API_URL}/gig_skills`, skillsPromises);
 
-      if (skillsError) throw skillsError;
+      if (skillsData.error) throw skillsData.error;
 
       // Insert leads
-      const { error: leadsError } = await supabase
-        .from('gig_leads')
-        .insert(data.leads.types.map(lead => ({
-          gig_id: gig.id,
+      const { error: leadsError } = await axios.post(`${API_URL}/gig_leads`, {
+        gig_id: gig.id,
+        leads: data.leads.types.map(lead => ({
           lead_type: lead.type,
           percentage: lead.percentage,
           description: lead.description,
           sources: data.leads.sources
-        })));
+        }))
+      });
 
       if (leadsError) throw leadsError;
 
@@ -142,9 +141,7 @@ export function GigForm() {
         }))
       ];
 
-      const { error: docsError } = await supabase
-        .from('gig_documentation')
-        .insert(docsPromises);
+      const { error: docsError } = await axios.post(`${API_URL}/gig_documentation`, docsPromises);
 
       if (docsError) throw docsError;
 

@@ -48,7 +48,7 @@ export async function analyzeTitleAndGenerateDescription(title: string): Promise
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant that helps create job listings. Analyze the job title and suggest an appropriate category and seniority level.
+            content: `You are an AI assistant that helps create job listings. Analyze the job title and suggest an appropriate category, seniority level, and other relevant details.
 
 Available categories (for reference):
 ${predefinedOptions.basic.categories.map(cat => `- ${cat}`).join('\n')}
@@ -56,14 +56,26 @@ ${predefinedOptions.basic.categories.map(cat => `- ${cat}`).join('\n')}
 Available seniority levels:
 ${predefinedOptions.basic.seniorityLevels.map(level => `- ${level}`).join('\n')}
 
+Available time zones:
+${predefinedOptions.basic.timeZones.map(zone => `- ${zone}`).join('\n')}
+
+Available schedule flexibility options:
+${predefinedOptions.basic.scheduleFlexibility.map(option => `- ${option}`).join('\n')}
+
+Available destination zones:
+${predefinedOptions.basic.destinationZones.map(zone => `- ${zone}`).join('\n')}
+
 Return ONLY a valid JSON object with the following structure:
 {
   "description": string (detailed job description STRICTLY in 5-8 lines, separated by newlines),
-  "category": string (can be a new category if none of the existing ones fit),
+  "category": string (MUST be one of the available categories or a new one if none fit),
   "seniority": {
     "level": string (MUST be one of the available seniority levels),
     "yearsExperience": string
   },
+  "timeZone": string (MUST be one of the available time zones),
+  "scheduleFlexibility": string[] (MUST be from available options),
+  "destinationZone": string (MUST be one of the available zones),
   "skills": {
     "industry": string[]
   }
@@ -79,15 +91,10 @@ CRITICAL:
 - The description MUST contain EXACTLY between 5 and 8 lines, separated by newlines
 - Each line should be a complete, meaningful sentence
 - The seniority level MUST exactly match one of the provided options
-- The category can be a new one if none of the existing categories fit the role
-
-Example description format (6 lines):
-We are seeking a talented professional to join our dynamic team.
-The ideal candidate will drive sales growth through prospecting and relationship building.
-Key responsibilities include managing client accounts, conducting product demonstrations, and meeting sales targets.
-You will also collaborate with marketing to develop effective sales strategies.
-Required qualifications include 3+ years of sales experience and excellent communication skills.
-Success in this role means consistently meeting targets while maintaining high customer satisfaction.`
+- The category MUST be one of the provided options or a new one if none fit
+- The time zone MUST be one of the provided options
+- The schedule flexibility options MUST be from the provided list
+- The destination zone MUST be one of the provided options`
           },
           {
             role: "user",
@@ -115,6 +122,22 @@ Success in this role means consistently meeting targets while maintaining high c
         // Validate seniority level
         if (!predefinedOptions.basic.seniorityLevels.includes(parsed.seniority.level)) {
           throw new Error('Invalid seniority level suggestion');
+        }
+
+        // Validate time zone
+        if (!predefinedOptions.basic.timeZones.includes(parsed.timeZone)) {
+          throw new Error('Invalid time zone suggestion');
+        }
+
+        // Validate schedule flexibility
+        if (!parsed.scheduleFlexibility.every((option: string) => 
+          predefinedOptions.basic.scheduleFlexibility.includes(option))) {
+          throw new Error('Invalid schedule flexibility options');
+        }
+
+        // Validate destination zone
+        if (!predefinedOptions.basic.destinationZones.includes(parsed.destinationZone)) {
+          throw new Error('Invalid destination zone suggestion');
         }
 
         return parsed;
@@ -151,7 +174,7 @@ export async function generateSeniorityAndExperience(title: string, description:
           content: `You are an AI assistant that helps determine appropriate seniority levels and years of experience for job positions.
           
 Available seniority levels (you MUST choose one of these):
-${seniorityLevels.map(level => `- ${level}`).join('\n')}
+${predefinedOptions.basic.seniorityLevels.map(level => `- ${level}`).join('\n')}
 
 For each level, here are the typical years of experience:
 - Entry Level: 0-2 years
@@ -163,10 +186,19 @@ For each level, here are the typical years of experience:
 - Manager: 10-15 years
 - Director: 15+ years
 
+Consider the following factors when determining seniority:
+1. Complexity of responsibilities
+2. Required technical expertise
+3. Leadership requirements
+4. Decision-making authority
+5. Industry standards
+6. Company size and structure
+
 Return ONLY a valid JSON object with the following structure:
 {
   "level": string (MUST be one of the available seniority levels),
-  "yearsExperience": string (in format like "2-3 years" or "5+ years")
+  "yearsExperience": string (in format like "2-3 years" or "5+ years"),
+  "justification": string (brief explanation of why this level was chosen)
 }`
         },
         {
@@ -189,7 +221,7 @@ Based on this job title and description, suggest an appropriate seniority level 
     const result = JSON.parse(content);
     
     // Validate that the suggested level is one of the available options
-    if (!seniorityLevels.includes(result.level)) {
+    if (!predefinedOptions.basic.seniorityLevels.includes(result.level)) {
       throw new Error('Invalid seniority level suggested');
     }
 
@@ -203,205 +235,168 @@ Based on this job title and description, suggest an appropriate seniority level 
   }
 }
 
-interface TimezoneInfo {
+export interface TimezoneInfo {
   name: string;
-  cities: string[];
-  standard: string;
-  daylight: string;
-  utcOffset: number;
-  businessHours: {
-    start: string;
-    end: string;
-  };
+  description: string;
+  offset: number;
+  abbreviation: string;
 }
 
-export type TimezoneCode = "ET" | "CT" | "MT" | "PT" | "GMT" | "CET" | "GST" | "SGT" | "JST" | "AEST";
+export type TimezoneCode = 'America/New_York' | 'Europe/London' | 'Asia/Singapore' | 'Asia/Tokyo' | 'Europe/Paris' | 'America/Chicago' | 'America/Denver' | 'America/Los_Angeles' | 'Europe/Dubai' | 'Australia/Sydney';
 
 export const MAJOR_TIMEZONES: Record<TimezoneCode, TimezoneInfo> = {
-  "ET": {
-    name: "Eastern Time (ET)",
-    cities: ["New York", "Miami", "Boston"],
-    standard: "EST",
-    daylight: "EDT",
-    utcOffset: -5,
-    businessHours: { start: "09:00", end: "17:00" }
+  'America/New_York': {
+    name: 'New York (EST/EDT)',
+    description: 'Eastern United States, major financial hub',
+    offset: -5,
+    abbreviation: 'EST/EDT'
   },
-  "CT": {
-    name: "Central Time (CT)",
-    cities: ["Chicago", "Houston", "Dallas"],
-    standard: "CST",
-    daylight: "CDT",
-    utcOffset: -6,
-    businessHours: { start: "09:00", end: "17:00" }
+  'America/Chicago': {
+    name: 'Chicago (CST/CDT)',
+    description: 'Central United States, major business hub',
+    offset: -6,
+    abbreviation: 'CST/CDT'
   },
-  "MT": {
-    name: "Mountain Time (MT)",
-    cities: ["Denver", "Phoenix", "Salt Lake City"],
-    standard: "MST",
-    daylight: "MDT",
-    utcOffset: -7,
-    businessHours: { start: "09:00", end: "17:00" }
+  'America/Denver': {
+    name: 'Denver (MST/MDT)',
+    description: 'Mountain United States, growing tech hub',
+    offset: -7,
+    abbreviation: 'MST/MDT'
   },
-  "PT": {
-    name: "Pacific Time (PT)",
-    cities: ["Los Angeles", "San Francisco", "Seattle"],
-    standard: "PST",
-    daylight: "PDT",
-    utcOffset: -8,
-    businessHours: { start: "09:00", end: "17:00" }
+  'America/Los_Angeles': {
+    name: 'Los Angeles (PST/PDT)',
+    description: 'Western United States, major tech and entertainment hub',
+    offset: -8,
+    abbreviation: 'PST/PDT'
   },
-  "GMT": {
-    name: "Greenwich Mean Time (GMT)",
-    cities: ["London"],
-    standard: "GMT",
-    daylight: "BST",
-    utcOffset: 0,
-    businessHours: { start: "09:00", end: "17:00" }
+  'Europe/London': {
+    name: 'London (GMT/BST)',
+    description: 'United Kingdom, major European financial center',
+    offset: 0,
+    abbreviation: 'GMT/BST'
   },
-  "CET": {
-    name: "Central European Time (CET)",
-    cities: ["Paris", "Berlin", "Rome"],
-    standard: "CET",
-    daylight: "CEST",
-    utcOffset: 1,
-    businessHours: { start: "09:00", end: "17:00" }
+  'Europe/Paris': {
+    name: 'Paris (CET/CEST)',
+    description: 'Central European business hub',
+    offset: 1,
+    abbreviation: 'CET/CEST'
   },
-  "GST": {
-    name: "Gulf Standard Time (GST)",
-    cities: ["Dubai", "Abu Dhabi", "Muscat"],
-    standard: "GST",
-    daylight: "GST",
-    utcOffset: 4,
-    businessHours: { start: "08:00", end: "16:00" }
+  'Europe/Dubai': {
+    name: 'Dubai (GST)',
+    description: 'Middle Eastern business hub',
+    offset: 4,
+    abbreviation: 'GST'
   },
-  "SGT": {
-    name: "Singapore Time (SGT)",
-    cities: ["Singapore", "Kuala Lumpur"],
-    standard: "SGT",
-    daylight: "SGT",
-    utcOffset: 8,
-    businessHours: { start: "09:00", end: "17:00" }
+  'Asia/Singapore': {
+    name: 'Singapore (SGT)',
+    description: 'Southeast Asian business hub',
+    offset: 8,
+    abbreviation: 'SGT'
   },
-  "JST": {
-    name: "Japan Standard Time (JST)",
-    cities: ["Tokyo", "Osaka", "Seoul"],
-    standard: "JST",
-    daylight: "JST",
-    utcOffset: 9,
-    businessHours: { start: "09:00", end: "17:00" }
+  'Asia/Tokyo': {
+    name: 'Tokyo (JST)',
+    description: 'Japan, major Asian financial center',
+    offset: 9,
+    abbreviation: 'JST'
   },
-  "AEST": {
-    name: "Australian Eastern Time (AET)",
-    cities: ["Sydney", "Melbourne", "Brisbane"],
-    standard: "AEST",
-    daylight: "AEDT",
-    utcOffset: 10,
-    businessHours: { start: "09:00", end: "17:00" }
+  'Australia/Sydney': {
+    name: 'Sydney (AEST/AEDT)',
+    description: 'Australia, major Asia-Pacific business hub',
+    offset: 10,
+    abbreviation: 'AEST/AEDT'
   }
 };
 
-export const TIMEZONE_GROUPS: Record<string, TimezoneCode[]> = {
-  americas: ["ET", "CT", "MT", "PT"],
-  europe: ["GMT", "CET"],
-  asiaPacific: ["GST", "SGT", "JST", "AEST"]
+export const TIMEZONE_GROUPS = {
+  americas: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'] as TimezoneCode[],
+  europe: ['Europe/London', 'Europe/Paris', 'Europe/Dubai'] as TimezoneCode[],
+  asiaPacific: ['Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney'] as TimezoneCode[]
 };
 
-interface TimezoneCoverage {
-  primary: string[];
-  secondary: string[];
-  overlap: {
-    start: string;
-    end: string;
-    zones: string[];
-  }[];
+interface TimeRange {
+  start: string;
+  end: string;
+  description: string;
+  coverage: string[];
 }
 
-export function analyzeTimezones(selectedTimezones: TimezoneCode[]): TimezoneCoverage {
-  // Filter out invalid timezones
-  const validTimezones = selectedTimezones.filter(tz => MAJOR_TIMEZONES[tz]);
+export function analyzeTimezones(timezones: TimezoneCode[]) {
+  const validTimezones = timezones.filter(tz => MAJOR_TIMEZONES[tz]);
+  
+  if (validTimezones.length === 0) {
+    return {
+      coverage: 'No valid timezones selected',
+      gaps: ['Full coverage needed'],
+      recommendations: ['Select at least one timezone']
+    };
+  }
 
-  // Sort timezones by UTC offset
   const sortedTimezones = validTimezones
     .map(tz => MAJOR_TIMEZONES[tz])
-    .sort((a, b) => a.utcOffset - b.utcOffset);
+    .sort((a, b) => a.offset - b.offset);
 
   // Determine primary and secondary coverage
   const primary = validTimezones.filter(tz => 
-    MAJOR_TIMEZONES[tz].utcOffset >= -5 && MAJOR_TIMEZONES[tz].utcOffset <= 1
+    MAJOR_TIMEZONES[tz].offset >= -5 && MAJOR_TIMEZONES[tz].offset <= 1
   );
   const secondary = validTimezones.filter(tz => !primary.includes(tz));
 
-  // Calculate overlapping business hours
-  const overlap = [];
-  if (sortedTimezones.length > 1) {
-    for (let i = 0; i < sortedTimezones.length - 1; i++) {
-      const current = sortedTimezones[i];
-      const next = sortedTimezones[i + 1];
-      
-      const hourDiff = next.utcOffset - current.utcOffset;
-      if (hourDiff <= 8) { // Only consider zones with reasonable overlap
-        const overlapStart = addHours(current.businessHours.start, hourDiff);
-        const overlapEnd = current.businessHours.end;
-        
-        if (isTimeInRange(overlapStart, next.businessHours.start, next.businessHours.end)) {
-          overlap.push({
-            start: overlapStart,
-            end: overlapEnd,
-            zones: [current.name, next.name]
-          });
-        }
-      }
-    }
-  }
-
   return {
-    primary,
-    secondary,
-    overlap
+    coverage: `Primary coverage: ${primary.map(tz => MAJOR_TIMEZONES[tz].name).join(', ')}${
+      secondary.length ? `\nSecondary coverage: ${secondary.map(tz => MAJOR_TIMEZONES[tz].name).join(', ')}` : ''
+    }`,
+    gaps: findCoverageGaps(validTimezones),
+    recommendations: generateRecommendations(validTimezones)
   };
 }
 
 export function suggestTimezones(baseTimezone: TimezoneCode): TimezoneCode[] {
   const base = MAJOR_TIMEZONES[baseTimezone];
-  if (!base) return [];
-
   const suggestions: TimezoneCode[] = [];
-  
-  // Add timezones from the same region
-  for (const [region, zones] of Object.entries(TIMEZONE_GROUPS)) {
-    if (zones.includes(baseTimezone)) {
-      suggestions.push(...zones.filter(tz => tz !== baseTimezone) as TimezoneCode[]);
-      break;
-    }
-  }
 
   // Add complementary timezones for global coverage
-  if (base.utcOffset <= 0) { // If in Americas/Europe
-    suggestions.push(...TIMEZONE_GROUPS.asiaPacific.slice(0, 2));
+  if (base.offset <= 0) { // If in Americas/Europe
+    suggestions.push(...TIMEZONE_GROUPS.asiaPacific);
   } else { // If in Asia/Pacific
-    suggestions.push(...TIMEZONE_GROUPS.americas.slice(0, 2));
+    suggestions.push(...TIMEZONE_GROUPS.americas, ...TIMEZONE_GROUPS.europe);
   }
 
-  return [...new Set(suggestions)];
+  return [...new Set([baseTimezone, ...suggestions])];
 }
 
-// Helper functions
-function addHours(time: string, hours: number): string {
-  const [h, m] = time.split(':').map(Number);
-  const newHours = (h + hours + 24) % 24;
-  return `${String(newHours).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+function findCoverageGaps(timezones: TimezoneCode[]): string[] {
+  const gaps: string[] = [];
+  const sortedTimezones = timezones
+    .map(tz => MAJOR_TIMEZONES[tz])
+    .sort((a, b) => a.offset - b.offset);
+
+  // Check for major gaps in coverage
+  if (!timezones.some(tz => MAJOR_TIMEZONES[tz].offset >= -5 && MAJOR_TIMEZONES[tz].offset <= -4)) {
+    gaps.push('Americas (EST/EDT)');
+  }
+  if (!timezones.some(tz => MAJOR_TIMEZONES[tz].offset >= 0 && MAJOR_TIMEZONES[tz].offset <= 1)) {
+    gaps.push('Europe (GMT/CET)');
+  }
+  if (!timezones.some(tz => MAJOR_TIMEZONES[tz].offset >= 8 && MAJOR_TIMEZONES[tz].offset <= 9)) {
+    gaps.push('Asia/Pacific (SGT/JST)');
+  }
+
+  return gaps;
 }
 
-function isTimeInRange(time: string, start: string, end: string): boolean {
-  const [h, m] = time.split(':').map(Number);
-  const [startH, startM] = start.split(':').map(Number);
-  const [endH, endM] = end.split(':').map(Number);
-  
-  const timeMinutes = h * 60 + m;
-  const startMinutes = startH * 60 + startM;
-  const endMinutes = endH * 60 + endM;
-  
-  return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+function generateRecommendations(timezones: TimezoneCode[]): string[] {
+  const recommendations: string[] = [];
+  const gaps = findCoverageGaps(timezones);
+
+  if (gaps.length > 0) {
+    recommendations.push(`Consider adding coverage for: ${gaps.join(', ')}`);
+  }
+
+  if (timezones.length < 2) {
+    recommendations.push('Add more timezones for better global coverage');
+  }
+
+  return recommendations;
 }
 
 export function getTimezoneDisplayName(timezone: TimezoneCode): string {
@@ -420,109 +415,318 @@ interface WorkingHoursSuggestion {
 }
 
 export function generateWorkingHoursSuggestions(
-  selectedTimezones: TimezoneCode[],
-  jobCategory?: string
-): WorkingHoursSuggestion[] {
-  const suggestions: WorkingHoursSuggestion[] = [];
+  timezones: TimezoneCode[],
+  businessType: string
+): TimeRange[] {
+  const suggestions: TimeRange[] = [];
 
-  // Standard business hours for each region
-  const standardHours = {
-    americas: { start: "09:00", end: "17:00" },
-    europe: { start: "09:00", end: "17:00" },
-    asiaPacific: { start: "09:00", end: "17:00" }
-  };
-
-  // Get the regions covered by selected timezones
-  const coveredRegions = new Set<string>();
-  selectedTimezones.forEach(tz => {
-    for (const [region, zones] of Object.entries(TIMEZONE_GROUPS)) {
-      if (zones.includes(tz)) {
-        coveredRegions.add(region);
-      }
-    }
-  });
-
-  // Add standard business hours suggestion
+  // Standard business hours
   suggestions.push({
-    start: "09:00",
-    end: "17:00",
-    description: "Standard business hours",
-    coverage: ["Local business hours"]
+    start: '09:00',
+    end: '17:00',
+    description: 'Standard business hours',
+    coverage: ['Local market coverage']
   });
 
-  // Add early shift suggestion if covering multiple regions
-  if (coveredRegions.size > 1) {
+  // Extended hours for global coverage
+  if (timezones.length > 1) {
     suggestions.push({
-      start: "06:00",
-      end: "14:00",
-      description: "Early shift for better timezone coverage",
-      coverage: ["Early overlap with Asia/Pacific", "Afternoon coverage for Americas"]
+      start: '07:00',
+      end: '19:00',
+      description: 'Extended business hours',
+      coverage: ['Improved global coverage', 'Overlap with other regions']
     });
   }
 
-  // Add late shift suggestion if covering multiple regions
-  if (coveredRegions.size > 1) {
+  // 24/7 coverage suggestion for certain business types
+  if (businessType.toLowerCase().includes('support') || timezones.length > 2) {
     suggestions.push({
-      start: "14:00",
-      end: "22:00",
-      description: "Late shift for better timezone coverage",
-      coverage: ["Morning coverage for Americas", "Evening overlap with Asia/Pacific"]
-    });
-  }
-
-  // Add split shift suggestion for global coverage
-  if (coveredRegions.size > 2) {
-    suggestions.push({
-      start: "08:00",
-      end: "12:00",
-      description: "Split shift for global coverage (morning)",
-      coverage: ["Morning overlap with multiple regions"]
-    });
-    suggestions.push({
-      start: "16:00",
-      end: "20:00",
-      description: "Split shift for global coverage (evening)",
-      coverage: ["Evening overlap with multiple regions"]
-    });
-  }
-
-  // Add job-specific suggestions
-  if (jobCategory?.toLowerCase().includes('sales')) {
-    suggestions.push({
-      start: "10:00",
-      end: "18:00",
-      description: "Optimal hours for sales activities",
-      coverage: ["Peak customer availability", "Key business hours coverage"]
-    });
-  }
-
-  // Add suggestions for customer support if relevant
-  if (jobCategory?.toLowerCase().includes('support')) {
-    suggestions.push({
-      start: "07:00",
-      end: "15:00",
-      description: "Early customer support coverage",
-      coverage: ["Early customer support availability"]
-    });
-    suggestions.push({
-      start: "15:00",
-      end: "23:00",
-      description: "Late customer support coverage",
-      coverage: ["Extended customer support hours"]
+      start: '00:00',
+      end: '23:59',
+      description: '24/7 coverage',
+      coverage: ['Full global coverage', 'Round-the-clock service']
     });
   }
 
   return suggestions;
 }
 
-// Helper function to format time for display
 export function formatTimeRange(start: string, end: string): string {
   const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
   };
 
   return `${formatTime(start)} - ${formatTime(end)}`;
+}
+
+export async function generateCommissionAndActivity(title: string, description: string): Promise<{
+  commission: {
+    options: Array<{
+      base: string;
+      baseAmount: string;
+      bonus?: string;
+      bonusAmount?: string;
+      currency: string;
+      minimumVolume: {
+        amount: string;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: string;
+      };
+    }>;
+  };
+  activity: {
+    options: Array<{
+      type: string;
+      description: string;
+      requirements: string[];
+    }>;
+  };
+}> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!title || !description) {
+    throw new Error('Title and description are required');
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI assistant that helps determine appropriate commission structures and activity types for job positions.
+
+Available commission base types:
+${predefinedOptions.commission.baseTypes.map(type => `- ${type}`).join('\n')}
+
+Available bonus types:
+${predefinedOptions.commission.bonusTypes.map(type => `- ${type}`).join('\n')}
+
+Available currencies:
+${predefinedOptions.commission.currencies.map(currency => `- ${currency.name} (${currency.code})`).join('\n')}
+
+Available lead sources:
+${predefinedOptions.leads.sources.map(source => `- ${source}`).join('\n')}
+
+Return ONLY a valid JSON object with the following structure:
+{
+  "commission": {
+    "options": [
+      {
+        "base": string (MUST be one of the available base types),
+        "baseAmount": string (amount or percentage),
+        "bonus": string (optional, MUST be one of the available bonus types),
+        "bonusAmount": string (optional, amount or percentage),
+        "currency": string (MUST be one of the available currency codes),
+        "minimumVolume": {
+          "amount": string,
+          "period": string (e.g., "monthly", "quarterly"),
+          "unit": string (MUST match the currency)
+        },
+        "transactionCommission": {
+          "type": string (e.g., "percentage", "fixed"),
+          "amount": string
+        }
+      }
+    ]
+  },
+  "activity": {
+    "options": [
+      {
+        "type": string (e.g., "Lead Generation", "Sales"),
+        "description": string (detailed description of the activity),
+        "requirements": string[] (list of specific requirements)
+      }
+    ]
+  }
+}
+
+Consider the following factors when determining commission and activity:
+1. Industry standards and practices
+2. Role complexity and responsibilities
+3. Market conditions and competition
+4. Performance metrics and KPIs
+5. Risk and reward balance
+6. Team structure and hierarchy`
+        },
+        {
+          role: "user",
+          content: `Title: ${title}
+Description: ${description}
+
+Based on this job title and description, suggest appropriate commission structures and activity types. The commission base type, bonus type, and currency MUST be from the available options listed above.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) {
+      throw new Error('Failed to generate suggestions');
+    }
+
+    const result = JSON.parse(content);
+    
+    // Validate commission options
+    result.commission.options.forEach((option: any) => {
+      if (!predefinedOptions.commission.baseTypes.includes(option.base)) {
+        throw new Error('Invalid commission base type');
+      }
+      if (option.bonus && !predefinedOptions.commission.bonusTypes.includes(option.bonus)) {
+        throw new Error('Invalid bonus type');
+      }
+      if (!predefinedOptions.commission.currencies.some(currency => currency.code === option.currency)) {
+        throw new Error('Invalid currency');
+      }
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error generating commission and activity:', error);
+    throw error;
+  }
+}
+
+export async function generateTeamAndTerritories(title: string, description: string): Promise<{
+  team: {
+    roles: Array<{
+      id: string;
+      name: string;
+      description: string;
+      count: number;
+      requirements: string[];
+    }>;
+    structure: {
+      hierarchy: string;
+      reporting: string;
+      collaboration: string[];
+    };
+  };
+  territories: {
+    primary: string[];
+    secondary: string[];
+    coverage: {
+      type: string;
+      description: string;
+      requirements: string[];
+    }[];
+  };
+}> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!title || !description) {
+    throw new Error('Title and description are required');
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI assistant that helps determine appropriate team structures and territory assignments for job positions.
+
+Available team roles:
+${predefinedOptions.team.roles.map(role => `- ${role.name} (${role.description})`).join('\n')}
+
+Available territories:
+${predefinedOptions.team.territories.map(territory => `- ${territory}`).join('\n')}
+
+Return ONLY a valid JSON object with the following structure:
+{
+  "team": {
+    "roles": [
+      {
+        "id": string (MUST match one of the available role IDs),
+        "name": string (MUST match one of the available role names),
+        "description": string (detailed role description),
+        "count": number (suggested number of positions),
+        "requirements": string[] (specific requirements for this role)
+      }
+    ],
+    "structure": {
+      "hierarchy": string (description of team hierarchy),
+      "reporting": string (reporting structure),
+      "collaboration": string[] (key collaboration points)
+    }
+  },
+  "territories": {
+    "primary": string[] (MUST be from available territories),
+    "secondary": string[] (MUST be from available territories),
+    "coverage": [
+      {
+        "type": string (e.g., "Regional", "Global"),
+        "description": string (coverage description),
+        "requirements": string[] (specific requirements for coverage)
+      }
+    ]
+  }
+}
+
+Consider the following factors when determining team structure and territories:
+1. Business objectives and goals
+2. Market size and potential
+3. Cultural and language considerations
+4. Time zone coverage needs
+5. Resource allocation and efficiency
+6. Growth and scalability
+7. Local market knowledge requirements
+8. Regulatory and compliance considerations`
+        },
+        {
+          role: "user",
+          content: `Title: ${title}
+Description: ${description}
+
+Based on this job title and description, suggest appropriate team structure and territory assignments. The roles MUST be from the available options listed above, and territories MUST be from the available list.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) {
+      throw new Error('Failed to generate suggestions');
+    }
+
+    const result = JSON.parse(content);
+    
+    // Validate team roles
+    result.team.roles.forEach((role: any) => {
+      const validRole = predefinedOptions.team.roles.find(r => r.id === role.id);
+      if (!validRole) {
+        throw new Error(`Invalid role ID: ${role.id}`);
+      }
+      if (validRole.name !== role.name) {
+        throw new Error(`Role name mismatch for ID ${role.id}`);
+      }
+    });
+
+    // Validate territories
+    const allTerritories = [...result.territories.primary, ...result.territories.secondary];
+    allTerritories.forEach((territory: string) => {
+      if (!predefinedOptions.team.territories.includes(territory)) {
+        throw new Error(`Invalid territory: ${territory}`);
+      }
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error generating team and territories:', error);
+    throw error;
+  }
 }

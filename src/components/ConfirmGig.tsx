@@ -2,6 +2,8 @@ import React from "react";
 import Swal from "sweetalert2";
 import { CheckCircle, AlertCircle } from "lucide-react";
 import type { ParsedGig } from "../lib/types";
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
 
 interface ConfirmGigProps {
   gig: ParsedGig;
@@ -12,15 +14,58 @@ interface ConfirmGigProps {
 export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
   const handleConfirm = async () => {
     try {
+      // Vérifier si on est en mode standalone
+      const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
+      let userId: string;
+      let companyId: string;
+
+      console.log('ConfirmGig - isStandalone 1 :', isStandalone);
+      console.log('ConfirmGig - gig:', gig);
+
+
+      if (isStandalone) {
+        userId = '680a27ffefa3d29d628d0016';
+        companyId = '680bec7495ee2e5862009486';
+        console.log('ConfirmGig - Standalone Mode - userId:', userId, 'companyId:', companyId);
+      } else {
+        const cookieUserId = Cookies.get("userId");
+        if (!cookieUserId) {
+          throw new Error("User ID not found in cookies");
+        }
+        userId = cookieUserId;
+
+        // Récupérer le companyId associé à l'utilisateur
+        const { data: userData, error: userError } = await saveGigData(gigData);
+
+        if (userError) {
+          throw new Error("Failed to fetch user company");
+        }
+
+        if (!userData?.company_id) {
+          throw new Error("Company ID not found for user");
+        }
+        companyId = userData.company_id;
+        console.log('ConfirmGig - Normal Mode - userId:', userId, 'companyId:', companyId);
+      }
+
+      const gigData = {
+        ...gig,
+        userId: userId,
+        companyId: companyId
+      };
+
+      console.log('ConfirmGig - Final gigData:', gigData);
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(gig),
+        body: JSON.stringify(gigData),
       });
 
       const data = await response.json();
+      console.log('ConfirmGig - API Response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || "Échec de la publication du gig");

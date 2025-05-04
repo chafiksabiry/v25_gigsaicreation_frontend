@@ -21,6 +21,11 @@ import { AIDialog } from "./AIDialog";
 import { supabase } from "../lib/supabase";
 import BasicSection from './BasicSection';
 import { SectionContent } from './SectionContent';
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@mui/material';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
@@ -33,9 +38,12 @@ const sections = [
 ];
 
 const initialGigData: GigData = {
+  userId: "",
+  companyId: "",
   title: "",
   description: "",
   category: "",
+  destination_zone: [],
   callTypes: [],
   highlights: [],
   requirements: {
@@ -94,6 +102,7 @@ const initialGigData: GigData = {
   },
   seniority: {
     level: "",
+    years: "",
     yearsExperience: "",
   },
   team: {
@@ -144,7 +153,7 @@ const initialGigData: GigData = {
   equipment: {
     required: [],
     provided: [],
-  },
+  }
 };
 
 // Update the constants structure
@@ -170,6 +179,8 @@ interface GigCreatorProps {
     isLastSection: boolean;
   }) => React.ReactNode;
 }
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export function GigCreator({ children }: GigCreatorProps) {
   const [currentSection, setCurrentSection] = useState(sections[0].id);
@@ -230,41 +241,102 @@ export function GigCreator({ children }: GigCreatorProps) {
     setSubmitError(null);
 
     try {
-      const { data, error } = await supabase
-        .from("gigs")
-        .insert({
-          title: gigData.title,
-          description: gigData.description,
-          category: gigData.category,
-          seniority_level: gigData.seniority.level,
-          years_experience: gigData.seniority.yearsExperience,
-          schedule_days: gigData.schedule.days,
-          schedule_hours: gigData.schedule.hours,
-          schedule_timezone: gigData.schedule.timeZones,
-          schedule_flexibility: gigData.schedule.flexibility.join(", "),
-          commission_base: gigData.commission.base,
-          commission_base_amount: gigData.commission.baseAmount,
-          commission_bonus: gigData.commission.bonus,
-          commission_bonus_amount: gigData.commission.bonusAmount,
-          commission_currency: gigData.commission.currency,
-          commission_structure: gigData.commission.structure,
-          commission_minimum_volume_amount: gigData.commission.minimumVolume.amount,
-          commission_minimum_volume_period: gigData.commission.minimumVolume.period,
-          commission_minimum_volume_unit: gigData.commission.minimumVolume.unit,
-          commission_transaction_type: gigData.commission.transactionCommission.type,
-          commission_transaction_amount: gigData.commission.transactionCommission.amount,
-          team_size: gigData.team.size,
-          team_structure: gigData.team.structure,
-          team_territories: gigData.team.territories,
-          prerequisites: [],
-          call_types: gigData.callTypes,
-        })
-        .select()
-        .single();
+      let userId: string;
+      let companyId: string;
 
-      if (error) throw error;
+      // Vérifier si on est en mode standalone
+      const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
+      console.log('ConfirmGig - isStandalone 2 :', isStandalone);
 
-      if (data) {
+      if (isStandalone) {
+        // Valeurs par défaut pour le mode standalone
+        userId = '680a27ffefa3d29d628d0016';
+        companyId = '680bec7495ee2e5862009486';
+        console.log('GigCreator - Standalone Mode - userId:', userId, 'companyId:', companyId);
+      } else {
+        // Récupérer depuis les cookies
+        const cookieUserId = Cookies.get("userId");
+        if (!cookieUserId) {
+          throw new Error("User ID not found in cookies");
+        }
+        userId = cookieUserId;
+
+        // Récupérer le companyId associé à l'utilisateur
+        const { data: userData, error: userError } = await saveGigData(gigData);
+
+        if (userError) {
+          throw new Error("Failed to fetch user company");
+        }
+
+        if (!userData?.company_id) {
+          throw new Error("Company ID not found for user");
+        }
+        companyId = userData.company_id;
+        console.log('GigCreator - Normal Mode - userId:', userId, 'companyId:', companyId);
+      }
+
+      const gigDataToSave = {
+        title: gigData.title,
+        description: gigData.description,
+        category: gigData.category,
+        userId: userId,
+        companyId: companyId,
+        seniority: {
+          level: gigData.seniority.level,
+          yearsExperience: gigData.seniority.yearsExperience
+        },
+        skills: {
+          professional: gigData.skills.professional,
+          languages: gigData.skills.languages,
+          technical: gigData.skills.technical,
+          soft: gigData.skills.soft
+        },
+        schedule: {
+          days: gigData.schedule.days,
+          hours: gigData.schedule.hours,
+          timeZones: gigData.schedule.timeZones,
+          flexibility: gigData.schedule.flexibility
+        },
+        commission: {
+          base: gigData.commission.base,
+          baseAmount: gigData.commission.baseAmount,
+          bonus: gigData.commission.bonus,
+          bonusAmount: gigData.commission.bonusAmount,
+          currency: gigData.commission.currency,
+          minimumVolume: {
+            amount: gigData.commission.minimumVolume.amount,
+            period: gigData.commission.minimumVolume.period,
+            unit: gigData.commission.minimumVolume.unit
+          },
+          transactionCommission: {
+            type: gigData.commission.transactionCommission.type,
+            amount: gigData.commission.transactionCommission.amount
+          }
+        },
+        leads: {
+          types: gigData.leads.types,
+          sources: gigData.leads.sources
+        },
+        team: {
+          size: gigData.team.size,
+          structure: gigData.team.structure,
+          territories: gigData.team.territories
+        },
+        documentation: {
+          training: gigData.documentation.training,
+          product: gigData.documentation.product,
+          process: gigData.documentation.process
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log('GigCreator - Final gigDataToSave:', gigDataToSave);
+
+      const response = await axios.post(`${API_URL}/gigs`, gigDataToSave);
+      const gig = response.data;
+
+      if (gig) {
         // Insert skills
         if (
           gigData.skills.languages.length > 0 ||
@@ -273,61 +345,55 @@ export function GigCreator({ children }: GigCreatorProps) {
         ) {
           const skillsToInsert = [
             ...gigData.skills.languages.map((lang) => ({
-              gig_id: data.id,
+              gig_id: gig.id,
               category: "language",
               name: lang.name,
               level: lang.level,
             })),
             ...gigData.skills.professional.map((skill) => ({
-              gig_id: data.id,
+              gig_id: gig.id,
               category: "professional",
               name: skill,
             })),
             ...gigData.skills.technical.map((skill) => ({
-              gig_id: data.id,
+              gig_id: gig.id,
               category: "technical",
               name: skill,
             })),
           ];
 
-          const { error: skillsError } = await supabase
-            .from("gig_skills")
-            .insert(skillsToInsert);
-
-          if (skillsError) throw skillsError;
+          await axios.post(`${API_URL}/gig_skills`, { skills: skillsToInsert });
         }
 
         // Insert leads
         if (gigData.leads.types.some((lead) => lead.percentage > 0)) {
-          const { error: leadsError } = await supabase.from("gig_leads").insert(
-            gigData.leads.types.map((lead) => ({
-              gig_id: data.id,
+          await axios.post(`${API_URL}/gig_leads`, {
+            gig_id: gig.id,
+            leads: gigData.leads.types.map((lead) => ({
               lead_type: lead.type,
               percentage: lead.percentage,
               description: lead.description,
               sources: gigData.leads.sources,
-            }))
-          );
-
-          if (leadsError) throw leadsError;
+            })),
+          });
         }
 
         // Insert documentation
         const docsToInsert = [
           ...gigData.documentation.product.map((doc) => ({
-            gig_id: data.id,
+            gig_id: gig.id,
             doc_type: "product",
             name: doc.name,
             url: doc.url,
           })),
           ...gigData.documentation.process.map((doc) => ({
-            gig_id: data.id,
+            gig_id: gig.id,
             doc_type: "process",
             name: doc.name,
             url: doc.url,
           })),
           ...gigData.documentation.training.map((doc) => ({
-            gig_id: data.id,
+            gig_id: gig.id,
             doc_type: "training",
             name: doc.name,
             url: doc.url,
@@ -335,11 +401,7 @@ export function GigCreator({ children }: GigCreatorProps) {
         ];
 
         if (docsToInsert.length > 0) {
-          const { error: docsError } = await supabase
-            .from("gig_documentation")
-            .insert(docsToInsert);
-
-          if (docsError) throw docsError;
+          await axios.post(`${API_URL}/gig_documentation`, { docs: docsToInsert });
         }
 
         // Reset form

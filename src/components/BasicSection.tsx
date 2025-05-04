@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import {
@@ -13,9 +13,17 @@ import {
   Target,
   ArrowRight,
   ArrowLeft,
-  GraduationCap
+  GraduationCap,
+  Search
 } from "lucide-react";
 import { GigData } from '../types';
+import i18n from 'i18n-iso-countries';
+import fr from 'i18n-iso-countries/langs/fr.json';
+import en from 'i18n-iso-countries/langs/en.json';
+
+// Register languages
+i18n.registerLocale(fr);
+i18n.registerLocale(en);
 
 interface BasicSectionProps {
   data: GigData;
@@ -40,9 +48,55 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onSectionChange,
   currentSection = 'basic'
 }) => {
-  console.log('BasicSection - Current data:', data);
-  console.log('BasicSection - Seniority data:', data.seniority);
-  console.log('BasicSection - Years of Experience:', data.seniority.years);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Sélectionner automatiquement le pays généré par l'IA
+  useEffect(() => {
+    if (data.destination_zone_ai_generated && !data.destination_zone.includes(data.destination_zone_ai_generated)) {
+      onChange({ ...data, destination_zone: [...data.destination_zone, data.destination_zone_ai_generated] });
+    }
+  }, [data.destination_zone_ai_generated]);
+
+  // Fonction pour vérifier si un pays est sélectionné
+  const isCountrySelected = (countryCode: string) => {
+    return data.destination_zone?.includes(countryCode) || false;
+  };
+
+  const handleCountrySelect = (country: string) => {
+    // Si le pays est déjà sélectionné, on le retire
+    if (data.destination_zone?.includes(country)) {
+      onChange({ ...data, destination_zone: data.destination_zone.filter(c => c !== country) });
+    } else {
+      // Sinon on l'ajoute
+      onChange({ ...data, destination_zone: [...(data.destination_zone || []), country] });
+    }
+  };
+
+  const getCountriesByZone = (zone: string) => {
+    const zoneCountries: { [key: string]: string[] } = {
+      'Europe': ['FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'CH', 'AT', 'PT', 'GR', 'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'SK', 'SI', 'DK', 'FI', 'SE', 'NO', 'IE', 'GB', 'EE', 'LV', 'LT', 'LU', 'MT', 'CY'],
+      'Amérique du Nord': ['US', 'CA', 'MX'],
+      'Amérique du Sud': ['BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GY', 'SR', 'TT', 'JM', 'HT', 'DO', 'CU', 'HN', 'NI', 'CR', 'PA', 'SV', 'GT', 'BZ'],
+      'Asie': ['CN', 'JP', 'KR', 'IN', 'ID', 'TH', 'VN', 'MY', 'PH', 'SG', 'HK', 'TW'],
+      'Afrique': ['ZA', 'EG', 'MA', 'NG', 'KE', 'GH', 'SN', 'TN', 'DZ', 'CI', 'AO', 'TZ', 'ZM', 'ZW', 'NA', 'MG', 'MU', 'MR', 'MZ', 'NE', 'RW', 'SC', 'SL', 'SO', 'SD', 'SZ', 'TG', 'UG'],
+      'Océanie': ['AU', 'NZ'],
+      'Moyen-Orient': ['AE', 'SA', 'QA', 'KW', 'PS', 'TR', 'LB']
+    };
+
+    return (zoneCountries[zone] || [])
+      .map(code => {
+        const name = i18n.getName(code, 'en');
+        return name ? { code, name } : null;
+      })
+      .filter((country): country is { code: string; name: string } => country !== null);
+  };
+
+  const filteredZones = predefinedOptions.basic.destinationZones.filter((zone: string) => {
+    const countries = getCountriesByZone(zone);
+    return countries.some(country => 
+      country.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   // Add Material Icons
   useEffect(() => {
@@ -72,6 +126,21 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     }
     return Array.from(levels);
   }, [data.seniority?.level]);
+
+  // Update the seniority section to include the years field
+  const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
+    const newData = {
+      ...data,
+      seniority: {
+        ...data.seniority,
+        [field]: value,
+        years: field === 'yearsExperience' ? value : data.seniority?.years || '',
+        yearsExperience: field === 'years' ? value : data.seniority?.yearsExperience || '',
+        aiGenerated: data.seniority?.aiGenerated
+      }
+    };
+    onChange(newData);
+  };
 
   return (
     <div className="w-full bg-white p-6">
@@ -235,11 +304,85 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           )}
         </div>
 
-        {/* Experience Level Section */}
-        <div className="bg-green-50 rounded-xl p-6">
+        {/* Destination Zone Section */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <GraduationCap className="w-5 h-5 text-green-600" />
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <Globe2 className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Destination Zone</h3>
+              <p className="text-sm text-gray-600">Select the target region</p>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                placeholder="Rechercher un pays..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {filteredZones.map((zone) => {
+              const countries = getCountriesByZone(zone);
+              const filteredCountries = countries.filter(country => 
+                country.name.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+
+              if (filteredCountries.length === 0) return null;
+
+              return (
+                <div key={zone} className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-900">{zone}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {filteredCountries.map((country) => (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => handleCountrySelect(country.code)}
+                        className={`flex items-center gap-2 p-2 rounded-lg text-left transition-colors text-sm ${
+                          isCountrySelected(country.code)
+                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          isCountrySelected(country.code)
+                            ? 'bg-amber-600'
+                            : 'border-2 border-gray-300'
+                        }`}>
+                          {isCountrySelected(country.code) && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="flex-1 truncate">{country.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {errors.destination_zone && (
+            <p className="mt-2 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>
+          )}
+        </div>
+
+        {/* Experience Level Section */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <GraduationCap className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Experience Level</h3>
@@ -247,25 +390,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">Seniority Level</label>
               <select
                 value={data.seniority?.level || ''}
-                onChange={(e) => {
-                  const newData = {
-                    ...data,
-                    seniority: { 
-                      level: e.target.value,
-                      years: data.seniority?.years || '',
-                      yearsExperience: data.seniority?.yearsExperience || '',
-                      aiGenerated: data.seniority?.aiGenerated
-                    }
-                  };
-                  console.log('Seniority Level Changed:', newData.seniority);
-                  onChange(newData);
-                }}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
+                onChange={(e) => handleSeniorityChange('level', e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
               >
                 <option value="">Select seniority level</option>
                 {allSeniorityLevels.map((level) => (
@@ -281,29 +412,23 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <input
                 type="text"
                 value={data.seniority?.years || ''}
-                onChange={(e) => {
-                  const newData = {
-                    ...data,
-                    seniority: { 
-                      level: data.seniority?.level || '',
-                      years: e.target.value,
-                      yearsExperience: e.target.value,
-                      aiGenerated: data.seniority?.aiGenerated
-                    }
-                  };
-                  console.log('Years of Experience Changed:', newData.seniority);
-                  onChange(newData);
-                }}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
+                onChange={(e) => handleSeniorityChange('years', e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="e.g., 2-3 years"
               />
             </div>
           </div>
 
-          {data.seniority?.aiGenerated && (
-            <div className="mt-2 text-sm text-green-600 flex items-center gap-1">
-              <Brain className="w-4 h-4" />
-              <span>AI-generated recommendation</span>
+          {data.seniority?.level && data.seniority?.yearsExperience && (
+            <div className="mt-4 p-4 bg-white rounded-lg border border-emerald-200">
+              <div className="flex items-center gap-3">
+                <Brain className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <span className="font-medium text-gray-900">{data.seniority.level}</span>
+                  <span className="text-gray-600 mx-2">•</span>
+                  <span className="text-gray-700">{data.seniority.yearsExperience} experience</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -320,15 +445,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         </button>
         <button
           onClick={() => {
-            console.log('Next button clicked');
             if (onSectionChange) {
-              console.log('Calling onSectionChange with schedule');
               onSectionChange('schedule');
             } else if (onNext) {
-              console.log('Calling onNext');
               onNext();
-            } else {
-              console.warn('Neither onSectionChange nor onNext is defined');
             }
           }}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"

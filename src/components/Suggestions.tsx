@@ -233,6 +233,8 @@ const predefinedOptions: PredefinedOptions = {
 };
 
 interface GigData {
+  userId: string;
+  companyId: string;
   title: string;
   description: string;
   type: string;

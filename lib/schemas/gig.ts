@@ -1,6 +1,10 @@
-import mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
-const gigSchema = new mongoose.Schema({
+const gigSchema = new Schema({
+  userId: {
+    type: String,
+    required: true
+  },
   companyId: {
     type: String,
     required: true

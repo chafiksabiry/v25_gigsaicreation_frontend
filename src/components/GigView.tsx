@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getGig } from '../lib/api';
 import { GigDetails } from './GigDetails';
 import { Loader2 } from 'lucide-react';
 import { GigData } from '../types';
@@ -9,7 +9,7 @@ interface GigViewProps {
   onSelectGig: (id: string) => void;
 }
 
-export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
+const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
   const [gigs, setGigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGig, setSelectedGig] = useState<GigData | null>(null);
@@ -17,14 +17,7 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
   useEffect(() => {
     async function loadGigs() {
       try {
-        const { data, error } = await supabase
-          .from('gigs')
-          .select(`
-            *,
-            gig_skills (*),
-            gig_documentation (*),
-            gig_leads (*)
-          `);
+        const { data, error } = await getGig(selectedGigId);
 
         if (error) throw error;
         
@@ -50,6 +43,8 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
 
   // Transform database gig data to GigData format
   const transformGigData = (gig: any): GigData => ({
+    userId: gig.userId,
+    companyId: gig.companyId,
     title: gig.title,
     description: gig.description,
     category: gig.category,
@@ -123,7 +118,8 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
     },
     seniority: {
       level: gig.seniority_level || '',
-      yearsExperience: gig.years_experience || ''
+      yearsExperience: gig.years_experience || '',
+      years: ''
     },
     team: {
       size: gig.team_size || '',
@@ -256,4 +252,6 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
       ))}
     </div>
   );
-}
+};
+
+export default GigView;

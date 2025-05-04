@@ -30,7 +30,9 @@ export function GigWorkflow({ gig, onUpdate }: GigWorkflowProps) {
       setIsLoading(true);
       setError(null);
       const updatedGig = await publishGig(gig.id);
-      onUpdate(updatedGig);
+      if (updatedGig) {
+        onUpdate(updatedGig);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to publish gig');
     } finally {

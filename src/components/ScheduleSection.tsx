@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Save,
-  Brain
+  Brain,
+  Globe
 } from "lucide-react";
 import { MAJOR_TIMEZONES, TimezoneCode, analyzeTimezones, suggestTimezones, generateWorkingHoursSuggestions, formatTimeRange } from "../lib/ai";
 
@@ -389,61 +390,26 @@ export function ScheduleSection({
         </div>
 
         {/* Time Zones */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Time Zones</label>
-          <div className="space-y-4">
-            <SelectionList
-              options={Object.keys(MAJOR_TIMEZONES).map(tz => ({
-                value: tz as TimezoneCode,
-                label: MAJOR_TIMEZONES[tz as TimezoneCode].name,
-                description: `${MAJOR_TIMEZONES[tz as TimezoneCode].cities.join(", ")}`
-              } as TimezoneOption))}
-              selected={data?.timeZones || []}
-              onChange={(timeZones) => onChange({ ...data, timeZones })}
-              multiple={true}
-              layout="flow"
-            />
-
-            {data.timeZones.length > 0 && timezoneAnalysis && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Timezone Coverage Analysis</h4>
-                {timezoneAnalysis.overlap.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-blue-800">Overlapping Business Hours:</p>
-                    {timezoneAnalysis.overlap.map((overlap: any, index: number) => (
-                      <div key={index} className="text-sm text-blue-700">
-                        {overlap.zones.join(" & ")}: {overlap.start} - {overlap.end}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {timezoneSuggestions.length > 0 && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-600 mb-2">Suggested additional timezones:</p>
-                <div className="flex flex-wrap gap-2">
-                  {timezoneSuggestions.map((tz) => (
-                    <button
-                      key={tz}
-                      onClick={() => {
-                        if (!data.timeZones.includes(tz)) {
-                          onChange({
-                            ...data,
-                            timeZones: [...data.timeZones, tz]
-                          });
-                        }
-                      }}
-                      className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    >
-                      {MAJOR_TIMEZONES[tz].name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+          <div className="flex items-center gap-2 text-gray-900">
+            <Globe className="w-5 h-5" />
+            <h3 className="font-medium">Time Zones</h3>
           </div>
+          <SelectionList
+            options={Object.entries(MAJOR_TIMEZONES).map(([code, info]) => ({
+              value: code as TimezoneCode,
+              label: `${info.name}`,
+              description: ""
+            }))}
+            selected={data.timeZones}
+            onChange={(timeZones) => onChange({ ...data, timeZones })}
+            multiple={true}
+            layout="flow"
+            size="sm"
+          />
+          <p className="mt-2 text-sm text-gray-500">
+            Select all applicable time zones
+          </p>
           {errors.timeZones && (
             <p className="mt-1 text-sm text-red-600">{errors.timeZones.join(', ')}</p>
           )}

@@ -1,7 +1,11 @@
 export interface GigData {
+  userId: string;
+  companyId: string;
   title: string;
   description: string;
   category: string;
+  destination_zone: string[];
+  destination_zone_ai_generated?: string;
   callTypes: string[];
   highlights: string[];
   requirements: {

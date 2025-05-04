@@ -32,6 +32,8 @@
     "axios": "^1.7.9",
     "cloudinary": "^2.5.1",
     "cloudinary-core": "^2.13.1",
+    "i18n-iso-countries": "^7.14.0",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.474.0",
     "nodemon": "^3.1.9",
     "openai": "^4.92.1",
