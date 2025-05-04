@@ -41,57 +41,19 @@ export function SectionContent({
 
   console.log('SectionContent - Initialized data:', initializedData);
 
-  const validation = validateGigData(initializedData);
-
-  const sections = [
-    "basic",
-    "schedule",
-    "commission",
-    "leads",
-    "skills",
-    "team",
-    "docs",
-    "review",
-  ];
-
-  const handlePrevious = () => {
-    const currentIndex = sections.indexOf(section);
-    if (currentIndex > 0) {
-      const prevSection = sections[currentIndex - 1];
-      if (onSectionChange) {
-        onSectionChange(prevSection);
-      }
-    }
-  };
-
-  const handleNext = () => {
-    const currentIndex = sections.indexOf(section);
-    console.log("Current section:", section);
-    console.log("Current index:", currentIndex);
-    console.log("Sections:", sections);
-    console.log("onSectionChange is defined:", !!onSectionChange);
-
-    if (currentIndex < sections.length - 1) {
-      const nextSection = sections[currentIndex + 1];
-      console.log("Next section:", nextSection);
-
-      if (onSectionChange) {
-        console.log("Calling onSectionChange with:", nextSection);
-        onSectionChange(nextSection);
-      } else {
-        console.warn("onSectionChange is undefined");
-      }
-    } else {
-      console.warn("Already at last section, can't go next");
-    }
-  };
 
   const renderContent = () => {
     switch (section) {
       case "basic":
         return (
           <BasicSection
-            data={initializedData}
+            data={{
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: initializedData.seniority.yearsExperience 
+              }
+            }}
             onChange={onChange}
             errors={errors}
             onPrevious={() => onSectionChange?.('')}
@@ -108,7 +70,7 @@ export function SectionContent({
             data={initializedData.schedule || {
               days: [],
               hours: "",
-              timeZones: [],
+              timeZones: [] as TimezoneCode[],
               flexibility: [],
               minimumHours: {
                 daily: undefined,
@@ -120,6 +82,10 @@ export function SectionContent({
             }}
             onChange={(scheduleData) => onChange({
               ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: initializedData.seniority.yearsExperience
+              },
               schedule: scheduleData
             })}
             errors={errors}
@@ -238,3 +204,4 @@ export function SectionContent({
     </div>
   );
 }
+

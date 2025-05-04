@@ -19,6 +19,8 @@ export function SkillSelector({ skills, onChange, type, showLevel = false }: Ski
         return predefinedOptions.skills.technical;
       case 'soft':
         return predefinedOptions.skills.soft;
+      case 'professional':
+        return predefinedOptions.skills.professional;
       default:
         return [];
     }

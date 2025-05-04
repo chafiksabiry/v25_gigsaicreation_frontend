@@ -96,7 +96,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         const name = i18n.getName(code, 'en');
         return name ? { code, name } : null;
       })
-      .filter((country): country is { code: string; name: string } => country !== null);
+      .filter((country): country is { code: string; name: string } => country !== null)
+      .sort((a, b) => a.name.localeCompare(b.name));
   };
 
   // Log destination zone codes from suggestions
@@ -135,7 +136,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     }
   }, []);
 
-  const filteredZones = predefinedOptions.basic.destinationZones.filter((zone: string) => {
+  const filteredZones = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter((zone) => {
     const countries = getCountriesByZone(zone);
     return countries.some(country => 
       country.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -401,31 +402,41 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {Object.entries(i18n.getNames('en'))
-              .filter(([_, name]) => name.toLowerCase().includes(searchTerm.toLowerCase()))
-              .map(([code, name]) => (
-                <button
-                  key={code}
-                  onClick={() => handleCountrySelect(code)}
-                  className={`flex items-center gap-2 p-3 rounded-lg text-left transition-colors ${
-                    data.destination_zone === code
-                      ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                    data.destination_zone === code
-                      ? 'bg-amber-600'
-                      : 'border-2 border-gray-300'
-                  }`}>
-                    {data.destination_zone === code && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                    )}
+          <div className="space-y-6">
+            {filteredZones.map((zone) => {
+              const countries = getCountriesByZone(zone);
+              if (countries.length === 0) return null;
+
+              return (
+                <div key={zone} className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">{zone}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {countries.map(({ code, name }) => (
+                      <button
+                        key={code}
+                        onClick={() => handleCountrySelect(code)}
+                        className={`flex items-center gap-2 p-3 rounded-lg text-left transition-colors ${
+                          data.destination_zone === code
+                            ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                          data.destination_zone === code
+                            ? 'bg-amber-600'
+                            : 'border-2 border-gray-300'
+                        }`}>
+                          {data.destination_zone === code && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="flex-1">{name}</span>
+                      </button>
+                    ))}
                   </div>
-                  <span className="flex-1">{name}</span>
-                </button>
-              ))}
+                </div>
+              );
+            })}
           </div>
 
           {errors.destination_zone && (

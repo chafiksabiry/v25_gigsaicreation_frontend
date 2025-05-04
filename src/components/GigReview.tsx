@@ -224,12 +224,12 @@ export function GigReview({
                 <h3 className="font-medium">Performance Bonus</h3>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.commission.bonus
+                {data.commission?.bonus
                   ? `${getCurrencySymbol()}${data.commission.bonusAmount}`
                   : "N/A"}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.commission.bonus || "No bonus structure"}
+                {data.commission?.bonus || "No bonus structure"}
               </p>
             </div>
 

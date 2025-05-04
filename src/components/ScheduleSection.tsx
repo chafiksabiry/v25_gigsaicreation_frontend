@@ -272,6 +272,60 @@ export function ScheduleSection({
               </div>
             </div>
 
+            <div className="mt-4 grid grid-cols-4 gap-4">
+              <button
+                onClick={() => {
+                  setStartTime('09:00');
+                  setEndTime('17:00');
+                  handleTimeChange('start', '09:00');
+                  handleTimeChange('end', '17:00');
+                }}
+                className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+              >
+                <Sun className="w-5 h-5 text-orange-500" />
+                <span className="text-xs text-gray-600">9-5</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setStartTime('08:00');
+                  setEndTime('16:00');
+                  handleTimeChange('start', '08:00');
+                  handleTimeChange('end', '16:00');
+                }}
+                className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+              >
+                <Sunrise className="w-5 h-5 text-blue-500" />
+                <span className="text-xs text-gray-600">Early</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setStartTime('10:00');
+                  setEndTime('18:00');
+                  handleTimeChange('start', '10:00');
+                  handleTimeChange('end', '18:00');
+                }}
+                className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+              >
+                <Clock className="w-5 h-5 text-purple-500" />
+                <span className="text-xs text-gray-600">Late</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setStartTime('13:00');
+                  setEndTime('21:00');
+                  handleTimeChange('start', '13:00');
+                  handleTimeChange('end', '21:00');
+                }}
+                className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+              >
+                <Moon className="w-5 h-5 text-indigo-500" />
+                <span className="text-xs text-gray-600">Evening</span>
+              </button>
+            </div>
+
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -284,7 +338,7 @@ export function ScheduleSection({
               </div>
             </div>
 
-            {workingHoursSuggestions.length > 0 && (
+            {/* {workingHoursSuggestions.length > 0 && (
               <div className="mt-4 space-y-4">
                 <h4 className="font-medium text-gray-900">Suggested Working Hours</h4>
                 <div className="grid grid-cols-1 gap-3">
@@ -312,7 +366,7 @@ export function ScheduleSection({
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

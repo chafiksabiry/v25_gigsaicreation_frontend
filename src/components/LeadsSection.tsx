@@ -16,29 +16,18 @@ interface LeadsSectionProps {
       conversionRate?: number;
     }>;
     sources: string[];
-    distribution: {
-      method: string;
-      rules: string[];
-    };
-    qualificationCriteria: string[];
   };
   onChange: (data: any) => void;
   errors: { [key: string]: string[] };
-  onNext?: () => void;
-  onPrevious?: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
 }
 
-export function LeadsSection({ 
-  data, 
-  onChange, 
-  errors,
-  onNext,
-  onPrevious 
-}: LeadsSectionProps) {
+export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: LeadsSectionProps) {
   const handleSourceToggle = (source: string) => {
-    const newSources = data.sources.includes(source)
+    const newSources = data.sources?.includes(source)
       ? data.sources.filter(s => s !== source)
-      : [...data.sources, source];
+      : [...(data.sources || []), source];
     onChange({
       ...data,
       sources: newSources
