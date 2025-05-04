@@ -162,10 +162,12 @@ const TeamForm: React.FC<TeamFormProps> = ({
                       >
                         <option value="Entry Level">Entry Level</option>
                         <option value="Junior">Junior</option>
-                        <option value="Mid Level">Mid Level</option>
+                        <option value="Mid-Level">Mid-Level</option>
                         <option value="Senior">Senior</option>
-                        <option value="Lead">Lead</option>
+                        <option value="Team Lead">Team Lead</option>
+                        <option value="Supervisor">Supervisor</option>
                         <option value="Manager">Manager</option>
+                        <option value="Director">Director</option>
                       </select>
                     </div>
                   </div>

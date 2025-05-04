@@ -218,12 +218,12 @@ const predefinedOptions: PredefinedOptions = {
     seniorityLevels: [
       'Entry Level',
       'Junior',
-      'Mid Level',
+      'Mid-Level',
       'Senior',
-      'Lead',
+      'Team Lead',
+      'Supervisor',
       'Manager',
-      'Director',
-      'Executive'
+      'Director'
     ]
   }
 };

@@ -10,6 +10,17 @@ interface GigFormProps {
 
 export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
   const [formData, setFormData] = useState(gig);
+  const [isEditingSeniority, setIsEditingSeniority] = useState(false);
+  const seniorityLevels = [
+    'Entry Level',
+    'Junior',
+    'Mid-Level',
+    'Senior',
+    'Team Lead',
+    'Supervisor',
+    'Manager',
+    'Director'
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +31,28 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleNestedChange = (parent: string, field: string, value: any) => {
-    setFormData({
-      ...formData,
-      [parent]: {
-        ...formData[parent],
-        [field]: value
-      }
-    });
+  const handleNestedChange = <K extends keyof ParsedGig>(
+    parent: K,
+    field: keyof NonNullable<ParsedGig[K]>,
+    value: any
+  ) => {
+    const currentValue = formData[parent];
+    if (currentValue && typeof currentValue === 'object') {
+      setFormData({
+        ...formData,
+        [parent]: {
+          ...currentValue,
+          [field]: value
+        }
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [parent]: {
+          [field]: value
+        }
+      });
+    }
   };
 
   return (
@@ -79,43 +104,85 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
         </div>
       </div>
 
-      {/* Seniority Section */}
+      {/* Seniority Requirements Section */}
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold">Seniority Requirements</h2>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="seniorityLevel" className="block text-sm font-medium text-gray-700">
-              Level *
-            </label>
-            <select
-              id="seniorityLevel"
-              required
-              value={formData.seniority?.level}
-              onChange={(e) => handleNestedChange('seniority', 'level', e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Select Level</option>
-              <option value="Junior">Junior</option>
-              <option value="Mid">Mid</option>
-              <option value="Senior">Senior</option>
-              <option value="Lead">Lead</option>
-            </select>
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-yellow-500"><svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a2 2 0 0 1 2 2v1.528a6.002 6.002 0 0 1 4.472 7.472l-1.528-.44A4.002 4.002 0 0 0 12 5.528V4a2 2 0 0 1 2-2zM4 4a2 2 0 0 1 2-2v1.528a6.002 6.002 0 0 0-4.472 7.472l1.528-.44A4.002 4.002 0 0 1 8 5.528V4a2 2 0 0 1-2-2z"/></svg></span>
+              <h2 className="text-xl font-semibold">Seniority Requirements</h2>
+            </div>
+            {!isEditingSeniority && (
+              <button
+                type="button"
+                className="text-blue-600 hover:underline text-sm"
+                onClick={() => setIsEditingSeniority(true)}
+              >
+                Edit
+              </button>
+            )}
           </div>
-
-          <div>
-            <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">
-              Years of Experience *
-            </label>
-            <input
-              type="text"
-              id="yearsExperience"
-              required
-              value={formData.seniority?.yearsExperience}
-              onChange={(e) => handleNestedChange('seniority', 'yearsExperience', e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+          {!isEditingSeniority ? (
+            <>
+              <div className="mb-2">
+                <div className="text-sm text-gray-500 font-medium">Seniority Level *</div>
+                <div className="text-lg font-semibold text-gray-900">{formData.seniority?.level || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500 font-medium">Years of Experience *</div>
+                <div className="text-lg font-semibold text-gray-900">{formData.seniority?.yearsExperience || '-'}</div>
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="seniorityLevel" className="block text-sm font-medium text-gray-700">
+                  Level *
+                </label>
+                <select
+                  id="seniorityLevel"
+                  required
+                  value={formData.seniority?.level || ''}
+                  onChange={(e) => handleNestedChange('seniority', 'level', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">Select Level</option>
+                  {seniorityLevels.map((level) => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="yearsExperience" className="block text-sm font-medium text-gray-700">
+                  Years of Experience *
+                </label>
+                <input
+                  type="text"
+                  id="yearsExperience"
+                  required
+                  value={formData.seniority?.yearsExperience || ''}
+                  onChange={(e) => handleNestedChange('seniority', 'yearsExperience', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div className="col-span-2 flex justify-end gap-2 mt-4">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  onClick={() => setIsEditingSeniority(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={() => setIsEditingSeniority(false)}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -489,7 +556,8 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
                       value={lead.type}
                       onChange={(e) => {
                         const newTypes = [...(formData.leads?.types || [])];
-                        newTypes[index] = { ...lead, type: e.target.value };
+                        const selectedType = e.target.value as 'hot' | 'warm' | 'cold';
+                        newTypes[index] = { ...lead, type: selectedType };
                         handleNestedChange('leads', 'types', newTypes);
                       }}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"

@@ -27,6 +27,72 @@ export interface ParsedGig {
   type: string;
   description: string;
   status?: 'draft' | 'pending_review' | 'published' | 'closed';
+  seniority?: {
+    level: string;
+    yearsExperience: string;
+  };
+  schedule?: {
+    days: string[];
+    hours: string;
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
+  commission?: {
+    base: string;
+    baseAmount: string;
+    bonus?: string;
+    bonusAmount?: string;
+    currency: string;
+    minimumVolume: {
+      amount: string;
+      period: string;
+      unit: string;
+    };
+    transactionCommission: {
+      type: string;
+      amount: string;
+    };
+  };
+  leads?: {
+    types: Array<{
+      type: 'hot' | 'warm' | 'cold';
+      percentage: number;
+      description: string;
+      conversionRate?: number;
+    }>;
+    sources: string[];
+  };
+  team?: {
+    size: string;
+    structure: Array<{
+      roleId: string;
+      count: number;
+      seniority: {
+        level: string;
+        yearsExperience: string;
+      };
+    }>;
+    territories: string[];
+  };
+  documentation?: {
+    product: Array<{
+      name: string;
+      url: string;
+    }>;
+    process: Array<{
+      name: string;
+      url: string;
+    }>;
+    training: Array<{
+      name: string;
+      url: string;
+    }>;
+  };
 }
 
 export interface Gig {
