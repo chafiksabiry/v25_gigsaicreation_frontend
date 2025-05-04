@@ -20,6 +20,7 @@ import { GigData } from '../types';
 import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
+import { analyzeCityAndGetCountry } from '../lib/ai';
 
 // Register languages
 i18n.registerLocale(fr);
@@ -49,27 +50,34 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   currentSection = 'basic'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [cityInput, setCityInput] = useState('');
 
-  // Sélectionner automatiquement le pays généré par l'IA
+  // Sélectionner automatiquement le premier pays de destinationZones
   useEffect(() => {
-    if (data.destination_zone_ai_generated && !data.destination_zone.includes(data.destination_zone_ai_generated)) {
-      onChange({ ...data, destination_zone: [...data.destination_zone, data.destination_zone_ai_generated] });
+    if (data.destinationZones && data.destinationZones.length > 0 && 
+        (!data.destination_zone || data.destination_zone.length === 0)) {
+      const firstCountry = data.destinationZones[0];
+      
+      // Convertir le nom du pays en code pays
+      const countryCode = Object.entries(i18n.getNames('en'))
+        .find(([_, name]) => name === firstCountry)?.[0];
+      
+      if (countryCode) {
+        onChange({ ...data, destination_zone: countryCode });
+      }
     }
-  }, [data.destination_zone_ai_generated]);
+  }, [data.destinationZones, data.destination_zone, data, onChange]);
 
   // Fonction pour vérifier si un pays est sélectionné
   const isCountrySelected = (countryCode: string) => {
-    return data.destination_zone?.includes(countryCode) || false;
+    return data.destination_zone === countryCode;
   };
 
   const handleCountrySelect = (country: string) => {
-    // Si le pays est déjà sélectionné, on le retire
-    if (data.destination_zone?.includes(country)) {
-      onChange({ ...data, destination_zone: data.destination_zone.filter(c => c !== country) });
-    } else {
-      // Sinon on l'ajoute
-      onChange({ ...data, destination_zone: [...(data.destination_zone || []), country] });
-    }
+    onChange({ 
+      ...data, 
+      destination_zone: country 
+    });
   };
 
   const getCountriesByZone = (zone: string) => {
@@ -90,6 +98,42 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       })
       .filter((country): country is { code: string; name: string } => country !== null);
   };
+
+  // Log destination zone codes from suggestions
+  useEffect(() => {
+    const destinationZones = ["Morocco", "England"];
+    
+    // Convert country names to codes with special cases
+    const countryCodes = destinationZones.map(country => {
+      // Special cases for countries that are part of larger entities
+      const specialCases: { [key: string]: string } = {
+        'England': 'GB',  // England is part of United Kingdom
+        'Scotland': 'GB', // Scotland is part of United Kingdom
+        'Wales': 'GB',    // Wales is part of United Kingdom
+        'Northern Ireland': 'GB' // Northern Ireland is part of United Kingdom
+      };
+
+      // Check if the country is a special case
+      if (specialCases[country]) {
+        return { country, code: specialCases[country] };
+      }
+
+      // Normal case: look up the country code
+      const code = Object.entries(i18n.getNames('en'))
+        .find(([_, name]) => name === country)?.[0];
+      
+      if (!code) {
+        return { country, code: undefined };
+      }
+      
+      return { country, code };
+    });
+
+    // Set destination_zone to the first country code if available
+    if (countryCodes.length > 0 && countryCodes[0].code) {
+      onChange({ ...data, destination_zone: countryCodes[0].code });
+    }
+  }, []);
 
   const filteredZones = predefinedOptions.basic.destinationZones.filter((zone: string) => {
     const countries = getCountriesByZone(zone);
@@ -141,6 +185,14 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     };
     onChange(newData);
   };
+
+  // Log initial data when component mounts
+  useEffect(() => {
+  }, []);
+
+  // Log data changes
+  useEffect(() => {
+  }, [data]);
 
   return (
     <div className="w-full bg-white p-6">
@@ -312,9 +364,27 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Destination Zone</h3>
-              <p className="text-sm text-gray-600">Select the target region</p>
+              <p className="text-sm text-gray-600">Select the target country</p>
             </div>
           </div>
+
+          {/* Affichage du pays sélectionné */}
+          {data.destination_zone && (
+            <div className="mb-4 p-4 bg-white rounded-lg border border-amber-200">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Country:</h4>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm">
+                  {i18n.getName(data.destination_zone, 'en')}
+                  <button
+                    onClick={() => handleCountrySelect('')}
+                    className="ml-1 text-amber-600 hover:text-amber-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="mb-4">
             <div className="relative">
@@ -326,51 +396,36 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                placeholder="Rechercher un pays..."
+                placeholder="Search for a country..."
               />
             </div>
           </div>
 
-          <div className="space-y-6">
-            {filteredZones.map((zone) => {
-              const countries = getCountriesByZone(zone);
-              const filteredCountries = countries.filter(country => 
-                country.name.toLowerCase().includes(searchTerm.toLowerCase())
-              );
-
-              if (filteredCountries.length === 0) return null;
-
-              return (
-                <div key={zone} className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-900">{zone}</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {filteredCountries.map((country) => (
-                      <button
-                        key={country.code}
-                        type="button"
-                        onClick={() => handleCountrySelect(country.code)}
-                        className={`flex items-center gap-2 p-2 rounded-lg text-left transition-colors text-sm ${
-                          isCountrySelected(country.code)
-                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                          isCountrySelected(country.code)
-                            ? 'bg-amber-600'
-                            : 'border-2 border-gray-300'
-                        }`}>
-                          {isCountrySelected(country.code) && (
-                            <div className="w-2 h-2 rounded-full bg-white" />
-                          )}
-                        </div>
-                        <span className="flex-1 truncate">{country.name}</span>
-                      </button>
-                    ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {Object.entries(i18n.getNames('en'))
+              .filter(([_, name]) => name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map(([code, name]) => (
+                <button
+                  key={code}
+                  onClick={() => handleCountrySelect(code)}
+                  className={`flex items-center gap-2 p-3 rounded-lg text-left transition-colors ${
+                    data.destination_zone === code
+                      ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                    data.destination_zone === code
+                      ? 'bg-amber-600'
+                      : 'border-2 border-gray-300'
+                  }`}>
+                    {data.destination_zone === code && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                    )}
                   </div>
-                </div>
-              );
-            })}
+                  <span className="flex-1">{name}</span>
+                </button>
+              ))}
           </div>
 
           {errors.destination_zone && (

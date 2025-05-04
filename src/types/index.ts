@@ -4,8 +4,9 @@ export interface GigData {
   title: string;
   description: string;
   category: string;
-  destination_zone: string[];
+  destination_zone: string;
   destination_zone_ai_generated?: string;
+  destinationZones?: string[];
   callTypes: string[];
   highlights: string[];
   requirements: {

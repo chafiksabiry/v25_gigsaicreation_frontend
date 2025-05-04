@@ -240,6 +240,10 @@ export interface TimezoneInfo {
   description: string;
   offset: number;
   abbreviation: string;
+  businessHours: {
+    start: string;
+    end: string;
+  };
 }
 
 export type TimezoneCode = 'America/New_York' | 'Europe/London' | 'Asia/Singapore' | 'Asia/Tokyo' | 'Europe/Paris' | 'America/Chicago' | 'America/Denver' | 'America/Los_Angeles' | 'Europe/Dubai' | 'Australia/Sydney';
@@ -249,61 +253,71 @@ export const MAJOR_TIMEZONES: Record<TimezoneCode, TimezoneInfo> = {
     name: 'New York (EST/EDT)',
     description: 'Eastern United States, major financial hub',
     offset: -5,
-    abbreviation: 'EST/EDT'
+    abbreviation: 'EST/EDT',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'America/Chicago': {
     name: 'Chicago (CST/CDT)',
     description: 'Central United States, major business hub',
     offset: -6,
-    abbreviation: 'CST/CDT'
+    abbreviation: 'CST/CDT',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'America/Denver': {
     name: 'Denver (MST/MDT)',
     description: 'Mountain United States, growing tech hub',
     offset: -7,
-    abbreviation: 'MST/MDT'
+    abbreviation: 'MST/MDT',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'America/Los_Angeles': {
     name: 'Los Angeles (PST/PDT)',
     description: 'Western United States, major tech and entertainment hub',
     offset: -8,
-    abbreviation: 'PST/PDT'
+    abbreviation: 'PST/PDT',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'Europe/London': {
     name: 'London (GMT/BST)',
     description: 'United Kingdom, major European financial center',
     offset: 0,
-    abbreviation: 'GMT/BST'
+    abbreviation: 'GMT/BST',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'Europe/Paris': {
     name: 'Paris (CET/CEST)',
     description: 'Central European business hub',
     offset: 1,
-    abbreviation: 'CET/CEST'
+    abbreviation: 'CET/CEST',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'Europe/Dubai': {
     name: 'Dubai (GST)',
     description: 'Middle Eastern business hub',
     offset: 4,
-    abbreviation: 'GST'
+    abbreviation: 'GST',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'Asia/Singapore': {
     name: 'Singapore (SGT)',
     description: 'Southeast Asian business hub',
     offset: 8,
-    abbreviation: 'SGT'
+    abbreviation: 'SGT',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'Asia/Tokyo': {
     name: 'Tokyo (JST)',
     description: 'Japan, major Asian financial center',
     offset: 9,
-    abbreviation: 'JST'
+    abbreviation: 'JST',
+    businessHours: { start: "09:00", end: "17:00" }
   },
   'Australia/Sydney': {
     name: 'Sydney (AEST/AEDT)',
     description: 'Australia, major Asia-Pacific business hub',
     offset: 10,
-    abbreviation: 'AEST/AEDT'
+    abbreviation: 'AEST/AEDT',
+    businessHours: { start: "09:00", end: "17:00" }
   }
 };
 
@@ -727,6 +741,50 @@ Based on this job title and description, suggest appropriate team structure and 
     return result;
   } catch (error) {
     console.error('Error generating team and territories:', error);
+    throw error;
+  }
+}
+
+export async function analyzeCityAndGetCountry(city: string): Promise<string> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!city) {
+    throw new Error('City name is required');
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI assistant that helps identify the country of a given city. 
+          Return ONLY the country name in French, exactly as it appears in the predefined list of countries.
+          If the city is not found or is ambiguous, return "Unknown".
+          
+          Available countries:
+          ${predefinedOptions.basic.destinationZones.join(', ')}`
+        },
+        {
+          role: "user",
+          content: `City: ${city}`
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 50
+    });
+
+    const country = completion.choices[0].message.content?.trim();
+    
+    if (!country || country === "Unknown" || !predefinedOptions.basic.destinationZones.includes(country)) {
+      throw new Error('Could not determine the country for the given city');
+    }
+
+    return country;
+  } catch (error) {
+    console.error('Error analyzing city:', error);
     throw error;
   }
 }

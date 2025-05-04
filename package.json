@@ -4,13 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite --host --force",
     "vite": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "build:qiankun": "vite build --mode qiankun"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",

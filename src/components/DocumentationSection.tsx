@@ -68,7 +68,6 @@ export function DocumentationSection({
 
   const handleFileUpload = async (type: keyof typeof safeData, file: File) => {
     setUploadError(null);
-    console.log("Uploading file:", file);
 
     // Vérification de la taille du fichier uniquement si skipValidation est false
     if (!skipValidation) {
@@ -144,7 +143,6 @@ export function DocumentationSection({
       }
 
       const result = await response.json();
-      console.log("Upload result:", result);
 
       if (result.secure_url) {
         const docUrl = result.secure_url; // URL générée par Cloudinary
@@ -321,7 +319,6 @@ export function DocumentationSection({
   const handlePublishGig = async () => {
     try {
       setIsPublishing(true);
-      console.log('DocumentationSection - handlePublishGig - Starting publication');
       const gigData = {
         title: "Gig Documentation",
         description: "Documentation for products, processes, and training materials",
@@ -342,7 +339,6 @@ export function DocumentationSection({
       }
 
       const result = await response.json();
-      console.log('DocumentationSection - handlePublishGig - Publication successful:', result);
     } catch (error) {
       console.error('DocumentationSection - handlePublishGig - Error:', error);
       setUploadError(
@@ -422,8 +418,6 @@ export function DocumentationSection({
         </button>
         <button
           onClick={() => {
-            console.log('DocumentationSection - Review button clicked');
-            console.log('onReview prop:', onReview);
             if (onReview) {
               onReview();
             } else {

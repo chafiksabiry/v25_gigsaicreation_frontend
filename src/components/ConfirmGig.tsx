@@ -19,14 +19,11 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
       let userId: string;
       let companyId: string;
 
-      console.log('ConfirmGig - isStandalone 1 :', isStandalone);
-      console.log('ConfirmGig - gig:', gig);
 
 
       if (isStandalone) {
         userId = '680a27ffefa3d29d628d0016';
         companyId = '680bec7495ee2e5862009486';
-        console.log('ConfirmGig - Standalone Mode - userId:', userId, 'companyId:', companyId);
       } else {
         const cookieUserId = Cookies.get("userId");
         if (!cookieUserId) {
@@ -45,7 +42,6 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
           throw new Error("Company ID not found for user");
         }
         companyId = userData.company_id;
-        console.log('ConfirmGig - Normal Mode - userId:', userId, 'companyId:', companyId);
       }
 
       const gigData = {
@@ -54,7 +50,6 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
         companyId: companyId
       };
 
-      console.log('ConfirmGig - Final gigData:', gigData);
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
         method: "POST",
@@ -65,7 +60,6 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
       });
 
       const data = await response.json();
-      console.log('ConfirmGig - API Response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || "Échec de la publication du gig");

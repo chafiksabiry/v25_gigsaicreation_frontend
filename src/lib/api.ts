@@ -74,7 +74,6 @@ export async function getCompanyIdByUserId(userId: string): Promise<string> {
 export async function saveGigData(gigData: GigData): Promise<void> {
   try {
     const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
-    console.log('ConfirmGig - isStandalone 3 :', isStandalone);
     const userId = isStandalone ? import.meta.env.VITE_USER_ID : Cookies.get('userId');
     
     if (!userId) {
@@ -84,17 +83,11 @@ export async function saveGigData(gigData: GigData): Promise<void> {
     // Get companyId based on userId
     const companyId = await getCompanyIdByUserId(userId);
 
-    console.log('userId:', userId);
-    console.log('companyId:', companyId);
-
     const gigDataWithIds = {
       ...gigData,
       userId,
       companyId
     };
-
-    console.log('Starting to save gig data:', gigDataWithIds);
-    
     const response = await fetch(`${API_URL}/gigs`, {
       method: 'POST',
       headers: {
@@ -102,12 +95,7 @@ export async function saveGigData(gigData: GigData): Promise<void> {
       },
       body: JSON.stringify(gigDataWithIds),
     });
-
-    console.log('API Response status:', response.status);
-    console.log('API Response headers:', response.headers);
-
     const responseText = await response.text();
-    console.log('Response text:', responseText);
 
     if (!response.ok) {
       console.error('Error response text:', responseText);

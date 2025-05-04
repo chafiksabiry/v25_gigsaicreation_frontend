@@ -206,8 +206,7 @@ export function GigCreator({ children }: GigCreatorProps) {
   const isLastSection = currentSection === sections[sections.length - 1].id;
 
   const handleGigDataChange = (newData: GigData) => {
-    console.log('GigCreator - handleGigDataChange - Current data:', gigData);
-    console.log('GigCreator - handleGigDataChange - New data:', newData);
+
     setGigData(newData);
     const validation = validateGigData(newData);
     setValidationErrors(validation.errors);
@@ -246,13 +245,11 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       // Vérifier si on est en mode standalone
       const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
-      console.log('ConfirmGig - isStandalone 2 :', isStandalone);
 
       if (isStandalone) {
         // Valeurs par défaut pour le mode standalone
         userId = '680a27ffefa3d29d628d0016';
         companyId = '680bec7495ee2e5862009486';
-        console.log('GigCreator - Standalone Mode - userId:', userId, 'companyId:', companyId);
       } else {
         // Récupérer depuis les cookies
         const cookieUserId = Cookies.get("userId");
@@ -272,7 +269,6 @@ export function GigCreator({ children }: GigCreatorProps) {
           throw new Error("Company ID not found for user");
         }
         companyId = userData.company_id;
-        console.log('GigCreator - Normal Mode - userId:', userId, 'companyId:', companyId);
       }
 
       const gigDataToSave = {
@@ -331,7 +327,6 @@ export function GigCreator({ children }: GigCreatorProps) {
         updatedAt: new Date()
       };
 
-      console.log('GigCreator - Final gigDataToSave:', gigDataToSave);
 
       const response = await axios.post(`${API_URL}/gigs`, gigDataToSave);
       const gig = response.data;
@@ -433,11 +428,10 @@ export function GigCreator({ children }: GigCreatorProps) {
   };
 
   const handleNext = () => {
-    console.log('GigCreator - handleNext - Current section:', currentSection);
+
     const currentIndex = sections.findIndex(s => s.id === currentSection);
     if (currentIndex < sections.length - 1) {
       const nextSection = sections[currentIndex + 1].id;
-      console.log('GigCreator - handleNext - Moving to section:', nextSection);
       setCurrentSection(nextSection);
     }
   };
@@ -451,24 +445,20 @@ export function GigCreator({ children }: GigCreatorProps) {
   };
 
   const handleReview = () => {
-    console.log('GigCreator - handleReview - Setting isReviewing to true');
     setIsReviewing(true);
   };
 
   if (isReviewing) {
-    console.log('GigCreator - Rendering GigReview component');
     return (
       <GigReview
         data={gigData}
         onEdit={(section) => {
-          console.log('GigCreator - onEdit - Setting section to:', section);
           setCurrentSection(section);
           setIsReviewing(false);
         }}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         onBack={() => {
-          console.log('GigCreator - onBack - Setting isReviewing to false');
           setIsReviewing(false);
         }}
         skipValidation={skipValidation}

@@ -6,13 +6,9 @@ import {
   Target,
   DollarSign,
   Gauge,
-  TrendingUp,
   Clock,
   Award,
   Globe2,
-  HelpCircle,
-  ChevronRight,
-  ChevronDown,
   AlertCircle,
   Edit2,
   Save,
@@ -22,7 +18,6 @@ import {
   PlusCircle,
 } from "lucide-react";
 import OpenAI from "openai";
-import axios from "axios";
 import type { JobDescription, GigMetadata } from "../lib/types";
 import Swal from "sweetalert2";
 import moment from 'moment-timezone';
@@ -37,7 +32,7 @@ const isStringArray = (value: unknown): value is string[] => {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
 };
 
-type StringArraySection = 'jobTitles' | 'deliverables' | 'compensation' | 'skills' | 'kpis' | 'timeframes' | 'requirements' | 'languages' | 'sectors';
+type StringArraySection = 'jobTitles' | 'deliverables' | 'compensation' | 'skills' | 'kpis' | 'timeframes' | 'requirements' | 'languages' | 'sectors' | 'destinationZones';
 
 interface ActivityOption {
   type: string;
@@ -92,6 +87,7 @@ interface GigSuggestion {
   activity: {
     options: ActivityOption[];
   };
+  destinationZones: string[]; // Added destination zones
 }
 
 type EditableGigSuggestion = GigSuggestion;
@@ -346,7 +342,8 @@ const fallbackSuggestions: SuggestionState = {
   sectors: [],
   activity: {
     options: []
-  }
+  },
+  destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
 };
 
 export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
@@ -446,7 +443,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     }
   };
 
-  console.log("Suggestions 1:", suggestions);
 
   const generateJobDescription = async (title: string) => {
     if (!openai) {
@@ -577,10 +573,10 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     const newSuggestions = { ...editableSuggestions };
     const items = newSuggestions[section];
     if (isStringArray(items)) {
-      newSuggestions[section] = [...items, "New Item"];
+      newSuggestions[section] = [...items, "New Zone"];
       setEditableSuggestions(newSuggestions);
       setSuggestions(newSuggestions);
-      startEditing(section, newSuggestions[section].length - 1, "New Item");
+      startEditing(section, newSuggestions[section].length - 1, "New Zone");
     }
   };
 
@@ -861,7 +857,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     setShowMetadata(true);
   };
 
-  console.log("Suggestions 2:", suggestions);
 
     const generateSuggestions = async () => {
       if (!openai) {
@@ -917,22 +912,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 type: "percentage",
                 amount: "5"
               }
-            },
-            {
-              base: "fixed",
-              baseAmount: "3000",
-              bonus: "yearly",
-              bonusAmount: "10000",
-              currency: "EUR",
-              minimumVolume: {
-                amount: "100000",
-                period: "yearly",
-                unit: "EUR"
-              },
-              transactionCommission: {
-                type: "fixed",
-                amount: "100"
-              }
             }]
           },
           sectors: ["SaaS", "Software", "Technology"],
@@ -945,17 +924,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 "CRM software proficiency",
                 "Strong communication skills"
               ]
-            },
-            {
-              type: "Account Management",
-              description: "Managing and growing existing client relationships",
-              requirements: [
-                "Account management experience",
-                "Client relationship skills",
-                "Upselling expertise"
-              ]
             }]
-          }
+          },
+          destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
         };
         setSuggestions(fallbackSuggestions);
         setEditableSuggestions(fallbackSuggestions);
@@ -970,6 +941,15 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
               role: "system",
               content: `You are a gig creation assistant. Generate suggestions for a gig based on the following input. 
               Include all required fields and multiple options for commission and activity. 
+              For destinationZones, analyze the input and suggest relevant geographic regions where the gig could be performed.
+              Consider factors like:
+              - Target market
+              - Time zone requirements
+              - Language requirements
+              - Cultural considerations
+              - Market potential
+              - Infrastructure requirements
+              
               Format the response as a JSON object matching this structure:
               {
                 jobTitles: string[],
@@ -1020,7 +1000,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     description: string,
                     requirements: string[]
                   }>
-                }
+                },
+                destinationZones: string[]
               }`
             },
             {
@@ -1078,7 +1059,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   description: "Default activity description",
                   requirements: ["Default requirement"]
                 }]
-              }
+              },
+              destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
             };
 
             // Merge parsed suggestions with default values
@@ -1091,7 +1073,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
               },
               activity: {
                 options: parsedSuggestions.activity?.options || defaultSuggestions.activity.options
-              }
+              },
+              destinationZones: parsedSuggestions.destinationZones || defaultSuggestions.destinationZones
             };
 
             setSuggestions(mergedSuggestions);
@@ -1322,7 +1305,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       }
 
       const savedData = await response.json();
-      console.log('API Success Response:', savedData);
 
       await Swal.fire({
         title: "Success",
@@ -1457,8 +1439,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         }
       };
 
-      console.log('Sending data to API:', apiData);
-
       const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
         method: "POST",
         headers: {
@@ -1474,7 +1454,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       }
 
       const savedData = await response.json();
-      console.log('API Success Response:', savedData);
 
       Swal.fire({
         title: "Success",
@@ -1505,7 +1484,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     }
   };
 
-  console.log("Suggestions 3:", suggestions);
 
   const updateItem = (section: StringArraySection, index: number, value: string) => {
     if (!editableSuggestions) return;
@@ -2087,6 +2065,78 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     setEditableSuggestions(newSuggestions);
   };
 
+  const renderDestinationZonesSection = () => {
+    
+    if (!editableSuggestions?.destinationZones) {
+      return null;
+    }
+
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold flex items-center">
+            <Globe2 className="w-5 h-5 mr-2 text-blue-600" />
+            Destination Zones
+          </h3>
+          <button
+            onClick={() => addNewItem('destinationZones')}
+            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
+          >
+            <PlusCircle className="w-4 h-4 mr-1" />
+            Add Zone
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {editableSuggestions.destinationZones.map((zone, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded group">
+              {editingSection === 'destinationZones' && editingIndex === index ? (
+                <div className="flex-1 flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={saveEdit}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    <Save className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-gray-700">{zone}</span>
+                  <div className="hidden group-hover:flex items-center space-x-2">
+                    <button
+                      onClick={() => startEditing('destinationZones', index, zone)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => removeItem('destinationZones', index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (showMetadata) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
@@ -2116,6 +2166,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
               <div className="space-y-8">
                 {renderSenioritySection()}
                 {renderScheduleSection()}
+                {renderDestinationZonesSection()}
                 {/* Suggested Names Section */}
                 <div className="bg-white rounded-xl shadow-xl p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -2537,6 +2588,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                       {renderCommissionSection()}
                       {renderSectorsSection()}
                       {renderActivitySection()}
+                      {renderDestinationZonesSection()}
                     </div>
                   </div>
                 )
