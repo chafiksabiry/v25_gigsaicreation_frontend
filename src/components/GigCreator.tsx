@@ -40,6 +40,8 @@ const sections = [
 const initialGigData: GigData = {
   userId: "",
   companyId: "",
+  userId: "",
+  companyId: "",
   title: "",
   description: "",
   category: "",
@@ -102,6 +104,7 @@ const initialGigData: GigData = {
   },
   seniority: {
     level: "",
+    years: "",
     years: "",
     yearsExperience: "",
   },

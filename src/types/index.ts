@@ -137,6 +137,8 @@ export interface GigData {
     };
   };
   documentation: {
+    templates: any;
+    reference: any;
     product: Array<{ name: string; url: string }>;
     process: Array<{ name: string; url: string }>;
     training: Array<{ name: string; url: string }>;

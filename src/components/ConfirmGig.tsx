@@ -4,6 +4,8 @@ import { CheckCircle, AlertCircle } from "lucide-react";
 import type { ParsedGig } from "../lib/types";
 import Cookies from 'js-cookie';
 import { saveGigData } from '../lib/api';
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
 
 interface ConfirmGigProps {
   gig: ParsedGig;
@@ -57,9 +59,11 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(gigData),
+        body: JSON.stringify(gigData),
       });
 
       const data = await response.json();
+      console.log('ConfirmGig - API Response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || "Échec de la publication du gig");
