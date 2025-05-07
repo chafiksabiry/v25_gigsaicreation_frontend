@@ -58,7 +58,7 @@ interface Company {
 export async function getCompanyIdByUserId(userId: string): Promise<string> {
   try {
     const companies = await fetchCompanies();
-    const company = companies.find((company: Company) => company._id === "681a91212c1ca099fe2b17df");
+    const company = companies.find((company: Company) => company._id === "681a91865736a7a7cf2453b8");
     
     if (!company) {
       throw new Error(`No company found for userId: ${userId}`);
