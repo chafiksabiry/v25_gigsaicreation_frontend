@@ -24,10 +24,10 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
 
 
       if (isStandalone) {
-        userId = Cookies.get("userId") || '';
+        userId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
         companyId = '680bec7495ee2e5862009486';
       } else {
-        const cookieUserId = Cookies.get("userId");
+        const cookieUserId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
         if (!cookieUserId) {
           throw new Error("User ID not found in cookies");
         }

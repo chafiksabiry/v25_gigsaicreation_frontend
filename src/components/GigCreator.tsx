@@ -249,7 +249,7 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       if (isStandalone) {
         // Valeurs par défaut pour le mode standalone
-        userId = '680a27ffefa3d29d628d0016';
+        userId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
         companyId = '680bec7495ee2e5862009486';
       } else {
         // Récupérer depuis les cookies

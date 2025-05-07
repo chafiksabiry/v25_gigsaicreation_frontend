@@ -333,7 +333,7 @@ export function ScheduleSection({
                   <span className="text-sm text-gray-600">Working Hours:</span>
                 </div>
                 <span className="text-lg font-medium text-gray-900">
-                  {data?.hours || formatTimeRange(startTime, endTime)}
+                  {startTime && endTime ? `${startTime} - ${endTime}` : "Non défini"}
                 </span>
               </div>
             </div>

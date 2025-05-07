@@ -179,8 +179,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       seniority: {
         ...data.seniority,
         [field]: value,
-        years: field === 'yearsExperience' ? value : data.seniority?.years || '',
-        yearsExperience: field === 'years' ? value : data.seniority?.yearsExperience || '',
+        // years: field === 'yearsExperience' ? value : data.seniority?.yearsExperience || '',
+        yearsExperience: field === 'yearsExperience' ? value : data.seniority?.yearsExperience || '',
         aiGenerated: data.seniority?.aiGenerated
       }
     };

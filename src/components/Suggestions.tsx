@@ -939,18 +939,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           messages: [
             {
               role: "system",
-              content: `You are a gig creation assistant. Generate suggestions for a gig based on the following input. 
-              Include all required fields and multiple options for commission and activity. 
-              For destinationZones, analyze the input and suggest relevant geographic regions where the gig could be performed.
-              Consider factors like:
-              - Target market
-              - Time zone requirements
-              - Language requirements
-              - Cultural considerations
-              - Market potential
-              - Infrastructure requirements
-              
-              Format the response as a JSON object matching this structure:
+              content: `You are a gig creation assistant. Your task is to generate suggestions for a gig based on the input provided.
+              IMPORTANT: You must respond with ONLY a valid JSON object. Do not include any other text, explanations, or markdown formatting.
+              The response must be a single JSON object matching this exact structure:
               {
                 jobTitles: string[],
                 deliverables: string[],
@@ -1002,7 +993,18 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   }>
                 },
                 destinationZones: string[]
-              }`
+              }
+
+              For destinationZones, analyze the input and suggest relevant geographic regions where the gig could be performed.
+              Consider factors like:
+              - Target market
+              - Time zone requirements
+              - Language requirements
+              - Cultural considerations
+              - Market potential
+              - Infrastructure requirements
+              
+              Remember: Respond with ONLY the JSON object, no other text.`
             },
             {
               role: "user",
