@@ -24,7 +24,7 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
 
 
       if (isStandalone) {
-        userId = '680a27ffefa3d29d628d0016';
+        userId = Cookies.get("userId") || '';
         companyId = '680bec7495ee2e5862009486';
       } else {
         const cookieUserId = Cookies.get("userId");

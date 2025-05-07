@@ -24,7 +24,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
         if (data) {
           setGigs(data);
           if (selectedGigId) {
-            const selected = data.find(g => g.id === selectedGigId);
+            const selected = data.find((g: { id: string }) => g.id === selectedGigId);
             if (selected) {
               const transformedData = transformGigData(selected);
               setSelectedGig(transformedData);

@@ -40,12 +40,10 @@ const sections = [
 const initialGigData: GigData = {
   userId: "",
   companyId: "",
-  userId: "",
-  companyId: "",
   title: "",
   description: "",
   category: "",
-  destination_zone: [],
+  destination_zone: "",
   callTypes: [],
   highlights: [],
   requirements: {
