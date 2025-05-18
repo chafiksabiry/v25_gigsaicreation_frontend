@@ -73,7 +73,7 @@ export function GigReview({
         icon: "success",
         confirmButtonText: "OK",
       }).then(() => {
-        window.location.href = "/gigs";
+        window.location.href = "/app11";
       });
     } catch (error) {
       console.error('Error publishing gig:', error);
