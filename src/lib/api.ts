@@ -63,8 +63,12 @@ export async function getCompanyIdByUserId(userId: string): Promise<string> {
     // if (!company) {
     //   throw new Error(`No company found for userId: ${userId}`);
     // }
+    const company = companies.find((company: Company) => company.userId === userId);
+    if (!company) {
+      throw new Error(`No company found for userId: ${userId}`);
+    }
     
-    return "681a91865736a7a7cf2453b8";
+    return company._id;
   } catch (error) {
     console.error('Error getting companyId by userId:', error);
     throw error;

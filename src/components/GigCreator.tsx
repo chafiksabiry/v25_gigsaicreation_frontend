@@ -247,29 +247,23 @@ export function GigCreator({ children }: GigCreatorProps) {
       // Vérifier si on est en mode standalone
       const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
 
+      
+
       if (isStandalone) {
         // Valeurs par défaut pour le mode standalone
-        userId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
-        companyId = Cookies.get("companyId") || '680bec7495ee2e5862009486';
+        userId = Cookies.get("userId") || '';
+        companyId = Cookies.get("companyId") || '';
       } else {
-        // Récupérer depuis les cookies
-        const cookieUserId = Cookies.get("userId");
-        if (!cookieUserId) {
-          throw new Error("User ID not found in cookies");
-        }
-        userId = cookieUserId;
-
         // Récupérer le companyId associé à l'utilisateur
-        const { data: userData, error: userError } = await saveGigData(gigData);
+        await saveGigData(gigData);
+        
+        // Since saveGigData doesn't return data, we'll use the cookies directly
+        userId = Cookies.get("userId") || "";
+        companyId = Cookies.get("companyId") || "";
 
-        if (userError) {
-          throw new Error("Failed to fetch user company");
+        if (!userId || !companyId) {
+          throw new Error("User ID or Company ID not found in cookies");
         }
-
-        if (!userData?.company_id) {
-          throw new Error("Company ID not found for user");
-        }
-        companyId = userData.company_id;
       }
 
       const gigDataToSave = {
