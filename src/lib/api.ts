@@ -78,7 +78,7 @@ export async function getCompanyIdByUserId(userId: string): Promise<string> {
 export async function saveGigData(gigData: GigData): Promise<void> {
   try {
     const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
-    const userId = "681a91212c1ca099fe2b17df";
+    const userId = Cookies.get("userId");
     
     if (!userId) {
       throw new Error('User ID not found in cookies');
