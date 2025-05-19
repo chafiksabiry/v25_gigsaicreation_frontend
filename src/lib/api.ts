@@ -55,28 +55,27 @@ interface Company {
   // Add other company fields as needed
 }
 
-export async function getCompanyIdByUserId(userId: string): Promise<string> {
-  try {
-    const companies = await fetchCompanies();
-    const company = companies.find((company: Company) => 
-      company.userId === userId || 
-      (typeof company.userId === 'object' && company.userId.$oid === userId)
-    );
+// export async function getCompanyIdByUserId(userId: string): Promise<string> {
+//   try {
+//     const companies = await fetchCompanies();
+//     const company = companies.find((company: Company) => 
+//       company.userId === userId || 
+//       (typeof company.userId === 'object' && company.userId.$oid === userId)
+//     );
     
-    if (!company) {
-      throw new Error(`No company found for userId: ${userId}`);
-    }
+//     if (!company) {
+//       throw new Error(`No company found for userId: ${userId}`);
+//     }
     
-    return company._id;
-  } catch (error) {
-    console.error('Error getting companyId by userId:', error);
-    throw error;
-  }
-}
+//     return company._id;
+//   } catch (error) {
+//     console.error('Error getting companyId by userId:', error);
+//     throw error;
+//   }
+// }
 
 export async function saveGigData(gigData: GigData): Promise<void> {
   try {
-    const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
     const userId = Cookies.get("userId");
     
     if (!userId) {
@@ -84,7 +83,7 @@ export async function saveGigData(gigData: GigData): Promise<void> {
     }
 
     // Get companyId based on userId
-    const companyId = await getCompanyIdByUserId(userId);
+    const companyId = Cookies.get("companyId");
 
     const gigDataWithIds = {
       ...gigData,
