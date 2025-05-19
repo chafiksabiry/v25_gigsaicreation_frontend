@@ -15,7 +15,7 @@ export function validateGigData(data: GigData): ValidationResult {
   // Basic Info
   if (!data.title?.trim()) {
     errors.basic = [...(errors.basic || []), 'Title is required'];
-  } else if (data.title.length < 10) {
+  } else if (data.title.length < 3) {
     errors.basic = [...(errors.basic || []), 'Title must be at least 10 characters long'];
   }
 
