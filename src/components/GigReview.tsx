@@ -1,5 +1,7 @@
 import React from "react";
 import Swal from "sweetalert2";
+import Cookies from 'js-cookie';
+import axios from 'axios';
 import {
   AlertCircle,
   CheckCircle,
@@ -72,7 +74,18 @@ export function GigReview({
         text: "Your gig has been published successfully.",
         icon: "success",
         confirmButtonText: "OK",
-      }).then(() => {
+      }).then(async () => {
+        // Update onboarding step progress
+        const companyId = Cookies.get('companyId');
+        console.log(companyId);
+        try {
+          await axios.put(`${import.meta.env.VITE_API_URL_ONBOARDING}/onboarding/companies/${companyId}/onboarding/phases/2/steps/4`, {
+            completed: true
+          });
+        } catch (error) {
+          console.error('Error updating onboarding progress:', error);
+          // Continue with navigation even if update fails
+        }
         window.location.href = "/app11";
       });
     } catch (error) {
