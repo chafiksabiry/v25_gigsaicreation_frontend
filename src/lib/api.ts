@@ -49,7 +49,7 @@ export async function fetchCompanies() {
 
 interface Company {
   _id: string;
-  userId: string;
+  userId: string | { $oid: string };
   name: string;
   industry: string;
   // Add other company fields as needed
@@ -58,12 +58,11 @@ interface Company {
 export async function getCompanyIdByUserId(userId: string): Promise<string> {
   try {
     const companies = await fetchCompanies();
-    // const company = companies.find((company: Company) => company._id === "681a91865736a7a7cf2453b8");
+    const company = companies.find((company: Company) => 
+      company.userId === userId || 
+      (typeof company.userId === 'object' && company.userId.$oid === userId)
+    );
     
-    // if (!company) {
-    //   throw new Error(`No company found for userId: ${userId}`);
-    // }
-    const company = companies.find((company: Company) => company.userId === userId);
     if (!company) {
       throw new Error(`No company found for userId: ${userId}`);
     }
