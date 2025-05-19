@@ -101,9 +101,8 @@ const initialGigData: GigData = {
     certifications: [],
   },
   seniority: {
+    years: "",
     level: "",
-    years: "",
-    years: "",
     yearsExperience: "",
   },
   team: {
@@ -142,6 +141,8 @@ const initialGigData: GigData = {
     },
   },
   documentation: {
+    templates: {},
+    reference: {},
     product: [],
     process: [],
     training: [],
