@@ -249,11 +249,8 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       if (isStandalone) {
         // Valeurs par défaut pour le mode standalone
-        userId = Cookies.get("userId") || '';
-        companyId = Cookies.get("companyId") || '';
-        if (!userId || !companyId) {
-          throw new Error("Required cookies not found");
-        }
+        userId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
+        companyId = Cookies.get("companyId") || '680bec7495ee2e5862009486';
       } else {
         // Récupérer depuis les cookies
         const cookieUserId = Cookies.get("userId");

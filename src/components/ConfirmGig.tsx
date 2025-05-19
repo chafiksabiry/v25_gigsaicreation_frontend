@@ -21,14 +21,13 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
       let userId: string;
       let companyId: string;
 
+
+
       if (isStandalone) {
-        userId = Cookies.get("userId") || '';
-        companyId = Cookies.get("companyId") || '';
-        if (!userId || !companyId) {
-          throw new Error("Required cookies not found");
-        }
+        userId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
+        companyId = Cookies.get("companyId") || '680bec7495ee2e5862009486';
       } else {
-        const cookieUserId = Cookies.get("userId");
+        const cookieUserId = Cookies.get("userId") || '681a91212c1ca099fe2b17df';
         if (!cookieUserId) {
           throw new Error("User ID not found in cookies");
         }
@@ -52,8 +51,6 @@ export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
         userId: userId,
         companyId: companyId
       };
-
-      console.log('ConfirmGig - Gig Data:', gigData);
 
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
