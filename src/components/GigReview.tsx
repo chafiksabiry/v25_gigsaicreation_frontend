@@ -80,7 +80,7 @@ export function GigReview({
         console.log(companyId);
         try {
           await axios.put(`${import.meta.env.VITE_API_URL_ONBOARDING}/onboarding/companies/${companyId}/onboarding/phases/2/steps/4`, {
-            completed: true
+            { status: 'completed' }
           });
         } catch (error) {
           console.error('Error updating onboarding progress:', error);
