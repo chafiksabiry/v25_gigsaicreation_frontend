@@ -74,18 +74,7 @@ export function GigReview({
         text: "Your gig has been published successfully.",
         icon: "success",
         confirmButtonText: "OK",
-      }).then(async () => {
-        // Update onboarding step progress
-        const companyId = Cookies.get('companyId');
-        console.log(companyId);
-        try {
-          await axios.put(`${import.meta.env.VITE_API_URL_ONBOARDING}/onboarding/companies/${companyId}/onboarding/phases/2/steps/4`, {
-            status: 'completed'
-          });
-        } catch (error) {
-          console.error('Error updating onboarding progress:', error);
-          // Continue with navigation even if update fails
-        }
+      }).then(() => {
         window.location.href = "/app11";
       });
     } catch (error) {
