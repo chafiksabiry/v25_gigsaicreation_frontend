@@ -316,18 +316,18 @@ export function GigReview({
                       </div>
                       <CheckCircle className="w-6 h-6 text-green-600" />
                     </div>
-                    {data.commission.minimumVolume && (
+                    {data?.commission?.minimumVolume && (
                       <div className="mt-4 pt-4 border-t border-gray-100">
                         <div className="text-sm text-gray-600">
                           Minimum Requirements:
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                            {data.commission.minimumVolume.amount}{" "}
-                            {data.commission.minimumVolume.unit}
+                            {data?.commission?.minimumVolume?.amount}{" "}
+                            {data?.commission?.minimumVolume?.unit}
                           </div>
                           <span className="text-sm text-gray-600">
-                            per {data.commission.minimumVolume.period}
+                            per {data?.commission?.minimumVolume?.period}
                           </span>
                         </div>
                       </div>
