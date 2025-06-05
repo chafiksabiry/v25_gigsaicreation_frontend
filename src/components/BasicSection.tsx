@@ -112,7 +112,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           'England': 'GB',  // England is part of United Kingdom
           'Scotland': 'GB', // Scotland is part of United Kingdom
           'Wales': 'GB',    // Wales is part of United Kingdom
-          'Northern Ireland': 'GB' // Northern Ireland is part of United Kingdom
+          'Northern Ireland': 'GB', // Northern Ireland is part of United Kingdom
+          'Germany': 'DE',  // Add Germany explicitly
+          'Deutschland': 'DE' // Add German name for Germany
         };
 
         // Check if the country is a special case
@@ -147,7 +149,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     } else {
       console.log('No destinationZones available');
     }
-  }, [data.destinationZones]);
+  }, [data.destinationZones, data.destination_zone]);
 
   const filteredZones = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter((zone) => {
     const countries = getCountriesByZone(zone);
