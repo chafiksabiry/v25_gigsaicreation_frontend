@@ -308,10 +308,10 @@ export function GigReview({
                       <div>
                         <div className="text-2xl font-bold text-gray-900">
                           {getCurrencySymbol()}
-                          {data.commission?.baseAmount || '0'}
+                          {data?.commission?.baseAmount || '0'}
                         </div>
                         <div className="text-sm text-gray-600 mt-1">
-                          {data.commission.base}
+                          {data?.commission?.base || 'No base commission'}
                         </div>
                       </div>
                       <CheckCircle className="w-6 h-6 text-green-600" />
@@ -346,10 +346,10 @@ export function GigReview({
                         <div>
                           <div className="text-2xl font-bold text-gray-900">
                             {getCurrencySymbol()}
-                            {data.commission.bonusAmount}
+                            {data?.commission?.bonusAmount || '0'}
                           </div>
                           <div className="text-sm text-gray-600 mt-1">
-                            {data.commission.bonus}
+                            {data?.commission?.bonus || 'No bonus structure'}
                           </div>
                         </div>
                         <Star className="w-6 h-6 text-blue-600" />
