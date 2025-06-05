@@ -7,6 +7,13 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import type { ParsedGig } from '../lib/types';
+
+interface GigFormProps {
+  gig: ParsedGig;
+  onSave: (updatedGig: ParsedGig) => void;
+  onCancel: () => void;
+}
 
 type GigFormData = {
   title: string;
@@ -59,7 +66,7 @@ type GigFormData = {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export function GigForm() {
+export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
   const { register, control, handleSubmit, formState: { errors } } = useForm<GigFormData>();
 
   const onSubmit = async (data: GigFormData) => {

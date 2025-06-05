@@ -4,7 +4,15 @@ import { GigWorkflow } from "./GigWorkflow";
 import { Suggestions } from "./Suggestions";
 import { GigForm } from "./GigForm";
 import { ConfirmGig } from "./ConfirmGig";
-import type { ParsedGig } from "../lib/types";
+import type { ParsedGig, Gig } from "../lib/types";
+import type { GigData } from "../types";
+import { saveGigData } from "../lib/api";
+
+interface GigFormProps {
+  gig: ParsedGig;
+  onSave: (updatedGig: ParsedGig) => void;
+  onCancel: () => void;
+}
 
 function App() {
   const [naturalInput, setNaturalInput] = useState("");
@@ -14,45 +22,225 @@ function App() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
-  const parseGigDescription = (input: string) => {
+
+  const generateDestinationZone = async (title: string, description: string, type: string) => {
+    try {
+      const response = await fetch('/api/generate-destination', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          category: type
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate destination zone');
+      }
+
+      const suggestions = await response.json();
+      return suggestions[0] || ''; // Return the first suggested zone or empty string
+    } catch (error) {
+      console.error('Error generating destination zone:', error);
+      return '';
+    }
+  };
+
+  const parseGigDescription = async (input: string) => {
     setIsProcessing(true);
-    setTimeout(() => {
+    try {
       const quantity = input.match(/\d+/)?.[0] || "0";
       const timeline = input.includes("week") ? "Weekly" : "Flexible";
       const type = input.toLowerCase().includes("sales")
         ? "Sales"
         : "Customer Service";
 
+      const title = `${type} Campaign - ${quantity} Actions`;
+      
+      // Generate destination zone using AI
+      const destinationZone = await generateDestinationZone(title, input, type);
+
       setParsedGig({
-        title: `${type} Campaign - ${quantity} Actions`,
+        title,
         quantity: parseInt(quantity),
         timeline: timeline,
         type: type,
         description: input,
         status: "draft",
+        destination_zone: destinationZone
       });
+    } catch (error) {
+      console.error('Error parsing gig description:', error);
+    } finally {
       setIsProcessing(false);
-    }, 1500);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (naturalInput.trim()) {
-      parseGigDescription(naturalInput);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (naturalInput.trim()) {
+      await parseGigDescription(naturalInput);
+    }
+  };
+
+  const convertToGig = (parsedGig: ParsedGig): Gig => ({
+    id: "",
+    creator_id: "",
+    title: parsedGig.title,
+    description: parsedGig.description,
+    type: parsedGig.type,
+    quantity: parsedGig.quantity,
+    timeline: parsedGig.timeline,
+    requirements: [],
+    skills_required: [],
+    languages_required: [],
+    kpis: [],
+    compensation: {
+      type: parsedGig.commission?.base || "",
+      amount: parseFloat(parsedGig.commission?.baseAmount || "0"),
+      currency: parsedGig.commission?.currency || "USD"
+    },
+    status: parsedGig.status || "draft",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  });
+
+  const handlePublish = async () => {
+    if (!parsedGig) return;
+    
+    try {
+      const gigData = convertToGigData(parsedGig);
+      await saveGigData(gigData);
+      setIsConfirming(false);
+    } catch (error) {
+      console.error("Error publishing gig:", error);
+    }
+  };
+
+  const convertToGigData = (parsedGig: ParsedGig): GigData => ({
+    userId: "",
+    companyId: "",
+    title: parsedGig.title,
+    description: parsedGig.description,
+    category: "",
+    destination_zone: parsedGig.destination_zone || "",
+    callTypes: [],
+    highlights: [],
+    requirements: {
+      essential: [],
+      preferred: []
+    },
+    benefits: [],
+    schedule: {
+      days: [],
+      hours: "",
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {
+        daily: undefined,
+        weekly: undefined,
+        monthly: undefined
+      }
+    },
+    commission: {
+      base: "",
+      baseAmount: "",
+      bonus: "",
+      bonusAmount: "",
+      structure: "",
+      currency: "USD",
+      minimumVolume: {
+        amount: "",
+        period: "",
+        unit: ""
+      },
+      transactionCommission: {
+        type: "",
+        amount: ""
+      },
+      kpis: []
+    },
+    leads: {
+      types: [],
+      sources: [],
+      distribution: {
+        method: "",
+        rules: []
+      },
+      qualificationCriteria: []
+    },
+    skills: {
+      languages: [],
+      soft: [],
+      professional: [],
+      technical: [],
+      certifications: []
+    },
+    seniority: {
+      level: "",
+      yearsExperience: "",
+      years: ""
+    },
+    team: {
+      size: "",
+      structure: [],
+      territories: [],
+      reporting: {
+        to: "",
+        frequency: ""
+      },
+      collaboration: []
+    },
+    tools: {
+      provided: [],
+      required: []
+    },
+    training: {
+      initial: {
+        duration: "",
+        format: "",
+        topics: []
+      },
+      ongoing: {
+        frequency: "",
+        format: "",
+        topics: []
+      },
+      support: []
+    },
+    metrics: {
+      kpis: [],
+      targets: {},
+      reporting: {
+        frequency: "",
+        metrics: []
+      }
+    },
+    documentation: {
+      templates: {},
+      reference: {},
+      product: [],
+      process: [],
+      training: []
+    },
+    compliance: {
+      requirements: [],
+      certifications: [],
+      policies: []
+    },
+    equipment: {
+      required: [],
+      provided: []
+    }
+  });
 
   const handleGigUpdate = (updatedGig: ParsedGig) => {
     setParsedGig(updatedGig);
     setIsEditing(false);
     setIsConfirming(true);
-  };
-
-  const handlePublish = () => {
-    if (parsedGig) {
-      setParsedGig({ ...parsedGig, status: "published" });
-      setIsConfirming(false);
-    }
   };
 
   if (showSuggestions) {
@@ -197,11 +385,13 @@ function App() {
                 onCancel={() => setIsEditing(false)}
               />
             ) : isConfirming ? (
-              <ConfirmGig
-                gig={parsedGig}
-                onConfirm={handlePublish}
-                onEdit={() => setIsEditing(true)}
-              />
+              parsedGig ? (
+                <ConfirmGig
+                  gig={convertToGigData(parsedGig)}
+                  onConfirm={handlePublish}
+                  onCancel={() => setIsEditing(true)}
+                />
+              ) : null
             ) : (
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -278,7 +468,34 @@ function App() {
 
                 {parsedGig.status === "published" && (
                   <div className="mt-8">
-                    <GigWorkflow gig={parsedGig} onUpdate={setParsedGig} />
+                    <GigWorkflow
+                      gig={convertToGig(parsedGig)}
+                      onUpdate={(updatedGig) => {
+                        setParsedGig({
+                          ...parsedGig,
+                          title: updatedGig.title,
+                          description: updatedGig.description,
+                          type: updatedGig.type,
+                          quantity: updatedGig.quantity,
+                          timeline: updatedGig.timeline,
+                          status: updatedGig.status,
+                          commission: {
+                            base: updatedGig.compensation.type,
+                            baseAmount: updatedGig.compensation.amount.toString(),
+                            currency: updatedGig.compensation.currency,
+                            minimumVolume: {
+                              amount: "",
+                              period: "",
+                              unit: ""
+                            },
+                            transactionCommission: {
+                              type: "",
+                              amount: ""
+                            }
+                          }
+                        });
+                      }}
+                    />
                   </div>
                 )}
               </div>
