@@ -472,10 +472,21 @@ export function ScheduleSection({
         {/* Schedule Flexibility */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Schedule Flexibility</label>
+          {(() => {
+            console.log('Flexibility data:', {
+              options: predefinedOptions.basic.scheduleFlexibility,
+              selected: data?.flexibility,
+              data: data
+            });
+            return null;
+          })()}
           <SelectionList
             options={predefinedOptions.basic.scheduleFlexibility}
             selected={data?.flexibility || []}
-            onChange={(flexibility) => onChange({ ...data, flexibility })}
+            onChange={(flexibility) => {
+              console.log('Flexibility changed:', flexibility);
+              onChange({ ...data, flexibility });
+            }}
             multiple={true}
             layout="flow"
             size="sm"

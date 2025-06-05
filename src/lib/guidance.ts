@@ -51,7 +51,7 @@ export const predefinedOptions = {
     ],
     scheduleFlexibility: [
       'Remote Work Available',
-      'Flexible Hours',
+      'Flexible hours',
       'Weekend Rotation',
       'Night Shift Available',
       'Split Shifts',
