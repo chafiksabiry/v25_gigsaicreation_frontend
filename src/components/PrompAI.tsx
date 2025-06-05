@@ -180,7 +180,7 @@ const PrompAI: React.FC = () => {
       description: suggestions.deliverables?.join("\n") || prevData.description,
       category: suggestions.sectors?.[0] || prevData.category,
       destinationZones: suggestions.destinationZones || prevData.destinationZones,
-      destination_zone: suggestions.destinationZones?.[0] ? 'TR' : prevData.destination_zone,
+      destination_zone: suggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : prevData.destination_zone,
       seniority: {
         level: suggestions.seniority?.level || prevData.seniority.level,
         years: suggestions.seniority?.yearsExperience || prevData.seniority.years,
@@ -272,7 +272,7 @@ const PrompAI: React.FC = () => {
         // Preserve destinationZones from suggestions if they exist
         destinationZones: confirmedSuggestions.destinationZones || newData.destinationZones,
         // If we have a destination_zone from suggestions, use it
-        destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] ? 'TR' : '')
+        destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : '')
       };
       
       console.log('handleGigDataChange - Updated data with suggestions:', updatedData);

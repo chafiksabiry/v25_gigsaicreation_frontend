@@ -967,7 +967,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   description: "Default activity description",
                   requirements: ["Default requirement"]
                 }]
-              }
+              },
+              destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
             };
 
             const finalSuggestions = {
