@@ -37,35 +37,72 @@ const PrompAI: React.FC = () => {
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
   const [gigData, setGigData] = useState<GigData>({
+    userId: "",
+    companyId: "",
+    destination_zone: "",
+    callTypes: [],
+    highlights: [],
+    requirements: {
+      essential: [],
+      preferred: []
+    },
+    benefits: [],
+    tools: {
+      provided: [],
+      required: []
+    },
+    equipment: {
+      provided: [],
+      required: []
+    },
     title: "",
     description: "",
     category: "",
-    seniority: {
-      level: "",
-      years: 0,
-    },
     schedule: {
       days: [],
       hours: "",
       timeZones: [],
+      flexibility: [],
+      minimumHours: {}
     },
     commission: {
+      base: "",
+      baseAmount: "",
+      bonus: "",
+      bonusAmount: "",
+      structure: "",
       currency: "",
-      base: false,
-      baseAmount: 0,
       minimumVolume: {
-        amount: 0,
-        unit: "",
+        amount: "",
         period: "",
+        unit: ""
       },
+      transactionCommission: {
+        type: "",
+        amount: ""
+      },
+      kpis: []
     },
     leads: {
       types: [],
       sources: [],
+      distribution: {
+        method: "",
+        rules: []
+      },
+      qualificationCriteria: []
     },
     skills: {
       languages: [],
+      soft: [],
       professional: [],
+      technical: [],
+      certifications: []
+    },
+    seniority: {
+      years: "",
+      level: "",
+      yearsExperience: ""
     },
     team: {
       size: "",
@@ -73,15 +110,43 @@ const PrompAI: React.FC = () => {
       territories: [],
       reporting: {
         to: "",
-        frequency: "",
+        frequency: ""
       },
-      collaboration: [],
+      collaboration: []
+    },
+    training: {
+      initial: {
+        duration: "",
+        format: "",
+        topics: []
+      },
+      ongoing: {
+        frequency: "",
+        format: "",
+        topics: []
+      },
+      support: []
+    },
+    metrics: {
+      kpis: [],
+      targets: {},
+      reporting: {
+        frequency: "",
+        metrics: []
+      }
     },
     documentation: {
-      training: [],
-      reference: [],
-      templates: [],
+      templates: null,
+      reference: null,
+      product: [],
+      process: [],
+      training: []
     },
+    compliance: {
+      requirements: [],
+      certifications: [],
+      policies: []
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,7 +172,7 @@ const PrompAI: React.FC = () => {
     setCurrentSection("basic");
 
     // Mettre à jour les données du gig avec les suggestions
-    setGigData((prevData) => ({
+    setGigData((prevData: GigData) => ({
       ...prevData,
       // Section Basic
       title: suggestions.jobTitles?.[0] || prevData.title,
@@ -115,7 +180,8 @@ const PrompAI: React.FC = () => {
       category: suggestions.sectors?.[0] || prevData.category,
       seniority: {
         level: suggestions.seniority?.level || prevData.seniority.level,
-        years: parseInt(suggestions.seniority?.yearsExperience || "0"),
+        years: suggestions.seniority?.yearsExperience || prevData.seniority.years,
+        yearsExperience: suggestions.seniority?.yearsExperience || prevData.seniority.yearsExperience
       },
       // Section Schedule
       schedule: {
@@ -123,56 +189,44 @@ const PrompAI: React.FC = () => {
         hours: suggestions.schedule?.hours || prevData.schedule.hours,
         timeZones:
           suggestions.schedule?.timeZones || prevData.schedule.timeZones,
+        flexibility: suggestions.schedule?.flexibility || prevData.schedule.flexibility,
+        minimumHours: {
+          daily: suggestions.schedule?.minimumHours?.daily || prevData.schedule.minimumHours.daily,
+          weekly: suggestions.schedule?.minimumHours?.weekly || prevData.schedule.minimumHours.weekly,
+          monthly: suggestions.schedule?.minimumHours?.monthly || prevData.schedule.minimumHours.monthly
+        }
       },
       // Section Commission
       commission: {
-        base:
-          suggestions.commission?.options?.[0]?.base ||
-          prevData.commission.base,
-        baseAmount:
-          suggestions.commission?.options?.[0]?.baseAmount ||
-          prevData.commission.baseAmount,
-        bonus:
-          suggestions.commission?.options?.[0]?.bonus ||
-          prevData.commission.bonus,
-        bonusAmount:
-          suggestions.commission?.options?.[0]?.bonusAmount ||
-          prevData.commission.bonusAmount,
-        structure:
-          suggestions.commission?.options?.[0]?.structure ||
-          prevData.commission.structure,
-        currency:
-          suggestions.commission?.options?.[0]?.currency ||
-          prevData.commission.currency,
+        base: suggestions.commission?.base || prevData.commission.base,
+        baseAmount: suggestions.commission?.baseAmount || prevData.commission.baseAmount,
+        bonus: suggestions.commission?.bonus || prevData.commission.bonus,
+        bonusAmount: suggestions.commission?.bonusAmount || prevData.commission.bonusAmount,
+        structure: suggestions.commission?.structure || prevData.commission.structure,
+        currency: suggestions.commission?.currency || prevData.commission.currency,
         minimumVolume: {
-          amount:
-            suggestions.commission?.options?.[0]?.minimumVolume?.amount ||
-            prevData.commission.minimumVolume.amount,
-          period:
-            suggestions.commission?.options?.[0]?.minimumVolume?.period ||
-            prevData.commission.minimumVolume.period,
-          unit:
-            suggestions.commission?.options?.[0]?.minimumVolume?.unit ||
-            prevData.commission.minimumVolume.unit,
+          amount: suggestions.commission?.minimumVolume?.amount || prevData.commission.minimumVolume.amount,
+          period: suggestions.commission?.minimumVolume?.period || prevData.commission.minimumVolume.period,
+          unit: suggestions.commission?.minimumVolume?.unit || prevData.commission.minimumVolume.unit,
         },
         transactionCommission: {
-          type:
-            suggestions.commission?.options?.[0]?.transactionCommission?.type ||
-            prevData.commission.transactionCommission.type,
-          amount:
-            suggestions.commission?.options?.[0]?.transactionCommission
-              ?.amount || prevData.commission.transactionCommission.amount,
+          type: suggestions.commission?.transactionCommission?.type || prevData.commission.transactionCommission.type,
+          amount: suggestions.commission?.transactionCommission?.amount || prevData.commission.transactionCommission.amount,
         },
+        kpis: suggestions.commission?.kpis || prevData.commission.kpis || []
       },
       // Section Skills
       skills: {
         languages: suggestions.skills?.languages || prevData.skills.languages,
+        soft: suggestions.skills?.soft || prevData.skills.soft,
         professional:
           suggestions.skills?.professional || prevData.skills.professional,
+        technical: suggestions.skills?.technical || prevData.skills.technical,
+        certifications: suggestions.skills?.certifications || prevData.skills.certifications,
       },
       // Section Team
       team: {
-        size: parseInt(suggestions.team?.size?.toString() || "0"),
+        size: suggestions.team?.size?.toString() || prevData.team.size,
         structure: suggestions.team?.structure || prevData.team.structure,
         territories: suggestions.team?.territories || prevData.team.territories,
         reporting: {

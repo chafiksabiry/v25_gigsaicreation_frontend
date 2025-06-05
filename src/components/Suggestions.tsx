@@ -18,7 +18,7 @@ import {
   PlusCircle,
 } from "lucide-react";
 import OpenAI from "openai";
-import type { JobDescription, GigMetadata } from "../lib/types";
+import type { JobDescription, GigMetadata, GigSuggestion } from "../lib/types";
 import Swal from "sweetalert2";
 import moment from 'moment-timezone';
 import Modal from './Modal';
@@ -38,56 +38,6 @@ interface ActivityOption {
   type: string;
   description: string;
   requirements: string[];
-}
-
-interface GigSuggestion {
-  jobTitles: string[];
-  deliverables: string[];
-  compensation: any; // TODO: Define specific type
-  skills: string[];
-  kpis: string[];
-  timeframes: string[];
-  requirements: string[];
-  languages: string[];
-  seniority: {
-    level: string;
-    yearsExperience: string;
-  };
-  schedule: {
-    days: string[];
-    hours: string;
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily: number;
-      weekly: number;
-      monthly: number;
-    };
-  };
-  commission: {
-    options: Array<{
-      base: string;
-      baseAmount: string;
-      bonus?: string;
-      bonusAmount?: string;
-      structure?: string;
-      currency: string;
-      minimumVolume: {
-        amount: string;
-        period: string;
-        unit: string;
-      };
-      transactionCommission: {
-        type: string;
-        amount: string;
-      };
-    }>;
-  };
-  sectors: string[];
-  activity: {
-    options: ActivityOption[];
-  };
-  destinationZones: string[]; // Added destination zones
 }
 
 type EditableGigSuggestion = GigSuggestion;
