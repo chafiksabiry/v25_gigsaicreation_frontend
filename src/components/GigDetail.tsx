@@ -12,17 +12,45 @@ interface GigDetailProps {
 }
 
 export function GigDetail({ gig, onBack }: GigDetailProps) {
+  // Add debug logging at the very start
+  console.log('GigDetail component rendered with gig:', gig);
+  console.log('Commission structure:', gig?.commission);
+
   const formatCurrency = (amount: string) => {
-    console.log('Formatting amount:', amount);
-    console.log('Commission object:', gig?.commission);
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: gig?.commission?.currency || 'USD'
-    }).format(Number(amount || 0));
+    try {
+      console.log('formatCurrency called with amount:', amount);
+      console.log('Current commission state:', gig?.commission);
+      
+      const currency = gig?.commission?.currency || 'USD';
+      console.log('Using currency:', currency);
+      
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency
+      }).format(Number(amount || 0));
+      
+      console.log('Formatted amount:', formattedAmount);
+      return formattedAmount;
+    } catch (error) {
+      console.error('Error in formatCurrency:', error);
+      return '$0.00';
+    }
   };
 
-  // Add debug logging for the entire gig object
-  console.log('Gig object:', gig);
+  // Helper function to safely get commission amount
+  const getCommissionAmount = (amount: any) => {
+    console.log('Getting commission amount:', amount);
+    if (!amount) {
+      console.log('No amount provided, returning 0');
+      return '0';
+    }
+    try {
+      return amount.toString();
+    } catch (error) {
+      console.error('Error converting amount to string:', error);
+      return '0';
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
@@ -117,9 +145,12 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                   <div>
                     <div className="text-sm text-gray-500">Amount</div>
                     <div className="text-lg font-semibold text-gray-900">
-                      {gig?.commission?.baseAmount ? 
-                        formatCurrency(gig.commission.baseAmount.toString()) : 
-                        formatCurrency('0')}
+                      {(() => {
+                        console.log('Rendering base commission amount');
+                        const baseAmount = gig?.commission?.baseAmount;
+                        console.log('Base amount value:', baseAmount);
+                        return formatCurrency(getCommissionAmount(baseAmount));
+                      })()}
                     </div>
                   </div>
                   <div>
@@ -137,9 +168,12 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                     <div>
                       <div className="text-sm text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900">
-                        {gig?.commission?.bonusAmount ? 
-                          formatCurrency(gig.commission.bonusAmount.toString()) : 
-                          formatCurrency('0')}
+                        {(() => {
+                          console.log('Rendering bonus amount');
+                          const bonusAmount = gig?.commission?.bonusAmount;
+                          console.log('Bonus amount value:', bonusAmount);
+                          return formatCurrency(getCommissionAmount(bonusAmount));
+                        })()}
                       </div>
                     </div>
                     <div>
