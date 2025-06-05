@@ -281,7 +281,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             <div>
               <label className="block text-sm font-medium text-gray-700">Bonus Type</label>
               <select
-                value={data.bonus}
+                value={data?.bonus || ''}
                 onChange={(e) => onChange({ ...data, bonus: e.target.value })}
                 className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-amber-500 focus:border-amber-500"
               >
@@ -300,7 +300,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 </div>
                 <input
                   type="text"
-                  value={data.bonusAmount}
+                  value={data?.bonusAmount || ''}
                   onChange={(e) => onChange({ ...data, bonusAmount: formatAmount(e.target.value) })}
                   className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="Enter bonus amount"
@@ -315,7 +315,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
       <div className="bg-white rounded-xl p-6 border border-gray-200">
         <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
         <textarea
-          value={data.structure}
+          value={data?.structure || ''}
           onChange={(e) => onChange({ ...data, structure: e.target.value })}
           rows={4}
           className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
