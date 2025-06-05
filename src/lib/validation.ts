@@ -74,8 +74,8 @@ export function validateGigData(data: GigData): ValidationResult {
   if (!data.team) {
     errors.team = [...(errors.team || []), 'Team information is required'];
   } else {
-    if (typeof data.team.size !== 'number' || data.team.size < 0) {
-      errors.team = [...(errors.team || []), 'Team size is required and must be a non-negative number'];
+    if (!data.team.size) {
+      errors.team = [...(errors.team || []), 'Team size is required'];
     }
 
     if (!data.team.structure?.length) {
