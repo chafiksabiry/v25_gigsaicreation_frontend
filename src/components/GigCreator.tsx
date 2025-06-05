@@ -310,9 +310,9 @@ export function GigCreator({ children }: GigCreatorProps) {
           sources: gigData.leads.sources
         },
         team: {
-          size: gigData.team.size,
-          structure: gigData.team.structure,
-          territories: gigData.team.territories
+          size: gigData.team?.size || '0',
+          structure: gigData.team?.structure || [],
+          territories: gigData.team?.territories || []
         },
         documentation: {
           training: gigData.documentation.training,

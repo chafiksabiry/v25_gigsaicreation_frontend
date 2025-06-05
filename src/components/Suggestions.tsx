@@ -1273,9 +1273,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           sources: []
         },
         team: {
-          size: "1-5",
-          structure: [],
-          territories: []
+          size: gigData.team?.size || '0',
+          structure: gigData.team?.structure || [],
+          territories: gigData.team?.territories || []
         },
         documentation: {
           product: [],

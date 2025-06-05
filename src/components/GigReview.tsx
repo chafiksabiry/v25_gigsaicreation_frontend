@@ -241,7 +241,7 @@ export function GigReview({
                 <h3 className="font-medium">Team Size</h3>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.team.size}
+                {data.team?.size || '0'}
               </div>
               <p className="text-sm text-gray-600 mt-1">Target Team Size</p>
             </div>
