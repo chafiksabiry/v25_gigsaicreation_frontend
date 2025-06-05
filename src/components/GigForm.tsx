@@ -75,9 +75,9 @@ export function GigForm() {
         commission_structure: data.commission.structure,
         seniority_level: data.seniority.level,
         years_experience: data.seniority.yearsExperience,
-        team_size: data.team.size,
-        team_structure: data.team.structure,
-        team_territories: data.team.territories,
+        team_size: data.team?.size || '0',
+        team_structure: data.team?.structure || [],
+        team_territories: data.team?.territories || [],
         prerequisites: data.prerequisites
       };
 

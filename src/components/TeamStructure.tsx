@@ -29,7 +29,7 @@ interface TeamStructureProps {
 export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStructureProps) {
   // Initialize team with default values if undefined
   const initializedTeam = {
-    size: data?.size,
+    size: data?.size || '0',
     structure: data?.structure || [],
     territories: data?.territories || []
   };
