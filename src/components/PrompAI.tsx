@@ -143,18 +143,19 @@ const PrompAI: React.FC = () => {
       },
       // Section Commission
       commission: {
+        ...prevData.commission,
         base:
           suggestions.commission?.options?.[0]?.base ||
           prevData.commission.base,
         baseAmount:
           suggestions.commission?.options?.[0]?.baseAmount ||
-          prevData.commission.baseAmount,
+          prevData.commission.baseAmount || "0",
         bonus:
           suggestions.commission?.options?.[0]?.bonus ||
           prevData.commission.bonus,
         bonusAmount:
           suggestions.commission?.options?.[0]?.bonusAmount ||
-          prevData.commission.bonusAmount,
+          prevData.commission.bonusAmount || "0",
         structure:
           suggestions.commission?.options?.[0]?.structure ||
           prevData.commission.structure,
@@ -162,23 +163,25 @@ const PrompAI: React.FC = () => {
           suggestions.commission?.options?.[0]?.currency ||
           prevData.commission.currency,
         minimumVolume: {
+          ...prevData.commission.minimumVolume,
           amount:
             suggestions.commission?.options?.[0]?.minimumVolume?.amount ||
-            prevData.commission.minimumVolume.amount,
+            prevData.commission.minimumVolume.amount || "0",
           period:
             suggestions.commission?.options?.[0]?.minimumVolume?.period ||
-            prevData.commission.minimumVolume.period,
+            prevData.commission.minimumVolume.period || "",
           unit:
             suggestions.commission?.options?.[0]?.minimumVolume?.unit ||
-            prevData.commission.minimumVolume.unit,
+            prevData.commission.minimumVolume.unit || "",
         },
         transactionCommission: {
+          ...prevData.commission.transactionCommission,
           type:
             suggestions.commission?.options?.[0]?.transactionCommission?.type ||
-            prevData.commission.transactionCommission.type,
+            prevData.commission.transactionCommission.type || "",
           amount:
-            suggestions.commission?.options?.[0]?.transactionCommission
-              ?.amount || prevData.commission.transactionCommission.amount,
+            suggestions.commission?.options?.[0]?.transactionCommission?.amount ||
+            prevData.commission.transactionCommission.amount || "0",
         },
         kpis: suggestions.commission?.options?.[0]?.kpis || prevData.commission.kpis || []
       },
