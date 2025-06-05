@@ -60,7 +60,7 @@ Available time zones:
 ${predefinedOptions.basic.timeZones.map(zone => `- ${zone}`).join('\n')}
 
 Available schedule flexibility options:
-${predefinedOptions.basic.scheduleFlexibility.map(option => `- ${option}`).join('\n')}
+${predefinedOptions.schedule.flexibility.map(option => `- ${option}`).join('\n')}
 
 Available destination zones:
 ${predefinedOptions.basic.destinationZones.map(zone => `- ${zone}`).join('\n')}
@@ -131,7 +131,7 @@ CRITICAL:
 
         // Validate schedule flexibility
         if (!parsed.scheduleFlexibility.every((option: string) => 
-          predefinedOptions.basic.scheduleFlexibility.includes(option))) {
+          predefinedOptions.schedule.flexibility.includes(option))) {
           throw new Error('Invalid schedule flexibility options');
         }
 
