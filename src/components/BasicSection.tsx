@@ -73,11 +73,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     return data.destination_zone === countryCode;
   };
 
-  const handleCountrySelect = (country: string) => {
-    onChange({ 
-      ...data, 
-      destination_zone: country 
-    });
+  const handleCountrySelect = (countryCode: string) => {
+    onChange({ ...data, destination_zone: countryCode });
   };
 
   const getCountriesByZone = (zone: string) => {
