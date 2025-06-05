@@ -15,7 +15,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: gig?.commission_currency || 'USD'
+      currency: gig?.commission?.currency || 'USD'
     }).format(Number(amount || 0));
   };
 
@@ -112,30 +112,30 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                   <div>
                     <div className="text-sm text-gray-500">Amount</div>
                     <div className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(gig?.commission_base_amount || '0')}
+                      {formatCurrency(gig?.commission?.baseAmount?.toString() || '0')}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Type</div>
-                    <div className="text-gray-900">{gig?.commission_base || 'Not specified'}</div>
+                    <div className="text-gray-900">{gig?.commission?.base || 'Not specified'}</div>
                   </div>
                 </div>
               </div>
 
               {/* Performance Bonus */}
-              {gig?.commission_bonus && (
+              {gig?.commission?.bonus && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h3 className="font-medium text-gray-900 mb-3">Performance Bonus</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900">
-                        {formatCurrency(gig?.commission_bonus_amount || '0')}
+                        {formatCurrency(gig?.commission?.bonusAmount?.toString() || '0')}
                       </div>
                     </div>
                     <div>
                       <div className="text-sm text-gray-500">Type</div>
-                      <div className="text-gray-900">{gig?.commission_bonus}</div>
+                      <div className="text-gray-900">{gig?.commission?.bonus}</div>
                     </div>
                   </div>
                 </div>
