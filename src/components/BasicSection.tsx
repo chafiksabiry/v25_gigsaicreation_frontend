@@ -99,39 +99,39 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
   // Log destination zone codes from suggestions
   useEffect(() => {
-    const destinationZones = ["Morocco", "England"];
-    
-    // Convert country names to codes with special cases
-    const countryCodes = destinationZones.map(country => {
-      // Special cases for countries that are part of larger entities
-      const specialCases: { [key: string]: string } = {
-        'England': 'GB',  // England is part of United Kingdom
-        'Scotland': 'GB', // Scotland is part of United Kingdom
-        'Wales': 'GB',    // Wales is part of United Kingdom
-        'Northern Ireland': 'GB' // Northern Ireland is part of United Kingdom
-      };
+    if (data.destinationZones && data.destinationZones.length > 0) {
+      // Convert country names to codes with special cases
+      const countryCodes = data.destinationZones.map(country => {
+        // Special cases for countries that are part of larger entities
+        const specialCases: { [key: string]: string } = {
+          'England': 'GB',  // England is part of United Kingdom
+          'Scotland': 'GB', // Scotland is part of United Kingdom
+          'Wales': 'GB',    // Wales is part of United Kingdom
+          'Northern Ireland': 'GB' // Northern Ireland is part of United Kingdom
+        };
 
-      // Check if the country is a special case
-      if (specialCases[country]) {
-        return { country, code: specialCases[country] };
+        // Check if the country is a special case
+        if (specialCases[country]) {
+          return { country, code: specialCases[country] };
+        }
+
+        // Normal case: look up the country code
+        const code = Object.entries(i18n.getNames('en'))
+          .find(([_, name]) => name === country)?.[0];
+        
+        if (!code) {
+          return { country, code: undefined };
+        }
+        
+        return { country, code };
+      });
+
+      // Set destination_zone to the first country code if available
+      if (countryCodes.length > 0 && countryCodes[0].code) {
+        onChange({ ...data, destination_zone: countryCodes[0].code });
       }
-
-      // Normal case: look up the country code
-      const code = Object.entries(i18n.getNames('en'))
-        .find(([_, name]) => name === country)?.[0];
-      
-      if (!code) {
-        return { country, code: undefined };
-      }
-      
-      return { country, code };
-    });
-
-    // Set destination_zone to the first country code if available
-    if (countryCodes.length > 0 && countryCodes[0].code) {
-      onChange({ ...data, destination_zone: countryCodes[0].code });
     }
-  }, []);
+  }, [data.destinationZones]);
 
   const filteredZones = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter((zone) => {
     const countries = getCountriesByZone(zone);
@@ -190,6 +190,14 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
   // Log data changes
   useEffect(() => {
+    console.log('Data from OpenAI:', {
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      destination_zone: data.destination_zone,
+      destinationZones: data.destinationZones,
+      seniority: data.seniority
+    });
   }, [data]);
 
   return (
@@ -380,6 +388,35 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                     ×
                   </button>
                 </span>
+              </div>
+            </div>
+          )}
+
+          {/* Suggestions from data.destinationZones */}
+          {data.destinationZones && data.destinationZones.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested Countries:</h4>
+              <div className="flex flex-wrap gap-2">
+                {data.destinationZones.map((country) => {
+                  const countryCode = Object.entries(i18n.getNames('en'))
+                    .find(([_, name]) => name === country)?.[0];
+                  
+                  if (!countryCode) return null;
+
+                  return (
+                    <button
+                      key={countryCode}
+                      onClick={() => handleCountrySelect(countryCode)}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
+                        data.destination_zone === countryCode
+                          ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      {country}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
