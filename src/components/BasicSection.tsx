@@ -99,6 +99,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
   // Log destination zone codes from suggestions
   useEffect(() => {
+    console.log('Debug destinationZones:', {
+      destinationZones: data.destinationZones,
+      currentDestinationZone: data.destination_zone
+    });
+
     if (data.destinationZones && data.destinationZones.length > 0) {
       // Convert country names to codes with special cases
       const countryCodes = data.destinationZones.map(country => {
@@ -112,6 +117,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
         // Check if the country is a special case
         if (specialCases[country]) {
+          console.log('Found special case for country:', country, '->', specialCases[country]);
           return { country, code: specialCases[country] };
         }
 
@@ -119,17 +125,27 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         const code = Object.entries(i18n.getNames('en'))
           .find(([_, name]) => name === country)?.[0];
         
+        console.log('Looking up country code for:', country, '->', code);
+        
         if (!code) {
+          console.log('No code found for country:', country);
           return { country, code: undefined };
         }
         
         return { country, code };
       });
 
+      console.log('Converted country codes:', countryCodes);
+
       // Set destination_zone to the first country code if available
       if (countryCodes.length > 0 && countryCodes[0].code) {
+        console.log('Setting destination_zone to:', countryCodes[0].code);
         onChange({ ...data, destination_zone: countryCodes[0].code });
+      } else {
+        console.log('No valid country code found to set as destination_zone');
       }
+    } else {
+      console.log('No destinationZones available');
     }
   }, [data.destinationZones]);
 
