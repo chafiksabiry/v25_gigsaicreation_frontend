@@ -9,30 +9,30 @@ import {
 
 interface CommissionSectionProps {
   data: {
-    base?: string;
-    baseAmount?: string;
+    base: string;
+    baseAmount: string;
     bonus?: string;
     bonusAmount?: string;
     structure?: string;
-    currency?: string;
-    minimumVolume?: {
-      amount?: string;
-      period?: string;
-      unit?: string;
+    currency: string;
+    minimumVolume: {
+      amount: string;
+      period: string;
+      unit: string;
     };
-    transactionCommission?: {
-      type?: string;
-      amount?: string;
+    transactionCommission: {
+      type: string;
+      amount: string;
     };
   };
   onChange: (data: any) => void;
-  errors?: { [key: string]: string[] };
-  warnings?: { [key: string]: string[] };
+  errors: { [key: string]: string[] };
+  warnings: { [key: string]: string[] };
   onNext?: () => void;
   onPrevious?: () => void;
 }
 
-export function CommissionSection({ data = {}, onChange, errors = {}, warnings = {}, onNext, onPrevious }: CommissionSectionProps) {
+export function CommissionSection({ data, onChange, errors, warnings, onNext, onPrevious }: CommissionSectionProps) {
   const getCurrencySymbol = () => {
     return data?.currency ? 
       predefinedOptions.commission.currencies.find(c => c.code === data?.currency)?.symbol || '$'
@@ -41,25 +41,6 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
 
   const formatAmount = (value: string) => {
     return value?.replace(/[^\d.]/g, '') || '';
-  };
-
-  // Ensure we have default values for all required fields
-  const commissionData = {
-    base: data.base || '',
-    baseAmount: data.baseAmount || '',
-    bonus: data.bonus || '',
-    bonusAmount: data.bonusAmount || '',
-    structure: data.structure || '',
-    currency: data.currency || 'USD',
-    minimumVolume: {
-      amount: data.minimumVolume?.amount || '',
-      period: data.minimumVolume?.period || '',
-      unit: data.minimumVolume?.unit || ''
-    },
-    transactionCommission: {
-      type: data.transactionCommission?.type || '',
-      amount: data.transactionCommission?.amount || ''
-    }
   };
 
   return (
@@ -85,19 +66,19 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
           {predefinedOptions.commission.currencies.map((currency) => (
             <button
               key={currency.code}
-              onClick={() => onChange({ ...commissionData, currency: currency.code })}
+              onClick={() => onChange({ ...data, currency: currency.code })}
               className={`flex items-center gap-3 p-4 rounded-xl text-left transition-colors ${
-                commissionData.currency === currency.code
+                data?.currency === currency.code
                   ? 'bg-green-100 text-green-700 border border-green-200'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                commissionData.currency === currency.code
+                data?.currency === currency.code
                   ? 'bg-green-600'
                   : 'border-2 border-gray-300'
               }`}>
-                {commissionData.currency === currency.code && (
+                {data?.currency === currency.code && (
                   <div className="w-2.5 h-2.5 rounded-full bg-white" />
                 )}
               </div>
@@ -132,8 +113,8 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
                 </div>
                 <input
                   type="text"
-                  value={commissionData.baseAmount}
-                  onChange={(e) => onChange({ ...commissionData, baseAmount: formatAmount(e.target.value) })}
+                  value={data?.baseAmount || ''}
+                  onChange={(e) => onChange({ ...data, baseAmount: formatAmount(e.target.value) })}
                   className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter base amount"
                 />
@@ -143,8 +124,8 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
             <div>
               <label className="block text-sm font-medium text-gray-700">Base Type</label>
               <select
-                value={commissionData.base}
-                onChange={(e) => onChange({ ...commissionData, base: e.target.value })}
+                value={data?.base || ''}
+                onChange={(e) => onChange({ ...data, base: e.target.value })}
                 className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select type</option>
@@ -167,11 +148,11 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
                 <label className="block text-sm font-medium text-gray-600">Target Amount</label>
                 <input
                   type="text"
-                  value={commissionData.minimumVolume.amount}
+                  value={data?.minimumVolume?.amount || ''}
                   onChange={(e) => onChange({
-                    ...commissionData,
+                    ...data,
                     minimumVolume: {
-                      ...commissionData.minimumVolume,
+                      ...data?.minimumVolume,
                       amount: formatAmount(e.target.value)
                     }
                   })}
@@ -183,11 +164,11 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
               <div>
                 <label className="block text-sm font-medium text-gray-600">Unit</label>
                 <select
-                  value={commissionData.minimumVolume.unit}
+                  value={data?.minimumVolume?.unit || ''}
                   onChange={(e) => onChange({
-                    ...commissionData,
+                    ...data,
                     minimumVolume: {
-                      ...commissionData.minimumVolume,
+                      ...data?.minimumVolume,
                       unit: e.target.value
                     }
                   })}
@@ -203,11 +184,11 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
               <div>
                 <label className="block text-sm font-medium text-gray-600">Period</label>
                 <select
-                  value={commissionData.minimumVolume.period}
+                  value={data?.minimumVolume?.period || ''}
                   onChange={(e) => onChange({
-                    ...commissionData,
+                    ...data,
                     minimumVolume: {
-                      ...commissionData.minimumVolume,
+                      ...data?.minimumVolume,
                       period: e.target.value
                     }
                   })}
@@ -240,11 +221,11 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
           <div>
             <label className="block text-sm font-medium text-gray-700">Commission Type</label>
             <select
-              value={commissionData.transactionCommission.type}
+              value={data?.transactionCommission?.type || ''}
               onChange={(e) => onChange({
-                ...commissionData,
+                ...data,
                 transactionCommission: {
-                  ...commissionData.transactionCommission,
+                  ...data?.transactionCommission,
                   type: e.target.value
                 }
               })}
@@ -262,21 +243,21 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span className="text-gray-500">
-                  {commissionData.transactionCommission.type === 'percentage' ? '%' : getCurrencySymbol()}
+                  {data?.transactionCommission?.type === 'percentage' ? '%' : getCurrencySymbol()}
                 </span>
               </div>
               <input
                 type="text"
-                value={commissionData.transactionCommission.amount}
+                value={data?.transactionCommission?.amount || ''}
                 onChange={(e) => onChange({
-                  ...commissionData,
+                  ...data,
                   transactionCommission: {
-                    ...commissionData.transactionCommission,
+                    ...data?.transactionCommission,
                     amount: formatAmount(e.target.value)
                   }
                 })}
                 className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-purple-500 focus:border-purple-500"
-                placeholder={`Enter ${commissionData.transactionCommission.type === 'percentage' ? 'percentage' : 'amount'}`}
+                placeholder={`Enter ${data?.transactionCommission?.type === 'percentage' ? 'percentage' : 'amount'}`}
               />
             </div>
           </div>
@@ -300,8 +281,8 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
             <div>
               <label className="block text-sm font-medium text-gray-700">Bonus Type</label>
               <select
-                value={commissionData.bonus}
-                onChange={(e) => onChange({ ...commissionData, bonus: e.target.value })}
+                value={data?.bonus || ''}
+                onChange={(e) => onChange({ ...data, bonus: e.target.value })}
                 className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-amber-500 focus:border-amber-500"
               >
                 <option value="">Select bonus type</option>
@@ -319,8 +300,8 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
                 </div>
                 <input
                   type="text"
-                  value={commissionData.bonusAmount}
-                  onChange={(e) => onChange({ ...commissionData, bonusAmount: formatAmount(e.target.value) })}
+                  value={data?.bonusAmount || ''}
+                  onChange={(e) => onChange({ ...data, bonusAmount: formatAmount(e.target.value) })}
                   className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="Enter bonus amount"
                 />
@@ -334,8 +315,8 @@ export function CommissionSection({ data = {}, onChange, errors = {}, warnings =
       <div className="bg-white rounded-xl p-6 border border-gray-200">
         <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
         <textarea
-          value={commissionData.structure}
-          onChange={(e) => onChange({ ...commissionData, structure: e.target.value })}
+          value={data?.structure || ''}
+          onChange={(e) => onChange({ ...data, structure: e.target.value })}
           rows={4}
           className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Add any additional details about the commission structure..."
