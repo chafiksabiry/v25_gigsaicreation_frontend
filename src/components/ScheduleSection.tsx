@@ -171,7 +171,7 @@ export function ScheduleSection({
   const [workingHoursSuggestions, setWorkingHoursSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    if (data.timeZones.length > 0) {
+    if (data?.timeZones?.length > 0) {
       try {
         // Convert string timezones to TimezoneCode
         const validTimezones = data.timeZones.filter((tz): tz is TimezoneCode => 
@@ -194,7 +194,7 @@ export function ScheduleSection({
         console.error('Error analyzing timezones:', error);
       }
     }
-  }, [data.timeZones]);
+  }, [data?.timeZones]);
 
   return (
     <div className="space-y-6">

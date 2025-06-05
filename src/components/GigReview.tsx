@@ -255,7 +255,7 @@ export function GigReview({
                 {data.schedule?.hours || 'Not specified'}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.schedule.timeZones.join(", ")}
+                {data.schedule?.timeZones?.join(", ") || 'No time zones specified'}
               </p>
             </div>
           </div>
@@ -445,7 +445,7 @@ export function GigReview({
                     Time Zones
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {data.schedule.timeZones.map((zone) => (
+                    {data.schedule?.timeZones?.map((zone) => (
                       <span
                         key={zone}
                         className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"

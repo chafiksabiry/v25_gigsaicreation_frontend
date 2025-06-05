@@ -122,10 +122,10 @@ const PrompAI: React.FC = () => {
       },
       // Section Schedule
       schedule: {
-        days: suggestions.schedule?.days || prevData.schedule.days,
-        hours: suggestions.schedule?.hours || prevData.schedule.hours,
-        timeZones:
-          suggestions.schedule?.timeZones || prevData.schedule.timeZones,
+        days: suggestions.schedule?.days || prevData.schedule?.days || [],
+        hours: suggestions.schedule?.hours || prevData.schedule?.hours || '',
+        timeZones: suggestions.schedule?.timeZones || prevData.schedule?.timeZones || [],
+        flexibility: suggestions.schedule?.flexibility || prevData.schedule?.flexibility || []
       },
       // Section Commission
       commission: {
