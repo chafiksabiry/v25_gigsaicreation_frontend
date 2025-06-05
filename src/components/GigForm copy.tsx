@@ -377,7 +377,7 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
               type="text"
               id="baseAmount"
               required
-              value={formData.commission?.baseAmount}
+              value={formData.commission?.baseAmount || ''}
               onChange={(e) => handleNestedChange('commission', 'baseAmount', e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />

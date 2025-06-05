@@ -53,13 +53,21 @@ const PrompAI: React.FC = () => {
     },
     commission: {
       currency: "",
-      base: false,
-      baseAmount: 0,
+      base: "false",
+      baseAmount: "0",
+      bonus: "",
+      bonusAmount: "0",
+      structure: "",
       minimumVolume: {
-        amount: 0,
+        amount: "0",
         unit: "",
         period: "",
       },
+      transactionCommission: {
+        type: "",
+        amount: "0"
+      },
+      kpis: []
     },
     leads: {
       types: [],
@@ -118,14 +126,20 @@ const PrompAI: React.FC = () => {
       category: suggestions.sectors?.[0] || prevData.category,
       seniority: {
         level: suggestions.seniority?.level || prevData.seniority.level,
-        years: parseInt(suggestions.seniority?.yearsExperience || "0"),
+        years: (parseInt(suggestions.seniority?.yearsExperience || "0")).toString(),
+        yearsExperience: suggestions.seniority?.yearsExperience || prevData.seniority.yearsExperience || "0"
       },
       // Section Schedule
       schedule: {
         days: suggestions.schedule?.days || prevData.schedule?.days || [],
         hours: suggestions.schedule?.hours || prevData.schedule?.hours || '',
         timeZones: suggestions.schedule?.timeZones || prevData.schedule?.timeZones || [],
-        flexibility: suggestions.schedule?.flexibility || prevData.schedule?.flexibility || []
+        flexibility: suggestions.schedule?.flexibility || prevData.schedule?.flexibility || [],
+        minimumHours: {
+          daily: 0,
+          weekly: 0,
+          monthly: 0
+        }
       },
       // Section Commission
       commission: {
@@ -166,16 +180,26 @@ const PrompAI: React.FC = () => {
             suggestions.commission?.options?.[0]?.transactionCommission
               ?.amount || prevData.commission.transactionCommission.amount,
         },
+        kpis: suggestions.commission?.options?.[0]?.kpis || prevData.commission.kpis || []
       },
       // Section Skills
       skills: {
-        languages: suggestions.skills?.languages || prevData.skills.languages,
-        professional:
-          suggestions.skills?.professional || prevData.skills.professional,
+        languages: suggestions.skills?.languages?.map(lang => ({
+          name: lang.name || '',
+          level: lang.level || ''
+        })) || prevData.skills.languages,
+        soft: suggestions.skills?.soft || prevData.skills.soft || [],
+        professional: suggestions.skills?.professional || prevData.skills.professional || [],
+        technical: suggestions.skills?.technical || prevData.skills.technical || [],
+        certifications: suggestions.skills?.certifications?.map(cert => ({
+          name: cert.name || '',
+          required: cert.required || false,
+          provider: cert.provider
+        })) || prevData.skills.certifications || []
       },
       // Section Team
       team: {
-        size: parseInt(suggestions.team?.size?.toString() || "0"),
+        size: (parseInt(suggestions.team?.size?.toString() || "0")).toString(),
         structure: suggestions.team?.structure || prevData.team.structure,
         territories: suggestions.team?.territories || prevData.team.territories,
         reporting: {

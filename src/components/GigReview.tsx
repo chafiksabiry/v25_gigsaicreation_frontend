@@ -308,7 +308,7 @@ export function GigReview({
                       <div>
                         <div className="text-2xl font-bold text-gray-900">
                           {getCurrencySymbol()}
-                          {data.commission.baseAmount}
+                          {data.commission?.baseAmount || '0'}
                         </div>
                         <div className="text-sm text-gray-600 mt-1">
                           {data.commission.base}
