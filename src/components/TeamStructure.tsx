@@ -16,11 +16,21 @@ interface TeamStructureProps {
     size: string;
     structure: TeamRole[];
     territories: string[];
+    reporting: {
+      to: string;
+      frequency: string;
+    };
+    collaboration: string[];
   };
   onChange: (data: {
     size: string;
     structure: TeamRole[];
     territories: string[];
+    reporting: {
+      to: string;
+      frequency: string;
+    };
+    collaboration: string[];
   }) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -31,7 +41,9 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
   const initializedTeam = {
     size: data?.size || '0',
     structure: data?.structure || [],
-    territories: data?.territories || []
+    territories: data?.territories || [],
+    reporting: data?.reporting || { to: '', frequency: '' },
+    collaboration: data?.collaboration || []
   };
 
   const handleAddRole = () => {
@@ -136,7 +148,17 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
             <input
               type="text"
               value={initializedTeam.size || '0'}
-              onChange={(e) => onChange({ ...initializedTeam, size: e.target.value || '0' })}
+              onChange={(e) => {
+                const newSize = e.target.value || '0';
+                onChange({
+                  ...initializedTeam,
+                  size: newSize,
+                  structure: initializedTeam.structure || [],
+                  territories: initializedTeam.territories || [],
+                  reporting: initializedTeam.reporting || { to: '', frequency: '' },
+                  collaboration: initializedTeam.collaboration || []
+                });
+              }}
               placeholder="e.g., 5-10 people"
               className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
