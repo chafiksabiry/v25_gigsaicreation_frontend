@@ -125,9 +125,9 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 <h3 className="font-medium">Base Commission</h3>
               </div>
               <div className="text-2xl font-bold text-blue-900">
-                {getCurrencySymbol()}{data.commission.baseAmount || '0'}
+                {getCurrencySymbol()}{data?.commission?.baseAmount || '0'}
               </div>
-              <p className="text-sm text-blue-600 mt-1">{data.commission.base}</p>
+              <p className="text-sm text-blue-600 mt-1">{data?.commission?.base || 'No base commission'}</p>
             </div>
 
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
@@ -145,9 +145,9 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 <h3 className="font-medium">Performance Bonus</h3>
               </div>
               <div className="text-2xl font-bold text-green-900">
-                {data.commission.bonus ? `${getCurrencySymbol()}${data.commission.bonusAmount}` : 'N/A'}
+                {data?.commission?.bonus ? `${getCurrencySymbol()}${data?.commission?.bonusAmount || '0'}` : 'N/A'}
               </div>
-              <p className="text-sm text-green-600 mt-1">{data.commission.bonus || 'No bonus structure'}</p>
+              <p className="text-sm text-green-600 mt-1">{data?.commission?.bonus || 'No bonus structure'}</p>
             </div>
 
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">

@@ -213,10 +213,10 @@ export function GigReview({
               </div>
               <div className="text-2xl font-bold text-gray-900">
                 {getCurrencySymbol()}
-                {data.commission?.baseAmount || "0"}
+                {data?.commission?.baseAmount || "0"}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.commission?.base || "No base commission"}
+                {data?.commission?.base || "No base commission"}
               </p>
             </div>
 
@@ -226,12 +226,12 @@ export function GigReview({
                 <h3 className="font-medium">Performance Bonus</h3>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.commission?.bonus
-                  ? `${getCurrencySymbol()}${data.commission.bonusAmount}`
+                {data?.commission?.bonus
+                  ? `${getCurrencySymbol()}${data?.commission?.bonusAmount || "0"}`
                   : "N/A"}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.commission?.bonus || "No bonus structure"}
+                {data?.commission?.bonus || "No bonus structure"}
               </p>
             </div>
 
