@@ -210,14 +210,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
   // Log data changes
   useEffect(() => {
-    console.log('Data from OpenAI:', {
-      title: data.title,
-      description: data.description,
-      category: data.category,
-      destination_zone: data.destination_zone,
-      destinationZones: data.destinationZones,
-      seniority: data.seniority
-    });
+
+    console.log('Data from OpenAI:', data);
   }, [data]);
 
   return (
