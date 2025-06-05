@@ -58,7 +58,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
     );
     if (availableRole) {
       onChange({
-        ...initializedTeam,
+        ...data,
         team: {
           ...initializedTeam.team,
           structure: [...initializedTeam.team.structure, { 
@@ -76,7 +76,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
 
   const handleRemoveRole = (index: number) => {
     onChange({
-      ...initializedTeam,
+      ...data,
       team: {
         ...initializedTeam.team,
         structure: initializedTeam.team.structure.filter((_, i) => i !== index)
@@ -95,7 +95,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       }
     };
     onChange({
-      ...initializedTeam,
+      ...data,
       team: {
         ...initializedTeam.team,
         structure: newStructure
@@ -107,7 +107,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
     const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = { ...newStructure[index], count: Math.max(1, count) };
     onChange({
-      ...initializedTeam,
+      ...data,
       team: {
         ...initializedTeam.team,
         structure: newStructure
@@ -125,7 +125,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       }
     };
     onChange({
-      ...initializedTeam,
+      ...data,
       team: {
         ...initializedTeam.team,
         structure: newStructure
@@ -138,7 +138,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       ? initializedTeam.team.territories.filter(t => t !== territory)
       : [...initializedTeam.team.territories, territory];
     onChange({
-      ...initializedTeam,
+      ...data,
       team: {
         ...initializedTeam.team,
         territories: newTerritories
