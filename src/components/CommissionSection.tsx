@@ -34,13 +34,13 @@ interface CommissionSectionProps {
 
 export function CommissionSection({ data, onChange, errors, warnings, onNext, onPrevious }: CommissionSectionProps) {
   const getCurrencySymbol = () => {
-    return data.currency ? 
-      predefinedOptions.commission.currencies.find(c => c.code === data.currency)?.symbol || '$'
+    return data?.currency ? 
+      predefinedOptions.commission.currencies.find(c => c.code === data?.currency)?.symbol || '$'
       : '$';
   };
 
   const formatAmount = (value: string) => {
-    return value.replace(/[^\d.]/g, '');
+    return value?.replace(/[^\d.]/g, '') || '';
   };
 
   return (
@@ -68,17 +68,17 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               key={currency.code}
               onClick={() => onChange({ ...data, currency: currency.code })}
               className={`flex items-center gap-3 p-4 rounded-xl text-left transition-colors ${
-                data.currency === currency.code
+                data?.currency === currency.code
                   ? 'bg-green-100 text-green-700 border border-green-200'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                data.currency === currency.code
+                data?.currency === currency.code
                   ? 'bg-green-600'
                   : 'border-2 border-gray-300'
               }`}>
-                {data.currency === currency.code && (
+                {data?.currency === currency.code && (
                   <div className="w-2.5 h-2.5 rounded-full bg-white" />
                 )}
               </div>
@@ -113,7 +113,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 </div>
                 <input
                   type="text"
-                  value={data.baseAmount}
+                  value={data?.baseAmount || ''}
                   onChange={(e) => onChange({ ...data, baseAmount: formatAmount(e.target.value) })}
                   className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter base amount"
@@ -124,7 +124,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             <div>
               <label className="block text-sm font-medium text-gray-700">Base Type</label>
               <select
-                value={data.base}
+                value={data?.base || ''}
                 onChange={(e) => onChange({ ...data, base: e.target.value })}
                 className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               >
@@ -148,11 +148,11 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 <label className="block text-sm font-medium text-gray-600">Target Amount</label>
                 <input
                   type="text"
-                  value={data.minimumVolume?.amount || ''}
+                  value={data?.minimumVolume?.amount || ''}
                   onChange={(e) => onChange({
                     ...data,
                     minimumVolume: {
-                      ...data.minimumVolume,
+                      ...data?.minimumVolume,
                       amount: formatAmount(e.target.value)
                     }
                   })}
@@ -164,11 +164,11 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               <div>
                 <label className="block text-sm font-medium text-gray-600">Unit</label>
                 <select
-                  value={data.minimumVolume?.unit || ''}
+                  value={data?.minimumVolume?.unit || ''}
                   onChange={(e) => onChange({
                     ...data,
                     minimumVolume: {
-                      ...data.minimumVolume,
+                      ...data?.minimumVolume,
                       unit: e.target.value
                     }
                   })}
@@ -184,11 +184,11 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               <div>
                 <label className="block text-sm font-medium text-gray-600">Period</label>
                 <select
-                  value={data.minimumVolume?.period || ''}
+                  value={data?.minimumVolume?.period || ''}
                   onChange={(e) => onChange({
                     ...data,
                     minimumVolume: {
-                      ...data.minimumVolume,
+                      ...data?.minimumVolume,
                       period: e.target.value
                     }
                   })}
@@ -221,11 +221,11 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           <div>
             <label className="block text-sm font-medium text-gray-700">Commission Type</label>
             <select
-              value={data.transactionCommission?.type || ''}
+              value={data?.transactionCommission?.type || ''}
               onChange={(e) => onChange({
                 ...data,
                 transactionCommission: {
-                  ...data.transactionCommission,
+                  ...data?.transactionCommission,
                   type: e.target.value
                 }
               })}
@@ -243,21 +243,21 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span className="text-gray-500">
-                  {data.transactionCommission?.type === 'percentage' ? '%' : getCurrencySymbol()}
+                  {data?.transactionCommission?.type === 'percentage' ? '%' : getCurrencySymbol()}
                 </span>
               </div>
               <input
                 type="text"
-                value={data.transactionCommission?.amount || ''}
+                value={data?.transactionCommission?.amount || ''}
                 onChange={(e) => onChange({
                   ...data,
                   transactionCommission: {
-                    ...data.transactionCommission,
+                    ...data?.transactionCommission,
                     amount: formatAmount(e.target.value)
                   }
                 })}
                 className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-purple-500 focus:border-purple-500"
-                placeholder={`Enter ${data.transactionCommission?.type === 'percentage' ? 'percentage' : 'amount'}`}
+                placeholder={`Enter ${data?.transactionCommission?.type === 'percentage' ? 'percentage' : 'amount'}`}
               />
             </div>
           </div>
