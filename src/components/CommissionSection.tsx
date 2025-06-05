@@ -15,6 +15,23 @@ interface CommissionSectionProps {
     bonusAmount?: string;
     structure?: string;
     currency: string;
+    commission?: {
+      base: string;
+      baseAmount: string;
+      bonus?: string;
+      bonusAmount?: string;
+      structure?: string;
+      currency: string;
+      minimumVolume: {
+        amount: string;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: string;
+      };
+    };
     minimumVolume: {
       amount: string;
       period: string;
@@ -66,7 +83,17 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           {predefinedOptions.commission.currencies.map((currency) => (
             <button
               key={currency.code}
-              onClick={() => onChange({ ...data, currency: currency.code })}
+              onClick={() => {
+                const newData = {
+                  ...data,
+                  currency: currency.code,
+                  commission: {
+                    ...data.commission,
+                    currency: currency.code
+                  }
+                };
+                onChange(newData);
+              }}
               className={`flex items-center gap-3 p-4 rounded-xl text-left transition-colors ${
                 data?.currency === currency.code
                   ? 'bg-green-100 text-green-700 border border-green-200'
