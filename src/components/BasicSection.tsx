@@ -100,7 +100,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   // Log destination zone codes from suggestions
   useEffect(() => {
     console.log('Debug destinationZones:', {
-      destinationZones: data.destinationZones,
+      destinationZones: data.destinationZones?.length,
       currentDestinationZone: data.destination_zone
     });
 
@@ -115,7 +115,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           'Northern Ireland': 'GB', // Northern Ireland is part of United Kingdom
           'Germany': 'DE',  // Add Germany explicitly
           'Deutschland': 'DE', // Add German name for Germany
-          'Egypt': 'EG'     // Add Egypt explicitly
+          'Egypt': 'EG',    // Add Egypt explicitly
+          'Turkey': 'TR'    // Add Turkey explicitly
         };
 
         // Check if the country is a special case
