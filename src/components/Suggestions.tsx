@@ -343,56 +343,11 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   }, [input]);
 
   const handleConfirm = () => {
-    if (!suggestions) {
-      Swal.fire({
-        title: "Error",
-        text: "No suggestions available to confirm",
-        icon: "error",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          htmlContainer: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      });
-      return;
-    }
-
-    // Apply default values for missing fields
-    const validatedSuggestions = { ...suggestions };
-    
-    // Basic fields
-    if (!validatedSuggestions.title) {
-      validatedSuggestions.title = "Untitled Gig";
-    }
-    if (!validatedSuggestions.description) {
-      validatedSuggestions.description = "No description provided";
-    }
-    if (!validatedSuggestions.category) {
-      validatedSuggestions.category = "General";
-    }
-    if (!validatedSuggestions.seniority?.level) {
-      validatedSuggestions.seniority = {
-        ...validatedSuggestions.seniority,
-        level: "Mid Level"
-      };
-    }
-    if (!validatedSuggestions.seniority?.yearsExperience) {
-      validatedSuggestions.seniority = {
-        ...validatedSuggestions.seniority,
-        yearsExperience: "2-5 years"
-      };
-    }
-
-    // Validate and apply default values
-    validateGigData(validatedSuggestions);
-
-    setIsConfirming(true);
+    console.log('Generated Gig Data:', gigData);
     if (onConfirm) {
-      onConfirm(validatedSuggestions);
+      onConfirm(gigData);
     }
   };
-
 
   const generateJobDescription = async (title: string) => {
     if (!openai) {
@@ -751,6 +706,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         const metadataData = JSON.parse(response);
         setMetadata(metadataData);
         setEditableMetadata(metadataData);
+        console.log('Generated Metadata:', metadataData);
       }
     } catch (error) {
       console.error("Error generating metadata:", error);
@@ -1031,6 +987,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
             setSuggestions(mergedSuggestions);
             setEditableSuggestions(mergedSuggestions);
+            console.log('Generated Suggestions:', mergedSuggestions);
           } catch (error) {
             console.error("Error parsing suggestions:", error);
             // Fallback to default suggestions if parsing fails
@@ -1420,6 +1377,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       }).then(() => {
         onBack();
       });
+      console.log('Saving to database:', gigData);
     } catch (error) {
       console.error("Error saving gig data:", error);
       Swal.fire({
