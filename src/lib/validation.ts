@@ -50,21 +50,21 @@ export function validateGigData(data: GigData): ValidationResult {
   if (!data.commission) {
     errors.commission = [...(errors.commission || []), 'Commission information is required'];
   } else {
-    if (!data.commission.currency) {
+    if (!data.commission?.currency) {
       errors.commission = [...(errors.commission || []), 'Currency is required'];
     }
 
-    if (data.commission.base) {
-      if (!data.commission.baseAmount) {
+    if (data.commission?.base) {
+      if (!data.commission?.baseAmount) {
         errors.commission = [...(errors.commission || []), 'Base commission amount is required'];
       }
-      if (!data.commission.minimumVolume?.amount) {
+      if (!data.commission?.minimumVolume?.amount) {
         errors.commission = [...(errors.commission || []), 'Minimum volume amount is required'];
       }
       if (!data.commission.minimumVolume?.unit) {
         errors.commission = [...(errors.commission || []), 'Minimum volume unit is required'];
       }
-      if (!data.commission.minimumVolume?.period) {
+      if (!data.commission?.minimumVolume?.period) {
         errors.commission = [...(errors.commission || []), 'Minimum volume period is required'];
       }
     }
