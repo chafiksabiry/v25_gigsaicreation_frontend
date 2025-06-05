@@ -168,6 +168,7 @@ export interface GigSuggestion {
   jobTitles: string[];
   deliverables: string[];
   sectors: string[];
+  destinationZones: string[];
   schedule: {
     days: string[];
     hours: string;

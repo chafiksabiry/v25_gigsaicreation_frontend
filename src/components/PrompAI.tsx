@@ -40,6 +40,7 @@ const PrompAI: React.FC = () => {
     userId: "",
     companyId: "",
     destination_zone: "",
+    destinationZones: [],
     callTypes: [],
     highlights: [],
     requirements: {
@@ -178,6 +179,8 @@ const PrompAI: React.FC = () => {
       title: suggestions.jobTitles?.[0] || prevData.title,
       description: suggestions.deliverables?.join("\n") || prevData.description,
       category: suggestions.sectors?.[0] || prevData.category,
+      destinationZones: suggestions.destinationZones || prevData.destinationZones,
+      destination_zone: suggestions.destinationZones?.[0] ? 'TR' : prevData.destination_zone,
       seniority: {
         level: suggestions.seniority?.level || prevData.seniority.level,
         years: suggestions.seniority?.yearsExperience || prevData.seniority.years,
@@ -259,7 +262,24 @@ const PrompAI: React.FC = () => {
   };
 
   const handleGigDataChange = (newData: GigData) => {
-    setGigData(newData);
+    console.log('handleGigDataChange - Previous data:', gigData);
+    console.log('handleGigDataChange - New data:', newData);
+    
+    // If we have confirmed suggestions, merge them with the new data
+    if (confirmedSuggestions) {
+      const updatedData = {
+        ...newData,
+        // Preserve destinationZones from suggestions if they exist
+        destinationZones: confirmedSuggestions.destinationZones || newData.destinationZones,
+        // If we have a destination_zone from suggestions, use it
+        destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] ? 'TR' : '')
+      };
+      
+      console.log('handleGigDataChange - Updated data with suggestions:', updatedData);
+      setGigData(updatedData);
+    } else {
+      setGigData(newData);
+    }
   };
 
   if (showSuggestions) {
