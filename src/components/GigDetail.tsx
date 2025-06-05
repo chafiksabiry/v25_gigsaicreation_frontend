@@ -52,6 +52,16 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
     }
   };
 
+  // Helper function to format minimum volume
+  const formatMinimumVolume = () => {
+    if (!gig?.commission?.minimumVolume) return 'Not specified';
+    
+    const { amount, unit, period } = gig.commission.minimumVolume;
+    if (!amount || !unit || !period) return 'Not specified';
+    
+    return `${amount} ${unit} per ${period}`;
+  };
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
       {/* Header */}
@@ -156,6 +166,19 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                   <div>
                     <div className="text-sm text-gray-500">Type</div>
                     <div className="text-gray-900">{gig?.commission?.base || 'Not specified'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Minimum Volume */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-3">Minimum Volume</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500">Requirements</div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {formatMinimumVolume()}
+                    </div>
                   </div>
                 </div>
               </div>
