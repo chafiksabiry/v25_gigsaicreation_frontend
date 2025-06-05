@@ -74,7 +74,7 @@ interface Company {
 //   }
 // }
 
-export async function saveGigData(gigData: GigData): Promise<void> {
+export async function saveGigData(gigData: GigData): Promise<{ data: any; error?: Error }> {
   try {
     const userId = Cookies.get("userId");
     
@@ -103,24 +103,24 @@ export async function saveGigData(gigData: GigData): Promise<void> {
       console.error('Error response text:', responseText);
       try {
         const errorData = JSON.parse(responseText);
-        throw new Error(errorData.message || 'Failed to save gig data');
+        return { data: null, error: new Error(errorData.message || 'Failed to save gig data') };
       } catch (parseError) {
         console.error('Error parsing error response:', parseError);
-        throw new Error(`Failed to save gig data: ${responseText}`);
+        return { data: null, error: new Error(`Failed to save gig data: ${responseText}`) };
       }
     }
     
     try {
       const data = JSON.parse(responseText);
       console.log('Parsed response data:', data);
-      return data;
+      return { data, error: null };
     } catch (parseError) {
       console.error('Error parsing success response:', parseError);
-      throw new Error('Invalid JSON response from server');
+      return { data: null, error: new Error('Invalid JSON response from server') };
     }
   } catch (error) {
     console.error('Error in saveGigData:', error);
-    throw error;
+    return { data: null, error: error instanceof Error ? error : new Error('Unknown error occurred') };
   }
 }
 

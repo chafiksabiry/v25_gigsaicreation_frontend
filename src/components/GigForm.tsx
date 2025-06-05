@@ -6,6 +6,7 @@ import {
   Brain, Briefcase, FileText, Building2
 } from 'lucide-react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 type GigFormData = {
   title: string;
@@ -48,8 +49,11 @@ type GigFormData = {
   };
   prerequisites: string[];
   documentation: {
+    templates: {};
+    reference: {};
     product: string[];
-    sales: string[];
+    process: string[];
+    training: string[];
   };
 };
 
@@ -62,23 +66,127 @@ export function GigForm() {
     try {
       // Insert main gig data
       const gigData = {
+        userId: Cookies.get("userId") || "",
+        companyId: Cookies.get("companyId") || "",
         title: data.title,
         description: data.description,
         category: data.category,
-        call_types: data.callTypes,
-        schedule_days: data.schedule?.days || [],
-        schedule_hours: data.schedule?.hours || '',
-        schedule_timezone: data.schedule?.timeZones || [],
-        schedule_flexibility: data.schedule?.flexibility || '',
-        commission_base: data.commission.base,
-        commission_bonus: data.commission.bonus,
-        commission_structure: data.commission.structure,
-        seniority_level: data.seniority.level,
-        years_experience: data.seniority.yearsExperience,
-        team_size: data.team?.size || '0',
-        team_structure: data.team?.structure || [],
-        team_territories: data.team?.territories || [],
-        prerequisites: data.prerequisites
+        destination_zone: "",
+        callTypes: data.callTypes,
+        highlights: [],
+        requirements: {
+          essential: [],
+          preferred: []
+        },
+        benefits: [],
+        schedule: {
+          days: data.schedule?.days || [],
+          hours: data.schedule?.hours || '',
+          timeZones: data.schedule?.timeZones || [],
+          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
+          minimumHours: {
+            daily: undefined,
+            weekly: undefined,
+            monthly: undefined
+          }
+        },
+        commission: {
+          base: data.commission.base,
+          baseAmount: "",
+          bonus: data.commission.bonus,
+          bonusAmount: "",
+          structure: data.commission.structure,
+          currency: "USD",
+          minimumVolume: {
+            amount: "",
+            period: "",
+            unit: ""
+          },
+          transactionCommission: {
+            type: "",
+            amount: ""
+          },
+          kpis: []
+        },
+        leads: {
+          types: data.leads.types,
+          sources: data.leads.sources,
+          distribution: {
+            method: "",
+            rules: []
+          },
+          qualificationCriteria: []
+        },
+        skills: {
+          languages: data.skills.languages,
+          soft: data.skills.soft,
+          professional: data.skills.professional,
+          technical: [],
+          certifications: []
+        },
+        seniority: {
+          level: data.seniority.level,
+          yearsExperience: data.seniority.yearsExperience,
+          years: ""
+        },
+        team: {
+          size: data.team?.size || "",
+          structure: (data.team?.structure || []).map(role => ({
+            roleId: role,
+            count: 1,
+            seniority: {
+              level: "",
+              yearsExperience: ""
+            }
+          })),
+          territories: data.team?.territories || [],
+          reporting: {
+            to: "",
+            frequency: ""
+          },
+          collaboration: []
+        },
+        documentation: {
+          templates: {},
+          reference: {},
+          product: (data.documentation?.product || []).map(name => ({ name, url: "" })),
+          process: (data.documentation?.process || []).map(name => ({ name, url: "" })),
+          training: (data.documentation?.training || []).map(name => ({ name, url: "" }))
+        },
+        tools: {
+          provided: [],
+          required: []
+        },
+        training: {
+          initial: {
+            duration: "",
+            format: "",
+            topics: []
+          },
+          ongoing: {
+            frequency: "",
+            format: "",
+            topics: []
+          },
+          support: []
+        },
+        metrics: {
+          kpis: [],
+          targets: {},
+          reporting: {
+            frequency: "",
+            metrics: []
+          }
+        },
+        compliance: {
+          requirements: [],
+          certifications: [],
+          policies: []
+        },
+        equipment: {
+          required: [],
+          provided: []
+        }
       };
 
       const { data: gig, error: gigError } = await saveGigData(gigData);
@@ -110,12 +218,11 @@ export function GigForm() {
         }))
       ];
 
-      const { data: skillsData } = await axios.post(`${API_URL}/gig_skills`, skillsPromises);
-
-      if (skillsData.error) throw skillsData.error;
+      const skillsResponse = await axios.post(`${API_URL}/gig_skills`, skillsPromises);
+      if (!skillsResponse.data) throw new Error('Failed to save skills');
 
       // Insert leads
-      const { error: leadsError } = await axios.post(`${API_URL}/gig_leads`, {
+      const leadsResponse = await axios.post(`${API_URL}/gig_leads`, {
         gig_id: gig.id,
         leads: data.leads.types.map(lead => ({
           lead_type: lead.type,
@@ -124,26 +231,32 @@ export function GigForm() {
           sources: data.leads.sources
         }))
       });
-
-      if (leadsError) throw leadsError;
+      if (!leadsResponse.data) throw new Error('Failed to save leads');
 
       // Insert documentation
       const docsPromises = [
-        ...data.documentation.product.map(doc => ({
+        ...(data.documentation?.product || []).map(doc => ({
           gig_id: gig.id,
-          doc_type: 'product',
-          name: doc
+          type: 'product',
+          name: doc,
+          url: ""
         })),
-        ...data.documentation.sales.map(doc => ({
+        ...(data.documentation?.process || []).map(doc => ({
           gig_id: gig.id,
-          doc_type: 'sales',
-          name: doc
+          type: 'process',
+          name: doc,
+          url: ""
+        })),
+        ...(data.documentation?.training || []).map(doc => ({
+          gig_id: gig.id,
+          type: 'training',
+          name: doc,
+          url: ""
         }))
       ];
 
-      const { error: docsError } = await axios.post(`${API_URL}/gig_documentation`, docsPromises);
-
-      if (docsError) throw docsError;
+      const docsResponse = await axios.post(`${API_URL}/gig_documentation`, docsPromises);
+      if (!docsResponse.data) throw new Error('Failed to save documentation');
 
       alert('Gig created successfully!');
     } catch (error) {

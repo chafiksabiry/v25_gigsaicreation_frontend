@@ -17,10 +17,7 @@ import {
   Clock,
   Calendar,
   Languages,
-  Building2,
   Briefcase,
-  Phone,
-  GraduationCap,
   Award,
   Laptop,
   Shield,
@@ -665,7 +662,7 @@ export function GigReview({
                     {type} Documentation
                   </h3>
                   <ul className="space-y-2">
-                    {docs.map((doc, index) => (
+                    {docs.map((doc: { name: string; url: string }, index: number) => (
                       <li key={index}>
                         <a
                           href={doc.url}
