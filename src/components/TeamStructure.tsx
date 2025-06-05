@@ -13,24 +13,28 @@ interface TeamRole {
 
 interface TeamStructureProps {
   data?: {
-    size: string;
-    structure: TeamRole[];
-    territories: string[];
-    reporting: {
-      to: string;
-      frequency: string;
+    team: {
+      size: string;
+      structure: TeamRole[];
+      territories: string[];
+      reporting: {
+        to: string;
+        frequency: string;
+      };
+      collaboration: string[];
     };
-    collaboration: string[];
   };
   onChange: (data: {
-    size: string;
-    structure: TeamRole[];
-    territories: string[];
-    reporting: {
-      to: string;
-      frequency: string;
+    team: {
+      size: string;
+      structure: TeamRole[];
+      territories: string[];
+      reporting: {
+        to: string;
+        frequency: string;
+      };
+      collaboration: string[];
     };
-    collaboration: string[];
   }) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -39,42 +43,47 @@ interface TeamStructureProps {
 export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStructureProps) {
   // Initialize team with default values if undefined
   const initializedTeam = {
-    size: data?.size || '0',
-    structure: data?.structure || [],
-    territories: data?.territories || [],
-    reporting: data?.reporting || { to: '', frequency: '' },
-    collaboration: data?.collaboration || []
+    team: {
+      size: data?.team?.size || '0',
+      structure: data?.team?.structure || [],
+      territories: data?.team?.territories || [],
+      reporting: data?.team?.reporting || { to: '', frequency: '' },
+      collaboration: data?.team?.collaboration || []
+    }
   };
 
   const handleAddRole = () => {
     const availableRole = predefinedOptions.team.roles.find(
-      role => !initializedTeam.structure.some(s => s.roleId === role.id)
+      role => !initializedTeam.team.structure.some(s => s.roleId === role.id)
     );
     if (availableRole) {
       onChange({
-        ...initializedTeam,
-        size: initializedTeam.size || '', // Ensure size is never undefined
-        structure: [...initializedTeam.structure, { 
-          roleId: availableRole.id, 
-          count: 1,
-          seniority: {
-            level: '',
-            yearsExperience: ''
-          }
-        }]
+        team: {
+          ...initializedTeam.team,
+          structure: [...initializedTeam.team.structure, { 
+            roleId: availableRole.id, 
+            count: 1,
+            seniority: {
+              level: '',
+              yearsExperience: ''
+            }
+          }]
+        }
       });
     }
   };
+
   const handleRemoveRole = (index: number) => {
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: initializedTeam.structure.filter((_, i) => i !== index)
+      team: {
+        ...initializedTeam.team,
+        structure: initializedTeam.team.structure.filter((_, i) => i !== index)
+      }
     });
   };
 
   const handleRoleChange = (index: number, roleId: string) => {
-    const newStructure = [...initializedTeam.structure];
+    const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = { 
       ...newStructure[index], 
       roleId,
@@ -84,24 +93,26 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       }
     };
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: newStructure
+      team: {
+        ...initializedTeam.team,
+        structure: newStructure
+      }
     });
   };
 
   const handleCountChange = (index: number, count: number) => {
-    const newStructure = [...initializedTeam.structure];
+    const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = { ...newStructure[index], count: Math.max(1, count) };
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: newStructure
+      team: {
+        ...initializedTeam.team,
+        structure: newStructure
+      }
     });
   };
 
   const handleSeniorityChange = (index: number, field: 'level' | 'yearsExperience', value: string) => {
-    const newStructure = [...initializedTeam.structure];
+    const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = {
       ...newStructure[index],
       seniority: {
@@ -110,24 +121,26 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       }
     };
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: newStructure
+      team: {
+        ...initializedTeam.team,
+        structure: newStructure
+      }
     });
   };
 
   const handleTerritoryToggle = (territory: string) => {
-    const newTerritories = initializedTeam.territories.includes(territory)
-      ? initializedTeam.territories.filter(t => t !== territory)
-      : [...initializedTeam.territories, territory];
+    const newTerritories = initializedTeam.team.territories.includes(territory)
+      ? initializedTeam.team.territories.filter(t => t !== territory)
+      : [...initializedTeam.team.territories, territory];
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      territories: newTerritories
+      team: {
+        ...initializedTeam.team,
+        territories: newTerritories
+      }
     });
   };
 
-  const totalTeamSize = initializedTeam.structure.reduce((sum, role) => sum + role.count, 0);
+  const totalTeamSize = initializedTeam.team.structure.reduce((sum, role) => sum + role.count, 0);
 
   return (
     <div className="space-y-8">
@@ -147,12 +160,14 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
             <label className="block text-sm font-medium text-gray-700">Target Team Size</label>
             <input
               type="text"
-              value={initializedTeam.size || '0'}
+              value={initializedTeam.team.size || '0'}
               onChange={(e) => {
                 const newSize = e.target.value || '0';
                 onChange({
-                  ...initializedTeam,
-                  size: newSize
+                  team: {
+                    ...initializedTeam.team,
+                    size: newSize
+                  }
                 });
               }}
               placeholder="e.g., 5-10 people"
@@ -179,7 +194,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
         </div>
 
         <div className="space-y-4">
-          {initializedTeam.structure.map((role, index) => (
+          {initializedTeam.team.structure.map((role, index) => (
             <div key={index} className="bg-white rounded-xl border border-purple-100 overflow-hidden">
               <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50">
                 <div className="flex items-center justify-between">
@@ -194,7 +209,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
                         <option 
                           key={r.id} 
                           value={r.id}
-                          disabled={initializedTeam.structure.some((s, i) => i !== index && s.roleId === r.id)}
+                          disabled={initializedTeam.team.structure.some((s, i) => i !== index && s.roleId === r.id)}
                         >
                           {r.name}
                         </option>
@@ -278,7 +293,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
 
           <button
             onClick={handleAddRole}
-            disabled={initializedTeam.structure.length >= predefinedOptions.team.roles.length}
+            disabled={initializedTeam.team.structure.length >= predefinedOptions.team.roles.length}
             className="w-full flex items-center justify-center gap-2 p-3 text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
@@ -305,17 +320,17 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
               key={territory}
               onClick={() => handleTerritoryToggle(territory)}
               className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                initializedTeam.territories.includes(territory)
+                initializedTeam.team.territories.includes(territory)
                   ? 'bg-emerald-100 text-emerald-700'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                initializedTeam.territories.includes(territory)
+                initializedTeam.team.territories.includes(territory)
                   ? 'bg-emerald-600'
                   : 'border-2 border-gray-300'
               }`}>
-                {initializedTeam.territories.includes(territory) && (
+                {initializedTeam.team.territories.includes(territory) && (
                   <Check className="w-4 h-4 text-white" />
                 )}
               </div>
@@ -325,11 +340,11 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
           ))}
         </div>
 
-        {initializedTeam.territories.length > 0 && (
+        {initializedTeam.team.territories.length > 0 && (
           <div className="mt-4 p-3 bg-white rounded-lg border border-emerald-200">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Selected Territories:</span>
-              <span className="font-medium text-emerald-600">{initializedTeam.territories.length}</span>
+              <span className="font-medium text-emerald-600">{initializedTeam.team.territories.length}</span>
             </div>
           </div>
         )}
