@@ -43,6 +43,7 @@ interface TeamStructureProps {
 export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStructureProps) {
   // Initialize team with default values if undefined
   const initializedTeam = {
+    ...data,
     team: {
       size: data?.team?.size || '0',
       structure: data?.team?.structure || [],
@@ -146,6 +147,39 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
     });
   };
 
+  const handleTeamSizeChange = (size: string) => {
+    onChange({
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        size
+      }
+    });
+  };
+
+  const handleReportingChange = (field: 'to' | 'frequency', value: string) => {
+    onChange({
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        reporting: {
+          ...initializedTeam.team.reporting,
+          [field]: value
+        }
+      }
+    });
+  };
+
+  const handleCollaborationChange = (collaboration: string[]) => {
+    onChange({
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        collaboration
+      }
+    });
+  };
+
   const totalTeamSize = initializedTeam.team.structure.reduce((sum, role) => sum + role.count, 0);
 
   return (
@@ -167,15 +201,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
             <input
               type="text"
               value={initializedTeam.team.size || '0'}
-              onChange={(e) => {
-                const newSize = e.target.value || '0';
-                onChange({
-                  team: {
-                    ...initializedTeam.team,
-                    size: newSize
-                  }
-                });
-              }}
+              onChange={(e) => handleTeamSizeChange(e.target.value)}
               placeholder="e.g., 5-10 people"
               className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
@@ -354,6 +380,90 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
             </div>
           </div>
         )}
+      </div>
+
+      {/* Reporting */}
+      <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-yellow-100 rounded-lg">
+            <Briefcase className="w-5 h-5 text-yellow-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Reporting</h3>
+            <p className="text-sm text-gray-600">Define reporting structure</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Report to</label>
+            <input
+              type="text"
+              value={initializedTeam.team.reporting.to}
+              onChange={(e) => handleReportingChange('to', e.target.value)}
+              placeholder="e.g., Manager Name"
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Reporting frequency</label>
+            <input
+              type="text"
+              value={initializedTeam.team.reporting.frequency}
+              onChange={(e) => handleReportingChange('frequency', e.target.value)}
+              placeholder="e.g., Weekly"
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Collaboration */}
+      <div className="bg-gradient-to-r from-lime-50 to-green-50 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-lime-100 rounded-lg">
+            <Users className="w-5 h-5 text-lime-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Collaboration</h3>
+            <p className="text-sm text-gray-600">Define collaboration requirements</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {initializedTeam.team.collaboration.map((collaborator, index) => (
+            <div key={index} className="flex items-center justify-between">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={collaborator}
+                  onChange={(e) => handleCollaborationChange([
+                    ...initializedTeam.team.collaboration.slice(0, index),
+                    e.target.value,
+                    ...initializedTeam.team.collaboration.slice(index + 1)
+                  ])}
+                  placeholder="e.g., John Doe"
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-lime-500 focus:border-lime-500"
+                />
+              </div>
+              <div className="ml-4">
+                <button
+                  onClick={() => handleCollaborationChange(initializedTeam.team.collaboration.filter((_, i) => i !== index))}
+                  className="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-red-50"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => handleCollaborationChange([...initializedTeam.team.collaboration, ''])}
+            className="w-full flex items-center justify-center gap-2 p-3 text-lime-600 hover:text-lime-800 bg-lime-50 hover:bg-lime-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Collaborator</span>
+          </button>
+        </div>
       </div>
 
       {/* Navigation Buttons */}
