@@ -336,7 +336,7 @@ export function GigReview({
                 </div>
 
                 {/* Performance Bonus */}
-                {data.commission.bonus && (
+                {data?.commission?.bonus && data?.commission?.bonusAmount && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
                       Performance Bonus
@@ -346,10 +346,10 @@ export function GigReview({
                         <div>
                           <div className="text-2xl font-bold text-gray-900">
                             {getCurrencySymbol()}
-                            {data?.commission?.bonusAmount || '0'}
+                            {data?.commission?.bonusAmount}
                           </div>
                           <div className="text-sm text-gray-600 mt-1">
-                            {data?.commission?.bonus || 'No bonus structure'}
+                            {data?.commission?.bonus}
                           </div>
                         </div>
                         <Star className="w-6 h-6 text-blue-600" />
