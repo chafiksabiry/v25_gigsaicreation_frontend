@@ -157,7 +157,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                     <div className="text-lg font-semibold text-gray-900">
                       {(() => {
                         console.log('Rendering base commission amount');
-                        const baseAmount = gig?.commission?.baseAmount;
+                        const baseAmount = gig?.commission?.baseAmount || 0;
                         console.log('Base amount value:', baseAmount);
                         return formatCurrency(getCommissionAmount(baseAmount));
                       })()}
