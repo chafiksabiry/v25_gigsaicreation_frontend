@@ -152,11 +152,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
                 const newSize = e.target.value || '0';
                 onChange({
                   ...initializedTeam,
-                  size: newSize,
-                  structure: initializedTeam.structure || [],
-                  territories: initializedTeam.territories || [],
-                  reporting: initializedTeam.reporting || { to: '', frequency: '' },
-                  collaboration: initializedTeam.collaboration || []
+                  size: newSize
                 });
               }}
               placeholder="e.g., 5-10 people"
