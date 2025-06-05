@@ -61,7 +61,7 @@ export function validateGigData(data: GigData): ValidationResult {
       if (!data.commission?.minimumVolume?.amount) {
         errors.commission = [...(errors.commission || []), 'Minimum volume amount is required'];
       }
-      if (!data.commission.minimumVolume?.unit) {
+      if (!data.commission?.minimumVolume?.unit) {
         errors.commission = [...(errors.commission || []), 'Minimum volume unit is required'];
       }
       if (!data.commission?.minimumVolume?.period) {
