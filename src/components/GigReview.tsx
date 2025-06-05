@@ -359,7 +359,7 @@ export function GigReview({
                 )}
 
                 {/* Transaction Commission */}
-                {data.commission.transactionCommission.type && (
+                {data?.commission?.transactionCommission?.type && (
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
                       Transaction Commission
@@ -368,16 +368,14 @@ export function GigReview({
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-2xl font-bold text-gray-900">
-                            {data.commission.transactionCommission.type ===
-                            "percentage"
-                              ? `${data.commission.transactionCommission.amount}%`
+                            {data?.commission?.transactionCommission?.type === "percentage"
+                              ? `${data?.commission?.transactionCommission?.amount}%`
                               : `${getCurrencySymbol()}${
-                                  data.commission.transactionCommission.amount
+                                  data?.commission?.transactionCommission?.amount
                                 }`}
                           </div>
                           <div className="text-sm text-gray-600 mt-1">
-                            {data.commission.transactionCommission.type ===
-                            "percentage"
+                            {data?.commission?.transactionCommission?.type === "percentage"
                               ? "Per Transaction Value"
                               : "Per Transaction"}
                           </div>
@@ -389,13 +387,13 @@ export function GigReview({
                 )}
 
                 {/* Additional Details */}
-                {data.commission.structure && (
+                {data?.commission?.structure && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       Additional Details
                     </h3>
                     <p className="text-gray-700 whitespace-pre-wrap">
-                      {data.commission.structure}
+                      {data?.commission?.structure}
                     </p>
                   </div>
                 )}
@@ -417,7 +415,7 @@ export function GigReview({
                       Working Days
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.schedule.days.map((day) => (
+                      {data?.schedule?.days?.map((day) => (
                         <span
                           key={day}
                           className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
@@ -434,7 +432,7 @@ export function GigReview({
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-gray-400" />
                       <span className="text-gray-900">
-                        {data.schedule.hours}
+                        {data?.schedule?.hours || 'Not specified'}
                       </span>
                     </div>
                   </div>
@@ -445,7 +443,7 @@ export function GigReview({
                     Time Zones
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {data.schedule?.timeZones?.map((zone) => (
+                    {data?.schedule?.timeZones?.map((zone) => (
                       <span
                         key={zone}
                         className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
@@ -456,24 +454,23 @@ export function GigReview({
                   </div>
                 </div>
 
-                {data.schedule.flexibility &&
-                  data.schedule.flexibility.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-sm font-medium text-gray-700 mb-3">
-                        Flexibility Options
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {data.schedule.flexibility.map((option) => (
-                          <span
-                            key={option}
-                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                          >
-                            {option}
-                          </span>
-                        ))}
-                      </div>
+                {data?.schedule?.flexibility && data?.schedule?.flexibility.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                      Flexibility Options
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {data?.schedule?.flexibility.map((option) => (
+                        <span
+                          key={option}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {option}
+                        </span>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -487,7 +484,7 @@ export function GigReview({
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-3 gap-4">
-                  {data.leads.types.map((lead) => (
+                  {data?.leads?.types?.map((lead) => (
                     <div
                       key={lead.type}
                       className="bg-gradient-to-b from-purple-50 to-white rounded-lg p-4 border border-purple-100"
@@ -513,13 +510,13 @@ export function GigReview({
                   ))}
                 </div>
 
-                {data.leads.sources.length > 0 && (
+                {data?.leads?.sources && data?.leads?.sources.length > 0 && (
                   <div className="mt-6">
                     <h3 className="text-sm font-medium text-gray-700 mb-3">
                       Lead Sources
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.leads.sources.map((source) => (
+                      {data?.leads?.sources.map((source) => (
                         <span
                           key={source}
                           className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
