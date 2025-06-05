@@ -13,11 +13,16 @@ interface GigDetailProps {
 
 export function GigDetail({ gig, onBack }: GigDetailProps) {
   const formatCurrency = (amount: string) => {
+    console.log('Formatting amount:', amount);
+    console.log('Commission object:', gig?.commission);
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: gig?.commission?.currency || 'USD'
     }).format(Number(amount || 0));
   };
+
+  // Add debug logging for the entire gig object
+  console.log('Gig object:', gig);
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
@@ -112,7 +117,9 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                   <div>
                     <div className="text-sm text-gray-500">Amount</div>
                     <div className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(gig?.commission?.baseAmount?.toString() || '0')}
+                      {gig?.commission?.baseAmount ? 
+                        formatCurrency(gig.commission.baseAmount.toString()) : 
+                        formatCurrency('0')}
                     </div>
                   </div>
                   <div>
@@ -130,7 +137,9 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                     <div>
                       <div className="text-sm text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900">
-                        {formatCurrency(gig?.commission?.bonusAmount?.toString() || '0')}
+                        {gig?.commission?.bonusAmount ? 
+                          formatCurrency(gig.commission.bonusAmount.toString()) : 
+                          formatCurrency('0')}
                       </div>
                     </div>
                     <div>
