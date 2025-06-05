@@ -114,7 +114,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           'Wales': 'GB',    // Wales is part of United Kingdom
           'Northern Ireland': 'GB', // Northern Ireland is part of United Kingdom
           'Germany': 'DE',  // Add Germany explicitly
-          'Deutschland': 'DE' // Add German name for Germany
+          'Deutschland': 'DE', // Add German name for Germany
+          'Egypt': 'EG'     // Add Egypt explicitly
         };
 
         // Check if the country is a special case

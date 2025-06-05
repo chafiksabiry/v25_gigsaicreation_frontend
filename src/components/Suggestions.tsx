@@ -967,27 +967,18 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   description: "Default activity description",
                   requirements: ["Default requirement"]
                 }]
-              },
-              destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
+              }
             };
 
-            // Merge parsed suggestions with default values
-            const mergedSuggestions = {
-              ...parsedSuggestions,
-              seniority: parsedSuggestions.seniority || defaultSuggestions.seniority,
-              schedule: parsedSuggestions.schedule || defaultSuggestions.schedule,
-              commission: {
-                options: parsedSuggestions.commission?.options || defaultSuggestions.commission.options
-              },
-              activity: {
-                options: parsedSuggestions.activity?.options || defaultSuggestions.activity.options
-              },
-              destinationZones: parsedSuggestions.destinationZones || defaultSuggestions.destinationZones
+            const finalSuggestions = {
+              ...defaultSuggestions,
+              ...parsedSuggestions
             };
 
-            setSuggestions(mergedSuggestions);
-            setEditableSuggestions(mergedSuggestions);
-            console.log('Generated Suggestions:', mergedSuggestions);
+            setSuggestions(finalSuggestions);
+            setEditableSuggestions(finalSuggestions);
+            setGigData(finalSuggestions); // Set the gigData state with the generated suggestions
+            console.log('Generated Suggestions:', finalSuggestions);
           } catch (error) {
             console.error("Error parsing suggestions:", error);
             // Fallback to default suggestions if parsing fails
