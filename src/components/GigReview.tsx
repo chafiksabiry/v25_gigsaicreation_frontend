@@ -252,7 +252,7 @@ export function GigReview({
                 <h3 className="font-medium">Coverage</h3>
               </div>
               <div className="text-lg font-bold text-gray-900">
-                {data.schedule.hours}
+                {data.schedule?.hours || 'Not specified'}
               </div>
               <p className="text-sm text-gray-600 mt-1">
                 {data.schedule.timeZones.join(", ")}

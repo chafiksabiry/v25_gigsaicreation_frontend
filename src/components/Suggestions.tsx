@@ -1238,14 +1238,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           yearsExperience: suggestions?.seniority?.yearsExperience || "2-5 years"
         },
         schedule: {
-          days: suggestions?.schedule?.days || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          days: suggestions?.schedule?.days || [],
           hours: suggestions?.schedule?.hours || "9:00 AM - 6:00 PM CET",
           timeZones: suggestions?.schedule?.timeZones || ["CET"],
-          flexibility: suggestions?.schedule?.flexibility || ["Remote work", "Flexible hours"],
-          minimumHours: suggestions?.schedule?.minimumHours || {
-            daily: 8,
-            weekly: 40,
-            monthly: 160
+          flexibility: suggestions?.schedule?.flexibility || [],
+          minimumHours: {
+            daily: suggestions?.schedule?.minimumHours?.daily || 8,
+            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
+            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
           }
         },
         commission: {

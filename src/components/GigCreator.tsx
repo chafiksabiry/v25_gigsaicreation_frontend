@@ -284,10 +284,15 @@ export function GigCreator({ children }: GigCreatorProps) {
           soft: gigData.skills.soft
         },
         schedule: {
-          days: gigData.schedule.days,
-          hours: gigData.schedule.hours,
-          timeZones: gigData.schedule.timeZones,
-          flexibility: gigData.schedule.flexibility
+          days: gigData.schedule?.days || [],
+          hours: gigData.schedule?.hours || '',
+          timeZones: gigData.schedule?.timeZones || [],
+          flexibility: gigData.schedule?.flexibility || '',
+          minimumHours: {
+            daily: gigData.schedule?.minimumHours?.daily || 0,
+            weekly: gigData.schedule?.minimumHours?.weekly || 0,
+            monthly: gigData.schedule?.minimumHours?.monthly || 0
+          }
         },
         commission: {
           base: gigData.commission.base,
