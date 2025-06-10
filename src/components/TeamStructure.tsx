@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Trash2, Check, Globe, Users, Building2, ChevronRight, Briefcase, GraduationCap, ArrowLeft, ArrowRight } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
+import { GigData } from '../types';
 
 interface TeamRole {
   roleId: string;
@@ -12,57 +13,75 @@ interface TeamRole {
 }
 
 interface TeamStructureProps {
-  data?: {
-    size: string;
-    structure: TeamRole[];
-    territories: string[];
+  data: GigData;
+  onChange: (data: GigData) => void;
+  errors: {
+    team?: {
+      size?: string;
+      structure?: string[];
+      territories?: string[];
+      reporting?: {
+        to?: string;
+        frequency?: string;
+      };
+      collaboration?: string[];
+    };
   };
-  onChange: (data: {
-    size: string;
-    structure: TeamRole[];
-    territories: string[];
-  }) => void;
-  onPrevious: () => void;
-  onNext: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  onSave?: () => void;
+  onAIAssist?: () => void;
+  onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs') => void;
+  currentSection: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs';
 }
 
-export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStructureProps) {
+export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection }: TeamStructureProps) {
   // Initialize team with default values if undefined
   const initializedTeam = {
-    size: data?.size,
-    structure: data?.structure || [],
-    territories: data?.territories || []
+    ...data,
+    team: {
+      size: data.team?.size || '0',
+      structure: data.team?.structure || [],
+      territories: data.team?.territories || [],
+      reporting: data.team?.reporting || { to: '', frequency: '' },
+      collaboration: data.team?.collaboration || []
+    }
   };
 
   const handleAddRole = () => {
     const availableRole = predefinedOptions.team.roles.find(
-      role => !initializedTeam.structure.some(s => s.roleId === role.id)
+      role => !initializedTeam.team.structure.some(s => s.roleId === role.id)
     );
     if (availableRole) {
       onChange({
-        ...initializedTeam,
-        size: initializedTeam.size || '', // Ensure size is never undefined
-        structure: [...initializedTeam.structure, { 
-          roleId: availableRole.id, 
-          count: 1,
-          seniority: {
-            level: '',
-            yearsExperience: ''
-          }
-        }]
+        ...data,
+        team: {
+          ...initializedTeam.team,
+          structure: [...initializedTeam.team.structure, { 
+            roleId: availableRole.id, 
+            count: 1,
+            seniority: {
+              level: '',
+              yearsExperience: ''
+            }
+          }]
+        }
       });
     }
   };
+
   const handleRemoveRole = (index: number) => {
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: initializedTeam.structure.filter((_, i) => i !== index)
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        structure: initializedTeam.team.structure.filter((_, i) => i !== index)
+      }
     });
   };
 
   const handleRoleChange = (index: number, roleId: string) => {
-    const newStructure = [...initializedTeam.structure];
+    const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = { 
       ...newStructure[index], 
       roleId,
@@ -72,24 +91,28 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       }
     };
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: newStructure
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        structure: newStructure
+      }
     });
   };
 
   const handleCountChange = (index: number, count: number) => {
-    const newStructure = [...initializedTeam.structure];
+    const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = { ...newStructure[index], count: Math.max(1, count) };
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: newStructure
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        structure: newStructure
+      }
     });
   };
 
   const handleSeniorityChange = (index: number, field: 'level' | 'yearsExperience', value: string) => {
-    const newStructure = [...initializedTeam.structure];
+    const newStructure = [...initializedTeam.team.structure];
     newStructure[index] = {
       ...newStructure[index],
       seniority: {
@@ -98,24 +121,61 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
       }
     };
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      structure: newStructure
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        structure: newStructure
+      }
     });
   };
 
   const handleTerritoryToggle = (territory: string) => {
-    const newTerritories = initializedTeam.territories.includes(territory)
-      ? initializedTeam.territories.filter(t => t !== territory)
-      : [...initializedTeam.territories, territory];
+    const newTerritories = initializedTeam.team.territories.includes(territory)
+      ? initializedTeam.team.territories.filter(t => t !== territory)
+      : [...initializedTeam.team.territories, territory];
     onChange({
-      ...initializedTeam,
-      size: initializedTeam.size || '', // Ensure size is never undefined
-      territories: newTerritories
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        territories: newTerritories
+      }
     });
   };
 
-  const totalTeamSize = initializedTeam.structure.reduce((sum, role) => sum + role.count, 0);
+  const handleTeamSizeChange = (size: string) => {
+    onChange({
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        size
+      }
+    });
+  };
+
+  const handleReportingChange = (field: 'to' | 'frequency', value: string) => {
+    onChange({
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        reporting: {
+          ...initializedTeam.team.reporting,
+          [field]: value
+        }
+      }
+    });
+  };
+
+  const handleCollaborationChange = (collaboration: string[]) => {
+    onChange({
+      ...data,
+      team: {
+        ...initializedTeam.team,
+        collaboration
+      }
+    });
+  };
+
+  const totalTeamSize = initializedTeam.team.structure.reduce((sum, role) => sum + role.count, 0);
 
   return (
     <div className="space-y-8">
@@ -135,11 +195,16 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
             <label className="block text-sm font-medium text-gray-700">Target Team Size</label>
             <input
               type="text"
-              value={initializedTeam.size || '0'}
-              onChange={(e) => onChange({ ...initializedTeam, size: e.target.value || '0' })}
+              value={initializedTeam.team.size || '0'}
+              onChange={(e) => handleTeamSizeChange(e.target.value)}
               placeholder="e.g., 5-10 people"
-              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors?.team?.size ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors?.team?.size && (
+              <p className="mt-1 text-sm text-red-600">{errors.team.size}</p>
+            )}
           </div>
           <div className="flex items-center justify-between px-4 py-2 bg-white rounded-lg border border-gray-200">
             <div className="text-sm text-gray-600">Current Team Composition</div>
@@ -161,7 +226,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
         </div>
 
         <div className="space-y-4">
-          {initializedTeam.structure.map((role, index) => (
+          {initializedTeam.team.structure.map((role, index) => (
             <div key={index} className="bg-white rounded-xl border border-purple-100 overflow-hidden">
               <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50">
                 <div className="flex items-center justify-between">
@@ -176,7 +241,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
                         <option 
                           key={r.id} 
                           value={r.id}
-                          disabled={initializedTeam.structure.some((s, i) => i !== index && s.roleId === r.id)}
+                          disabled={initializedTeam.team.structure.some((s, i) => i !== index && s.roleId === r.id)}
                         >
                           {r.name}
                         </option>
@@ -260,7 +325,7 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
 
           <button
             onClick={handleAddRole}
-            disabled={initializedTeam.structure.length >= predefinedOptions.team.roles.length}
+            disabled={initializedTeam.team.structure.length >= predefinedOptions.team.roles.length}
             className="w-full flex items-center justify-center gap-2 p-3 text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
@@ -287,17 +352,17 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
               key={territory}
               onClick={() => handleTerritoryToggle(territory)}
               className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                initializedTeam.territories.includes(territory)
+                initializedTeam.team.territories.includes(territory)
                   ? 'bg-emerald-100 text-emerald-700'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                initializedTeam.territories.includes(territory)
+                initializedTeam.team.territories.includes(territory)
                   ? 'bg-emerald-600'
                   : 'border-2 border-gray-300'
               }`}>
-                {initializedTeam.territories.includes(territory) && (
+                {initializedTeam.team.territories.includes(territory) && (
                   <Check className="w-4 h-4 text-white" />
                 )}
               </div>
@@ -307,14 +372,98 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
           ))}
         </div>
 
-        {initializedTeam.territories.length > 0 && (
+        {initializedTeam.team.territories.length > 0 && (
           <div className="mt-4 p-3 bg-white rounded-lg border border-emerald-200">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Selected Territories:</span>
-              <span className="font-medium text-emerald-600">{initializedTeam.territories.length}</span>
+              <span className="font-medium text-emerald-600">{initializedTeam.team.territories.length}</span>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Reporting */}
+      <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-yellow-100 rounded-lg">
+            <Briefcase className="w-5 h-5 text-yellow-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Reporting</h3>
+            <p className="text-sm text-gray-600">Define reporting structure</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Report to</label>
+            <input
+              type="text"
+              value={initializedTeam.team.reporting.to}
+              onChange={(e) => handleReportingChange('to', e.target.value)}
+              placeholder="e.g., Manager Name"
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Reporting frequency</label>
+            <input
+              type="text"
+              value={initializedTeam.team.reporting.frequency}
+              onChange={(e) => handleReportingChange('frequency', e.target.value)}
+              placeholder="e.g., Weekly"
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-yellow-500 focus:border-yellow-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Collaboration */}
+      <div className="bg-gradient-to-r from-lime-50 to-green-50 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-lime-100 rounded-lg">
+            <Users className="w-5 h-5 text-lime-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Collaboration</h3>
+            <p className="text-sm text-gray-600">Define collaboration requirements</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {initializedTeam.team.collaboration.map((collaborator, index) => (
+            <div key={index} className="flex items-center justify-between">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={collaborator}
+                  onChange={(e) => handleCollaborationChange([
+                    ...initializedTeam.team.collaboration.slice(0, index),
+                    e.target.value,
+                    ...initializedTeam.team.collaboration.slice(index + 1)
+                  ])}
+                  placeholder="e.g., John Doe"
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-lime-500 focus:border-lime-500"
+                />
+              </div>
+              <div className="ml-4">
+                <button
+                  onClick={() => handleCollaborationChange(initializedTeam.team.collaboration.filter((_, i) => i !== index))}
+                  className="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-red-50"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => handleCollaborationChange([...initializedTeam.team.collaboration, ''])}
+            className="w-full flex items-center justify-center gap-2 p-3 text-lime-600 hover:text-lime-800 bg-lime-50 hover:bg-lime-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Collaborator</span>
+          </button>
+        </div>
       </div>
 
       {/* Navigation Buttons */}

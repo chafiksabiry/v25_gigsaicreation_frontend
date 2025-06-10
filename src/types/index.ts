@@ -83,7 +83,7 @@ export interface GigData {
   seniority: {
     years: string;
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
     aiGenerated?: boolean;
   };
   team: {
@@ -93,7 +93,7 @@ export interface GigData {
       count: number;
       seniority: {
         level: string;
-        yearsExperience: string;
+        yearsExperience: number;
       };
     }>;
     territories: string[];
@@ -157,5 +157,120 @@ export interface GigData {
       type: string;
       specifications: string[];
     }>;
+  };
+}
+
+export interface GigSuggestion {
+  title: string;
+  description: string;
+  category: string;
+  highlights: string[];
+  jobTitles: string[];
+  deliverables: string[];
+  sectors: string[];
+  destinationZones: string[];
+  schedule: {
+    days: string[];
+    hours: string;
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+    shifts?: {
+      name: string;
+      hours: string;
+      timezone: string;
+    }[];
+  };
+  requirements: {
+    essential: string[];
+    preferred: string[];
+  };
+  benefits: {
+    type: string;
+    description: string;
+  }[];
+  skills: {
+    languages: Array<{ name: string; level: string }>;
+    soft: string[];
+    professional: string[];
+    technical: string[];
+    certifications: Array<{
+      name: string;
+      required: boolean;
+      provider?: string;
+    }>;
+  };
+  seniority: {
+    years: string;
+    level: string;
+    yearsExperience: number;
+  };
+  team: {
+    size: string;
+    structure: Array<{
+      roleId: string;
+      count: number;
+      seniority: {
+        level: string;
+        yearsExperience: number;
+      };
+    }>;
+    territories: string[];
+    reporting: {
+      to: string;
+      frequency: string;
+    };
+    collaboration: string[];
+  };
+  commission: {
+    options: Array<{
+      base: string;
+      baseAmount: string;
+      bonus?: string;
+      bonusAmount?: string;
+      structure?: string;
+      currency: string;
+      minimumVolume: {
+        amount: string;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: string;
+      };
+    }>;
+  };
+  activity: {
+    options: Array<{
+      type: string;
+      description: string;
+      requirements: string[];
+    }>;
+  };
+  leads: {
+    types: Array<{
+      type: 'hot' | 'warm' | 'cold';
+      percentage: number;
+      description: string;
+      conversionRate?: number;
+    }>;
+    sources: string[];
+    distribution: {
+      method: string;
+      rules: string[];
+    };
+    qualificationCriteria: string[];
+  };
+  documentation: {
+    templates: any;
+    reference: any;
+    product: Array<{ name: string; url: string }>;
+    process: Array<{ name: string; url: string }>;
+    training: Array<{ name: string; url: string }>;
   };
 }

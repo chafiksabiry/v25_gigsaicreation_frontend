@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { GigData } from '../types';
+import { GigData, GigSuggestion } from '../types';
 import { predefinedOptions } from './guidance';
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -60,7 +60,7 @@ Available time zones:
 ${predefinedOptions.basic.timeZones.map(zone => `- ${zone}`).join('\n')}
 
 Available schedule flexibility options:
-${predefinedOptions.basic.scheduleFlexibility.map(option => `- ${option}`).join('\n')}
+${predefinedOptions.schedule.flexibility.map(option => `- ${option}`).join('\n')}
 
 Available destination zones:
 ${predefinedOptions.basic.destinationZones.map(zone => `- ${zone}`).join('\n')}
@@ -131,7 +131,7 @@ CRITICAL:
 
         // Validate schedule flexibility
         if (!parsed.scheduleFlexibility.every((option: string) => 
-          predefinedOptions.basic.scheduleFlexibility.includes(option))) {
+          predefinedOptions.schedule.flexibility.includes(option))) {
           throw new Error('Invalid schedule flexibility options');
         }
 
@@ -156,7 +156,7 @@ CRITICAL:
   }
 }
 
-export async function generateSeniorityAndExperience(title: string, description: string, seniorityLevels: string[]): Promise<{ level: string; yearsExperience: string }> {
+export async function generateSeniorityAndExperience(title: string, description: string, seniorityLevels: string[]): Promise<{ seniority: { level: string; yearsExperience: number } }> {
   if (!isValidApiKey(OPENAI_API_KEY)) {
     throw new Error('Please configure your OpenAI API key in the .env file');
   }
@@ -176,15 +176,15 @@ export async function generateSeniorityAndExperience(title: string, description:
 Available seniority levels (you MUST choose one of these):
 ${predefinedOptions.basic.seniorityLevels.map(level => `- ${level}`).join('\n')}
 
-For each level, here are the typical years of experience:
-- Entry Level: 0-2 years
-- Junior: 1-3 years
-- Mid-Level: 3-5 years
-- Senior: 5-8 years
-- Team Lead: 6-10 years
-- Supervisor: 8-12 years
-- Manager: 10-15 years
-- Director: 15+ years
+For each level, here are the typical years of experience (you MUST return a SINGLE number, not a range):
+- Entry Level: 1 year
+- Junior: 2 years
+- Mid-Level: 4 years
+- Senior: 6 years
+- Team Lead: 8 years
+- Supervisor: 10 years
+- Manager: 12 years
+- Director: 15 years
 
 Consider the following factors when determining seniority:
 1. Complexity of responsibilities
@@ -196,9 +196,10 @@ Consider the following factors when determining seniority:
 
 Return ONLY a valid JSON object with the following structure:
 {
-  "level": string (MUST be one of the available seniority levels),
-  "yearsExperience": string (in format like "2-3 years" or "5+ years"),
-  "justification": string (brief explanation of why this level was chosen)
+  "seniority": {
+    "level": string (MUST be one of the available seniority levels),
+    "yearsExperience": number (MUST be a single number, not a range)
+  }
 }`
         },
         {
@@ -206,7 +207,7 @@ Return ONLY a valid JSON object with the following structure:
           content: `Title: ${title}
 Description: ${description}
 
-Based on this job title and description, suggest an appropriate seniority level and years of experience. The seniority level MUST be one of the available options listed above.`
+Based on this job title and description, suggest an appropriate seniority level and years of experience. The seniority level MUST be one of the available options listed above. Return a single number for yearsExperience, not a range.`
         }
       ],
       temperature: 0.7,
@@ -221,13 +222,29 @@ Based on this job title and description, suggest an appropriate seniority level 
     const result = JSON.parse(content);
     
     // Validate that the suggested level is one of the available options
-    if (!predefinedOptions.basic.seniorityLevels.includes(result.level)) {
+    if (!predefinedOptions.basic.seniorityLevels.includes(result.seniority.level)) {
       throw new Error('Invalid seniority level suggested');
     }
 
+    // Ensure yearsExperience is a single number
+    let yearsExperience: number;
+    if (typeof result.seniority.yearsExperience === 'number') {
+      yearsExperience = result.seniority.yearsExperience;
+    } else {
+      // Handle string format and ensure we get a single number
+      const yearsStr = result.seniority.yearsExperience.toString().replace(/[^0-9]/g, '');
+      yearsExperience = parseInt(yearsStr);
+    }
+
+    if (isNaN(yearsExperience) || typeof yearsExperience !== 'number') {
+      throw new Error('Invalid years of experience value - must be a single number');
+    }
+
     return {
-      level: result.level,
-      yearsExperience: result.yearsExperience
+      seniority: {
+        level: result.seniority.level,
+        yearsExperience: yearsExperience
+      }
     };
   } catch (error) {
     console.error('Error generating seniority and experience:', error);
@@ -520,8 +537,136 @@ export async function generateCommissionAndActivity(title: string, description: 
           role: "system",
           content: `You are an AI assistant that helps determine appropriate commission structures and activity types for job positions.
 
-Available commission base types:
-${predefinedOptions.commission.baseTypes.map(type => `- ${type}`).join('\n')}
+CRITICAL: The commission base type MUST be EXACTLY one of these five options, no variations allowed:
+1. "Fixed Salary"
+2. "Base + Commission"
+3. "Pure Commission"
+4. "Tiered Commission"
+5. "Graduated Commission"
+
+Examples of valid commission structures:
+{
+  "commission": {
+    "options": [
+      {
+        "base": "Fixed Salary",
+        "baseAmount": "5000",
+        "bonus": "Performance Bonus",
+        "bonusAmount": "10%",
+        "currency": "USD",
+        "minimumVolume": {
+          "amount": "100000",
+          "period": "monthly",
+          "unit": "USD"
+        },
+        "transactionCommission": {
+          "type": "percentage",
+          "amount": "5%"
+        }
+      }
+    ]
+  }
+}
+
+OR
+
+{
+  "commission": {
+    "options": [
+      {
+        "base": "Base + Commission",
+        "baseAmount": "3000",
+        "bonus": "Sales Target Bonus",
+        "bonusAmount": "15%",
+        "currency": "EUR",
+        "minimumVolume": {
+          "amount": "50000",
+          "period": "monthly",
+          "unit": "EUR"
+        },
+        "transactionCommission": {
+          "type": "percentage",
+          "amount": "3%"
+        }
+      }
+    ]
+  }
+}
+
+OR
+
+{
+  "commission": {
+    "options": [
+      {
+        "base": "Pure Commission",
+        "baseAmount": "0",
+        "bonus": "High Performance Bonus",
+        "bonusAmount": "20%",
+        "currency": "GBP",
+        "minimumVolume": {
+          "amount": "75000",
+          "period": "monthly",
+          "unit": "GBP"
+        },
+        "transactionCommission": {
+          "type": "percentage",
+          "amount": "8%"
+        }
+      }
+    ]
+  }
+}
+
+OR
+
+{
+  "commission": {
+    "options": [
+      {
+        "base": "Tiered Commission",
+        "baseAmount": "2500",
+        "bonus": "Tier Achievement Bonus",
+        "bonusAmount": "25%",
+        "currency": "USD",
+        "minimumVolume": {
+          "amount": "100000",
+          "period": "quarterly",
+          "unit": "USD"
+        },
+        "transactionCommission": {
+          "type": "tiered",
+          "amount": "5-15%"
+        }
+      }
+    ]
+  }
+}
+
+OR
+
+{
+  "commission": {
+    "options": [
+      {
+        "base": "Graduated Commission",
+        "baseAmount": "2000",
+        "bonus": "Progressive Achievement Bonus",
+        "bonusAmount": "30%",
+        "currency": "EUR",
+        "minimumVolume": {
+          "amount": "25000",
+          "period": "monthly",
+          "unit": "EUR"
+        },
+        "transactionCommission": {
+          "type": "graduated",
+          "amount": "2-10%"
+        }
+      }
+    ]
+  }
+}
 
 Available bonus types:
 ${predefinedOptions.commission.bonusTypes.map(type => `- ${type}`).join('\n')}
@@ -537,7 +682,7 @@ Return ONLY a valid JSON object with the following structure:
   "commission": {
     "options": [
       {
-        "base": string (MUST be one of the available base types),
+        "base": string (MUST be EXACTLY one of: "Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", "Graduated Commission"),
         "baseAmount": string (amount or percentage),
         "bonus": string (optional, MUST be one of the available bonus types),
         "bonusAmount": string (optional, amount or percentage),
@@ -578,7 +723,7 @@ Consider the following factors when determining commission and activity:
           content: `Title: ${title}
 Description: ${description}
 
-Based on this job title and description, suggest appropriate commission structures and activity types. The commission base type, bonus type, and currency MUST be from the available options listed above.`
+Based on this job title and description, suggest appropriate commission structures and activity types. The commission base type MUST be EXACTLY one of: "Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", or "Graduated Commission". No variations or other types are allowed.`
         }
       ],
       temperature: 0.7,
@@ -593,15 +738,28 @@ Based on this job title and description, suggest appropriate commission structur
     const result = JSON.parse(content);
     
     // Validate commission options
+    const validBaseTypes = ["Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", "Graduated Commission"];
     result.commission.options.forEach((option: any) => {
-      if (!predefinedOptions.commission.baseTypes.includes(option.base)) {
-        throw new Error('Invalid commission base type');
+      if (!validBaseTypes.includes(option.base)) {
+        throw new Error(`Invalid commission base type: ${option.base}. Must be one of: ${validBaseTypes.join(', ')}`);
       }
       if (option.bonus && !predefinedOptions.commission.bonusTypes.includes(option.bonus)) {
-        throw new Error('Invalid bonus type');
+        // Add new bonus type to predefined options if it's not already there
+        if (!predefinedOptions.commission.bonusTypes.includes(option.bonus)) {
+          predefinedOptions.commission.bonusTypes.push(option.bonus);
+          console.log(`Added new bonus type: ${option.bonus}`);
+        }
       }
       if (!predefinedOptions.commission.currencies.some(currency => currency.code === option.currency)) {
         throw new Error('Invalid currency');
+      }
+    });
+
+    // Update predefinedOptions with any new base types
+    result.commission.options.forEach((option: any) => {
+      if (!predefinedOptions.commission.baseTypes.includes(option.base)) {
+        predefinedOptions.commission.baseTypes.push(option.base);
+        console.log(`Added new base type: ${option.base}`);
       }
     });
 
@@ -610,6 +768,15 @@ Based on this job title and description, suggest appropriate commission structur
     console.error('Error generating commission and activity:', error);
     throw error;
   }
+}
+
+// Add a function to get current available options
+export function getAvailableCommissionOptions() {
+  return {
+    baseTypes: predefinedOptions.commission.baseTypes,
+    bonusTypes: predefinedOptions.commission.bonusTypes,
+    currencies: predefinedOptions.commission.currencies
+  };
 }
 
 export async function generateTeamAndTerritories(title: string, description: string): Promise<{
@@ -787,4 +954,225 @@ export async function analyzeCityAndGetCountry(city: string): Promise<string> {
     console.error('Error analyzing city:', error);
     throw error;
   }
+}
+
+export async function generateSeniorityByCategory(
+  title: string, 
+  description: string, 
+  category: string
+): Promise<{ seniority: { level: string; yearsExperience: number } }> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!title || !description || !category) {
+    throw new Error('Title, description, and category are required');
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI assistant that helps determine appropriate seniority levels and years of experience for job positions based on the job category.
+
+Available seniority levels (you MUST choose one of these):
+${predefinedOptions.basic.seniorityLevels.map(level => `- ${level}`).join('\n')}
+
+For each level, here are the typical years of experience (you MUST return a SINGLE number, not a range or string):
+- Entry Level: 1
+- Junior: 2
+- Mid-Level: 4
+- Senior: 6
+- Team Lead: 8
+- Supervisor: 10
+- Manager: 12
+- Director: 15
+
+Consider the following factors when determining seniority:
+1. Job category and industry standards
+2. Complexity of responsibilities
+3. Required technical expertise
+4. Leadership requirements
+5. Decision-making authority
+6. Company size and structure
+7. Category-specific requirements
+
+Return ONLY a valid JSON object with the following structure:
+{
+  "seniority": {
+    "level": string (MUST be one of the available seniority levels),
+    "yearsExperience": number (MUST be a single number, not a string or range)
+  }
+}
+
+CRITICAL RULES FOR yearsExperience:
+1. MUST be a number, not a string
+2. MUST be a single number, not a range
+3. MUST NOT include any text like "years" or "ans"
+4. MUST NOT be in quotes
+5. MUST be a whole number
+
+Examples of CORRECT format:
+{
+  "seniority": {
+    "level": "Mid-Level",
+    "yearsExperience": 4
+  }
+}
+
+Examples of INCORRECT format (DO NOT USE):
+{
+  "seniority": {
+    "level": "Mid-Level",
+    "yearsExperience": "4"  // Wrong: string instead of number
+  }
+}
+{
+  "seniority": {
+    "level": "Mid-Level",
+    "yearsExperience": "2-4"  // Wrong: range instead of single number
+  }
+}
+{
+  "seniority": {
+    "level": "Mid-Level",
+    "yearsExperience": "4 years"  // Wrong: includes text
+  }
+}`
+        },
+        {
+          role: "user",
+          content: `Title: ${title}
+Description: ${description}
+Category: ${category}
+
+Based on this job title, description, and category, suggest an appropriate seniority level and years of experience. The seniority level MUST be one of the available options listed above. Return a single number for yearsExperience, not a string or range.`
+        }
+      ],
+      temperature: 0.3, // Reduced temperature for more consistent output
+      max_tokens: 200
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) {
+      throw new Error('Failed to generate suggestions');
+    }
+
+    const result = JSON.parse(content);
+    
+    // Validate that the suggested level is one of the available options
+    if (!predefinedOptions.basic.seniorityLevels.includes(result.seniority.level)) {
+      throw new Error('Invalid seniority level suggested');
+    }
+
+    // Convert and validate yearsExperience
+    let yearsExperience: number;
+    
+    if (typeof result.seniority.yearsExperience === 'number') {
+      yearsExperience = result.seniority.yearsExperience;
+    } else if (typeof result.seniority.yearsExperience === 'string') {
+      // Remove any non-numeric characters except for the hyphen
+      const cleanStr = result.seniority.yearsExperience.replace(/[^0-9-]/g, '');
+      
+      if (cleanStr.includes('-')) {
+        // If it's a range, take the average and round up
+        const [min, max] = cleanStr.split('-').map(Number);
+        if (!isNaN(min) && !isNaN(max)) {
+          yearsExperience = Math.ceil((min + max) / 2);
+        } else {
+          throw new Error('Invalid years of experience range');
+        }
+      } else {
+        // If it's a single number as string
+        yearsExperience = parseInt(cleanStr);
+      }
+    } else {
+      throw new Error('yearsExperience must be a number or a valid string representation');
+    }
+
+    // Final validation
+    if (isNaN(yearsExperience) || !Number.isInteger(yearsExperience)) {
+      throw new Error('yearsExperience must be a valid whole number');
+    }
+
+    if (yearsExperience < 0 || yearsExperience > 30) {
+      throw new Error('yearsExperience must be between 0 and 30');
+    }
+
+    return {
+      seniority: {
+        level: result.seniority.level,
+        yearsExperience: yearsExperience
+      }
+    };
+  } catch (error) {
+    console.error('Error generating seniority by category:', error);
+    throw error;
+  }
+}
+
+export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial<GigData> {
+  return {
+    title: generatedData.jobTitles?.[0] || '',
+    description: generatedData.deliverables?.join('\n') || '',
+    category: generatedData.sectors?.[0] || '',
+    highlights: generatedData.highlights || [],
+    destinationZones: generatedData.destinationZones || [],
+    seniority: {
+      level: generatedData.seniority?.level || '',
+      yearsExperience: generatedData.seniority?.yearsExperience || 0,
+      years: String(generatedData.seniority?.yearsExperience || 0)
+    },
+    schedule: {
+      days: generatedData.schedule?.days || [],
+      hours: generatedData.schedule?.hours || '',
+      timeZones: generatedData.schedule?.timeZones || [],
+      flexibility: generatedData.schedule?.flexibility || [],
+      minimumHours: {
+        daily: generatedData.schedule?.minimumHours?.daily || undefined,
+        weekly: generatedData.schedule?.minimumHours?.weekly || undefined,
+        monthly: generatedData.schedule?.minimumHours?.monthly || undefined
+      }
+    },
+    commission: {
+      base: generatedData.commission?.base || '',
+      baseAmount: generatedData.commission?.baseAmount || '',
+      bonus: generatedData.commission?.bonus || '',
+      bonusAmount: generatedData.commission?.bonusAmount || '',
+      structure: generatedData.commission?.structure || '',
+      currency: generatedData.commission?.currency || '',
+      minimumVolume: {
+        amount: generatedData.commission?.minimumVolume?.amount || '',
+        period: generatedData.commission?.minimumVolume?.period || '',
+        unit: generatedData.commission?.minimumVolume?.unit || ''
+      },
+      transactionCommission: {
+        type: generatedData.commission?.transactionCommission?.type || '',
+        amount: generatedData.commission?.transactionCommission?.amount || ''
+      },
+      kpis: generatedData.commission?.kpis || []
+    },
+    skills: {
+      languages: generatedData.skills?.languages || [],
+      soft: generatedData.skills?.soft || [],
+      professional: generatedData.skills?.professional || [],
+      technical: generatedData.skills?.technical || [],
+      certifications: generatedData.skills?.certifications || []
+    },
+    requirements: {
+      essential: generatedData.requirements?.essential || [],
+      preferred: generatedData.requirements?.preferred || []
+    },
+    benefits: generatedData.benefits || [],
+    metrics: {
+      kpis: [],
+      targets: {},
+      reporting: {
+        frequency: '',
+        metrics: []
+      }
+    }
+  };
 }
