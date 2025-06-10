@@ -181,7 +181,7 @@ function App() {
     },
     seniority: {
       level: "",
-      yearsExperience: "",
+      yearsExperience: 0,
       years: ""
     },
     team: {

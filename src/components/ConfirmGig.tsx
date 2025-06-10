@@ -17,8 +17,8 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
       let userId: string;
       let companyId: string;
 
-      companyId = Cookies.get('companyId') || "";
-      userId = Cookies.get('userId') || "";
+      companyId = Cookies.get('companyId');
+      userId = Cookies.get('userId');
 
       if (!userId || !companyId) {
         throw new Error("User ID or Company ID not found in cookies");
@@ -81,7 +81,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         seniority: {
           level: gig.seniority?.level || "",
           years: gig.seniority?.years || "",
-          yearsExperience: gig.seniority?.yearsExperience || ""
+          yearsExperience: typeof gig.seniority?.yearsExperience === 'string' ? parseInt(gig.seniority.yearsExperience) || 0 : gig.seniority?.yearsExperience || 0
         },
         team: {
           size: gig.team?.size || "",

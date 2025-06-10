@@ -1,3 +1,34 @@
+export const aiPrompts = {
+  basic: {
+    title: "Basic Information Assistant",
+    description: "Get AI suggestions for your gig's basic information"
+  },
+  schedule: {
+    title: "Schedule Assistant",
+    description: "Get AI suggestions for scheduling and time management"
+  },
+  commission: {
+    title: "Commission Assistant",
+    description: "Get AI suggestions for commission structure"
+  },
+  leads: {
+    title: "Leads Assistant",
+    description: "Get AI suggestions for lead management"
+  },
+  skills: {
+    title: "Skills Assistant",
+    description: "Get AI suggestions for required skills"
+  },
+  team: {
+    title: "Team Assistant",
+    description: "Get AI suggestions for team structure"
+  },
+  docs: {
+    title: "Documentation Assistant",
+    description: "Get AI suggestions for documentation"
+  }
+};
+
 export const predefinedOptions = {
   basic: {
     categories: [

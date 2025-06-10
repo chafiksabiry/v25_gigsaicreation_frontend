@@ -83,7 +83,7 @@ export interface GigData {
   seniority: {
     years: string;
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
     aiGenerated?: boolean;
   };
   team: {
@@ -93,7 +93,7 @@ export interface GigData {
       count: number;
       seniority: {
         level: string;
-        yearsExperience: string;
+        yearsExperience: number;
       };
     }>;
     territories: string[];
@@ -207,7 +207,7 @@ export interface GigSuggestion {
   seniority: {
     years: string;
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
   team: {
     size: string;
@@ -216,7 +216,7 @@ export interface GigSuggestion {
       count: number;
       seniority: {
         level: string;
-        yearsExperience: string;
+        yearsExperience: number;
       };
     }>;
     territories: string[];
@@ -227,26 +227,30 @@ export interface GigSuggestion {
     collaboration: string[];
   };
   commission: {
-    base: string;
-    baseAmount: string;
-    bonus: string;
-    bonusAmount: string;
-    structure: string;
-    currency: string;
-    minimumVolume: {
-      amount: string;
-      period: string;
-      unit: string;
-    };
-    transactionCommission: {
+    options: Array<{
+      base: string;
+      baseAmount: string;
+      bonus?: string;
+      bonusAmount?: string;
+      structure?: string;
+      currency: string;
+      minimumVolume: {
+        amount: string;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: string;
+      };
+    }>;
+  };
+  activity: {
+    options: Array<{
       type: string;
-      amount: string;
-    };
-    kpis: {
-      metric: string;
-      target: string;
-      reward: string;
-    }[];
+      description: string;
+      requirements: string[];
+    }>;
   };
   leads: {
     types: Array<{

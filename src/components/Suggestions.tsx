@@ -18,9 +18,9 @@ import {
   PlusCircle,
 } from "lucide-react";
 import OpenAI from "openai";
-import type { JobDescription, GigMetadata, GigSuggestion } from "../lib/types";
+import type { JobDescription, GigMetadata } from "../lib/types";
+import type { GigSuggestion } from "../types";
 import Swal from "sweetalert2";
-import moment from 'moment-timezone';
 import Modal from './Modal';
 import LeadsForm from './LeadsForm';
 import TeamForm from './TeamForm';
@@ -32,7 +32,38 @@ const isStringArray = (value: unknown): value is string[] => {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
 };
 
-type StringArraySection = 'jobTitles' | 'deliverables' | 'compensation' | 'skills' | 'kpis' | 'timeframes' | 'requirements' | 'languages' | 'sectors' | 'destinationZones';
+const getNestedProperty = (obj: any, path: string) => {
+  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+};
+
+const setNestedProperty = (obj: any, path: string, value: any) => {
+  const parts = path.split('.');
+  const lastPart = parts.pop()!;
+  const target = parts.reduce((acc, part) => {
+    if (!acc[part]) {
+      acc[part] = {};
+    }
+    return acc[part];
+  }, obj);
+  target[lastPart] = value;
+};
+
+type StringArraySection = 
+  | 'jobTitles' 
+  | 'deliverables' 
+  | 'sectors' 
+  | 'destinationZones' 
+  | 'highlights' 
+  | 'requirements.essential' 
+  | 'requirements.preferred' 
+  | 'skills.technical' 
+  | 'skills.soft' 
+  | 'skills.professional' 
+  | 'skills.languages' 
+  | 'skills.certifications' 
+  | 'commission.kpis'
+  | 'commission'
+  | 'activity';
 
 interface ActivityOption {
   type: string;
@@ -40,7 +71,34 @@ interface ActivityOption {
   requirements: string[];
 }
 
-type EditableGigSuggestion = GigSuggestion;
+type EditableGigSuggestion = Omit<GigSuggestion, 'commission' | 'activity'> & {
+  commission?: {
+    options: Array<{
+      base: string;
+      baseAmount: string;
+      bonus?: string;
+      bonusAmount?: string;
+      structure?: string;
+      currency: string;
+      minimumVolume: {
+        amount: string;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: string;
+      };
+    }>;
+  };
+  activity?: {
+    options: Array<{
+      type: string;
+      description: string;
+      requirements: string[];
+    }>;
+  };
+};
 
 interface SuggestionsProps {
   input: string;
@@ -259,8 +317,8 @@ const fallbackSuggestions: SuggestionState = {
   requirements: [],
   languages: [],
   seniority: {
-    level: "Mid Level",
-    yearsExperience: "2-5 years"
+    level: "",
+    yearsExperience: 0
   },
   schedule: {
     days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
@@ -275,17 +333,19 @@ const fallbackSuggestions: SuggestionState = {
   },
   commission: {
     options: [{
-      base: "fixed",
-      baseAmount: "5000",
+      base: "Fixed Salary",
+      baseAmount: "0",
+      bonus: "quarterly",
+      bonusAmount: "5000",
       currency: "USD",
       minimumVolume: {
-        amount: "10000",
-        period: "monthly",
-        unit: "USD"
+        amount: "0",
+        period: "Monthly",
+        unit: "Projects"
       },
       transactionCommission: {
-        type: "percentage",
-        amount: "5"
+        type: "None",
+        amount: "0"
       }
     }]
   },
@@ -332,6 +392,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const [error, setError] = useState<string | null>(null);
   const [showBasicSection, setShowBasicSection] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [leadsData, setLeadsData] = useState<any>(null);
 
   useEffect(() => {
     if (input.trim().length > 0) {
@@ -343,10 +404,102 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   }, [input]);
 
   const handleConfirm = () => {
-    console.log('Generated Gig Data:', gigData);
-    if (onConfirm) {
-      onConfirm(gigData);
-    }
+    if (!suggestions) return;
+
+    // Transform commission data from suggestions format to CommissionSection format
+    const commissionData = suggestions.commission ? {
+      options: [{
+        base: suggestions.commission?.options?.[0]?.base || "Fixed Salary",
+        baseAmount: suggestions.commission?.options?.[0]?.baseAmount || "0",
+        bonus: suggestions.commission?.options?.[0]?.bonus,
+        bonusAmount: suggestions.commission?.options?.[0]?.bonusAmount,
+        currency: suggestions.commission?.options?.[0]?.currency || "USD",
+        minimumVolume: {
+          amount: suggestions.commission?.options?.[0]?.minimumVolume?.amount || "0",
+          period: suggestions.commission?.options?.[0]?.minimumVolume?.period || "Monthly",
+          unit: suggestions.commission?.options?.[0]?.minimumVolume?.unit || "Projects"
+        },
+        transactionCommission: {
+          type: suggestions.commission?.options?.[0]?.transactionCommission?.type || "None",
+          amount: suggestions.commission?.options?.[0]?.transactionCommission?.amount || "0"
+        }
+      }]
+    } : undefined;
+
+    const transformedSuggestions: GigSuggestion = {
+      title: suggestions.title || "",
+      description: suggestions.description || "",
+      category: suggestions.category || "",
+      highlights: suggestions.highlights || [],
+      jobTitles: suggestions.jobTitles || [],
+      deliverables: suggestions.deliverables || [],
+      sectors: suggestions.sectors || [],
+      destinationZones: suggestions.destinationZones || [],
+      schedule: suggestions.schedule || {
+        days: [],
+        hours: "",
+        timeZones: [],
+        flexibility: [],
+        minimumHours: {}
+      },
+      requirements: {
+        essential: suggestions.requirements?.filter(req => 
+          ["Proven graphic design portfolio", "Experience with design software"].includes(req)
+        ) || [],
+        preferred: suggestions.requirements?.filter(req => 
+          ["Attention to detail"].includes(req)
+        ) || []
+      },
+      benefits: [],
+      skills: {
+        languages: (suggestions.skills?.languages || []).map(lang => ({ name: lang, level: "Fluent" })),
+        soft: (suggestions.skills?.soft || []).filter(skill => 
+          ["Creative thinking", "Communication", "Attention to detail"].includes(skill)
+        ),
+        professional: [],
+        technical: (suggestions.skills?.technical || []).filter(skill => 
+          ["Adobe Illustrator", "Photoshop", "InDesign"].includes(skill)
+        ),
+        certifications: []
+      },
+      seniority: {
+        level: suggestions.seniority?.level || "",
+        yearsExperience: parseInt((suggestions.seniority?.yearsExperience || "0").split("-")[0]),
+        years: suggestions.seniority?.yearsExperience || "0"
+      },
+      team: {
+        size: "",
+        structure: [],
+        territories: [],
+        reporting: {
+          to: "",
+          frequency: ""
+        },
+        collaboration: []
+      },
+      commission: {
+        // options: [{
+          base: suggestions.commission?.options?.[0]?.base || "Fixed Salary",
+          baseAmount: suggestions.commission?.options?.[0]?.baseAmount || "0",
+          bonus: suggestions.commission?.options?.[0]?.bonus,
+          bonusAmount: suggestions.commission?.options?.[0]?.bonusAmount,
+          structure: suggestions.commission?.options?.[0]?.structure || "",
+          currency: suggestions.commission?.options?.[0]?.currency || "USD",
+          minimumVolume: suggestions.commission?.options?.[0]?.minimumVolume || {
+            amount: "",
+            period: "",
+            unit: ""
+          },
+          transactionCommission: suggestions.commission?.options?.[0]?.transactionCommission || {
+            type: "None",
+            amount: "0"
+          }
+        // }]
+      }
+    };
+
+    onConfirm?.(transformedSuggestions);
+    setIsSuggestionsConfirmed(true);
   };
 
   const generateJobDescription = async (title: string) => {
@@ -455,7 +608,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const saveEdit = () => {
     if (editingSection && editingIndex !== null && editableSuggestions) {
       const newSuggestions = { ...editableSuggestions };
-      const items = newSuggestions[editingSection];
+      const items = getNestedProperty(newSuggestions, editingSection);
       if (isStringArray(items)) {
         items[editingIndex] = editValue;
         setEditableSuggestions(newSuggestions);
@@ -476,19 +629,35 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const addNewItem = (section: StringArraySection) => {
     if (!editableSuggestions) return;
     const newSuggestions = { ...editableSuggestions };
-    const items = newSuggestions[section];
-    if (isStringArray(items)) {
-      newSuggestions[section] = [...items, "New Zone"];
-      setEditableSuggestions(newSuggestions);
-      setSuggestions(newSuggestions);
-      startEditing(section, newSuggestions[section].length - 1, "New Zone");
+    const items = getNestedProperty(newSuggestions, section);
+    if (section === 'commission') {
+      newSuggestions[section] = {
+        options: [...(items as any).options, {
+          base: '',
+          baseAmount: '',
+          currency: 'EUR',
+          minimumVolume: { amount: '', period: '', unit: '' },
+          transactionCommission: { type: '', amount: '' }
+        }]
+      };
+    } else if (section === 'activity') {
+      newSuggestions[section] = {
+        options: [...(items as any).options, {
+          type: '',
+          description: '',
+          requirements: []
+        }]
+      };
+    } else if (isStringArray(items)) {
+      newSuggestions[section] = [...items, ""];
     }
+    setEditableSuggestions(newSuggestions);
   };
 
   const removeItem = (section: StringArraySection, index: number) => {
     if (!editableSuggestions) return;
     const newSuggestions = { ...editableSuggestions };
-    const items = newSuggestions[section];
+    const items = getNestedProperty(newSuggestions, section);
     if (isStringArray(items)) {
       newSuggestions[section] = items.filter((_, i) => i !== index);
       setEditableSuggestions(newSuggestions);
@@ -788,8 +957,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           ],
           languages: ["English (Fluent)"],
           seniority: {
-            level: "Senior",
-            yearsExperience: "5+ years"
+            level: "",
+            yearsExperience: 0
           },
           schedule: {
             days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
@@ -804,19 +973,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           },
           commission: {
             options: [{
-              base: "percentage",
-              baseAmount: "15",
+              base: "Fixed Salary",
+              baseAmount: "0",
               bonus: "quarterly",
               bonusAmount: "5000",
-              currency: "EUR",
+              currency: "USD",
               minimumVolume: {
-                amount: "50000",
-                period: "monthly",
-                unit: "EUR"
+                amount: "0",
+                period: "Monthly",
+                unit: "Projects"
               },
               transactionCommission: {
-                type: "percentage",
-                amount: "5"
+                type: "None",
+                amount: "0"
               }
             }]
           },
@@ -930,7 +1099,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             const defaultSuggestions = {
               seniority: {
                 level: "Senior",
-                yearsExperience: "5+ years"
+                yearsExperience: ""
               },
               schedule: {
                 days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
@@ -945,19 +1114,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
               },
               commission: {
                 options: [{
-                  base: "percentage",
-                  baseAmount: "15",
+                  base: "Fixed Salary",
+                  baseAmount: "0",
                   bonus: "quarterly",
                   bonusAmount: "5000",
-                  currency: "EUR",
+                  currency: "USD",
                   minimumVolume: {
-                    amount: "50000",
-                    period: "monthly",
-                    unit: "EUR"
+                    amount: "0",
+                    period: "Monthly",
+                    unit: "Projects"
                   },
                   transactionCommission: {
-                    type: "percentage",
-                    amount: "5"
+                    type: "None",
+                    amount: "0"
                   }
                 }]
               },
@@ -1120,7 +1289,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
   // Ajouter les styles globaux pour SweetAlert2
 
-  const handleSaveAndOnBack = async () => {
+  const handleSaveAndOnBack = async (documentation?: any) => {
     try {
       const initialGigData = {
         title: selectedJobTitle || suggestions?.jobTitles?.[0] || "Untitled Gig",
@@ -1148,20 +1317,21 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           }
         },
         commission: {
-          base: "percentage",
-          baseAmount: "10000",
-          bonus: "quarterly",
-          bonusAmount: "5000",
-          currency: "EUR",
+          base: suggestions?.commission?.options?.[0]?.base || "Fixed Salary",
+          baseAmount: suggestions?.commission?.options?.[0]?.baseAmount || "0",
+          bonus: suggestions?.commission?.options?.[0]?.bonus,
+          bonusAmount: suggestions?.commission?.options?.[0]?.bonusAmount,
+          currency: suggestions?.commission?.options?.[0]?.currency || "USD",
           minimumVolume: {
-            amount: "50000",
-            period: "monthly",
-            unit: "EUR"
+            amount: suggestions?.commission?.options?.[0]?.minimumVolume?.amount || "0",
+            period: suggestions?.commission?.options?.[0]?.minimumVolume?.period || "Monthly",
+            unit: suggestions?.commission?.options?.[0]?.minimumVolume?.unit || "Projects"
           },
           transactionCommission: {
-            type: "percentage",
-            amount: "5"
-          }
+            type: suggestions?.commission?.options?.[0]?.transactionCommission?.type || "None",
+            amount: suggestions?.commission?.options?.[0]?.transactionCommission?.amount || "0"
+          },
+          kpis: []
         },
         leads: {
           types: [
@@ -1186,9 +1356,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       // Ajouter les données de documentation si elles existent
       if (documentation) {
         initialGigData.documentation = {
-          product: documentation.product.map(doc => ({ name: doc.name, url: doc.url })),
-          process: documentation.process.map(doc => ({ name: doc.name, url: doc.url })),
-          training: documentation.training.map(doc => ({ name: doc.name, url: doc.url }))
+          product: documentation.product.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url })),
+          process: documentation.process.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url })),
+          training: documentation.training.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url }))
         };
       }
 
@@ -1217,9 +1387,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           htmlContainer: "text-gray-600",
           confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         }
+      }).then(() => {
+        onBack();
       });
-
-      onBack();
     } catch (error) {
       console.error("Error saving gig data:", error);
       await Swal.fire({
@@ -1236,17 +1406,13 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     }
   };
 
-  const handleLeadsSave = (leadsData: any) => {
-    setGigData(prev => ({
-      ...prev,
-      leads: leadsData
-    }));
+  const handleLeadsSave = (data: any) => {
+    setLeadsData(data);
     setIsLeadsModalOpen(false);
-    setIsTeamModalOpen(true);
   };
 
   const handleLeadsSkip = () => {
-    setGigData(prev => ({
+    setGigData((prev: GigData) => ({
       ...prev,
       leads: {
         types: [
@@ -1262,7 +1428,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   };
 
   const handleTeamSave = (teamData: any) => {
-    setGigData(prev => ({
+    setGigData((prev: GigData) => ({
       ...prev,
       team: teamData
     }));
@@ -1271,7 +1437,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   };
 
   const handleTeamSkip = () => {
-    setGigData(prev => ({
+    setGigData((prev: GigData) => ({
       ...prev,
       team: {
         size: "1-5",
@@ -1284,7 +1450,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   };
 
   const handleDocumentationSave = (documentationData: any) => {
-    setGigData(prev => ({
+    setGigData((prev: GigData) => ({
       ...prev,
       documentation: documentationData
     }));
@@ -1293,7 +1459,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   };
 
   const handleDocumentationSkip = () => {
-    setGigData(prev => ({
+    setGigData((prev: GigData) => ({
       ...prev,
       documentation: {
         product: [],
@@ -1390,7 +1556,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const updateItem = (section: StringArraySection, index: number, value: string) => {
     if (!editableSuggestions) return;
     const newSuggestions = { ...editableSuggestions };
-    const items = newSuggestions[section];
+    const items = getNestedProperty(newSuggestions, section);
     if (isStringArray(items)) {
       items[index] = value;
       setEditableSuggestions(newSuggestions);
@@ -1400,11 +1566,29 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const addItem = (section: StringArraySection) => {
     if (!editableSuggestions) return;
     const newSuggestions = { ...editableSuggestions };
-    const items = newSuggestions[section];
-    if (isStringArray(items)) {
+    const items = getNestedProperty(newSuggestions, section);
+    if (section === 'commission') {
+      newSuggestions[section] = {
+        options: [...(items as any).options, {
+          base: '',
+          baseAmount: '',
+          currency: 'EUR',
+          minimumVolume: { amount: '', period: '', unit: '' },
+          transactionCommission: { type: '', amount: '' }
+        }]
+      };
+    } else if (section === 'activity') {
+      newSuggestions[section] = {
+        options: [...(items as any).options, {
+          type: '',
+          description: '',
+          requirements: []
+        }]
+      };
+    } else if (isStringArray(items)) {
       newSuggestions[section] = [...items, ""];
-      setEditableSuggestions(newSuggestions);
     }
+    setEditableSuggestions(newSuggestions);
   };
 
   const renderEditableList = (
@@ -1414,7 +1598,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   ) => {
     if (!editableSuggestions) return null;
     
-    const items = editableSuggestions[section];
+    const items = getNestedProperty(editableSuggestions, section);
     if (!isStringArray(items)) return null;
 
     return (
@@ -1486,25 +1670,32 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const addNewCommissionOption = () => {
     if (!editableSuggestions) return;
     const newSuggestions = { ...editableSuggestions };
+    
     if (!newSuggestions.commission) {
-      newSuggestions.commission = { options: [] };
+      newSuggestions.commission = {
+        options: []
+      };
     }
+    
+    if (!newSuggestions.commission.options) {
+      newSuggestions.commission.options = [];
+    }
+
     newSuggestions.commission.options.push({
-      base: "percentage",
-      baseAmount: "10000",
-      bonus: "quarterly",
-      bonusAmount: "5000",
-      currency: "EUR",
+      base: "Hourly",
+      baseAmount: "$0",
+      currency: "USD",
       minimumVolume: {
-        amount: "50000",
-        period: "monthly",
-        unit: "EUR"
+        amount: "0",
+        period: "Weekly",
+        unit: "Hours"
       },
       transactionCommission: {
-        type: "percentage",
-        amount: "5"
+        type: "None",
+        amount: "$0"
       }
     });
+
     setEditableSuggestions(newSuggestions);
   };
 
@@ -1565,6 +1756,22 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     <div>
                       <label className="text-sm font-medium text-gray-500">Period</label>
                       <p className="text-gray-900">{option.bonus}</p>
+                    </div>
+                  </div>
+                )}
+                {option.minimumVolume && (
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Minimum Volume</label>
+                      <p className="text-gray-900">{option.minimumVolume.amount} {option.minimumVolume.unit} per {option.minimumVolume.period}</p>
+                    </div>
+                  </div>
+                )}
+                {option.transactionCommission && (
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Transaction Commission</label>
+                      <p className="text-gray-900">{option.transactionCommission.amount} ({option.transactionCommission.type})</p>
                     </div>
                   </div>
                 )}
@@ -1779,7 +1986,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 value={editableSuggestions.seniority.yearsExperience}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.seniority.yearsExperience = e.target.value;
+                  newSuggestions.seniority.yearsExperience = Number(e.target.value);
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -2520,11 +2727,18 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         isOpen={isLeadsModalOpen}
         onClose={() => setIsLeadsModalOpen(false)}
         title="Leads Information"
-        onSave={handleLeadsSave}
+        onSave={() => setIsLeadsModalOpen(false)}
         onSkip={handleLeadsSkip}
       >
         <LeadsForm
-          onSave={handleLeadsSave}
+          onSave={(data) => {
+            setGigData((prev: GigData) => ({
+              ...prev,
+              leads: data
+            }));
+            setIsLeadsModalOpen(false);
+            setIsTeamModalOpen(true);
+          }}
           predefinedSources={predefinedOptions.leads.sources}
         />
       </Modal>
@@ -2533,7 +2747,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         isOpen={isTeamModalOpen}
         onClose={() => setIsTeamModalOpen(false)}
         title="Team Structure"
-        onSave={handleTeamSave}
+        onSave={() => setIsTeamModalOpen(false)}
         onSkip={handleTeamSkip}
       >
         <TeamForm
@@ -2547,7 +2761,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         isOpen={isDocModalOpen}
         onClose={() => setIsDocModalOpen(false)}
         title="Documentation Requirements"
-        onSave={handleDocumentationSave}
+        onSave={() => setIsDocModalOpen(false)}
         onSkip={handleDocumentationSkip}
       >
         <DocumentationForm

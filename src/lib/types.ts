@@ -281,3 +281,56 @@ export interface GigData {
     provided: string[];
   };
 }
+
+export interface GigSuggestion {
+  jobTitles: string[];
+  deliverables: string[];
+  compensation: string[];
+  skills: string[];
+  kpis: string[];
+  timeframes: string[];
+  requirements: string[];
+  languages: string[];
+  seniority: {
+    level: string;
+    yearsExperience: number;
+  };
+  schedule: {
+    days: string[];
+    hours: string;
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
+  commission: {
+    options: Array<{
+      base: string;
+      baseAmount: string;
+      bonus?: string;
+      bonusAmount?: string;
+      currency: string;
+      minimumVolume: {
+        amount: string;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: string;
+      };
+    }>;
+  };
+  sectors: string[];
+  activity: {
+    options: Array<{
+      type: string;
+      description: string;
+      requirements: string[];
+    }>;
+  };
+  destinationZones: string[];
+}

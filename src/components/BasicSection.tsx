@@ -1,3 +1,11 @@
+/**
+ * BasicSection.tsx
+ * 
+ * Ce composant est responsable de la section de base du formulaire de création de gig.
+ * Il gère les informations fondamentales comme le titre, la description, la catégorie,
+ * la zone de destination et le niveau d'expérience.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
@@ -20,12 +28,23 @@ import { GigData } from '../types';
 import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
-import { analyzeCityAndGetCountry } from '../lib/ai';
 
-// Register languages
+// Enregistrement des langues pour la traduction des noms de pays
 i18n.registerLocale(fr);
 i18n.registerLocale(en);
 
+/**
+ * Interface définissant les props du composant BasicSection
+ * @property {GigData} data - Les données du gig
+ * @property {Function} onChange - Callback pour mettre à jour les données
+ * @property {Object} errors - Les erreurs de validation
+ * @property {Function} onPrevious - Callback pour la navigation précédente
+ * @property {Function} onNext - Callback pour la navigation suivante
+ * @property {Function} onSave - Callback pour sauvegarder les données
+ * @property {Function} onAIAssist - Callback pour l'assistance IA
+ * @property {Function} onSectionChange - Callback pour changer de section
+ * @property {string} currentSection - La section actuelle
+ */
 interface BasicSectionProps {
   data: GigData;
   onChange: (data: GigData) => void;
@@ -38,6 +57,10 @@ interface BasicSectionProps {
   currentSection: string;
 }
 
+/**
+ * Composant principal BasicSection
+ * Gère l'affichage et la modification des informations de base d'un gig
+ */
 const BasicSection: React.FC<BasicSectionProps> = ({ 
   data, 
   onChange, 
@@ -46,19 +69,21 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onNext,
   onSave,
   onAIAssist,
-  onSectionChange,
-  currentSection = 'basic'
+  onSectionChange
 }) => {
+  // États locaux pour la recherche et la saisie de ville
   const [searchTerm, setSearchTerm] = useState('');
-  const [cityInput, setCityInput] = useState('');
 
-  // Sélectionner automatiquement le premier pays de destinationZones
+  /**
+   * Effet pour sélectionner automatiquement le premier pays de destinationZones
+   * S'exécute lorsque destinationZones ou destination_zone change
+   */
   useEffect(() => {
     if (data.destinationZones && data.destinationZones.length > 0 && 
         (!data.destination_zone || data.destination_zone.length === 0)) {
       const firstCountry = data.destinationZones[0];
       
-      // Convertir le nom du pays en code pays
+      // Conversion du nom du pays en code pays
       const countryCode = Object.entries(i18n.getNames('en'))
         .find(([_, name]) => name === firstCountry)?.[0];
       
@@ -68,15 +93,28 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     }
   }, [data.destinationZones, data.destination_zone, data, onChange]);
 
-  // Fonction pour vérifier si un pays est sélectionné
+  /**
+   * Vérifie si un pays est sélectionné
+   * @param {string} countryCode - Le code du pays à vérifier
+   * @returns {boolean} - True si le pays est sélectionné
+   */
   const isCountrySelected = (countryCode: string) => {
     return data.destination_zone === countryCode;
   };
 
+  /**
+   * Gère la sélection d'un pays
+   * @param {string} countryCode - Le code du pays sélectionné
+   */
   const handleCountrySelect = (countryCode: string) => {
     onChange({ ...data, destination_zone: countryCode });
   };
 
+  /**
+   * Récupère la liste des pays par zone géographique
+   * @param {string} zone - La zone géographique
+   * @returns {Array} - Liste des pays de la zone
+   */
   const getCountriesByZone = (zone: string) => {
     const zoneCountries: { [key: string]: string[] } = {
       'Europe': ['FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'CH', 'AT', 'PT', 'GR', 'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'SK', 'SI', 'DK', 'FI', 'SE', 'NO', 'IE', 'GB', 'EE', 'LV', 'LT', 'LU', 'MT', 'CY'],
@@ -97,7 +135,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       .sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  // Log destination zone codes from suggestions
+  /**
+   * Effet pour logger les codes de zone de destination
+   * Utile pour le débogage
+   */
   useEffect(() => {
     console.log('Debug destinationZones:', {
       destinationZones: data.destinationZones?.length,
@@ -153,6 +194,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     }
   }, [data.destinationZones, data.destination_zone]);
 
+  /**
+   * Filtre les zones en fonction du terme de recherche
+   */
   const filteredZones = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter((zone) => {
     const countries = getCountriesByZone(zone);
     return countries.some(country => 
@@ -160,7 +204,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     );
   });
 
-  // Add Material Icons
+  /**
+   * Effet pour ajouter les icônes Material Icons
+   */
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
@@ -171,7 +217,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     };
   }, []);
 
-  // Get all categories including the one from data if it's not in predefined options
+  /**
+   * Récupère toutes les catégories disponibles
+   * Inclut les catégories prédéfinies et les nouvelles catégories
+   */
   const allCategories = React.useMemo(() => {
     const categories = new Set(predefinedOptions.basic.categories);
     if (data.category && !categories.has(data.category)) {
@@ -180,7 +229,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     return Array.from(categories);
   }, [data.category]);
 
-  // Get all seniority levels including the one from data if it's not in predefined options
+  /**
+   * Récupère tous les niveaux de séniorité disponibles
+   * Inclut les niveaux prédéfinis et les nouveaux niveaux
+   */
   const allSeniorityLevels = React.useMemo(() => {
     const levels = new Set(predefinedOptions.basic.seniorityLevels);
     if (data.seniority?.level && !levels.has(data.seniority.level)) {
@@ -189,31 +241,32 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     return Array.from(levels);
   }, [data.seniority?.level]);
 
-  // Update the seniority section to include the years field
+  /**
+   * Gère les changements dans la section séniorité
+   * @param {string} field - Le champ modifié (level, years, yearsExperience)
+   * @param {string} value - La nouvelle valeur
+   */
   const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
     const newData = {
       ...data,
       seniority: {
         ...data.seniority,
         [field]: value,
-        // years: field === 'yearsExperience' ? value : data.seniority?.yearsExperience || '',
-        yearsExperience: field === 'yearsExperience' ? value : data.seniority?.yearsExperience || '',
+        yearsExperience: field === 'yearsExperience' ? Number(value) : data.seniority?.yearsExperience || 0,
         aiGenerated: data.seniority?.aiGenerated
       }
     };
     onChange(newData);
   };
 
-  // Log initial data when component mounts
+  /**
+   * Effet pour logger les changements de données
+   */
   useEffect(() => {
-  }, []);
-
-  // Log data changes
-  useEffect(() => {
-
     console.log('Data from OpenAI:', data);
   }, [data]);
 
+  // Le rendu du composant
   return (
     <div className="w-full bg-white p-6">
       {/* Header Navigation */}
@@ -528,7 +581,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 value={data.seniority?.years || ''}
                 onChange={(e) => handleSeniorityChange('years', e.target.value)}
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="e.g., 2-3 years"
+                placeholder="e.g., 2"
               />
             </div>
           </div>
@@ -540,7 +593,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <div>
                   <span className="font-medium text-gray-900">{data.seniority.level}</span>
                   <span className="text-gray-600 mx-2">•</span>
-                  <span className="text-gray-700">{data.seniority.yearsExperience} experience</span>
+                  <span className="text-gray-700">
+                    {data.seniority.yearsExperience === 4 ? '3-5 years' : `${data.seniority.yearsExperience} years`} of experience
+                  </span>
                 </div>
               </div>
             </div>

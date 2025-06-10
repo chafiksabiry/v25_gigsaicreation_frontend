@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import { 
@@ -6,26 +6,13 @@ import {
   TrendingUp, BarChart2, Percent, Star,
   ArrowUpRight, Calculator, ArrowLeft, ArrowRight
 } from 'lucide-react';
+import { GigData } from '../types';
+
+
 
 interface CommissionSectionProps {
-  data: {
-    base: string;
-    baseAmount: string;
-    bonus?: string;
-    bonusAmount?: string;
-    structure?: string;
-    currency: string;
-    minimumVolume: {
-      amount: string;
-      period: string;
-      unit: string;
-    };
-    transactionCommission: {
-      type: string;
-      amount: string;
-    };
-  };
-  onChange: (data: any) => void;
+  data: GigData;
+  onChange: (data: GigData) => void;
   errors: { [key: string]: string[] };
   warnings: { [key: string]: string[] };
   onNext?: () => void;
@@ -34,14 +21,44 @@ interface CommissionSectionProps {
 
 export function CommissionSection({ data, onChange, errors, warnings, onNext, onPrevious }: CommissionSectionProps) {
   const getCurrencySymbol = () => {
-    return data?.currency ? 
-      predefinedOptions.commission.currencies.find(c => c.code === data?.currency)?.symbol || '$'
+    return data?.commission?.currency ? 
+      predefinedOptions.commission.currencies.find(c => c.code === data?.commission?.currency)?.symbol || '$'
       : '$';
   };
 
   const formatAmount = (value: string) => {
+    // Remove any currency symbols and non-numeric characters except decimal point
     return value?.replace(/[^\d.]/g, '') || '';
   };
+
+  // Log commission data
+  console.log('Commission Data:', {
+    base: data?.commission?.base,
+    baseAmount: data?.commission?.baseAmount,
+    bonus: data?.commission?.bonus,
+    bonusAmount: data?.commission?.bonusAmount,
+    structure: data?.commission?.structure,
+    currency: data?.commission?.currency,
+    minimumVolume: data?.commission?.minimumVolume,
+    transactionCommission: data?.commission?.transactionCommission,
+    kpis: data?.commission?.kpis
+  });
+
+  // Add new base type if it doesn't exist
+  useEffect(() => {
+    if (data?.commission?.base && !predefinedOptions.commission.baseTypes.includes(data.commission.base)) {
+      predefinedOptions.commission.baseTypes.push(data.commission.base);
+      console.log(`Added new base type: ${data.commission.base}`);
+    }
+  }, [data?.commission?.base]);
+
+  // Add new bonus type if it doesn't exist
+  useEffect(() => {
+    if (data?.commission?.bonus && !predefinedOptions.commission.bonusTypes.includes(data.commission.bonus)) {
+      predefinedOptions.commission.bonusTypes.push(data.commission.bonus);
+      console.log(`Added new bonus type: ${data.commission.bonus}`);
+    }
+  }, [data?.commission?.bonus]);
 
   return (
     <div className="space-y-8">
@@ -66,19 +83,25 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           {predefinedOptions.commission.currencies.map((currency) => (
             <button
               key={currency.code}
-              onClick={() => onChange({ ...data, currency: currency.code })}
+              onClick={() => onChange({ 
+                ...data, 
+                commission: { 
+                  ...data.commission,
+                  currency: currency.code
+                } 
+              })}
               className={`flex items-center gap-3 p-4 rounded-xl text-left transition-colors ${
-                data?.currency === currency.code
+                data?.commission?.currency === currency.code
                   ? 'bg-green-100 text-green-700 border border-green-200'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                data?.currency === currency.code
+                data?.commission?.currency === currency.code
                   ? 'bg-green-600'
                   : 'border-2 border-gray-300'
               }`}>
-                {data?.currency === currency.code && (
+                {data?.commission?.currency === currency.code && (
                   <div className="w-2.5 h-2.5 rounded-full bg-white" />
                 )}
               </div>
@@ -113,8 +136,14 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 </div>
                 <input
                   type="text"
-                  value={data?.baseAmount || ''}
-                  onChange={(e) => onChange({ ...data, baseAmount: formatAmount(e.target.value) })}
+                  value={data?.commission?.baseAmount || ''}
+                  onChange={(e) => onChange({ 
+                    ...data, 
+                    commission: { 
+                      ...data.commission,
+                      baseAmount: formatAmount(e.target.value)
+                    } 
+                  })}
                   className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter base amount"
                 />
@@ -124,14 +153,30 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             <div>
               <label className="block text-sm font-medium text-gray-700">Base Type</label>
               <select
-                value={data?.base || ''}
-                onChange={(e) => onChange({ ...data, base: e.target.value })}
+                value={data?.commission?.base || ''}
+                onChange={(e) => {
+                  const newBaseType = e.target.value;
+                  // Add new base type if it doesn't exist
+                  if (newBaseType && !predefinedOptions.commission.baseTypes.includes(newBaseType)) {
+                    predefinedOptions.commission.baseTypes.push(newBaseType);
+                  }
+                  onChange({ 
+                    ...data, 
+                    commission: { 
+                      ...data.commission,
+                      base: newBaseType
+                    } 
+                  });
+                }}
                 className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select type</option>
                 {predefinedOptions.commission.baseTypes.map((type) => (
                   <option key={type} value={type}>{type}</option>
                 ))}
+                {data?.commission?.base && !predefinedOptions.commission.baseTypes.includes(data.commission.base) && (
+                  <option value={data.commission.base}>{data.commission.base}</option>
+                )}
               </select>
             </div>
           </div>
@@ -148,12 +193,15 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 <label className="block text-sm font-medium text-gray-600">Target Amount</label>
                 <input
                   type="text"
-                  value={data?.minimumVolume?.amount || ''}
+                  value={data?.commission?.minimumVolume?.amount || ''}
                   onChange={(e) => onChange({
                     ...data,
-                    minimumVolume: {
-                      ...data?.minimumVolume,
-                      amount: formatAmount(e.target.value)
+                    commission: {
+                      ...data.commission,
+                      minimumVolume: {
+                        ...data.commission?.minimumVolume,
+                        amount: formatAmount(e.target.value)
+                      }
                     }
                   })}
                   className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
@@ -164,40 +212,46 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               <div>
                 <label className="block text-sm font-medium text-gray-600">Unit</label>
                 <select
-                  value={data?.minimumVolume?.unit || ''}
+                  value={data?.commission?.minimumVolume?.unit || ''}
                   onChange={(e) => onChange({
                     ...data,
-                    minimumVolume: {
-                      ...data?.minimumVolume,
-                      unit: e.target.value
+                    commission: {
+                      ...data.commission,
+                      minimumVolume: {
+                        ...data.commission?.minimumVolume,
+                        unit: e.target.value
+                      }
                     }
                   })}
                   className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select unit</option>
-                  <option value="calls">Calls Handled</option>
-                  <option value="hours">Hours Volume</option>
-                  <option value="transactions">Successful Transactions</option>
+                  <option value="Posts">Posts</option>
+                  <option value="Calls">Calls</option>
+                  <option value="Transactions">Transactions</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-600">Period</label>
                 <select
-                  value={data?.minimumVolume?.period || ''}
+                  value={data?.commission?.minimumVolume?.period || ''}
                   onChange={(e) => onChange({
                     ...data,
-                    minimumVolume: {
-                      ...data?.minimumVolume,
-                      period: e.target.value
+                    commission: {
+                      ...data.commission,
+                      minimumVolume: {
+                        ...data.commission?.minimumVolume,
+                        period: e.target.value
+                      }
                     }
                   })}
                   className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select period</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
                 </select>
               </div>
             </div>
@@ -221,20 +275,23 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           <div>
             <label className="block text-sm font-medium text-gray-700">Commission Type</label>
             <select
-              value={data?.transactionCommission?.type || ''}
+              value={data?.commission?.transactionCommission?.type || ''}
               onChange={(e) => onChange({
                 ...data,
-                transactionCommission: {
-                  ...data?.transactionCommission,
-                  type: e.target.value
+                commission: {
+                  ...data.commission,
+                  transactionCommission: {
+                    ...data.commission?.transactionCommission,
+                    type: e.target.value
+                  }
                 }
               })}
               className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">Select type</option>
-              <option value="fixed">Fixed Amount per Transaction</option>
-              <option value="percentage">Percentage of Transaction Value</option>
-              <option value="tiered">Tiered Based on Volume</option>
+              <option value="Conversion">Conversion</option>
+              <option value="Fixed">Fixed Amount</option>
+              <option value="Percentage">Percentage</option>
             </select>
           </div>
 
@@ -243,21 +300,24 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span className="text-gray-500">
-                  {data?.transactionCommission?.type === 'percentage' ? '%' : getCurrencySymbol()}
+                  {data?.commission?.transactionCommission?.type === 'Percentage' ? '%' : getCurrencySymbol()}
                 </span>
               </div>
               <input
                 type="text"
-                value={data?.transactionCommission?.amount || ''}
+                value={data?.commission?.transactionCommission?.amount || ''}
                 onChange={(e) => onChange({
                   ...data,
-                  transactionCommission: {
-                    ...data?.transactionCommission,
-                    amount: formatAmount(e.target.value)
+                  commission: {
+                    ...data.commission,
+                    transactionCommission: {
+                      ...data.commission?.transactionCommission,
+                      amount: formatAmount(e.target.value)
+                    }
                   }
                 })}
                 className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-purple-500 focus:border-purple-500"
-                placeholder={`Enter ${data?.transactionCommission?.type === 'percentage' ? 'percentage' : 'amount'}`}
+                placeholder={`Enter ${data?.commission?.transactionCommission?.type === 'Percentage' ? 'percentage' : 'amount'}`}
               />
             </div>
           </div>
@@ -281,14 +341,30 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             <div>
               <label className="block text-sm font-medium text-gray-700">Bonus Type</label>
               <select
-                value={data?.bonus || ''}
-                onChange={(e) => onChange({ ...data, bonus: e.target.value })}
+                value={data?.commission?.bonus || ''}
+                onChange={(e) => {
+                  const newBonusType = e.target.value;
+                  // Add new bonus type if it doesn't exist
+                  if (newBonusType && !predefinedOptions.commission.bonusTypes.includes(newBonusType)) {
+                    predefinedOptions.commission.bonusTypes.push(newBonusType);
+                  }
+                  onChange({ 
+                    ...data, 
+                    commission: { 
+                      ...data.commission,
+                      bonus: newBonusType
+                    } 
+                  });
+                }}
                 className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-amber-500 focus:border-amber-500"
               >
                 <option value="">Select bonus type</option>
                 {predefinedOptions.commission.bonusTypes.map((type) => (
                   <option key={type} value={type}>{type}</option>
                 ))}
+                {data?.commission?.bonus && !predefinedOptions.commission.bonusTypes.includes(data.commission.bonus) && (
+                  <option value={data.commission.bonus}>{data.commission.bonus}</option>
+                )}
               </select>
             </div>
 
@@ -300,8 +376,14 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 </div>
                 <input
                   type="text"
-                  value={data?.bonusAmount || ''}
-                  onChange={(e) => onChange({ ...data, bonusAmount: formatAmount(e.target.value) })}
+                  value={data?.commission?.bonusAmount || ''}
+                  onChange={(e) => onChange({ 
+                    ...data, 
+                    commission: { 
+                      ...data.commission,
+                      bonusAmount: formatAmount(e.target.value)
+                    } 
+                  })}
                   className="block w-full rounded-lg border-gray-300 pl-7 focus:ring-amber-500 focus:border-amber-500"
                   placeholder="Enter bonus amount"
                 />
@@ -309,18 +391,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Additional Details */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
-        <textarea
-          value={data?.structure || ''}
-          onChange={(e) => onChange({ ...data, structure: e.target.value })}
-          rows={4}
-          className="mt-1 block w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Add any additional details about the commission structure..."
-        />
       </div>
 
       {/* Validation Messages */}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Trash2, Check, Globe, Users, Building2, ChevronRight, Briefcase, GraduationCap, ArrowLeft, ArrowRight } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
+import { GigData } from '../types';
 
 interface TeamRole {
   roleId: string;
@@ -12,44 +13,38 @@ interface TeamRole {
 }
 
 interface TeamStructureProps {
-  data?: {
-    team: {
-      size: string;
-      structure: TeamRole[];
-      territories: string[];
-      reporting: {
-        to: string;
-        frequency: string;
+  data: GigData;
+  onChange: (data: GigData) => void;
+  errors: {
+    team?: {
+      size?: string;
+      structure?: string[];
+      territories?: string[];
+      reporting?: {
+        to?: string;
+        frequency?: string;
       };
-      collaboration: string[];
+      collaboration?: string[];
     };
   };
-  onChange: (data: {
-    team: {
-      size: string;
-      structure: TeamRole[];
-      territories: string[];
-      reporting: {
-        to: string;
-        frequency: string;
-      };
-      collaboration: string[];
-    };
-  }) => void;
-  onPrevious: () => void;
-  onNext: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  onSave?: () => void;
+  onAIAssist?: () => void;
+  onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs') => void;
+  currentSection: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs';
 }
 
-export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStructureProps) {
+export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection }: TeamStructureProps) {
   // Initialize team with default values if undefined
   const initializedTeam = {
     ...data,
     team: {
-      size: data?.team?.size || '0',
-      structure: data?.team?.structure || [],
-      territories: data?.team?.territories || [],
-      reporting: data?.team?.reporting || { to: '', frequency: '' },
-      collaboration: data?.team?.collaboration || []
+      size: data.team?.size || '0',
+      structure: data.team?.structure || [],
+      territories: data.team?.territories || [],
+      reporting: data.team?.reporting || { to: '', frequency: '' },
+      collaboration: data.team?.collaboration || []
     }
   };
 
@@ -203,8 +198,13 @@ export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStruct
               value={initializedTeam.team.size || '0'}
               onChange={(e) => handleTeamSizeChange(e.target.value)}
               placeholder="e.g., 5-10 people"
-              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
+                errors?.team?.size ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
+            {errors?.team?.size && (
+              <p className="mt-1 text-sm text-red-600">{errors.team.size}</p>
+            )}
           </div>
           <div className="flex items-center justify-between px-4 py-2 bg-white rounded-lg border border-gray-200">
             <div className="text-sm text-gray-600">Current Team Composition</div>

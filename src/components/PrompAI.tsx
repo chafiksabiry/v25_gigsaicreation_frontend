@@ -15,8 +15,9 @@ import { AIDialog } from "./AIDialog";
 import { Suggestions } from "./Suggestions";
 import BasicSection from "./BasicSection";
 import { SectionContent } from "./SectionContent";
-import type { GigSuggestion, GigData } from "../types";
+import type { GigData, GigSuggestion } from "../types";
 import { predefinedOptions } from "../lib/guidance";
+import { mapGeneratedDataToGigData } from '../lib/ai';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
@@ -101,9 +102,9 @@ const PrompAI: React.FC = () => {
       certifications: []
     },
     seniority: {
-      years: "",
+      years: "0",
       level: "",
-      yearsExperience: ""
+      yearsExperience: 0
     },
     team: {
       size: "",
@@ -172,88 +173,18 @@ const PrompAI: React.FC = () => {
     setShowSuggestions(false);
     setCurrentSection("basic");
 
-    // Mettre à jour les données du gig avec les suggestions
+    // Map the generated data to the initialized structure
+    const mappedData = mapGeneratedDataToGigData(suggestions);
+    
+    // Update the gig data with the mapped suggestions
     setGigData((prevData: GigData) => ({
       ...prevData,
-      // Section Basic
-      title: suggestions.jobTitles?.[0] || prevData.title,
-      description: suggestions.deliverables?.join("\n") || prevData.description,
-      category: suggestions.sectors?.[0] || prevData.category,
-      destinationZones: suggestions.destinationZones || prevData.destinationZones,
-      destination_zone: suggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : prevData.destination_zone,
-      seniority: {
-        level: suggestions.seniority?.level || prevData.seniority.level,
-        years: suggestions.seniority?.yearsExperience || prevData.seniority.years,
-        yearsExperience: suggestions.seniority?.yearsExperience || prevData.seniority.yearsExperience
-      },
-      // Section Schedule
-      schedule: {
-        days: suggestions.schedule?.days || prevData.schedule.days,
-        hours: suggestions.schedule?.hours || prevData.schedule.hours,
-        timeZones:
-          suggestions.schedule?.timeZones || prevData.schedule.timeZones,
-        flexibility: suggestions.schedule?.flexibility || prevData.schedule.flexibility,
-        minimumHours: {
-          daily: suggestions.schedule?.minimumHours?.daily || prevData.schedule.minimumHours.daily,
-          weekly: suggestions.schedule?.minimumHours?.weekly || prevData.schedule.minimumHours.weekly,
-          monthly: suggestions.schedule?.minimumHours?.monthly || prevData.schedule.minimumHours.monthly
-        }
-      },
-      // Section Commission
-      commission: {
-        base: suggestions.commission?.base || prevData.commission.base,
-        baseAmount: suggestions.commission?.baseAmount || prevData.commission.baseAmount,
-        bonus: suggestions.commission?.bonus || prevData.commission.bonus,
-        bonusAmount: suggestions.commission?.bonusAmount || prevData.commission.bonusAmount,
-        structure: suggestions.commission?.structure || prevData.commission.structure,
-        currency: suggestions.commission?.currency || prevData.commission.currency,
-        minimumVolume: {
-          amount: suggestions.commission?.minimumVolume?.amount || prevData.commission.minimumVolume.amount,
-          period: suggestions.commission?.minimumVolume?.period || prevData.commission.minimumVolume.period,
-          unit: suggestions.commission?.minimumVolume?.unit || prevData.commission.minimumVolume.unit,
-        },
-        transactionCommission: {
-          type: suggestions.commission?.transactionCommission?.type || prevData.commission.transactionCommission.type,
-          amount: suggestions.commission?.transactionCommission?.amount || prevData.commission.transactionCommission.amount,
-        },
-        kpis: suggestions.commission?.kpis || prevData.commission.kpis || []
-      },
-      // Section Skills
-      skills: {
-        languages: suggestions.skills?.languages || prevData.skills.languages,
-        soft: suggestions.skills?.soft || prevData.skills.soft,
-        professional:
-          suggestions.skills?.professional || prevData.skills.professional,
-        technical: suggestions.skills?.technical || prevData.skills.technical,
-        certifications: suggestions.skills?.certifications || prevData.skills.certifications,
-      },
-      // Section Team
-      team: {
-        size: suggestions.team?.size?.toString() || prevData.team.size,
-        structure: suggestions.team?.structure || prevData.team.structure,
-        territories: suggestions.team?.territories || prevData.team.territories,
-        reporting: {
-          to: suggestions.team?.reporting?.to || prevData.team.reporting.to,
-          frequency:
-            suggestions.team?.reporting?.frequency ||
-            prevData.team.reporting.frequency,
-        },
-        collaboration: suggestions.team?.collaboration || prevData.team.collaboration,
-      },
-      // Section Documentation
-      documentation: {
-        product:
-          suggestions.documentation?.product || prevData.documentation.product,
-        process:
-          suggestions.documentation?.process || prevData.documentation.process,
-        training:
-          suggestions.documentation?.training ||
-          prevData.documentation.training,
-        reference:
-          suggestions.documentation?.reference || prevData.documentation.reference,
-        templates:
-          suggestions.documentation?.templates || prevData.documentation.templates,
-      },
+      ...mappedData,
+      // Preserve any existing data that wasn't in the suggestions
+      userId: prevData.userId,
+      companyId: prevData.companyId,
+      // Ensure destination_zone is set correctly
+      destination_zone: suggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : prevData.destination_zone
     }));
   };
 

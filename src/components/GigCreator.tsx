@@ -103,7 +103,7 @@ const initialGigData: GigData = {
   seniority: {
     years: "",
     level: "",
-    yearsExperience: "",
+    yearsExperience: 0,
   },
   team: {
     size: "",
