@@ -17,10 +17,7 @@ import {
   Clock,
   Calendar,
   Languages,
-  Building2,
   Briefcase,
-  Phone,
-  GraduationCap,
   Award,
   Laptop,
   Shield,
@@ -213,10 +210,10 @@ export function GigReview({
               </div>
               <div className="text-2xl font-bold text-gray-900">
                 {getCurrencySymbol()}
-                {data.commission?.baseAmount || "0"}
+                {data?.commission?.baseAmount || "0"}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.commission?.base || "No base commission"}
+                {data?.commission?.base || "No base commission"}
               </p>
             </div>
 
@@ -226,12 +223,12 @@ export function GigReview({
                 <h3 className="font-medium">Performance Bonus</h3>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.commission?.bonus
-                  ? `${getCurrencySymbol()}${data.commission.bonusAmount}`
+                {data?.commission?.bonus
+                  ? `${getCurrencySymbol()}${data?.commission?.bonusAmount || "0"}`
                   : "N/A"}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.commission?.bonus || "No bonus structure"}
+                {data?.commission?.bonus || "No bonus structure"}
               </p>
             </div>
 
@@ -241,7 +238,7 @@ export function GigReview({
                 <h3 className="font-medium">Team Size</h3>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.team.size}
+                {data.team?.size || '0'}
               </div>
               <p className="text-sm text-gray-600 mt-1">Target Team Size</p>
             </div>
@@ -252,10 +249,10 @@ export function GigReview({
                 <h3 className="font-medium">Coverage</h3>
               </div>
               <div className="text-lg font-bold text-gray-900">
-                {data.schedule.hours}
+                {data.schedule?.hours || 'Not specified'}
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {data.schedule.timeZones.join(", ")}
+                {data.schedule?.timeZones?.join(", ") || 'No time zones specified'}
               </p>
             </div>
           </div>
@@ -272,192 +269,206 @@ export function GigReview({
               </div>
               <div className="p-6">
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  {data.title}
+                  {data?.title || 'No title provided'}
                 </h1>
-                <p className="text-gray-700">{data.description}</p>
+                <p className="text-gray-700">{data?.description || 'No description provided'}</p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                    {data.category}
-                  </span>
-                  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                    {data.seniority.level}
-                  </span>
-                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                    {data.seniority.yearsExperience} Experience
-                  </span>
+                  {data?.category && (
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                      {data.category}
+                    </span>
+                  )}
+                  {data?.seniority?.level && (
+                    <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                      {data.seniority.level}
+                    </span>
+                  )}
+                  {data?.seniority?.yearsExperience && (
+                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                      {data.seniority.yearsExperience} Experience
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Commission Structure */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                  Commission Structure
-                </h2>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Base Commission */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Base Commission
-                  </h3>
-                  <div className="bg-white rounded-lg border border-green-100 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {getCurrencySymbol()}
-                          {data.commission.baseAmount}
+            {data?.commission && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    Commission Structure
+                  </h2>
+                </div>
+                <div className="p-6 space-y-6">
+                  {/* Base Commission */}
+                  {data.commission.base && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        Base Commission
+                      </h3>
+                      <div className="bg-white rounded-lg border border-green-100 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-gray-900">
+                              {getCurrencySymbol()}
+                              {data.commission.baseAmount || '0'}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {data.commission.base}
+                            </div>
+                          </div>
+                          <CheckCircle className="w-6 h-6 text-green-600" />
                         </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {data.commission.base}
+                        {data.commission.minimumVolume && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="text-sm text-gray-600">
+                              Minimum Requirements:
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                {data.commission.minimumVolume.amount}{" "}
+                                {data.commission.minimumVolume.unit}
+                              </div>
+                              <span className="text-sm text-gray-600">
+                                per {data.commission.minimumVolume.period}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Performance Bonus */}
+                  {data.commission.bonus && data.commission.bonusAmount && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        Performance Bonus
+                      </h3>
+                      <div className="bg-white rounded-lg border border-blue-100 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-gray-900">
+                              {getCurrencySymbol()}
+                              {data.commission.bonusAmount}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {data.commission.bonus}
+                            </div>
+                          </div>
+                          <Star className="w-6 h-6 text-blue-600" />
                         </div>
                       </div>
-                      <CheckCircle className="w-6 h-6 text-green-600" />
                     </div>
-                    {data.commission.minimumVolume && (
-                      <div className="mt-4 pt-4 border-t border-gray-100">
-                        <div className="text-sm text-gray-600">
-                          Minimum Requirements:
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                            {data.commission.minimumVolume.amount}{" "}
-                            {data.commission.minimumVolume.unit}
+                  )}
+
+                  {/* Transaction Commission */}
+                  {data.commission.transactionCommission?.type && (
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        Transaction Commission
+                      </h3>
+                      <div className="bg-white rounded-lg border border-purple-100 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-2xl font-bold text-gray-900">
+                              {data.commission.transactionCommission.type === "percentage"
+                                ? `${data.commission.transactionCommission.amount}%`
+                                : `${getCurrencySymbol()}${
+                                    data.commission.transactionCommission.amount
+                                  }`}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {data.commission.transactionCommission.type === "percentage"
+                                ? "Per Transaction Value"
+                                : "Per Transaction"}
+                            </div>
                           </div>
-                          <span className="text-sm text-gray-600">
-                            per {data.commission.minimumVolume.period}
+                          <Coins className="w-6 h-6 text-purple-600" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Details */}
+                  {data.commission.structure && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Additional Details
+                      </h3>
+                      <p className="text-gray-700 whitespace-pre-wrap">
+                        {data.commission.structure}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Schedule */}
+            {data?.schedule && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-orange-600" />
+                    Schedule
+                  </h2>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    {data.schedule.days && data.schedule.days.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-3">
+                          Working Days
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {data.schedule.days.map((day) => (
+                            <span
+                              key={day}
+                              className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
+                            >
+                              {day}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {data.schedule.hours && (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 mb-3">
+                          Working Hours
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-5 h-5 text-gray-400" />
+                          <span className="text-gray-900">
+                            {data.schedule.hours}
                           </span>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Performance Bonus */}
-                {data.commission.bonus && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Performance Bonus
-                    </h3>
-                    <div className="bg-white rounded-lg border border-blue-100 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {getCurrencySymbol()}
-                            {data.commission.bonusAmount}
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {data.commission.bonus}
-                          </div>
-                        </div>
-                        <Star className="w-6 h-6 text-blue-600" />
+                  {data.schedule.timeZones && data.schedule.timeZones.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">
+                        Time Zones
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {data.schedule.timeZones.map((zone) => (
+                          <span
+                            key={zone}
+                            className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
+                          >
+                            {zone}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Transaction Commission */}
-                {data.commission.transactionCommission.type && (
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                      Transaction Commission
-                    </h3>
-                    <div className="bg-white rounded-lg border border-purple-100 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {data.commission.transactionCommission.type ===
-                            "percentage"
-                              ? `${data.commission.transactionCommission.amount}%`
-                              : `${getCurrencySymbol()}${
-                                  data.commission.transactionCommission.amount
-                                }`}
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {data.commission.transactionCommission.type ===
-                            "percentage"
-                              ? "Per Transaction Value"
-                              : "Per Transaction"}
-                          </div>
-                        </div>
-                        <Coins className="w-6 h-6 text-purple-600" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Additional Details */}
-                {data.commission.structure && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Additional Details
-                    </h3>
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {data.commission.structure}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Schedule */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-orange-600" />
-                  Schedule
-                </h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
-                      Working Days
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.schedule.days.map((day) => (
-                        <span
-                          key={day}
-                          className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
-                        >
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
-                      Working Hours
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-gray-400" />
-                      <span className="text-gray-900">
-                        {data.schedule.hours}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">
-                    Time Zones
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {data.schedule.timeZones.map((zone) => (
-                      <span
-                        key={zone}
-                        className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
-                      >
-                        {zone}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {data.schedule.flexibility &&
-                  data.schedule.flexibility.length > 0 && (
+                  {data.schedule.flexibility && data.schedule.flexibility.length > 0 && (
                     <div className="mt-6">
                       <h3 className="text-sm font-medium text-gray-700 mb-3">
                         Flexibility Options
@@ -474,64 +485,69 @@ export function GigReview({
                       </div>
                     </div>
                   )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Lead Distribution */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <Target className="w-5 h-5 text-purple-600" />
-                  Lead Distribution
-                </h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-3 gap-4">
-                  {data.leads.types.map((lead) => (
-                    <div
-                      key={lead.type}
-                      className="bg-gradient-to-b from-purple-50 to-white rounded-lg p-4 border border-purple-100"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-900 capitalize">
-                          {lead.type} Leads
-                        </h4>
-                        <span className="text-sm font-semibold text-purple-600">
-                          {lead.percentage}%
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        {lead.description}
-                      </p>
-                      {lead.conversionRate && (
-                        <div className="mt-3 flex items-center gap-2 text-sm text-purple-700">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>{lead.conversionRate}% avg. conversion</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+            {data?.leads && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-purple-600" />
+                    Lead Distribution
+                  </h2>
                 </div>
-
-                {data.leads.sources.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
-                      Lead Sources
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.leads.sources.map((source) => (
-                        <span
-                          key={source}
-                          className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
+                <div className="p-6">
+                  {data.leads.types && data.leads.types.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4">
+                      {data.leads.types.map((lead) => (
+                        <div
+                          key={lead.type}
+                          className="bg-gradient-to-b from-purple-50 to-white rounded-lg p-4 border border-purple-100"
                         >
-                          {source}
-                        </span>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium text-gray-900 capitalize">
+                              {lead.type} Leads
+                            </h4>
+                            <span className="text-sm font-semibold text-purple-600">
+                              {lead.percentage}%
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {lead.description}
+                          </p>
+                          {lead.conversionRate && (
+                            <div className="mt-3 flex items-center gap-2 text-sm text-purple-700">
+                              <TrendingUp className="w-4 h-4" />
+                              <span>{lead.conversionRate}% avg. conversion</span>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {data.leads.sources && data.leads.sources.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">
+                        Lead Sources
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {data.leads.sources.map((source) => (
+                          <span
+                            key={source}
+                            className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
+                          >
+                            {source}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -646,7 +662,7 @@ export function GigReview({
                     {type} Documentation
                   </h3>
                   <ul className="space-y-2">
-                    {docs.map((doc, index) => (
+                    {docs.map((doc: { name: string; url: string }, index: number) => (
                       <li key={index}>
                         <a
                           href={doc.url}

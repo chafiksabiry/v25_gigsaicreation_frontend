@@ -10,6 +10,7 @@ import { TeamStructure } from "./TeamStructure";
 import { DocumentationSection } from "./DocumentationSection";
 import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
+import { TimezoneCode } from "../lib/ai";
 
 interface SectionContentProps {
   section: string;
@@ -34,8 +35,9 @@ export function SectionContent({
     ...data,
     seniority: {
       level: data.seniority?.level || '',
-      yearsExperience: data.seniority?.yearsExperience || '',
-      aiGenerated: data.seniority?.aiGenerated
+      yearsExperience: data.seniority?.yearsExperience || 0,
+      years: String(data.seniority?.yearsExperience || ''),
+      aiGenerated: data.seniority?.aiGenerated,
     }
   }), [data]);
 
@@ -51,7 +53,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: initializedData.seniority.yearsExperience 
+                years: String(initializedData.seniority.yearsExperience)
               }
             }}
             onChange={onChange}
@@ -67,7 +69,19 @@ export function SectionContent({
       case "schedule":
         return (
           <ScheduleSection
-            data={initializedData.schedule || {
+            data={(initializedData.schedule as {
+              days: string[];
+              hours: string;
+              timeZones: TimezoneCode[];
+              flexibility: string[];
+              minimumHours: {
+                daily?: number;
+                weekly?: number;
+                monthly?: number;
+              };
+              startTime?: string;
+              endTime?: string;
+            }) || {
               days: [],
               hours: "",
               timeZones: [] as TimezoneCode[],
@@ -84,7 +98,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: initializedData.seniority.yearsExperience
+                years: String(initializedData.seniority.yearsExperience)
               },
               schedule: scheduleData
             })}
@@ -100,55 +114,102 @@ export function SectionContent({
       case "commission":
         return (
           <CommissionSection
-            data={initializedData}
+            data={{
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: String(initializedData.seniority.yearsExperience)
+              },
+              commission: initializedData.commission || {
+                base: "",
+                baseAmount: "",
+                bonus: "",
+                bonusAmount: "",
+                structure: "",
+                currency: "",
+                minimumVolume: {
+                  amount: "",
+                  period: "",
+                  unit: ""
+                },
+                transactionCommission: {
+                  type: "",
+                  amount: ""
+                },
+                kpis: []
+              }
+            }}
             onChange={onChange}
             errors={errors}
+            warnings={{}}
             onPrevious={() => onSectionChange?.('schedule')}
             onNext={() => onSectionChange?.('leads')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
-            currentSection={section}
           />
         );
 
       case "leads":
         return (
           <LeadsSection
-            data={initializedData}
-            onChange={onChange}
+            data={initializedData.leads || {
+              types: [
+                { type: 'hot', percentage: 0, description: '', conversionRate: 0 },
+                { type: 'warm', percentage: 0, description: '', conversionRate: 0 },
+                { type: 'cold', percentage: 0, description: '', conversionRate: 0 }
+              ],
+              sources: []
+            }}
+            onChange={(leadsData) => onChange({
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: String(initializedData.seniority.yearsExperience)
+              },
+              leads: leadsData
+            })}
             errors={errors}
             onPrevious={() => onSectionChange?.('commission')}
             onNext={() => onSectionChange?.('skills')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
-            currentSection={section}
           />
         );
 
       case "skills":
         return (
           <SkillsSection
-            data={initializedData}
-            onChange={onChange}
+            data={initializedData.skills || {
+              languages: [],
+              soft: [],
+              professional: [],
+              technical: [],
+              certifications: []
+            }}
+            onChange={(skillsData) => onChange({
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: String(initializedData.seniority.yearsExperience)
+              },
+              skills: skillsData
+            })}
             errors={errors}
             onPrevious={() => onSectionChange?.('leads')}
             onNext={() => onSectionChange?.('team')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
-            currentSection={section}
           />
         );
 
       case "team":
         return (
           <TeamStructure
-            data={initializedData}
+            data={{
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: String(initializedData.seniority.yearsExperience)
+              }
+            }}
             onChange={onChange}
             errors={errors}
             onPrevious={() => onSectionChange?.('skills')}
             onNext={() => onSectionChange?.('docs')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
             currentSection={section}
           />
         );
@@ -158,8 +219,14 @@ export function SectionContent({
         return (
           <DocumentationSection
             data={initializedData.documentation}
-            onChange={(newDocs) => onChange({ ...initializedData, documentation: newDocs })}
-            errors={errors}
+            onChange={(newDocs) => onChange({
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: String(initializedData.seniority.yearsExperience)
+              },
+              documentation: newDocs
+            })}
             onPrevious={() => onSectionChange?.('team')}
             onNext={() => {}}
             onReview={() => {
@@ -171,10 +238,15 @@ export function SectionContent({
         );
 
       case "review":
-        console.log('SectionContent - Rendering GigReview');
         return (
           <GigReview
-            data={initializedData}
+            data={{
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                years: String(initializedData.seniority.yearsExperience)
+              }
+            }}
             onEdit={(section) => {
               console.log('SectionContent - onEdit - Setting section to:', section);
               onSectionChange?.(section);

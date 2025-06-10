@@ -96,9 +96,8 @@ export function ScheduleSection({
       type === "start"
         ? { startTime: value, endTime }
         : { startTime, endTime: value };
-    const formattedTime = `${formatTime(newTime.startTime)} - ${formatTime(
-      newTime.endTime
-    )}`;
+    // Store in 24h format
+    const formattedTime = `${newTime.startTime} - ${newTime.endTime}`;
 
     if (type === "start") {
       setStartTime(value);
@@ -119,6 +118,12 @@ export function ScheduleSection({
     const ampm = hour >= 12 ? "PM" : "AM";
     const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
+  const formatTimeFr = (time: string) => {
+    if (!time) return '';
+    const [h, m] = time.split(':');
+    return `${h}h${m}`;
   };
 
   const weekdays = [
@@ -171,7 +176,7 @@ export function ScheduleSection({
   const [workingHoursSuggestions, setWorkingHoursSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    if (data.timeZones.length > 0) {
+    if (data?.timeZones?.length > 0) {
       try {
         // Convert string timezones to TimezoneCode
         const validTimezones = data.timeZones.filter((tz): tz is TimezoneCode => 
@@ -194,7 +199,7 @@ export function ScheduleSection({
         console.error('Error analyzing timezones:', error);
       }
     }
-  }, [data.timeZones]);
+  }, [data?.timeZones]);
 
   return (
     <div className="space-y-6">
@@ -252,6 +257,7 @@ export function ScheduleSection({
                   type="time"
                   value={startTime}
                   onChange={(e) => handleTimeChange('start', e.target.value)}
+                  
                   className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -333,7 +339,9 @@ export function ScheduleSection({
                   <span className="text-sm text-gray-600">Working Hours:</span>
                 </div>
                 <span className="text-lg font-medium text-gray-900">
-                  {startTime && endTime ? `${startTime} - ${endTime}` : "Non défini"}
+                  {startTime && endTime && startTime !== '--:--' && endTime !== '--:--'
+                    ? `${formatTimeFr(startTime)} - ${formatTimeFr(endTime)}`
+                    : "Non défini"}
                 </span>
               </div>
             </div>
@@ -472,10 +480,21 @@ export function ScheduleSection({
         {/* Schedule Flexibility */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Schedule Flexibility</label>
+          {(() => {
+            console.log('Flexibility data:', {
+              options: predefinedOptions.schedule.flexibility,
+              selected: data?.flexibility,
+              data: data
+            });
+            return null;
+          })()}
           <SelectionList
-            options={predefinedOptions.basic.scheduleFlexibility}
+            options={predefinedOptions.schedule.flexibility}
             selected={data?.flexibility || []}
-            onChange={(flexibility) => onChange({ ...data, flexibility })}
+            onChange={(flexibility) => {
+              console.log('Flexibility changed:', flexibility);
+              onChange({ ...data, flexibility });
+            }}
             multiple={true}
             layout="flow"
             size="sm"

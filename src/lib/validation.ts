@@ -10,72 +10,70 @@ export function validateGigData(data: GigData): ValidationResult {
   const errors: { [key: string]: string[] } = {};
   const warnings: { [key: string]: string[] } = {};
 
-  // Critical Validations (Errors)
-  
   // Basic Info
   if (!data.title?.trim()) {
-    errors.basic = [...(errors.basic || []), 'Title is required'];
+    warnings.basic = [...(warnings.basic || []), 'Consider adding a title'];
   } else if (data.title.length < 3) {
-    errors.basic = [...(errors.basic || []), 'Title must be at least 10 characters long'];
+    warnings.basic = [...(warnings.basic || []), 'Consider making the title at least 10 characters long'];
   }
 
   if (!data.description?.trim()) {
-    errors.basic = [...(errors.basic || []), 'Description is required'];
+    warnings.basic = [...(warnings.basic || []), 'Consider adding a description'];
   } else if (data.description.length < 10) {
     warnings.basic = [...(warnings.basic || []), 'Consider adding more details to the description'];
   }
 
   if (!data.category) {
-    errors.basic = [...(errors.basic || []), 'Category is required'];
+    warnings.basic = [...(warnings.basic || []), 'Consider selecting a category'];
   }
 
   // Schedule
   if (!data.schedule) {
-    errors.schedule = [...(errors.schedule || []), 'Schedule information is required'];
+    warnings.schedule = [...(warnings.schedule || []), 'Consider adding schedule information'];
   } else {
     if (!data.schedule.days?.length) {
-      errors.schedule = [...(errors.schedule || []), 'Working days are required'];
+      warnings.schedule = [...(warnings.schedule || []), 'Consider specifying working days'];
     }
 
     if (!data.schedule.hours?.trim()) {
-      errors.schedule = [...(errors.schedule || []), 'Working hours are required'];
+      warnings.schedule = [...(warnings.schedule || []), 'Consider specifying working hours'];
     }
 
     if (!data.schedule.timeZones?.length) {
-      errors.schedule = [...(errors.schedule || []), 'At least one time zone is required'];
+      warnings.schedule = [...(warnings.schedule || []), 'Consider adding at least one time zone'];
     }
   }
 
   // Commission
   if (!data.commission) {
-    errors.commission = [...(errors.commission || []), 'Commission information is required'];
+    warnings.commission = [...(warnings.commission || []), 'Consider adding commission information'];
   } else {
-    if (!data.commission.currency) {
-      errors.commission = [...(errors.commission || []), 'Currency is required'];
+    if (!data.commission?.currency) {
+      warnings.commission = [...(warnings.commission || []), 'Consider specifying the currency'];
     }
 
-    if (data.commission.base) {
-      if (!data.commission.baseAmount) {
-        errors.commission = [...(errors.commission || []), 'Base commission amount is required'];
+    if (data.commission?.base) {
+      if (!data.commission?.baseAmount) {
+        warnings.commission = [...(warnings.commission || []), 'Consider specifying base commission amount'];
       }
-      if (!data.commission.minimumVolume?.amount) {
-        errors.commission = [...(errors.commission || []), 'Minimum volume amount is required'];
+      if (!data.commission?.minimumVolume?.amount) {
+        warnings.commission = [...(warnings.commission || []), 'Consider specifying minimum volume amount'];
       }
-      if (!data.commission.minimumVolume?.unit) {
-        errors.commission = [...(errors.commission || []), 'Minimum volume unit is required'];
+      if (!data.commission?.minimumVolume?.unit) {
+        warnings.commission = [...(warnings.commission || []), 'Consider specifying minimum volume unit'];
       }
-      if (!data.commission.minimumVolume?.period) {
-        errors.commission = [...(errors.commission || []), 'Minimum volume period is required'];
+      if (!data.commission?.minimumVolume?.period) {
+        warnings.commission = [...(warnings.commission || []), 'Consider specifying minimum volume period'];
       }
     }
   }
 
   // Team
   if (!data.team) {
-    errors.team = [...(errors.team || []), 'Team information is required'];
+    warnings.team = [...(warnings.team || []), 'Consider adding team information'];
   } else {
-    if (typeof data.team.size !== 'number' || data.team.size < 0) {
-      errors.team = [...(errors.team || []), 'Team size is required and must be a non-negative number'];
+    if (!data.team.size) {
+      warnings.team = [...(warnings.team || []), 'Consider specifying team size'];
     }
 
     if (!data.team.structure?.length) {
@@ -87,8 +85,6 @@ export function validateGigData(data: GigData): ValidationResult {
     }
   }
 
-  // Non-Critical Validations (Warnings)
-  
   // Leads
   if (data.leads?.types?.length) {
     const totalLeadPercentage = data.leads.types.reduce((sum, type) => sum + type.percentage, 0);
@@ -116,7 +112,7 @@ export function validateGigData(data: GigData): ValidationResult {
   }
 
   return {
-    isValid: Object.keys(errors).length === 0,
+    isValid: true, // Always valid since nothing is required
     errors,
     warnings
   };

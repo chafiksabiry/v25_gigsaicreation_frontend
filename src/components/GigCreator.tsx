@@ -103,7 +103,7 @@ const initialGigData: GigData = {
   seniority: {
     years: "",
     level: "",
-    yearsExperience: "",
+    yearsExperience: 0,
   },
   team: {
     size: "",
@@ -284,10 +284,15 @@ export function GigCreator({ children }: GigCreatorProps) {
           soft: gigData.skills.soft
         },
         schedule: {
-          days: gigData.schedule.days,
-          hours: gigData.schedule.hours,
-          timeZones: gigData.schedule.timeZones,
-          flexibility: gigData.schedule.flexibility
+          days: gigData.schedule?.days || [],
+          hours: gigData.schedule?.hours || '',
+          timeZones: gigData.schedule?.timeZones || [],
+          flexibility: gigData.schedule?.flexibility || '',
+          minimumHours: {
+            daily: gigData.schedule?.minimumHours?.daily || 0,
+            weekly: gigData.schedule?.minimumHours?.weekly || 0,
+            monthly: gigData.schedule?.minimumHours?.monthly || 0
+          }
         },
         commission: {
           base: gigData.commission.base,
@@ -310,9 +315,9 @@ export function GigCreator({ children }: GigCreatorProps) {
           sources: gigData.leads.sources
         },
         team: {
-          size: gigData.team.size,
-          structure: gigData.team.structure,
-          territories: gigData.team.territories
+          size: gigData.team?.size || '0',
+          structure: gigData.team?.structure || [],
+          territories: gigData.team?.territories || []
         },
         documentation: {
           training: gigData.documentation.training,

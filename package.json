@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host --force",
+    "dev:watch": "nodemon --watch src --ext ts,tsx,js,jsx,json,css --exec \"npm run dev\"",
     "vite": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

@@ -47,7 +47,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
           count: 1,
           seniority: {
             level: 'Mid Level',
-            yearsExperience: '2-5'
+            yearsExperience: ''
           }
         }
       ]

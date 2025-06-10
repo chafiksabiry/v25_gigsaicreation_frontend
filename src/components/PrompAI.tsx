@@ -15,8 +15,9 @@ import { AIDialog } from "./AIDialog";
 import { Suggestions } from "./Suggestions";
 import BasicSection from "./BasicSection";
 import { SectionContent } from "./SectionContent";
-import type { GigSuggestion, GigData } from "../types";
+import type { GigData, GigSuggestion } from "../types";
 import { predefinedOptions } from "../lib/guidance";
+import { mapGeneratedDataToGigData } from '../lib/ai';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
@@ -37,38 +38,73 @@ const PrompAI: React.FC = () => {
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
   const [gigData, setGigData] = useState<GigData>({
+    userId: "",
+    companyId: "",
+    destination_zone: "",
+    destinationZones: [],
+    callTypes: [],
+    highlights: [],
+    requirements: {
+      essential: [],
+      preferred: []
+    },
+    benefits: [],
+    tools: {
+      provided: [],
+      required: []
+    },
+    equipment: {
+      provided: [],
+      required: []
+    },
     title: "",
     description: "",
     category: "",
-    seniority: {
-      level: "",
-      years: "", // Changed to string to match type
-    },
     schedule: {
-      days: [] as string[], // Added type annotation
+      days: [],
       hours: "",
-      flexibility: [], // Added missing required property
-      minimumHours: {}, // Added missing required property
-      timeZones: [] as string[], // Will be defined outside selection
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {}
     },
     commission: {
+      base: "",
+      baseAmount: "",
+      bonus: "",
+      bonusAmount: "",
+      structure: "",
       currency: "",
-      base: false,
-      baseAmount: 0,
       minimumVolume: {
-        amount: 0,
-        unit: "",
+        amount: "",
         period: "",
+        unit: ""
       },
+      transactionCommission: {
+        type: "",
+        amount: ""
+      },
+      kpis: []
     },
     leads: {
       types: [],
       sources: [],
-      timeZones: [] as string[],
+      distribution: {
+        method: "",
+        rules: []
+      },
+      qualificationCriteria: []
     },
     skills: {
       languages: [],
+      soft: [],
       professional: [],
+      technical: [],
+      certifications: []
+    },
+    seniority: {
+      years: "0",
+      level: "",
+      yearsExperience: 0
     },
     team: {
       size: "",
@@ -76,15 +112,43 @@ const PrompAI: React.FC = () => {
       territories: [],
       reporting: {
         to: "",
-        frequency: "",
+        frequency: ""
       },
-      collaboration: [],
+      collaboration: []
+    },
+    training: {
+      initial: {
+        duration: "",
+        format: "",
+        topics: []
+      },
+      ongoing: {
+        frequency: "",
+        format: "",
+        topics: []
+      },
+      support: []
+    },
+    metrics: {
+      kpis: [],
+      targets: {},
+      reporting: {
+        frequency: "",
+        metrics: []
+      }
     },
     documentation: {
-      training: [],
-      reference: [],
-      templates: [],
+      templates: null,
+      reference: null,
+      product: [],
+      process: [],
+      training: []
     },
+    compliance: {
+      requirements: [],
+      certifications: [],
+      policies: []
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -109,97 +173,18 @@ const PrompAI: React.FC = () => {
     setShowSuggestions(false);
     setCurrentSection("basic");
 
-    // Mettre à jour les données du gig avec les suggestions
-    setGigData((prevData) => ({
+    // Map the generated data to the initialized structure
+    const mappedData = mapGeneratedDataToGigData(suggestions);
+    
+    // Update the gig data with the mapped suggestions
+    setGigData((prevData: GigData) => ({
       ...prevData,
-      // Section Basic
-      title: suggestions.jobTitles?.[0] || prevData.title,
-      description: suggestions.deliverables?.join("\n") || prevData.description,
-      category: suggestions.sectors?.[0] || prevData.category,
-      seniority: {
-        level: suggestions.seniority?.level || prevData.seniority.level,
-        years: parseInt(suggestions.seniority?.yearsExperience || "0"),
-      },
-      // Section Schedule
-      schedule: {
-        days: suggestions.schedule?.days || prevData.schedule.days,
-        hours: suggestions.schedule?.hours || prevData.schedule.hours,
-        timeZones:
-          suggestions.schedule?.timeZones || prevData.schedule.timeZones,
-      },
-      // Section Commission
-      commission: {
-        base:
-          suggestions.commission?.options?.[0]?.base ||
-          prevData.commission.base,
-        baseAmount:
-          suggestions.commission?.options?.[0]?.baseAmount ||
-          prevData.commission.baseAmount,
-        bonus:
-          suggestions.commission?.options?.[0]?.bonus ||
-          prevData.commission.bonus,
-        bonusAmount:
-          suggestions.commission?.options?.[0]?.bonusAmount ||
-          prevData.commission.bonusAmount,
-        structure:
-          suggestions.commission?.options?.[0]?.structure ||
-          prevData.commission.structure,
-        currency:
-          suggestions.commission?.options?.[0]?.currency ||
-          prevData.commission.currency,
-        minimumVolume: {
-          amount:
-            suggestions.commission?.options?.[0]?.minimumVolume?.amount ||
-            prevData.commission.minimumVolume.amount,
-          period:
-            suggestions.commission?.options?.[0]?.minimumVolume?.period ||
-            prevData.commission.minimumVolume.period,
-          unit:
-            suggestions.commission?.options?.[0]?.minimumVolume?.unit ||
-            prevData.commission.minimumVolume.unit,
-        },
-        transactionCommission: {
-          type:
-            suggestions.commission?.options?.[0]?.transactionCommission?.type ||
-            prevData.commission.transactionCommission.type,
-          amount:
-            suggestions.commission?.options?.[0]?.transactionCommission
-              ?.amount || prevData.commission.transactionCommission.amount,
-        },
-      },
-      // Section Skills
-      skills: {
-        languages: suggestions.skills?.languages || prevData.skills.languages,
-        professional:
-          suggestions.skills?.professional || prevData.skills.professional,
-      },
-      // Section Team
-      team: {
-        size: parseInt(suggestions.team?.size?.toString() || "0"),
-        structure: suggestions.team?.structure || prevData.team.structure,
-        territories: suggestions.team?.territories || prevData.team.territories,
-        reporting: {
-          to: suggestions.team?.reporting?.to || prevData.team.reporting.to,
-          frequency:
-            suggestions.team?.reporting?.frequency ||
-            prevData.team.reporting.frequency,
-        },
-        collaboration: suggestions.team?.collaboration || prevData.team.collaboration,
-      },
-      // Section Documentation
-      documentation: {
-        product:
-          suggestions.documentation?.product || prevData.documentation.product,
-        process:
-          suggestions.documentation?.process || prevData.documentation.process,
-        training:
-          suggestions.documentation?.training ||
-          prevData.documentation.training,
-        reference:
-          suggestions.documentation?.reference || prevData.documentation.reference,
-        templates:
-          suggestions.documentation?.templates || prevData.documentation.templates,
-      },
+      ...mappedData,
+      // Preserve any existing data that wasn't in the suggestions
+      userId: prevData.userId,
+      companyId: prevData.companyId,
+      // Ensure destination_zone is set correctly
+      destination_zone: suggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : prevData.destination_zone
     }));
   };
 
@@ -208,7 +193,24 @@ const PrompAI: React.FC = () => {
   };
 
   const handleGigDataChange = (newData: GigData) => {
-    setGigData(newData);
+    console.log('handleGigDataChange - Previous data:', gigData);
+    console.log('handleGigDataChange - New data:', newData);
+    
+    // If we have confirmed suggestions, merge them with the new data
+    if (confirmedSuggestions) {
+      const updatedData = {
+        ...newData,
+        // Preserve destinationZones from suggestions if they exist
+        destinationZones: confirmedSuggestions.destinationZones || newData.destinationZones,
+        // If we have a destination_zone from suggestions, use it
+        destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : '')
+      };
+      
+      console.log('handleGigDataChange - Updated data with suggestions:', updatedData);
+      setGigData(updatedData);
+    } else {
+      setGigData(newData);
+    }
   };
 
   if (showSuggestions) {
