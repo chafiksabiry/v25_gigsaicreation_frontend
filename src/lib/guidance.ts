@@ -373,16 +373,16 @@ export const predefinedOptions = {
       { name: 'Russian' }
     ],
     professional: [
-      'Gestion de projet',
-      'Architecture logicielle',
-      'Méthodologies Agile',
-      'Gestion d\'équipe',
-      'Planification stratégique',
-      'Analyse de marché',
-      'Développement commercial',
-      'Gestion de la qualité',
-      'Gestion des risques',
-      'Conformité réglementaire'
+      'Project Management',
+      'Software Architecture',
+      'Agile Methodologies',
+      'Team Management',
+      'Strategic Planning',
+      'Market Analysis',
+      'Business Development',
+      'Quality Management',
+      'Risk Management',
+      'Regulatory Compliance'
     ],
     technical: [
       'JavaScript',
@@ -411,15 +411,15 @@ export const predefinedOptions = {
     ],
     soft: [
       'Communication',
-      'Travail d\'équipe',
-      'Résolution de problèmes',
-      'Adaptabilité',
+      'Teamwork',
+      'Problem Solving',
+      'Adaptability',
       'Leadership',
-      'Gestion du temps',
-      'Pensée critique',
-      'Créativité',
-      'Empathie',
-      'Gestion du stress'
+      'Time Management',
+      'Critical Thinking',
+      'Creativity',
+      'Empathy',
+      'Stress Management'
     ],
     skillLevels: [
       'Basic',

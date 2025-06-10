@@ -452,7 +452,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       },
       benefits: [],
       skills: {
-        languages: (suggestions.skills?.languages || []).map(lang => ({ name: lang, level: "Fluent" })),
+        languages: (suggestions?.languages || []).map(lang => typeof lang === 'string' ? { name: lang, level: "Fluent" } : lang),
         soft: (suggestions.skills?.soft || []).filter(skill => 
           ["Creative thinking", "Communication", "Attention to detail"].includes(skill)
         ),
