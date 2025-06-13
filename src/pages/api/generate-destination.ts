@@ -29,7 +29,7 @@ Example response format: ["US", "CA", "UK", "DE"]`;
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that suggests appropriate destination zones for job postings based on the job details provided."
+          content: "You are a helpful assistant that suggests appropriate destination zones for job postings based on the job details provided. IMPORTANT: All responses MUST be in English only."
         },
         {
           role: "user",

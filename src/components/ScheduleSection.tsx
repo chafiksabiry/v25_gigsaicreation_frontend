@@ -15,7 +15,8 @@ import {
   ArrowRight,
   Save,
   Brain,
-  Globe
+  Globe,
+  PenSquare
 } from "lucide-react";
 import { MAJOR_TIMEZONES, TimezoneCode, analyzeTimezones, suggestTimezones, generateWorkingHoursSuggestions, formatTimeRange } from "../lib/ai";
 
@@ -27,7 +28,6 @@ interface TimeRange {
 interface ScheduleSectionProps {
   data: {
     days: string[];
-    hours: string;
     timeZones: TimezoneCode[];
     flexibility: string[];
     minimumHours: {
@@ -57,7 +57,6 @@ interface TimezoneOption {
 export function ScheduleSection({
   data = {
     days: [],
-    hours: "",
     timeZones: [],
     flexibility: [],
     minimumHours: {
@@ -77,47 +76,34 @@ export function ScheduleSection({
   onAIAssist,
   currentSection = 'schedule'
 }: ScheduleSectionProps) {
-  // Parse the hours string to get start and end times
-  const parseHours = (hoursString: string) => {
-    if (!hoursString) return { startTime: "09:00", endTime: "17:00" };
-    const [start, end] = hoursString.split(" - ");
-    return {
-      startTime: start || "09:00",
-      endTime: end || "17:00"
-    };
-  };
-
-  const { startTime: initialStartTime, endTime: initialEndTime } = parseHours(data.hours);
-  const [startTime, setStartTime] = useState(initialStartTime);
-  const [endTime, setEndTime] = useState(initialEndTime);
+  const [startTime, setStartTime] = useState(data.startTime || "09:00");
+  const [endTime, setEndTime] = useState(data.endTime || "17:00");
+  const [isEditingHours, setIsEditingHours] = useState(false);
+  const [hoursEdit, setHoursEdit] = useState({
+    daily: data?.minimumHours?.daily ?? '',
+    weekly: data?.minimumHours?.weekly ?? '',
+    monthly: data?.minimumHours?.monthly ?? '',
+  });
 
   const handleTimeChange = (type: "start" | "end", value: string) => {
-    const newTime =
-      type === "start"
-        ? { startTime: value, endTime }
-        : { startTime, endTime: value };
-    // Store in 24h format
-    const formattedTime = `${newTime.startTime} - ${newTime.endTime}`;
-
     if (type === "start") {
       setStartTime(value);
+      onChange({
+        ...data,
+        startTime: value
+      });
     } else {
       setEndTime(value);
+      onChange({
+        ...data,
+        endTime: value
+      });
     }
-
-    onChange({
-      ...data,
-      hours: formattedTime,
-      ...newTime,
-    });
   };
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${ampm}`;
+    return `${hours}h${minutes}`;
   };
 
   const formatTimeFr = (time: string) => {
@@ -201,6 +187,21 @@ export function ScheduleSection({
     }
   }, [data?.timeZones]);
 
+  useEffect(() => {
+    setHoursEdit({
+      daily: data?.minimumHours?.daily ?? '',
+      weekly: data?.minimumHours?.weekly ?? '',
+      monthly: data?.minimumHours?.monthly ?? '',
+    });
+  }, [data]);
+
+  const baseOptions = predefinedOptions.schedule.flexibility;
+  const selectedFlex = data?.flexibility || [];
+  const allOptions = [
+    ...baseOptions,
+    ...selectedFlex.filter(opt => !baseOptions.includes(opt))
+  ].map(opt => typeof opt === 'string' ? { value: opt, label: opt } : opt);
+
   return (
     <div className="space-y-6">
       <InfoText>
@@ -283,8 +284,11 @@ export function ScheduleSection({
                 onClick={() => {
                   setStartTime('09:00');
                   setEndTime('17:00');
-                  handleTimeChange('start', '09:00');
-                  handleTimeChange('end', '17:00');
+                  onChange({
+                    ...data,
+                    startTime: '09:00',
+                    endTime: '17:00'
+                  });
                 }}
                 className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
               >
@@ -296,8 +300,11 @@ export function ScheduleSection({
                 onClick={() => {
                   setStartTime('08:00');
                   setEndTime('16:00');
-                  handleTimeChange('start', '08:00');
-                  handleTimeChange('end', '16:00');
+                  onChange({
+                    ...data,
+                    startTime: '08:00',
+                    endTime: '16:00'
+                  });
                 }}
                 className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
               >
@@ -309,8 +316,11 @@ export function ScheduleSection({
                 onClick={() => {
                   setStartTime('10:00');
                   setEndTime('18:00');
-                  handleTimeChange('start', '10:00');
-                  handleTimeChange('end', '18:00');
+                  onChange({
+                    ...data,
+                    startTime: '10:00',
+                    endTime: '18:00'
+                  });
                 }}
                 className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
               >
@@ -322,8 +332,11 @@ export function ScheduleSection({
                 onClick={() => {
                   setStartTime('13:00');
                   setEndTime('21:00');
-                  handleTimeChange('start', '13:00');
-                  handleTimeChange('end', '21:00');
+                  onChange({
+                    ...data,
+                    startTime: '13:00',
+                    endTime: '21:00'
+                  });
                 }}
                 className="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
               >
@@ -379,7 +392,51 @@ export function ScheduleSection({
         </div>
 
         {/* Minimum Hours Requirements */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 relative">
+          {/* Bouton stylo en haut à droite */}
+          <button
+            onClick={() => setIsEditingHours(true)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white border border-blue-200 shadow hover:bg-blue-50 hover:text-blue-700 transition"
+            title="Edit minimum hours"
+            style={{ display: isEditingHours ? 'none' : 'block' }}
+          >
+            <PenSquare className="w-5 h-5" />
+          </button>
+          {isEditingHours && (
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button
+                onClick={() => {
+                  onChange({
+                    ...data,
+                    minimumHours: {
+                      daily: hoursEdit.daily === '' ? undefined : Number(hoursEdit.daily),
+                      weekly: hoursEdit.weekly === '' ? undefined : Number(hoursEdit.weekly),
+                      monthly: hoursEdit.monthly === '' ? undefined : Number(hoursEdit.monthly),
+                    },
+                  });
+                  setIsEditingHours(false);
+                }}
+                className="p-2 rounded-full bg-green-100 border border-green-200 hover:bg-green-200"
+                title="Valider"
+              >
+                <span className="text-green-700 font-bold">✔</span>
+              </button>
+              <button
+                onClick={() => {
+                  setHoursEdit({
+                    daily: data?.minimumHours?.daily ?? '',
+                    weekly: data?.minimumHours?.weekly ?? '',
+                    monthly: data?.minimumHours?.monthly ?? '',
+                  });
+                  setIsEditingHours(false);
+                }}
+                className="p-2 rounded-full bg-red-100 border border-red-200 hover:bg-red-200"
+                title="Annuler"
+              >
+                <span className="text-red-700 font-bold">✖</span>
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-gray-900">
             <Clock className="w-5 h-5" />
             <h3 className="font-medium">
@@ -387,57 +444,65 @@ export function ScheduleSection({
               {hasBaseCommission && <span className="text-red-500 ml-1">*</span>}
             </h3>
           </div>
-
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Per Day</label>
               <div className="mt-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="24"
-                  value={data?.minimumHours?.daily ?? ''}
-                  onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., 8"
-                />
+                {isEditingHours ? (
+                  <input
+                    type="number"
+                    min="0"
+                    max="24"
+                    value={hoursEdit.daily}
+                    onChange={e => setHoursEdit({ ...hoursEdit, daily: e.target.value })}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., 8"
+                  />
+                ) : (
+                  <div className="text-gray-900 text-base min-h-[2.5rem] flex items-center">{data?.minimumHours?.daily ?? <span className="text-gray-400">-</span>}</div>
+                )}
                 <p className="mt-1 text-xs text-gray-500">Maximum: 24 hours</p>
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">Per Week</label>
               <div className="mt-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="168"
-                  value={data?.minimumHours?.weekly ?? ''}
-                  onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., 40"
-                />
+                {isEditingHours ? (
+                  <input
+                    type="number"
+                    min="0"
+                    max="168"
+                    value={hoursEdit.weekly}
+                    onChange={e => setHoursEdit({ ...hoursEdit, weekly: e.target.value })}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., 40"
+                  />
+                ) : (
+                  <div className="text-gray-900 text-base min-h-[2.5rem] flex items-center">{data?.minimumHours?.weekly ?? <span className="text-gray-400">-</span>}</div>
+                )}
                 <p className="mt-1 text-xs text-gray-500">Maximum: 168 hours</p>
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">Per Month</label>
               <div className="mt-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="744"
-                  value={data?.minimumHours?.monthly ?? ''}
-                  onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., 160"
-                />
+                {isEditingHours ? (
+                  <input
+                    type="number"
+                    min="0"
+                    max="744"
+                    value={hoursEdit.monthly}
+                    onChange={e => setHoursEdit({ ...hoursEdit, monthly: e.target.value })}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., 160"
+                  />
+                ) : (
+                  <div className="text-gray-900 text-base min-h-[2.5rem] flex items-center">{data?.minimumHours?.monthly ?? <span className="text-gray-400">-</span>}</div>
+                )}
                 <p className="mt-1 text-xs text-gray-500">Maximum: 744 hours</p>
               </div>
             </div>
           </div>
-
           {hasBaseCommission && !data?.minimumHours?.daily && !data?.minimumHours?.weekly && !data?.minimumHours?.monthly && (
             <div className="flex items-start gap-2 p-3 bg-yellow-50 text-yellow-800 rounded-lg">
               <AlertCircle className="w-5 h-5 mt-0.5" />
@@ -489,8 +554,8 @@ export function ScheduleSection({
             return null;
           })()}
           <SelectionList
-            options={predefinedOptions.schedule.flexibility}
-            selected={data?.flexibility || []}
+            options={allOptions}
+            selected={selectedFlex}
             onChange={(flexibility) => {
               console.log('Flexibility changed:', flexibility);
               onChange({ ...data, flexibility });

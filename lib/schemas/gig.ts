@@ -101,7 +101,7 @@ const gigSchema = new Schema({
       required: true
     },
     baseAmount: {
-      type: Number,
+      type: String,
       required: true
     },
     currency: {

@@ -19,7 +19,8 @@ export interface GigData {
   }[];
   schedule: {
     days: string[];
-    hours: string;
+    startTime: string;
+    endTime: string;
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -171,7 +172,8 @@ export interface GigSuggestion {
   destinationZones: string[];
   schedule: {
     days: string[];
-    hours: string;
+    startTime: string;
+    endTime: string;
     timeZones: string[];
     flexibility: string[];
     minimumHours: {

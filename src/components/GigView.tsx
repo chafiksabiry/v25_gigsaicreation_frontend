@@ -57,7 +57,8 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     benefits: [],
     schedule: {
       days: gig.schedule_days || [],
-      hours: gig.schedule_hours || '',
+      startTime: gig.startTime || '',
+      endTime: gig.endTime || '',
       timeZones: gig.schedule_timezone || [],
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
@@ -67,7 +68,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       }
     },
     commission: {
-      base: gig.commission_base || '',
+      base: gig.commission_base || 'Fixed Salary',
       baseAmount: gig.commission_base_amount || '',
       bonus: gig.commission_bonus || '',
       bonusAmount: gig.commission_bonus_amount || '',

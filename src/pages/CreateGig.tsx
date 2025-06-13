@@ -15,6 +15,7 @@ interface GigCreatorProps {
 }
 
 export function CreateGig() {
+  console.log('CreateGig - Rendering');
   return (
     <div className="min-h-screen bg-gray-50">
       <GigCreator>
@@ -28,11 +29,23 @@ export function CreateGig() {
           onAIAssist,
           currentSection
         }: GigCreatorProps) => {
+          console.log('CreateGig - Current section:', currentSection);
+          console.log('CreateGig - Current data:', data);
+          
           if (currentSection === 'basic') {
+            const basicData = {
+              ...data,
+              destinationZones: data.destinationZones || []
+            };
+            console.log('CreateGig - Passing data to BasicSection:', basicData);
+            
             return (
               <BasicSection
-                data={data}
-                onChange={onChange}
+                data={basicData}
+                onChange={(newData) => {
+                  console.log('CreateGig - onChange called with:', newData);
+                  onChange(newData);
+                }}
                 errors={errors}
                 onPrevious={onPrevious}
                 onNext={onNext}

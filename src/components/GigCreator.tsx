@@ -8,30 +8,22 @@ import {
   Globe2,
   DollarSign,
   Users,
-  Target,
-  ArrowRight,
 } from "lucide-react";
 import { GigReview } from "./GigReview";
-import { ValidationMessage } from "./ValidationMessage";
-import { analyzeTitleAndGenerateDescription } from "../lib/ai";
+import { analyzeTitleAndGenerateDescription, generateSkills } from "../lib/ai";
 import { validateGigData } from "../lib/validation";
 import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { AIDialog } from "./AIDialog";
-import { supabase } from "../lib/supabase";
-import BasicSection from './BasicSection';
-import { SectionContent } from './SectionContent';
 import Cookies from 'js-cookie';
 import { saveGigData } from '../lib/api';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@mui/material';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
   { id: "schedule", label: "Schedule", icon: Globe2 },
   { id: "commission", label: "Commission", icon: DollarSign },
-  { id: "leads", label: "Leads", icon: Target },
+  // { id: "leads", label: "Leads", icon: Target },
   { id: "skills", label: "Skills", icon: Brain },
   { id: "team", label: "Team", icon: Users },
   { id: "docs", label: "Documentation", icon: FileText },
@@ -44,6 +36,7 @@ const initialGigData: GigData = {
   description: "",
   category: "",
   destination_zone: "",
+  destinationZones: [],
   callTypes: [],
   highlights: [],
   requirements: {
@@ -53,7 +46,8 @@ const initialGigData: GigData = {
   benefits: [],
   schedule: {
     days: ([] as unknown) as string[],
-    hours: "",
+    startTime: "",
+    endTime: "",
     timeZones: [],
     flexibility: [],
     minimumHours: {
@@ -94,11 +88,11 @@ const initialGigData: GigData = {
     qualificationCriteria: [],
   },
   skills: {
-    languages: [],
-    soft: [],
-    professional: [],
-    technical: [],
-    certifications: [],
+    languages: [{ name: "English", level: "fluent" }],
+    technical: ["Adobe Illustrator", "Adobe Photoshop", "Typography", "Color Theory"],
+    professional: ["Brand Identity Design", "Logo Design", "Marketing Collateral Design", "Portfolio Management"],
+    soft: ["Creativity", "Time Management", "Client Communication", "Attention to Detail"],
+    certifications: []
   },
   seniority: {
     years: "",
@@ -186,7 +180,10 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export function GigCreator({ children }: GigCreatorProps) {
   const [currentSection, setCurrentSection] = useState(sections[0].id);
-  const [gigData, setGigData] = useState<GigData>(initialGigData);
+  const [gigData, setGigData] = useState<GigData>({
+    ...initialGigData,
+    destinationZones: []
+  });
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -198,19 +195,22 @@ export function GigCreator({ children }: GigCreatorProps) {
   }>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const validation = validateGigData(gigData);
-  const currentSectionHasErrors = Object.keys(validation.errors).some(
-    (key) => key === currentSection
-  );
-  const currentSectionHasWarnings = Object.keys(validation.warnings).some(
-    (key) => key === currentSection
-  );
-  const isLastSection = currentSection === sections[sections.length - 1].id;
+  console.log('GigCreator - Initial state:', {
+    currentSection,
+    gigData,
+    validationErrors
+  });
 
   const handleGigDataChange = (newData: GigData) => {
-
-    setGigData(newData);
-    const validation = validateGigData(newData);
+    console.log('handleGigDataChange - Previous data:', gigData);
+    console.log('handleGigDataChange - New data:', newData);
+    const updatedData = {
+      ...newData,
+      destinationZones: newData.destinationZones || []
+    };
+    console.log('handleGigDataChange - Updated data:', updatedData);
+    setGigData(updatedData);
+    const validation = validateGigData(updatedData);
     setValidationErrors(validation.errors);
   };
 
@@ -222,12 +222,18 @@ export function GigCreator({ children }: GigCreatorProps) {
 
     setAnalyzing(true);
     try {
-      const suggestions = await analyzeTitleAndGenerateDescription(
-        gigData.title
-      );
+      const [suggestions, skills] = await Promise.all([
+        analyzeTitleAndGenerateDescription(gigData.title),
+        generateSkills(gigData.title, gigData.description || "")
+      ]);
+      
       setGigData((prev) => ({
         ...prev,
         ...suggestions,
+        skills: {
+          ...prev.skills,
+          ...skills
+        }
       }));
       setShowAIDialog(false);
     } catch (error: any) {
@@ -252,8 +258,8 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       if (isStandalone) {
         // Valeurs par défaut pour le mode standalone
-        userId = Cookies.get("userId") || '';
-        companyId = Cookies.get("companyId") || '';
+        companyId = Cookies.get('companyId') ?? "";
+        userId = Cookies.get('userId') ?? "";
       } else {
         // Récupérer le companyId associé à l'utilisateur
         await saveGigData(gigData);
@@ -285,7 +291,8 @@ export function GigCreator({ children }: GigCreatorProps) {
         },
         schedule: {
           days: gigData.schedule?.days || [],
-          hours: gigData.schedule?.hours || '',
+          startTime: gigData.schedule?.startTime || '',
+          endTime: gigData.schedule?.endTime || '',
           timeZones: gigData.schedule?.timeZones || [],
           flexibility: gigData.schedule?.flexibility || '',
           minimumHours: {

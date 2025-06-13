@@ -23,7 +23,7 @@ const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
   { id: "schedule", label: "Schedule", icon: Globe2 },
   { id: "commission", label: "Commission", icon: DollarSign },
-  { id: "leads", label: "Leads", icon: Target },
+  // { id: "leads", label: "Leads", icon: Target },
   { id: "skills", label: "Skills", icon: Brain },
   { id: "team", label: "Team", icon: Users },
   { id: "docs", label: "Documentation", icon: FileText },
@@ -62,10 +62,11 @@ const PrompAI: React.FC = () => {
     category: "",
     schedule: {
       days: [],
-      hours: "",
       timeZones: [],
       flexibility: [],
-      minimumHours: {}
+      minimumHours: {},
+      startTime: "",
+      endTime: ""
     },
     commission: {
       base: "",
