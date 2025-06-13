@@ -490,7 +490,7 @@ export function GigReview({
             )}
 
             {/* Lead Distribution */}
-            {data?.leads && (
+            {/* {data?.leads && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
                   <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -547,7 +547,7 @@ export function GigReview({
                   )}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Sidebar */}

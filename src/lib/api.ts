@@ -76,14 +76,14 @@ interface Company {
 
 export async function saveGigData(gigData: GigData): Promise<{ data: any; error?: Error }> {
   try {
-    const userId = Cookies.get("userId");
+    const userId = Cookies.get('userId') ?? "";
     
     if (!userId) {
       throw new Error('User ID not found in cookies');
     }
 
     // Get companyId based on userId
-    const companyId = Cookies.get("companyId");
+    const companyId = Cookies.get('companyId') ?? "";
 
     const gigDataWithIds = {
       ...gigData,

@@ -17,8 +17,8 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
       let userId: string;
       let companyId: string;
 
-      companyId = Cookies.get('companyId');
-      userId = Cookies.get('userId');
+      companyId = Cookies.get('companyId') ?? "";
+      userId = Cookies.get('userId') ?? "";
 
       if (!userId || !companyId) {
         throw new Error("User ID or Company ID not found in cookies");
@@ -39,10 +39,12 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         benefits: gig.benefits || [],
         schedule: {
           days: gig.schedule?.days || [],
-          hours: gig.schedule?.hours || "",
+          startTime: gig.schedule?.startTime || "",
+          endTime: gig.schedule?.endTime || "",
           timeZones: gig.schedule?.timeZones || [],
           flexibility: gig.schedule?.flexibility || [],
-          minimumHours: gig.schedule?.minimumHours || {}
+          minimumHours: gig.schedule?.minimumHours || {},
+
         },
         commission: {
           base: gig.commission?.base || "",
@@ -72,7 +74,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           qualificationCriteria: gig.leads?.qualificationCriteria || []
         },
         skills: {
-          languages: gig.skills?.languages || [],
+          languages: gig.skills?.languages.map(lang => ({ name: lang.name, level: lang.level })) || [],
           soft: gig.skills?.soft || [],
           professional: gig.skills?.professional || [],
           technical: gig.skills?.technical || [],

@@ -22,13 +22,16 @@ type GigFormData = {
   callTypes: string[];
   schedule: {
     days: string[];
-    hours: string;
+    startTime: string;
+    endTime: string;
     timeZones: string[];
     flexibility: string;
   };
   commission: {
     base: string;
+    baseAmount: string;
     bonus: string;
+    bonusAmount: string;
     structure: string;
   };
   leads: {
@@ -43,6 +46,8 @@ type GigFormData = {
     languages: { name: string; level: string; }[];
     soft: string[];
     professional: string[];
+    technical: string[];
+    certifications: string[];
     industry: string[];
   };
   seniority: {
@@ -73,8 +78,8 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
     try {
       // Insert main gig data
       const gigData = {
-        userId: Cookies.get("userId") || "",
-        companyId: Cookies.get("companyId") || "",
+        companyId: "684ace43641398dc582f1acc",
+        userId: "684acdfbcf52e87c3ad166cd",
         title: data.title,
         description: data.description,
         category: data.category,
@@ -88,7 +93,8 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
         benefits: [],
         schedule: {
           days: data.schedule?.days || [],
-          hours: data.schedule?.hours || '',
+          startTime: data.schedule?.startTime || '',
+          endTime: data.schedule?.endTime || '',
           timeZones: data.schedule?.timeZones || [],
           flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
           minimumHours: {
@@ -99,9 +105,9 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
         },
         commission: {
           base: data.commission.base,
-          baseAmount: "",
+          baseAmount: data.commission.baseAmount,
           bonus: data.commission.bonus,
-          bonusAmount: "",
+          bonusAmount: data.commission.bonusAmount,
           structure: data.commission.structure,
           currency: "USD",
           minimumVolume: {
@@ -310,7 +316,7 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
               <input
                 type="text"
                 {...register('schedule.hours', { required: true })}
-                placeholder="e.g., 9:00 AM - 6:00 PM EST"
+                placeholder="e.g., 08h00 - 17h00 EST"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>

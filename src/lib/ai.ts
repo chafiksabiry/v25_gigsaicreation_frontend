@@ -50,6 +50,8 @@ export async function analyzeTitleAndGenerateDescription(title: string): Promise
             role: "system",
             content: `You are an AI assistant that helps create job listings. Analyze the job title and suggest an appropriate category, seniority level, and other relevant details.
 
+IMPORTANT: All responses MUST be in English only.
+
 Available categories (for reference):
 ${predefinedOptions.basic.categories.map(cat => `- ${cat}`).join('\n')}
 
@@ -173,6 +175,8 @@ export async function generateSeniorityAndExperience(title: string, description:
           role: "system",
           content: `You are an AI assistant that helps determine appropriate seniority levels and years of experience for job positions.
           
+IMPORTANT: All responses MUST be in English only.
+
 Available seniority levels (you MUST choose one of these):
 ${predefinedOptions.basic.seniorityLevels.map(level => `- ${level}`).join('\n')}
 
@@ -435,7 +439,7 @@ export function getTimezoneDisplayName(timezone: TimezoneCode): string {
 }
 
 export function getTimezoneBusinessHours(timezone: TimezoneCode): { start: string; end: string } {
-  return MAJOR_TIMEZONES[timezone]?.businessHours || { start: "09:00", end: "17:00" };
+  return MAJOR_TIMEZONES[timezone]?.businessHours || { start: "08h00", end: "17h00" };
 }
 
 interface WorkingHoursSuggestion {
@@ -485,10 +489,7 @@ export function generateWorkingHoursSuggestions(
 export function formatTimeRange(start: string, end: string): string {
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${ampm}`;
+    return `${hours}h${minutes}`;
   };
 
   return `${formatTime(start)} - ${formatTime(end)}`;
@@ -537,6 +538,8 @@ export async function generateCommissionAndActivity(title: string, description: 
           role: "system",
           content: `You are an AI assistant that helps determine appropriate commission structures and activity types for job positions.
 
+IMPORTANT: All responses MUST be in English only.
+
 CRITICAL: The commission base type MUST be EXACTLY one of these five options, no variations allowed:
 1. "Fixed Salary"
 2. "Base + Commission"
@@ -544,7 +547,63 @@ CRITICAL: The commission base type MUST be EXACTLY one of these five options, no
 4. "Tiered Commission"
 5. "Graduated Commission"
 
-Examples of valid commission structures:
+CRITICAL: The transaction commission type MUST be EXACTLY one of these three options, no variations allowed:
+1. "Fixed Amount"
+2. "Percentage"
+3. "Conversion"
+
+CRITICAL RULES FOR NUMERICAL VALUES:
+1. baseAmount MUST be a plain number without currency symbol (e.g., 5000 not $5000)
+2. bonusAmount MUST be a plain number without currency symbol (e.g., 200 not $200)
+3. transactionCommission.amount MUST be a plain number without currency symbol or percentage sign (e.g., 5 not $5 or 5%)
+4. minimumVolume.amount MUST be a plain number without currency symbol (e.g., 100000 not $100000)
+5. minimumVolume.period MUST be EXACTLY one of: "Daily", "Weekly", "Monthly" (no variations allowed)
+
+CRITICAL RULES FOR DAYS OF THE WEEK:
+1. ALWAYS use English day names regardless of input language:
+   - Monday (not Lundi, Montag, etc.)
+   - Tuesday (not Mardi, Dienstag, etc.)
+   - Wednesday (not Mercredi, Mittwoch, etc.)
+   - Thursday (not Jeudi, Donnerstag, etc.)
+   - Friday (not Vendredi, Freitag, etc.)
+   - Saturday (not Samedi, Samstag, etc.)
+   - Sunday (not Dimanche, Sonntag, etc.)
+2. Days MUST be in the exact format shown above
+3. Days MUST be in an array format
+4. Days MUST be capitalized
+
+CRITICAL RULES FOR CURRENCY SELECTION:
+1. ALWAYS use standard ISO 4217 currency codes (3 letters):
+   - EUR (not Euro, Euros, €)
+   - USD (not Dollar, Dollars, $)
+   - MAD (not Dirham, Dirhams)
+   - TRY (not Turkish Lira)
+   - GBP (not Pound, Pounds, £)
+   - JPY (not Yen, ¥)
+   - INR (not Rupee, ₹)
+   - AED (not Dirham, د.إ)
+   - SGD (not Singapore Dollar, S$)
+   - AUD (not Australian Dollar, A$)
+   - CAD (not Canadian Dollar, C$)
+   - HKD (not Hong Kong Dollar, HK$)
+2. Currency codes MUST be:
+   - Exactly 3 letters
+   - All uppercase
+   - No currency symbols
+   - No currency names
+3. Consider the following factors when choosing currency:
+   - Primary market location
+   - Target audience location
+   - Industry standards in the region
+   - Company headquarters location
+   - Global vs local role scope
+4. For global/remote positions, consider:
+   - Company's primary market
+   - Most common currency in the industry
+   - Currency stability and recognition
+5. If location is unclear, default to EUR for European roles or the most relevant regional currency
+
+Examples of CORRECT format:
 {
   "commission": {
     "options": [
@@ -552,117 +611,32 @@ Examples of valid commission structures:
         "base": "Fixed Salary",
         "baseAmount": "5000",
         "bonus": "Performance Bonus",
-        "bonusAmount": "10%",
-        "currency": "USD",
+        "bonusAmount": "10",
+        "currency": "EUR",  // Correct: ISO code
         "minimumVolume": {
           "amount": "100000",
-          "period": "monthly",
-          "unit": "USD"
+          "period": "Monthly",
+          "unit": "EUR"  // Should match the currency code
         },
         "transactionCommission": {
-          "type": "percentage",
-          "amount": "5%"
+          "type": "Percentage",
+          "amount": "5"
         }
       }
     ]
   }
 }
 
-OR
-
+Examples of INCORRECT format (DO NOT USE):
 {
   "commission": {
     "options": [
       {
-        "base": "Base + Commission",
-        "baseAmount": "3000",
-        "bonus": "Sales Target Bonus",
-        "bonusAmount": "15%",
-        "currency": "EUR",
-        "minimumVolume": {
-          "amount": "50000",
-          "period": "monthly",
-          "unit": "EUR"
-        },
-        "transactionCommission": {
-          "type": "percentage",
-          "amount": "3%"
-        }
-      }
-    ]
-  }
-}
-
-OR
-
-{
-  "commission": {
-    "options": [
-      {
-        "base": "Pure Commission",
-        "baseAmount": "0",
-        "bonus": "High Performance Bonus",
-        "bonusAmount": "20%",
-        "currency": "GBP",
-        "minimumVolume": {
-          "amount": "75000",
-          "period": "monthly",
-          "unit": "GBP"
-        },
-        "transactionCommission": {
-          "type": "percentage",
-          "amount": "8%"
-        }
-      }
-    ]
-  }
-}
-
-OR
-
-{
-  "commission": {
-    "options": [
-      {
-        "base": "Tiered Commission",
-        "baseAmount": "2500",
-        "bonus": "Tier Achievement Bonus",
-        "bonusAmount": "25%",
-        "currency": "USD",
-        "minimumVolume": {
-          "amount": "100000",
-          "period": "quarterly",
-          "unit": "USD"
-        },
-        "transactionCommission": {
-          "type": "tiered",
-          "amount": "5-15%"
-        }
-      }
-    ]
-  }
-}
-
-OR
-
-{
-  "commission": {
-    "options": [
-      {
-        "base": "Graduated Commission",
-        "baseAmount": "2000",
-        "bonus": "Progressive Achievement Bonus",
-        "bonusAmount": "30%",
-        "currency": "EUR",
-        "minimumVolume": {
-          "amount": "25000",
-          "period": "monthly",
-          "unit": "EUR"
-        },
-        "transactionCommission": {
-          "type": "graduated",
-          "amount": "2-10%"
-        }
+        "currency": "Euro",     // Wrong: full name
+        "currency": "€",        // Wrong: symbol
+        "currency": "euro",     // Wrong: lowercase
+        "currency": "EURO",     // Wrong: not ISO code
+        "currency": "EUR.",     // Wrong: extra character
       }
     ]
   }
@@ -683,18 +657,18 @@ Return ONLY a valid JSON object with the following structure:
     "options": [
       {
         "base": string (MUST be EXACTLY one of: "Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", "Graduated Commission"),
-        "baseAmount": string (amount or percentage),
+        "baseAmount": string (MUST be a plain number without currency symbol),
         "bonus": string (optional, MUST be one of the available bonus types),
-        "bonusAmount": string (optional, amount or percentage),
+        "bonusAmount": string (optional, MUST be a plain number without currency symbol),
         "currency": string (MUST be one of the available currency codes),
         "minimumVolume": {
-          "amount": string,
-          "period": string (e.g., "monthly", "quarterly"),
+          "amount": string (MUST be a plain number without currency symbol),
+          "period": string (MUST be EXACTLY one of: "Daily", "Weekly", "Monthly"),
           "unit": string (MUST match the currency)
         },
         "transactionCommission": {
-          "type": string (e.g., "percentage", "fixed"),
-          "amount": string
+          "type": string (MUST be EXACTLY one of: "Fixed Amount", "Percentage", "Conversion"),
+          "amount": string (MUST be a plain number without currency symbol or percentage sign)
         }
       }
     ]
@@ -752,6 +726,27 @@ Based on this job title and description, suggest appropriate commission structur
       }
       if (!predefinedOptions.commission.currencies.some(currency => currency.code === option.currency)) {
         throw new Error('Invalid currency');
+      }
+
+      // Validate numerical values are plain numbers without currency symbols or percentage signs
+      const validateNumber = (value: string, fieldName: string) => {
+        if (value.includes('$') || value.includes('%') || value.includes('€') || value.includes('£')) {
+          throw new Error(`${fieldName} must be a plain number without currency symbol or percentage sign`);
+        }
+        if (isNaN(Number(value))) {
+          throw new Error(`${fieldName} must be a valid number`);
+        }
+      };
+
+      validateNumber(option.baseAmount, 'baseAmount');
+      if (option.bonusAmount) validateNumber(option.bonusAmount, 'bonusAmount');
+      validateNumber(option.minimumVolume.amount, 'minimumVolume.amount');
+      validateNumber(option.transactionCommission.amount, 'transactionCommission.amount');
+
+      // Validate period is exactly one of the allowed values
+      const validPeriods = ["Daily", "Weekly", "Monthly"];
+      if (!validPeriods.includes(option.minimumVolume.period)) {
+        throw new Error(`minimumVolume.period must be exactly one of: ${validPeriods.join(', ')}`);
       }
     });
 
@@ -819,6 +814,8 @@ export async function generateTeamAndTerritories(title: string, description: str
         {
           role: "system",
           content: `You are an AI assistant that helps determine appropriate team structures and territory assignments for job positions.
+
+IMPORTANT: All responses MUST be in English only.
 
 Available team roles:
 ${predefinedOptions.team.roles.map(role => `- ${role.name} (${role.description})`).join('\n')}
@@ -977,6 +974,8 @@ export async function generateSeniorityByCategory(
           role: "system",
           content: `You are an AI assistant that helps determine appropriate seniority levels and years of experience for job positions based on the job category.
 
+IMPORTANT: All responses MUST be in English only.
+
 Available seniority levels (you MUST choose one of these):
 ${predefinedOptions.basic.seniorityLevels.map(level => `- ${level}`).join('\n')}
 
@@ -1113,7 +1112,263 @@ Based on this job title, description, and category, suggest an appropriate senio
   }
 }
 
+function convertTo24HourFormat(time: string): string {
+  // Remove any whitespace and convert to lowercase
+  time = time.trim().toLowerCase();
+  
+  // Handle format like "1am", "2pm", "10:30am", etc.
+  const match = time.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
+  if (!match) {
+    // If already in 24h format (HH:mm), validate and return
+    if (/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time)) {
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${minutes}`;
+    }
+    return '10:00'; // Default value if format is invalid
+  }
+
+  let [_, hours, minutes = '00', period] = match;
+  hours = parseInt(hours).toString();
+  
+  // Convert to 24h format
+  if (period === 'pm' && hours !== '12') {
+    hours = (parseInt(hours) + 12).toString();
+  } else if (period === 'am' && hours === '12') {
+    hours = '00';
+  }
+
+  // Ensure two digits for hours and minutes
+  hours = hours.padStart(2, '0');
+  minutes = minutes.padStart(2, '0');
+  
+  return `${hours}:${minutes}`;
+}
+
+// Add this function before mapGeneratedDataToGigData
+function convertDaysToEnglish(days: string[]): string[] {
+  const dayMap: { [key: string]: string } = {
+    'lundi': 'Monday',
+    'mardi': 'Tuesday',
+    'mercredi': 'Wednesday',
+    'jeudi': 'Thursday',
+    'vendredi': 'Friday',
+    'samedi': 'Saturday',
+    'dimanche': 'Sunday',
+    'monday': 'Monday',
+    'tuesday': 'Tuesday',
+    'wednesday': 'Wednesday',
+    'thursday': 'Thursday',
+    'friday': 'Friday',
+    'saturday': 'Saturday',
+    'sunday': 'Sunday'
+  };
+
+  return days.map(day => {
+    const normalizedDay = day.toLowerCase().trim();
+    return dayMap[normalizedDay] || day;
+  });
+}
+
 export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial<GigData> {
+  // Convert times to 24h format
+  const startTime = convertTo24HourFormat(generatedData.schedule?.startTime || '10:00');
+  const endTime = convertTo24HourFormat(generatedData.schedule?.endTime || '12:00');
+
+  // Validate time range
+  const [startHour, startMin] = startTime.split(':').map(Number);
+  const [endHour, endMin] = endTime.split(':').map(Number);
+  
+  // Ensure end time is after start time
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+  
+  const finalEndTime = endMinutes > startMinutes ? endTime : '12:00';
+
+  const validBaseTypes = [
+    "Fixed Salary",
+    "Base + Commission",
+    "Pure Commission",
+    "Tiered Commission",
+    "Graduated Commission"
+  ];
+  const commissionBase = generatedData.commission?.options?.[0]?.base;
+  const base =
+    validBaseTypes.includes(commissionBase)
+      ? commissionBase
+      : "Fixed Salary";
+
+  const validTransactionTypes = [
+    "Fixed Amount",
+    "Percentage",
+    "Conversion"
+  ];
+  const transactionType = generatedData.commission?.options?.[0]?.transactionCommission?.type;
+  const transactionAmountRaw = generatedData.commission?.options?.[0]?.transactionCommission?.amount;
+
+  // Nettoyage du type
+  const safeTransactionType =
+    validTransactionTypes.includes(transactionType)
+      ? transactionType
+      : '';
+
+  // Nettoyage du montant
+  const cleanedTransactionAmount = transactionAmountRaw
+    ? transactionAmountRaw.replace(/[^0-9.]/g, '')
+    : '';
+
+  let finalTransactionType = safeTransactionType;
+  let finalTransactionAmount = cleanedTransactionAmount;
+
+  if (!safeTransactionType || cleanedTransactionAmount === '' || cleanedTransactionAmount === '0') {
+    finalTransactionType = 'Fixed Amount';
+    finalTransactionAmount = '1'; // valeur par défaut
+  }
+
+  // Validate language levels
+  const validLanguageLevels = ['Basic', 'Conversational', 'Professional', 'Native/Bilingual'];
+  const skills = generatedData.skills || {};
+  const languages = skills.languages || [];
+  
+  // Ensure all language levels are valid
+  const validatedLanguages = languages.map((lang: string | any) => {
+    if (typeof lang === 'string') {
+      // If it's a string like "English (Fluent)", extract the language and level
+      const match = lang.match(/^(.+?)\s*\((.+?)\)$/);
+      if (match) {
+        const [_, language, level] = match;
+        // Convert level to proper format if needed
+        let normalizedLevel = level;
+        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+        
+        return {
+          name: language.trim(),
+          level: validLanguageLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        };
+      }
+      return { name: lang.trim(), level: 'Basic' }; // Default to Basic if format is invalid
+    }
+    if (typeof lang === 'object' && lang !== null) {
+      // If it's already an object with name and level
+      let normalizedLevel = lang.level;
+      if (lang.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+      if (lang.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+      if (lang.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+      if (lang.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+      
+      return {
+        name: lang.name || '',
+        level: validLanguageLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+      };
+    }
+    return { name: '', level: 'Basic' }; // Default to empty name and Basic level if invalid
+  });
+
+  // Validate soft skills
+  const validatedSoftSkills = (skills.soft || []).map((skill: string | any) => {
+    if (typeof skill === 'string') {
+      // If it's a string like "Communication (Professional)", extract the skill and level
+      const match = skill.match(/^(.+?)\s*\((.+?)\)$/);
+      if (match) {
+        const [_, skillName, level] = match;
+        let normalizedLevel = level;
+        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+        
+        return {
+          name: skillName.trim(),
+          level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        };
+      }
+      return { name: skill.trim(), level: 'Basic' };
+    }
+    if (typeof skill === 'object' && skill !== null) {
+      let normalizedLevel = skill.level;
+      if (skill.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+      if (skill.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+      if (skill.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+      if (skill.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+      
+      return {
+        name: skill.name || '',
+        level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+      };
+    }
+    return { name: '', level: 'Basic' };
+  });
+
+  // Validate professional skills
+  const validatedProfessionalSkills = (skills.professional || []).map((skill: string | any) => {
+    if (typeof skill === 'string') {
+      const match = skill.match(/^(.+?)\s*\((.+?)\)$/);
+      if (match) {
+        const [_, skillName, level] = match;
+        let normalizedLevel = level;
+        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+        
+        return {
+          name: skillName.trim(),
+          level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        };
+      }
+      return { name: skill.trim(), level: 'Basic' };
+    }
+    if (typeof skill === 'object' && skill !== null) {
+      let normalizedLevel = skill.level;
+      if (skill.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+      if (skill.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+      if (skill.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+      if (skill.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+      
+      return {
+        name: skill.name || '',
+        level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+      };
+    }
+    return { name: '', level: 'Basic' };
+  });
+
+  // Validate technical skills
+  const validatedTechnicalSkills = (skills.technical || []).map((skill: string | any) => {
+    if (typeof skill === 'string') {
+      const match = skill.match(/^(.+?)\s*\((.+?)\)$/);
+      if (match) {
+        const [_, skillName, level] = match;
+        let normalizedLevel = level;
+        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+        
+        return {
+          name: skillName.trim(),
+          level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        };
+      }
+      return { name: skill.trim(), level: 'Basic' };
+    }
+    if (typeof skill === 'object' && skill !== null) {
+      let normalizedLevel = skill.level;
+      if (skill.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
+      if (skill.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
+      if (skill.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
+      if (skill.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+      
+      return {
+        name: skill.name || '',
+        level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+      };
+    }
+    return { name: '', level: 'Basic' };
+  });
+
   return {
     title: generatedData.jobTitles?.[0] || '',
     description: generatedData.deliverables?.join('\n') || '',
@@ -1126,39 +1381,56 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       years: String(generatedData.seniority?.yearsExperience || 0)
     },
     schedule: {
-      days: generatedData.schedule?.days || [],
-      hours: generatedData.schedule?.hours || '',
+      days: convertDaysToEnglish(generatedData.schedule?.days || []),
       timeZones: generatedData.schedule?.timeZones || [],
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
         weekly: generatedData.schedule?.minimumHours?.weekly || undefined,
         monthly: generatedData.schedule?.minimumHours?.monthly || undefined
-      }
+      },
+      startTime: startTime,
+      endTime: finalEndTime
     },
     commission: {
-      base: generatedData.commission?.base || '',
-      baseAmount: generatedData.commission?.baseAmount || '',
-      bonus: generatedData.commission?.bonus || '',
-      bonusAmount: generatedData.commission?.bonusAmount || '',
-      structure: generatedData.commission?.structure || '',
-      currency: generatedData.commission?.currency || '',
+      base,
+      baseAmount: (
+        generatedData.commission?.options?.[0]?.baseAmount
+          ? generatedData.commission.options[0].baseAmount.replace(/[^0-9.]/g, '')
+          : '3'
+      ),
+      bonus: generatedData.commission?.options?.[0]?.bonus || 'Performance Bonus',
+      bonusAmount: (
+        generatedData.commission?.options?.[0]?.bonusAmount
+          ? generatedData.commission.options[0].bonusAmount.replace(/[^0-9.]/g, '')
+          : '2'
+      ),
+      structure: generatedData.commission?.options?.[0]?.structure || '',
+      currency: generatedData.commission?.options?.[0]?.currency || 'USD',
       minimumVolume: {
-        amount: generatedData.commission?.minimumVolume?.amount || '',
-        period: generatedData.commission?.minimumVolume?.period || '',
-        unit: generatedData.commission?.minimumVolume?.unit || ''
+        amount: (
+          generatedData.commission?.options?.[0]?.minimumVolume?.amount
+            ? generatedData.commission.options[0].minimumVolume.amount.replace(/[^0-9.]/g, '')
+            : '3'
+        ),
+        period: generatedData.commission?.options?.[0]?.minimumVolume?.period
+          ? generatedData.commission.options[0].minimumVolume.period.charAt(0).toUpperCase() + generatedData.commission.options[0].minimumVolume.period.slice(1)
+          : 'Monthly',
+        unit: generatedData.commission?.options?.[0]?.minimumVolume?.unit
+          ? generatedData.commission.options[0].minimumVolume.unit.charAt(0).toUpperCase() + generatedData.commission.options[0].minimumVolume.unit.slice(1)
+          : 'USD'
       },
       transactionCommission: {
-        type: generatedData.commission?.transactionCommission?.type || '',
-        amount: generatedData.commission?.transactionCommission?.amount || ''
+        type: finalTransactionType,
+        amount: finalTransactionAmount
       },
-      kpis: generatedData.commission?.kpis || []
+      kpis: []
     },
     skills: {
-      languages: generatedData.skills?.languages || [],
-      soft: generatedData.skills?.soft || [],
-      professional: generatedData.skills?.professional || [],
-      technical: generatedData.skills?.technical || [],
+      languages: validatedLanguages,
+      soft: validatedSoftSkills.map(skill => skill.name),
+      professional: validatedProfessionalSkills.map(skill => skill.name),
+      technical: validatedTechnicalSkills.map(skill => skill.name),
       certifications: generatedData.skills?.certifications || []
     },
     requirements: {
@@ -1175,4 +1447,169 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       }
     }
   };
+}
+
+export async function generateSkills(title: string, description: string): Promise<{
+  languages: Array<{
+    name: string;
+    level: string;
+    reading: string;
+    writing: string;
+    speaking: string;
+  }>;
+  soft: string[];
+  professional: string[];
+  technical: string[];
+}> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!title || !description) {
+    throw new Error('Title and description are required');
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI assistant that helps determine appropriate skills for job positions.
+
+IMPORTANT: All responses MUST be in English only.
+
+Available languages:
+${predefinedOptions.skills.languages.map(lang => `- ${lang.name}`).join('\n')}
+
+Available professional skills:
+${predefinedOptions.skills.professional.map(skill => `- ${skill}`).join('\n')}
+
+Available technical skills:
+${predefinedOptions.skills.technical.map(skill => `- ${skill}`).join('\n')}
+
+Available soft skills:
+${predefinedOptions.skills.soft.map(skill => `- ${skill}`).join('\n')}
+
+Available skill levels:
+${predefinedOptions.skills.skillLevels.map(level => `- ${level}`).join('\n')}
+
+Return ONLY a valid JSON object with the following structure:
+{
+  "languages": [
+    {
+      "name": string (MUST be one of the available languages),
+      "level": string (MUST be one of the available skill levels),
+      "reading": string (MUST be one of the available skill levels),
+      "writing": string (MUST be one of the available skill levels),
+      "speaking": string (MUST be one of the available skill levels)
+    }
+  ],
+  "soft": string[] (MUST be from available soft skills),
+  "professional": string[] (MUST be from available professional skills),
+  "technical": string[] (MUST be from available technical skills)
+}
+
+Consider the following factors when determining skills:
+1. Job requirements and responsibilities
+2. Industry standards and expectations
+3. Team collaboration needs
+4. Technical requirements
+5. Communication requirements
+6. Problem-solving needs
+7. Leadership requirements
+8. Customer interaction needs
+
+For human languages:
+- Select 1-3 most relevant human languages
+- Consider the target market and team location
+- Assign appropriate proficiency levels for reading, writing, and speaking
+- Ensure all language skills (Basic, Conversational, Professional, Native/Bilingual) are specified
+
+For soft skills:
+- Select 3-5 most important soft skills
+- Focus on communication and interpersonal skills
+- Consider team dynamics and customer interaction
+
+For professional skills:
+- Select 2-4 most relevant professional skills
+- Focus on industry-specific expertise
+- Consider management and leadership needs
+
+For technical skills:
+- Select 3-6 most relevant technical skills
+- Focus on required tools and technologies
+- Consider development and maintenance needs`
+        },
+        {
+          role: "user",
+          content: `Title: ${title}
+Description: ${description}
+
+Based on this job title and description, suggest appropriate skills. All skills MUST be from the available options listed above.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) {
+      throw new Error('Failed to generate suggestions');
+    }
+
+    const result = JSON.parse(content);
+    
+    // Validate languages
+    const validLanguages = predefinedOptions.skills.languages.map(lang => lang.name);
+    const validLevels = predefinedOptions.skills.skillLevels;
+    
+    result.languages.forEach((lang: any) => {
+      // Ensure we're dealing with human languages, not programming languages
+      if (!validLanguages.includes(lang.name)) {
+        throw new Error(`Invalid human language: ${lang.name}`);
+      }
+      if (!validLevels.includes(lang.level)) {
+        throw new Error(`Invalid language level: ${lang.level}`);
+      }
+      if (!validLevels.includes(lang.reading)) {
+        throw new Error(`Invalid reading level: ${lang.reading}`);
+      }
+      if (!validLevels.includes(lang.writing)) {
+        throw new Error(`Invalid writing level: ${lang.writing}`);
+      }
+      if (!validLevels.includes(lang.speaking)) {
+        throw new Error(`Invalid speaking level: ${lang.speaking}`);
+      }
+    });
+
+    // Validate soft skills
+    const validSoftSkills = predefinedOptions.skills.soft;
+    result.soft.forEach((skill: string) => {
+      if (!validSoftSkills.includes(skill)) {
+        throw new Error(`Invalid soft skill: ${skill}`);
+      }
+    });
+
+    // Validate professional skills
+    const validProfessionalSkills = predefinedOptions.skills.professional;
+    result.professional.forEach((skill: string) => {
+      if (!validProfessionalSkills.includes(skill)) {
+        throw new Error(`Invalid professional skill: ${skill}`);
+      }
+    });
+
+    // Validate technical skills
+    const validTechnicalSkills = predefinedOptions.skills.technical;
+    result.technical.forEach((skill: string) => {
+      if (!validTechnicalSkills.includes(skill)) {
+        throw new Error(`Invalid technical skill: ${skill}`);
+      }
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error generating skills:', error);
+    throw error;
+  }
 }

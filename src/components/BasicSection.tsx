@@ -74,24 +74,44 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   // États locaux pour la recherche et la saisie de ville
   const [searchTerm, setSearchTerm] = useState('');
 
+  console.log('BasicSection - Initial data:', data);
+  console.log('BasicSection - Current destination_zone:', data.destination_zone);
+
+  useEffect(() => {
+    console.log('BasicSection - Initializing data');
+    if (!data.destinationZones) {
+      console.log('BasicSection - No destinationZones, initializing');
+      onChange({
+        ...data,
+        destinationZones: []
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log('BasicSection - Data changed:', data);
+    console.log('BasicSection - Current destination_zone:', data.destination_zone);
+    console.log('BasicSection - Current destinationZones:', data.destinationZones);
+  }, [data]);
+
   /**
    * Effet pour sélectionner automatiquement le premier pays de destinationZones
    * S'exécute lorsque destinationZones ou destination_zone change
    */
   useEffect(() => {
-    if (data.destinationZones && data.destinationZones.length > 0 && 
-        (!data.destination_zone || data.destination_zone.length === 0)) {
+    console.log('BasicSection - Checking destinationZones:', data.destinationZones);
+    // Only set initial destination zone if none is selected
+    if (data.destinationZones && data.destinationZones.length > 0 && !data.destination_zone) {
       const firstCountry = data.destinationZones[0];
-      
-      // Conversion du nom du pays en code pays
       const countryCode = Object.entries(i18n.getNames('en'))
         .find(([_, name]) => name === firstCountry)?.[0];
       
       if (countryCode) {
+        console.log('Setting initial destination zone to:', countryCode);
         onChange({ ...data, destination_zone: countryCode });
       }
     }
-  }, [data.destinationZones, data.destination_zone, data, onChange]);
+  }, [data.destinationZones]); // Remove data.destination_zone from dependencies
 
   /**
    * Vérifie si un pays est sélectionné
@@ -107,7 +127,23 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} countryCode - Le code du pays sélectionné
    */
   const handleCountrySelect = (countryCode: string) => {
-    onChange({ ...data, destination_zone: countryCode });
+    console.log('handleCountrySelect called with code:', countryCode);
+    console.log('Current data:', data);
+    const countryName = i18n.getName(countryCode, 'en');
+    console.log('Country name:', countryName);
+    
+    if (!countryName) {
+      console.error('Invalid country code:', countryCode);
+      return;
+    }
+    
+    const newData = {
+      ...data,
+      destination_zone: countryCode,
+      destinationZones: data.destinationZones || []
+    };
+    console.log('New data to be set:', newData);
+    onChange(newData);
   };
 
   /**
@@ -141,7 +177,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    */
   useEffect(() => {
     console.log('Debug destinationZones:', {
-      destinationZones: data.destinationZones?.length,
+      destinationZones: data.destinationZones,
       currentDestinationZone: data.destination_zone
     });
 

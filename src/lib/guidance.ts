@@ -116,11 +116,11 @@ export const predefinedOptions = {
       { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' }
     ],
     baseTypes: [
-      'Fixed Salary',
-      'Base + Commission',
-      'Pure Commission',
-      'Tiered Commission',
-      'Graduated Commission'
+      'Fixed Salary', // Salaire fixe - Un montant fixe sans commission
+      'Base + Commission', // Base + Commission - Un salaire de base plus des commissions
+      'Pure Commission', // Commission pure - Rémunération basée uniquement sur les performances
+      'Tiered Commission', // Commission par paliers - Commission augmentant selon les objectifs atteints
+      'Graduated Commission' // Commission progressive - Commission augmentant progressivement avec le volume
     ],
     bonusTypes: [
       'Performance Bonus',
@@ -130,6 +130,23 @@ export const predefinedOptions = {
       'Signing Bonus',
       'Retention Bonus',
       'Holiday Bonus'
+    ],
+    minimumVolumeUnits: [
+      'Posts',
+      'Calls',
+      'Transactions',
+
+    ],
+    minimumVolumePeriods: [
+      'Daily',
+      'Weekly',
+      'Monthly',
+    ],
+    transactionCommissionTypes: [
+      'Fixed Amount',
+      'Percentage',
+      'Conversion'
+
     ]
   },
   leads: {
@@ -373,53 +390,55 @@ export const predefinedOptions = {
       { name: 'Russian' }
     ],
     professional: [
+      'Sales Management',
+      'Account Management',
+      'Customer Relationship Management',
+      'Business Development',
       'Project Management',
-      'Software Architecture',
-      'Agile Methodologies',
-      'Team Management',
+      'Team Leadership',
       'Strategic Planning',
       'Market Analysis',
-      'Business Development',
-      'Quality Management',
+      'Negotiation',
+      'Client Relations',
+      'Business Strategy',
+      'Performance Management',
+      'Process Improvement',
       'Risk Management',
-      'Regulatory Compliance'
+      'Quality Assurance'
     ],
     technical: [
-      'JavaScript',
-      'TypeScript',
-      'Node.js',
-      'React',
-      'Angular',
-      'Vue.js',
+      'CRM Software',
+      'Salesforce',
+      'Microsoft Office',
+      'Google Workspace',
+      'Data Analysis',
+      'SQL',
+      'Excel',
+      'Power BI',
+      'Tableau',
       'Python',
-      'Java',
-      'C#',
-      'PHP',
-      'MongoDB',
-      'PostgreSQL',
-      'MySQL',
-      'Docker',
-      'Kubernetes',
-      'AWS',
-      'Azure',
-      'Git',
-      'CI/CD',
-      'REST API',
-      'GraphQL',
-      'Microservices',
-      'DevOps'
+      'JavaScript',
+      'HTML/CSS',
+      'API Integration',
+      'Cloud Computing',
+      'Database Management'
     ],
     soft: [
       'Communication',
-      'Teamwork',
-      'Problem Solving',
-      'Adaptability',
       'Leadership',
+      'Problem Solving',
       'Time Management',
+      'Teamwork',
+      'Adaptability',
+      'Emotional Intelligence',
+      'Conflict Resolution',
       'Critical Thinking',
       'Creativity',
-      'Empathy',
-      'Stress Management'
+      'Decision Making',
+      'Stress Management',
+      'Active Listening',
+      'Presentation Skills',
+      'Interpersonal Skills'
     ],
     skillLevels: [
       'Basic',

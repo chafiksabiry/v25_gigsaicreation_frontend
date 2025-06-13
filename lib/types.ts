@@ -5,8 +5,13 @@ export interface Profile {
   avatar_url: string | null;
   title: string | null;
   bio: string | null;
-  skills: string[];
-  languages: Language[];
+  skills: {
+    languages: Language[];
+    professional: string[];
+    technical: string[];
+    softSkills: string[];
+  };
+  
   rating: number;
   total_reviews: number;
   created_at: string;
@@ -41,7 +46,7 @@ export interface Gig {
   kpis: any[];
   compensation: {
     type: string;
-    amount: number;
+    amount: string;
     currency: string;
     frequency?: string;
   };
