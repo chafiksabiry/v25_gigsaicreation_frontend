@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import { GigData, GigSuggestion } from '../types';
 import { predefinedOptions } from './guidance';
-
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 const openai = new OpenAI({
@@ -1453,9 +1452,7 @@ export async function generateSkills(title: string, description: string): Promis
   languages: Array<{
     name: string;
     level: string;
-    reading: string;
-    writing: string;
-    speaking: string;
+
   }>;
   soft: string[];
   professional: string[];
@@ -1571,39 +1568,6 @@ Based on this job title and description, suggest appropriate skills. All skills 
       }
       if (!validLevels.includes(lang.level)) {
         throw new Error(`Invalid language level: ${lang.level}`);
-      }
-      if (!validLevels.includes(lang.reading)) {
-        throw new Error(`Invalid reading level: ${lang.reading}`);
-      }
-      if (!validLevels.includes(lang.writing)) {
-        throw new Error(`Invalid writing level: ${lang.writing}`);
-      }
-      if (!validLevels.includes(lang.speaking)) {
-        throw new Error(`Invalid speaking level: ${lang.speaking}`);
-      }
-    });
-
-    // Validate soft skills
-    const validSoftSkills = predefinedOptions.skills.soft;
-    result.soft.forEach((skill: string) => {
-      if (!validSoftSkills.includes(skill)) {
-        throw new Error(`Invalid soft skill: ${skill}`);
-      }
-    });
-
-    // Validate professional skills
-    const validProfessionalSkills = predefinedOptions.skills.professional;
-    result.professional.forEach((skill: string) => {
-      if (!validProfessionalSkills.includes(skill)) {
-        throw new Error(`Invalid professional skill: ${skill}`);
-      }
-    });
-
-    // Validate technical skills
-    const validTechnicalSkills = predefinedOptions.skills.technical;
-    result.technical.forEach((skill: string) => {
-      if (!validTechnicalSkills.includes(skill)) {
-        throw new Error(`Invalid technical skill: ${skill}`);
       }
     });
 

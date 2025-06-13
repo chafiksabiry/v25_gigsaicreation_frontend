@@ -195,6 +195,13 @@ export function ScheduleSection({
     });
   }, [data]);
 
+  const baseOptions = predefinedOptions.schedule.flexibility;
+  const selectedFlex = data?.flexibility || [];
+  const allOptions = [
+    ...baseOptions,
+    ...selectedFlex.filter(opt => !baseOptions.includes(opt))
+  ].map(opt => typeof opt === 'string' ? { value: opt, label: opt } : opt);
+
   return (
     <div className="space-y-6">
       <InfoText>
@@ -547,8 +554,8 @@ export function ScheduleSection({
             return null;
           })()}
           <SelectionList
-            options={predefinedOptions.schedule.flexibility}
-            selected={data?.flexibility || []}
+            options={allOptions}
+            selected={selectedFlex}
             onChange={(flexibility) => {
               console.log('Flexibility changed:', flexibility);
               onChange({ ...data, flexibility });
