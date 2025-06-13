@@ -43,7 +43,7 @@ Format your response as a JSON object with the following structure:
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that provides timezone and scheduling recommendations for global business operations.'
+            content: 'You are a helpful assistant that provides timezone and scheduling recommendations for global business operations. IMPORTANT: All responses MUST be in English only.'
           },
           {
             role: 'user',

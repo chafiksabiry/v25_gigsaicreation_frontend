@@ -17,7 +17,7 @@ export interface Profile {
 
 export interface Language {
   language: string;
-  proficiency: 'basic' | 'conversational' | 'fluent' | 'native';
+  proficiency: 'Basic' | 'Conversational' | 'Professional' | 'Native/Bilingual';
 }
 
 export interface ParsedGig {
@@ -110,7 +110,7 @@ export interface Gig {
   kpis: any[];
   compensation: {
     type: string;
-    amount: number;
+    amount: string;
     currency: string;
     frequency?: string;
   };
@@ -170,7 +170,8 @@ export interface GigData {
   benefits: string[];
   schedule: {
     days: string[];
-    hours: string;
+    startTime: string;
+    endTime: string;
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -297,7 +298,8 @@ export interface GigSuggestion {
   };
   schedule: {
     days: string[];
-    hours: string;
+    startTime: string;
+    endTime: string;
     timeZones: string[];
     flexibility: string[];
     minimumHours: {

@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { InfoText } from './InfoText';
-import { SkillSelector } from './SkillSelector';
+import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
-import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface SkillsSectionProps {
   data: {
-    languages: Array<{ name: string; level: string }>;
+    languages: Array<{ name: string; level: string } | string>;
     soft: string[];
     professional: string[];
     technical: string[];
@@ -32,6 +31,248 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     certifications: (data?.certifications || [])
   };
 
+  // State for editing
+  const [editingIndex, setEditingIndex] = useState<{ type: string; index: number } | null>(null);
+  const [newSkill, setNewSkill] = useState({ name: '', level: '' });
+  const [addMode, setAddMode] = useState<{ type: string; active: boolean }>({ type: '', active: false });
+
+  // Example options
+  const languageOptions = [
+    'English', 'French', 'Spanish', 'German', 'Italian', 'Arabic', 'Chinese', 'Russian', 'Portuguese', 'Dutch'
+  ];
+  const levelOptions = ['Beginner', 'Conversational', 'Professional', 'Native'];
+  const professionalOptions = predefinedOptions.skills.professional;
+  const technicalOptions = predefinedOptions.skills.technical;
+  const softOptions = predefinedOptions.skills.soft;
+
+  // Prevent duplicate skills
+  const isDuplicate = (name: string, type: string, excludeIndex?: number) => {
+    const skills = safeData[type as keyof typeof safeData] as string[];
+    return skills.some((s, idx) => s === name && idx !== excludeIndex);
+  };
+
+  // Handlers
+  const handleEdit = (type: string, idx: number) => {
+    setEditingIndex({ type, index: idx });
+    const skill = safeData[type as keyof typeof safeData][idx];
+    if (type === 'languages') {
+      if (typeof skill === 'string') {
+        setNewSkill({ name: skill, level: '' });
+      } else {
+        if ('level' in skill) {
+          setNewSkill({ name: skill.name, level: skill.level });
+        } else {
+          setNewSkill({ name: skill.name, level: '' });
+        }
+      }
+    } else {
+      setNewSkill({ name: typeof skill === 'string' ? skill : '', level: '' });
+    }
+  };
+
+  const handleEditChange = (field: 'name' | 'level', value: string) => {
+    setNewSkill({ ...newSkill, [field]: value });
+  };
+
+  const handleEditSave = () => {
+    if (!editingIndex || !newSkill.name || isDuplicate(newSkill.name, editingIndex.type, editingIndex.index)) return;
+    
+    const updated = [...safeData[editingIndex.type as keyof typeof safeData]];
+    if (editingIndex.type === 'languages') {
+      updated[editingIndex.index] = { name: newSkill.name, level: newSkill.level };
+    } else {
+      updated[editingIndex.index] = newSkill.name;
+    }
+    
+    onChange({ ...safeData, [editingIndex.type]: updated });
+    setEditingIndex(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditingIndex(null);
+  };
+
+  const handleRemove = (type: string, idx: number) => {
+    const updated = safeData[type as keyof typeof safeData].filter((_, i) => i !== idx);
+    onChange({ ...safeData, [type]: updated });
+    if (editingIndex?.index === idx) setEditingIndex(null);
+  };
+
+  // Add new skill
+  const handleAdd = () => {
+    if (!addMode.active || !newSkill.name || isDuplicate(newSkill.name, addMode.type)) return;
+
+    let updated;
+    if (addMode.type === 'languages') {
+      updated = [...safeData.languages, { name: newSkill.name, level: newSkill.level }];
+    } else {
+      updated = [...safeData[addMode.type as keyof typeof safeData], newSkill.name];
+    }
+    onChange({ ...safeData, [addMode.type]: updated });
+    setNewSkill({ name: '', level: '' });
+    setAddMode({ type: '', active: false });
+  };
+
+  const renderSkillSection = (
+    type: string,
+    title: string,
+    description: string,
+    icon: React.ReactNode,
+    options: string[],
+    bgColor: string,
+    iconColor: string,
+    isLanguage: boolean = false
+  ) => {
+    const skills = safeData[type as keyof typeof safeData] as any[];
+    const isEditing = editingIndex?.type === type;
+    const isAdding = addMode.type === type && addMode.active;
+
+    return (
+      <div className={`bg-gradient-to-br from-${bgColor}-50 via-${bgColor}-50/30 to-${bgColor}-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-${bgColor}-100/50`}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className={`p-2.5 bg-${bgColor}-100/80 rounded-lg shadow-inner`}>
+            {icon}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <p className="text-sm text-gray-600">{description}</p>
+          </div>
+        </div>
+        {/* List */}
+        <div className="mb-4 space-y-2">
+          {skills.map((skill, idx) => (
+            <div
+              key={idx}
+              className={`flex items-center justify-between p-3.5 mb-2 border transition-all duration-200 ${
+                editingIndex?.index === idx 
+                  ? `bg-${bgColor}-50/70 border-${bgColor}-300 shadow-sm ring-2 ring-${bgColor}-200` 
+                  : 'bg-white border-blue-100 hover:border-blue-200 hover:shadow-sm'
+              } rounded-lg group`}
+            >
+              {editingIndex?.index === idx ? (
+                <div className="flex gap-3 items-center w-full">
+                  <select
+                    className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                    value={newSkill.name}
+                    onChange={e => handleEditChange('name', e.target.value)}
+                  >
+                    <option value="">Select {type}</option>
+                    {options.map(opt => (
+                      <option key={opt} value={opt} disabled={isDuplicate(opt, type, editingIndex.index)}>{opt}</option>
+                    ))}
+                  </select>
+                  {isLanguage && (
+                    <select
+                      className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                      value={newSkill.level}
+                      onChange={e => handleEditChange('level', e.target.value)}
+                    >
+                      <option value="">Select level</option>
+                      {levelOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      className="px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-all duration-200 shadow-sm hover:shadow"
+                      onClick={handleEditSave}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow"
+                      onClick={handleEditCancel}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-700 text-base flex-1">
+                    <span className="font-medium">{isLanguage ? skill.name : skill}</span>
+                    {isLanguage && (
+                      <>
+                        <span className="mx-2 text-gray-400">-</span>
+                        <span className="text-blue-600 font-medium">{skill.level}</span>
+                      </>
+                    )}
+                  </p>
+                  <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <button
+                      className={`p-2 text-${iconColor}-600 hover:bg-${iconColor}-100 rounded-lg transition-all duration-200 hover:scale-110`}
+                      onClick={() => handleEdit(type, idx)}
+                      title="Edit"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110"
+                      onClick={() => handleRemove(type, idx)}
+                      title="Remove"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+        {/* Add skill */}
+        {isAdding ? (
+          <div className="flex gap-3 items-center mb-2 bg-blue-50/70 border border-blue-200 rounded-lg p-3.5 shadow-sm">
+            <select
+              className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+              value={newSkill.name}
+              onChange={e => setNewSkill({ ...newSkill, name: e.target.value })}
+            >
+              <option value="">Select {type}</option>
+              {options.map(opt => (
+                <option key={opt} value={opt} disabled={isDuplicate(opt, type)}>{opt}</option>
+              ))}
+            </select>
+            {isLanguage && (
+              <select
+                className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                value={newSkill.level}
+                onChange={e => setNewSkill({ ...newSkill, level: e.target.value })}
+              >
+                <option value="">Select level</option>
+                {levelOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            )}
+            <button
+              className="px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-all duration-200 shadow-sm hover:shadow"
+              onClick={handleAdd}
+            >
+              Add
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow"
+              onClick={() => { setAddMode({ type: '', active: false }); setNewSkill({ name: '', level: '' }); }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button 
+            className={`text-${iconColor}-600 hover:text-${iconColor}-700 flex items-center gap-1.5 font-medium transition-colors duration-200 hover:underline`} 
+            onClick={() => { setAddMode({ type, active: true }); setEditingIndex(null); setNewSkill({ name: '', level: '' }); }}
+          >
+            + Add {type} skill
+          </button>
+        )}
+        {errors[type] && (
+          <p className="mt-2 text-sm text-red-600">{errors[type].join(', ')}</p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
       <InfoText>
@@ -41,80 +282,49 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
       <div className="grid grid-cols-1 gap-8">
         {/* Languages */}
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50/30 to-blue-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-blue-100/50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100/80 rounded-lg shadow-inner">
-              <Languages className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Languages</h3>
-              <p className="text-sm text-gray-600">Specify required languages and proficiency levels</p>
-            </div>
-          </div>
-          <SkillSelector
-            skills={safeData.languages}
-            onChange={(languages) => onChange({ ...safeData, languages })}
-            type="language"
-            showLevel={true}
-          />
-          {errors.languages && (
-            <p className="mt-2 text-sm text-red-600">{errors.languages.join(', ')}</p>
-          )}
-        </div>
+        {renderSkillSection(
+          'languages',
+          'Languages',
+          'Specify required languages and proficiency levels',
+          <Languages className="w-5 h-5 text-blue-600" />,
+          languageOptions,
+          'blue',
+          'blue',
+          true
+        )}
 
         {/* Professional Skills */}
-        <div className="bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-purple-100/50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-purple-100/80 rounded-lg shadow-inner">
-              <BookOpen className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Professional Skills</h3>
-              <p className="text-sm text-gray-600">Add required professional and industry-specific skills</p>
-            </div>
-          </div>
-          <SkillSelector
-            skills={safeData.professional.map(skill => ({ name: skill }))}
-            onChange={(skills) => onChange({ ...safeData, professional: skills.map(s => s.name) })}
-            type="professional"
-          />
-        </div>
+        {renderSkillSection(
+          'professional',
+          'Professional Skills',
+          'Add required professional and industry-specific skills',
+          <BookOpen className="w-5 h-5 text-purple-600" />,
+          professionalOptions,
+          'purple',
+          'purple'
+        )}
 
         {/* Technical Skills */}
-        <div className="bg-gradient-to-br from-emerald-50 via-teal-50/30 to-emerald-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-emerald-100/50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-emerald-100/80 rounded-lg shadow-inner">
-              <Laptop className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Technical Skills</h3>
-              <p className="text-sm text-gray-600">Specify required technical tools and software proficiency</p>
-            </div>
-          </div>
-          <SkillSelector
-            skills={safeData.technical.map(skill => ({ name: skill }))}
-            onChange={(skills) => onChange({ ...safeData, technical: skills.map(s => s.name) })}
-            type="technical"
-          />
-        </div>
+        {renderSkillSection(
+          'technical',
+          'Technical Skills',
+          'Specify required technical tools and software proficiency',
+          <Laptop className="w-5 h-5 text-emerald-600" />,
+          technicalOptions,
+          'emerald',
+          'emerald'
+        )}
 
         {/* Soft Skills */}
-        <div className="bg-gradient-to-br from-orange-50 via-amber-50/30 to-orange-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-orange-100/50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-orange-100/80 rounded-lg shadow-inner">
-              <Users className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Soft Skills</h3>
-              <p className="text-sm text-gray-600">Add interpersonal and communication skills</p>
-            </div>
-          </div>
-          <SkillSelector
-            skills={safeData.soft.map(skill => ({ name: skill }))}
-            onChange={(skills) => onChange({ ...safeData, soft: skills.map(s => s.name) })}
-            type="soft"
-          />
-        </div>
+        {renderSkillSection(
+          'soft',
+          'Soft Skills',
+          'Add interpersonal and communication skills',
+          <Users className="w-5 h-5 text-orange-600" />,
+          softOptions,
+          'orange',
+          'orange'
+        )}
       </div>
 
       {/* Skill Summary */}

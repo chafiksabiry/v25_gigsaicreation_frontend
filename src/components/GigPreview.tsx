@@ -211,7 +211,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
             </div>
 
             {/* Lead Distribution */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Target className="w-6 h-6 text-orange-600" />
                 <h3 className="text-xl font-semibold text-gray-900">Lead Distribution</h3>
@@ -241,7 +241,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* Sidebar */}

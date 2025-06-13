@@ -71,7 +71,6 @@ export function SectionContent({
           <ScheduleSection
             data={(initializedData.schedule as {
               days: string[];
-              hours: string;
               timeZones: TimezoneCode[];
               flexibility: string[];
               minimumHours: {
@@ -83,7 +82,6 @@ export function SectionContent({
               endTime?: string;
             }) || {
               days: [],
-              hours: "",
               timeZones: [] as TimezoneCode[],
               flexibility: [],
               minimumHours: {
@@ -92,7 +90,7 @@ export function SectionContent({
                 monthly: undefined,
               },
               startTime: "09:00",
-              endTime: "17:00",
+              endTime: "17:00"
             }}
             onChange={(scheduleData) => onChange({
               ...initializedData,
@@ -143,34 +141,34 @@ export function SectionContent({
             errors={errors}
             warnings={{}}
             onPrevious={() => onSectionChange?.('schedule')}
-            onNext={() => onSectionChange?.('leads')}
-          />
-        );
-
-      case "leads":
-        return (
-          <LeadsSection
-            data={initializedData.leads || {
-              types: [
-                { type: 'hot', percentage: 0, description: '', conversionRate: 0 },
-                { type: 'warm', percentage: 0, description: '', conversionRate: 0 },
-                { type: 'cold', percentage: 0, description: '', conversionRate: 0 }
-              ],
-              sources: []
-            }}
-            onChange={(leadsData) => onChange({
-              ...initializedData,
-              seniority: {
-                ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
-              },
-              leads: leadsData
-            })}
-            errors={errors}
-            onPrevious={() => onSectionChange?.('commission')}
             onNext={() => onSectionChange?.('skills')}
           />
         );
+
+      // case "leads":
+      //   return (
+      //     <LeadsSection
+      //       data={initializedData.leads || {
+      //         types: [
+      //           { type: 'hot', percentage: 0, description: '', conversionRate: 0 },
+      //           { type: 'warm', percentage: 0, description: '', conversionRate: 0 },
+      //           { type: 'cold', percentage: 0, description: '', conversionRate: 0 }
+      //         ],
+      //         sources: []
+      //       }}
+      //       onChange={(leadsData) => onChange({
+      //         ...initializedData,
+      //         seniority: {
+      //           ...initializedData.seniority,
+      //           years: String(initializedData.seniority.yearsExperience)
+      //         },
+      //         leads: leadsData
+      //       })}
+      //       errors={errors}
+      //       onPrevious={() => onSectionChange?.('commission')}
+      //       onNext={() => onSectionChange?.('skills')}
+      //     />
+      //   );
 
       case "skills":
         return (

@@ -296,10 +296,14 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                     >
                       <option value="">Select level</option>
                       {predefinedOptions.basic.seniorityLevels.map((level) => (
-                        <option key={level} value={level}>
-                          {level}
-                        </option>
+                        <option key={level} value={level}>{level}</option>
                       ))}
+                      {role.seniority.level &&
+                        !predefinedOptions.basic.seniorityLevels.some(
+                          l => l.toLowerCase() === role.seniority.level.toLowerCase()
+                        ) && (
+                          <option value={role.seniority.level}>{role.seniority.level}</option>
+                        )}
                     </select>
                   </div>
 
@@ -325,7 +329,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
           <button
             onClick={handleAddRole}
-            disabled={initializedTeam.team.structure.length >= predefinedOptions.team.roles.length}
+            disabled={false}
             className="w-full flex items-center justify-center gap-2 p-3 text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />

@@ -136,7 +136,8 @@ function App() {
     benefits: [],
     schedule: {
       days: [],
-      hours: "",
+      startTime: "",
+      endTime: "",
       timeZones: [],
       flexibility: [],
       minimumHours: {
@@ -173,7 +174,7 @@ function App() {
       qualificationCriteria: []
     },
     skills: {
-      languages: [],
+      languages: [{ name: "English", level: "Fluent" }],
       soft: [],
       professional: [],
       technical: [],

@@ -27,7 +27,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
       const formattedAmount = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currency
-      }).format(Number(amount || 0));
+      }).format(amount || 0);
       
       console.log('Formatted amount:', formattedAmount);
       return formattedAmount;
@@ -38,18 +38,13 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
   };
 
   // Helper function to safely get commission amount
-  const getCommissionAmount = (amount: any) => {
+  const getCommissionAmount = (amount: string) => {
     console.log('Getting commission amount:', amount);
     if (!amount) {
       console.log('No amount provided, returning 0');
-      return '0';
+      return 0;
     }
-    try {
-      return amount.toString();
-    } catch (error) {
-      console.error('Error converting amount to string:', error);
-      return '0';
-    }
+    return amount;
   };
 
   // Helper function to format minimum volume
@@ -157,7 +152,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                     <div className="text-lg font-semibold text-gray-900">
                       {(() => {
                         console.log('Rendering base commission amount');
-                        const baseAmount = gig?.commission?.baseAmount || 0;
+                        const baseAmount = gig?.commission?.baseAmount || "";
                         console.log('Base amount value:', baseAmount);
                         return formatCurrency(getCommissionAmount(baseAmount));
                       })()}
@@ -193,7 +188,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                       <div className="text-lg font-semibold text-gray-900">
                         {(() => {
                           console.log('Rendering bonus amount');
-                          const bonusAmount = gig?.commission?.bonusAmount;
+                          const bonusAmount = gig?.commission?.bonusAmount || 0;
                           console.log('Bonus amount value:', bonusAmount);
                           return formatCurrency(getCommissionAmount(bonusAmount));
                         })()}
@@ -218,14 +213,13 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           </section>
 
           {/* Lead Distribution */}
-          {gig?.gig_leads && gig?.gig_leads?.length > 0 && (
+          {/* {gig?.gig_leads && gig?.gig_leads?.length > 0 && (
             <section className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Target className="w-6 h-6 text-orange-600" />
                 <h2 className="text-xl font-semibold text-gray-900">Lead Distribution</h2>
               </div>
               <div className="space-y-6">
-                {/* Lead Types */}
                 <div className="grid grid-cols-3 gap-4">
                   {gig?.gig_leads?.map((lead: any) => (
                     <div key={lead?.lead_type} className="bg-gray-50 rounded-lg p-4">
@@ -238,7 +232,6 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                   ))}
                 </div>
 
-                {/* Lead Sources */}
                 {gig?.gig_leads?.[0]?.sources && gig?.gig_leads?.[0]?.sources?.length > 0 && (
                   <div>
                     <h3 className="font-medium text-gray-900 mb-3">Lead Sources</h3>
@@ -253,7 +246,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                 )}
               </div>
             </section>
-          )}
+          )} */}
 
           {/* Team Structure */}
           <section className="bg-white rounded-lg shadow-sm p-6">
