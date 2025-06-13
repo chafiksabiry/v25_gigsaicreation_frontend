@@ -31,10 +31,52 @@ export const aiPrompts = {
 
 export const predefinedOptions = {
   basic: {
-    categories: [],
-    seniorityLevels: [],
-    timeZones: [],
-    destinationZones: []
+    categories: [
+      'Sales',
+      'Customer Support',
+      'Marketing',
+      'Engineering',
+      'Finance',
+      'Human Resources',
+      'Operations',
+      'IT',
+      'Legal',
+      'Administration'
+    ],
+    seniorityLevels: [
+      'Entry Level',
+      'Junior',
+      'Mid-Level',
+      'Senior',
+      'Team Lead',
+      'Supervisor',
+      'Manager',
+      'Director'
+    ],
+    timeZones: [
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'Europe/London',
+      'Europe/Paris',
+      'Europe/Dubai',
+      'Asia/Singapore',
+      'Asia/Tokyo',
+      'Australia/Sydney'
+    ],
+    destinationZones: [
+      'France',
+      'United States',
+      'United Kingdom',
+      'Germany',
+      'Spain',
+      'Italy',
+      'Canada',
+      'Australia',
+      'Morocco',
+      'Turkey'
+    ]
   },
   schedule: {
     flexibility: [
@@ -49,12 +91,48 @@ export const predefinedOptions = {
     ]
   },
   commission: {
-    baseTypes: [],
-    bonusTypes: [],
-    currencies: [],
-    minimumVolumeUnits: [],
-    minimumVolumePeriods: [],
-    transactionCommissionTypes: []
+    baseTypes: [
+      'Fixed Salary',
+      'Base + Commission',
+      'Pure Commission',
+      'Tiered Commission',
+      'Graduated Commission'
+    ],
+    bonusTypes: [
+      'Performance Bonus',
+      'Sales Bonus',
+      'Project Completion',
+      'Team Achievement',
+      'Quarterly Bonus',
+      'Annual Bonus'
+    ],
+    currencies: [
+      { code: 'USD', name: 'US Dollar', symbol: '$' },
+      { code: 'EUR', name: 'Euro', symbol: '€' },
+      { code: 'GBP', name: 'British Pound', symbol: '£' },
+      { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+      { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+      { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+      { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
+      { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+      { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+      { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' }
+    ],
+    minimumVolumeUnits: [
+      'Calls',
+      'Conversions',
+      'Sales'
+    ],
+    minimumVolumePeriods: [
+      'Daily',
+      'Weekly',
+      'Monthly'
+    ],
+    transactionCommissionTypes: [
+      'Fixed Amount',
+      'Percentage',
+      'Conversion'
+    ]
   },
   skills: {
     languages: [],

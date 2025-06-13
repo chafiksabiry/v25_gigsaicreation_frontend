@@ -615,7 +615,7 @@ Examples of CORRECT format:
         "minimumVolume": {
           "amount": "100000",
           "period": "Monthly",
-          "unit": "EUR"  // Should match the currency code
+          "unit": "Calls"
         },
         "transactionCommission": {
           "type": "Percentage",

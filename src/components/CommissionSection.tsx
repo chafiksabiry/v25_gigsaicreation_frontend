@@ -330,7 +330,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                     />
                   ) : (
                   <p className="flex-1 text-gray-900">
-                    {data?.commission?.minimumVolume?.amount || '0'}
+                    {getCurrencySymbol()}{data?.commission?.minimumVolume?.amount || '0'}
                   </p>
                   )}
                 </div>
