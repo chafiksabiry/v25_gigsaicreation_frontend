@@ -1036,13 +1036,13 @@ Examples of INCORRECT format (DO NOT USE):
 {
   "seniority": {
     "level": "Mid-Level",
-    "yearsExperience": "2-4"  // Wrong: range instead of single number
+    "yearsExperience": 3  // Wrong: range instead of single number
   }
 }
 {
   "seniority": {
     "level": "Mid-Level",
-    "yearsExperience": "4 years"  // Wrong: includes text
+    "yearsExperience": 2  // Wrong: includes text
   }
 }`
         },
@@ -1398,7 +1398,6 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     seniority: {
       level: generatedData.seniority?.level || '',
       yearsExperience: generatedData.seniority?.yearsExperience || 0,
-      years: String(generatedData.seniority?.yearsExperience || 0)
     },
     schedule: {
       days: convertDaysToEnglish(generatedData.schedule?.days || []),
@@ -1467,7 +1466,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       }
     },
     team: {
-      size: generatedData.team?.size || "0",
+      size: generatedData.team?.size || 0,
       structure: generatedData.team?.structure || [],
       territories: generatedData.team?.territories || [],
       reporting: {

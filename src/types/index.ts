@@ -83,13 +83,12 @@ export interface GigData {
     }>;
   };
   seniority: {
-    years: string;
     level: string;
     yearsExperience: number;
     aiGenerated?: boolean;
   };
   team: {
-    size: string;
+    size: number;
     structure: Array<{
       roleId: string;
       count: number;
@@ -208,12 +207,11 @@ export interface GigSuggestion {
     }>;
   };
   seniority: {
-    years: string;
     level: string;
     yearsExperience: number;
   };
   team: {
-    size: string;
+    size: number;
     structure: Array<{
       roleId: string;
       count: number;

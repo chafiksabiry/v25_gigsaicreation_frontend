@@ -162,7 +162,7 @@ interface TeamRole {
 }
 
 interface TeamData {
-  size: string;
+  size: number;
   structure: TeamRole[];
   territories: string[];
 }
@@ -295,7 +295,16 @@ interface GigData {
     requirements: string[];
   };
   leads?: LeadsData;
-  team?: TeamData;
+  team?: {
+    size: number;
+    structure: TeamRole[];
+    territories: string[];
+    reporting: {
+      to: string;
+      frequency: string;
+    };
+    collaboration: string[];
+  };
   documentation: {
     templates: null,
     reference: null,
@@ -343,7 +352,7 @@ const fallbackSuggestions: SuggestionState = {
   commission: { options: [] },
   activity: { options: [] },
   team: { 
-    size: "1",
+    size: 1,
     structure: [{
       roleId: "default",
       count: 1,
@@ -411,6 +420,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const [showBasicSection, setShowBasicSection] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [leadsData, setLeadsData] = useState<any>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
 
   useEffect(() => {
     if (input.trim().length > 0) {
@@ -482,11 +492,9 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       seniority: suggestions?.seniority ? {
         level: suggestions.seniority.level || '',
         yearsExperience: Number(suggestions.seniority.yearsExperience) || 0,
-        years: String(suggestions.seniority.yearsExperience) || '0'
       } : {
         level: '',
         yearsExperience: 0,
-        years: '0'
       },
       commission: commissionData,
       activity: suggestions.activity || {
@@ -979,7 +987,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           requirements: { essential: [], preferred: [] },
           // languages: ["English (Fluent)"],
           seniority: {
-            years: "",
             level: "",
             yearsExperience: 0
           },
@@ -1060,7 +1067,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 // languages: string[],
                 seniority: {
                   level: string,
-                  yearsExperience: string
+                  yearsExperience: number
                 },
                 schedule: {
                   days: string[],
@@ -1103,13 +1110,13 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 },
                 destinationZones: string[],
                 team: {
-                  size: string,
+                  size: number,
                   structure: Array<{
                     roleId: string,
                     count: number,
                     seniority: {
                       level: string,
-                      yearsExperience: string
+                      yearsExperience: number
                     }
                   }>,
                   territories: string[]
@@ -1144,9 +1151,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             // Ensure all required fields are present with default values if missing
             const defaultSuggestions = {
               seniority: {
-                years: "Senior",
                 level: "",
-                yearsExperience: ""
+                yearsExperience: 0
               },
               schedule: {
                 days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
@@ -1193,7 +1199,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   count: 1,
                   seniority: {
                     level: "Senior",
-                    yearsExperience: "5+"
+                    yearsExperience: 2
                   }
                 }],
                 territories: ["Global"]
@@ -1374,9 +1380,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         requirements: suggestions?.requirements || { essential: [], preferred: [] },
         status: "draft",
         seniority: {
-          years: suggestions?.seniority?.years || "Mid Level",
           level: suggestions?.seniority?.level || "Mid Level",
-          yearsExperience: suggestions?.seniority?.yearsExperience || "2-5 years"
+          yearsExperience: suggestions?.seniority?.yearsExperience || 3
         },
         schedule: {
           days: suggestions?.schedule?.days || [],
@@ -1417,7 +1422,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           sources: []
         },
         team: {
-          size: gigData.team?.size || '0',
+          size: gigData.team?.size || 0,
           structure: gigData.team?.structure || [],
           territories: gigData.team?.territories || []
         },
@@ -1519,9 +1524,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     setGigData((prev: GigData) => ({
       ...prev,
       team: {
-        size: "1-5",
+        size: 0,
         structure: [],
-        territories: []
+        territories: [],
+        reporting: {
+          to: '',
+          frequency: ''
+        },
+        collaboration: []
       }
     }));
     setIsTeamModalOpen(false);
@@ -2096,7 +2106,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 type="number"
                 min={0}
                 value={editableSuggestions.seniority.yearsExperience}
-                onChange={e => handleSeniorityChange(index, 'yearsExperience', Number(e.target.value))}
+                onChange={e => handleSeniorityChange('yearsExperience', Number(e.target.value))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             ) : (
@@ -2391,28 +2401,25 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
   useEffect(() => {
     if (suggestions?.destinationZones && suggestions.destinationZones.length > 0 && 
-        (!suggestions.destination_zone || suggestions.destination_zone.length === 0)) {
+        (!suggestions.destinationZones || suggestions.destinationZones.length === 0)) {
       const firstCountry = suggestions.destinationZones[0];
       const countryCode = Object.entries(i18n.getNames('en'))
         .find(([_, name]) => name === firstCountry)?.[0];
-      
       if (countryCode) {
-        setSuggestions(prev => prev ? { ...prev, destination_zone: countryCode } : null);
+        setSelectedCountry(countryCode);
       }
     }
-  }, [suggestions?.destinationZones, suggestions?.destination_zone]);
+  }, [suggestions?.destinationZones]);
 
-  const handleSeniorityChange = (field: 'level' | 'yearsExperience', value: string) => {
+  const handleSeniorityChange = (field: 'level' | 'yearsExperience', value: string | number) => {
     if (!editableSuggestions) return;
-    
-    const newSuggestions = { ...editableSuggestions };
-    if (field === 'level') {
-      newSuggestions.seniority.level = value;
-    } else if (field === 'yearsExperience') {
-      const numValue = parseInt(value) || 0;
-      newSuggestions.seniority.yearsExperience = numValue;
-    }
-    setEditableSuggestions(newSuggestions);
+    setEditableSuggestions({
+      ...editableSuggestions,
+      seniority: {
+        ...editableSuggestions.seniority,
+        [field]: value
+      }
+    });
   };
 
   if (showMetadata) {
@@ -2795,7 +2802,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             seniority: {
               level: suggestions?.seniority?.level || '',
               yearsExperience: suggestions?.seniority?.yearsExperience || 2,
-              years: suggestions?.seniority?.years || ''
             },
             destination_zone: suggestions?.destinationZones?.[0] || "France",
             callTypes: [],
@@ -2949,4 +2955,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       </Modal>
     </div>
   );
+}
+
+function parseYearsExperience(val) {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    // Prend le premier nombre trouvé dans la string
+    const match = val.match(/\\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  }
+  return 0;
 }

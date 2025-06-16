@@ -95,12 +95,11 @@ const initialGigData: GigData = {
     certifications: []
   },
   seniority: {
-    years: "",
     level: "",
     yearsExperience: 0,
   },
   team: {
-    size: "",
+    size: 0,
     structure: [],
     territories: [],
     reporting: {
@@ -322,7 +321,7 @@ export function GigCreator({ children }: GigCreatorProps) {
           sources: gigData.leads.sources
         },
         team: {
-          size: gigData.team?.size || '0',
+          size: gigData.team?.size || 0,
           structure: gigData.team?.structure || [],
           territories: gigData.team?.territories || []
         },

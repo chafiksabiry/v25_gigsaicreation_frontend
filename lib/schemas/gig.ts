@@ -86,7 +86,7 @@ const gigSchema = new Schema({
   },
   team: {
     size: {
-      type: String,
+      type: Number,
       required: true
     },
     roles: [{

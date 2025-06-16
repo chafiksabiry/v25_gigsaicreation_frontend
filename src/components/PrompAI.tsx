@@ -103,12 +103,12 @@ const PrompAI: React.FC = () => {
       certifications: []
     },
     seniority: {
-      years: "0",
+
       level: "",
       yearsExperience: 0
     },
     team: {
-      size: "",
+      size: 0,
       structure: [],
       territories: [],
       reporting: {

@@ -82,11 +82,10 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         },
         seniority: {
           level: gig.seniority?.level || "",
-          years: gig.seniority?.years || "",
           yearsExperience: typeof gig.seniority?.yearsExperience === 'string' ? parseInt(gig.seniority.yearsExperience) || 0 : gig.seniority?.yearsExperience || 0
         },
         team: {
-          size: gig.team?.size || "",
+          size: gig.team?.size || 0,
           structure: gig.team?.structure || [],
           territories: gig.team?.territories || [],
           reporting: {

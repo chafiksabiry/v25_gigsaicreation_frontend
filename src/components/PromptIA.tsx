@@ -183,10 +183,9 @@ function App() {
     seniority: {
       level: "",
       yearsExperience: 0,
-      years: ""
     },
     team: {
-      size: "",
+      size: 0,
       structure: [],
       territories: [],
       reporting: {

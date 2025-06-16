@@ -36,7 +36,6 @@ export function SectionContent({
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
-      years: String(data.seniority?.yearsExperience || ''),
       aiGenerated: data.seniority?.aiGenerated,
     }
   }), [data]);
@@ -53,7 +52,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               }
             }}
             onChange={onChange}
@@ -96,7 +95,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
               schedule: scheduleData
             })}
@@ -116,7 +115,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
               commission: initializedData.commission || {
                 base: "",
@@ -184,7 +183,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
               skills: skillsData
             })}
@@ -201,7 +200,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               }
             }}
             onChange={onChange}
@@ -221,7 +220,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
               documentation: newDocs
             })}
@@ -242,7 +241,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               }
             }}
             onEdit={(section) => {

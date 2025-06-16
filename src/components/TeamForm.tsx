@@ -12,7 +12,7 @@ interface TeamRole {
 }
 
 interface TeamData {
-  size: string;
+  size: number;
   structure: TeamRole[];
   territories: string[];
 }
@@ -33,7 +33,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
   predefinedTerritories
 }) => {
   const [teamData, setTeamData] = useState<TeamData>({
-    size: '',
+    size: 0,
     structure: [],
     territories: []
   });
@@ -101,7 +101,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
         </label>
         <select
           value={teamData.size}
-          onChange={(e) => setTeamData(prev => ({ ...prev, size: e.target.value }))}
+          onChange={(e) => setTeamData(prev => ({ ...prev, size: Number(e.target.value) }))}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           required
         >

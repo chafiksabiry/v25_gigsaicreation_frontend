@@ -289,7 +289,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       newData.seniority = {
         level: '',
         yearsExperience: 0,
-        years: ''
       };
     }
 
@@ -628,7 +627,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <label className="block text-sm font-medium text-gray-700">Years of Experience</label>
               <input
                 type="text"
-                value={data.seniority?.years || ''}
+                value={data.seniority?.yearsExperience || ''}
                 onChange={(e) => handleSeniorityChange('years', e.target.value)}
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="e.g., 2"

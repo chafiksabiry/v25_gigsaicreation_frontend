@@ -119,11 +119,10 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     },
     seniority: {
       level: gig.seniority_level || '',
-      yearsExperience: gig.years_experience || '',
-      years: ''
+      yearsExperience: gig.years_experience || 0,
     },
     team: {
-      size: gig.team_size || '',
+      size: gig.team_size || 0,
       structure: gig.team_structure || [],
       territories: gig.team_territories || [],
       reporting: {

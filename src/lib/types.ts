@@ -30,7 +30,7 @@ export interface ParsedGig {
   destination_zone?: string;
   seniority?: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
   schedule?: {
     days: string[];
@@ -69,13 +69,13 @@ export interface ParsedGig {
     sources: string[];
   };
   team?: {
-    size: string;
+    size: number;
     structure: Array<{
       roleId: string;
       count: number;
       seniority: {
         level: string;
-        yearsExperience: string;
+        yearsExperience: number;
       };
     }>;
     territories: string[];
@@ -220,17 +220,16 @@ export interface GigData {
   };
   seniority: {
     level: string;
-    yearsExperience: string;
-    years: string;
+    yearsExperience: number;
   };
   team: {
-    size: string;
+    size: number;
     structure: Array<{
       roleId: string;
       count: number;
       seniority: {
         level: string;
-        yearsExperience: string;
+        yearsExperience: number;
       };
     }>;
     territories: string[];

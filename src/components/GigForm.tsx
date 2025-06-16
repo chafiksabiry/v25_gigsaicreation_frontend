@@ -52,10 +52,10 @@ type GigFormData = {
   };
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
   team: {
-    size: string;
+    size: number;
     structure: string[];
     territories: string[];
   };
@@ -140,16 +140,15 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
         seniority: {
           level: data.seniority.level,
           yearsExperience: data.seniority.yearsExperience,
-          years: ""
         },
         team: {
-          size: data.team?.size || "",
+          size: data.team?.size || 0,
           structure: (data.team?.structure || []).map(role => ({
             roleId: role,
             count: 1,
             seniority: {
               level: "",
-              yearsExperience: ""
+              yearsExperience: 0
             }
           })),
           territories: data.team?.territories || [],

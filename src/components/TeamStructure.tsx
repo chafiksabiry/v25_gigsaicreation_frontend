@@ -49,7 +49,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   const initializedTeam = {
     ...data,
     team: {
-      size: data.team?.size || '0',
+      size: data.team?.size || 0,
       structure: data.team?.structure || [],
       territories: data.team?.territories || [],
       reporting: data.team?.reporting || { to: '', frequency: '' },
@@ -151,12 +151,13 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
     });
   };
 
-  const handleTeamSizeChange = (size: string) => {
+  const handleTeamSizeChange = (size: number) => {
+    const numericSize = size || 0;
     onChange({
       ...data,
       team: {
         ...initializedTeam.team,
-        size
+        size: numericSize
       }
     });
   };
@@ -203,10 +204,11 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
           <div>
             <label className="block text-sm font-medium text-gray-700">Target Team Size</label>
             <input
-              type="text"
-              value={initializedTeam.team.size || '0'}
+              type="number"
+              min="0"
+              value={initializedTeam.team.size || 0}
               onChange={(e) => handleTeamSizeChange(e.target.value)}
-              placeholder="e.g., 5-10 people"
+              placeholder="e.g., 5"
               className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                 errors?.team?.size ? 'border-red-300' : 'border-gray-300'
               }`}
