@@ -157,7 +157,7 @@ interface TeamRole {
   count: number;
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
 }
 
@@ -257,7 +257,7 @@ interface GigData {
   category: string;
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
   schedule: {
     days: string[];
@@ -343,16 +343,21 @@ const fallbackSuggestions: SuggestionState = {
   commission: { options: [] },
   activity: { options: [] },
   team: { 
-    size: 1,
+    size: "1",
     structure: [{
       roleId: "default",
       count: 1,
       seniority: {
         level: "Senior",
-        yearsExperience: "5+"
+        yearsExperience: 5
       }
     }],
-    territories: ["Global"]
+    territories: ["Global"],
+    reporting: {
+      to: "Project Manager",
+      frequency: "Weekly"
+    },
+    collaboration: ["Daily standups", "Weekly reviews"]
   },
   leads: { 
     types: [], 
@@ -2066,8 +2071,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           <div>
             <label className="text-sm font-medium text-gray-500">Seniority Level *</label>
             {isEditing ? (
-              <input
-                type="text"
+              <select
                 value={editableSuggestions.seniority.level}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
@@ -2075,8 +2079,12 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. Mid-level, Senior, etc."
-              />
+              >
+                <option value="">Select seniority level</option>
+                {predefinedOptions.basic.seniorityLevels.map((level) => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
             ) : (
               <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.level}</p>
             )}
@@ -2085,18 +2093,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             <label className="text-sm font-medium text-gray-500">Years of Experience *</label>
             {isEditing ? (
               <input
-                type="text"
+                type="number"
+                min={0}
                 value={editableSuggestions.seniority.yearsExperience}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.seniority.yearsExperience = Number(e.target.value);
-                  setEditableSuggestions(newSuggestions);
-                }}
+                onChange={e => handleSeniorityChange(index, 'yearsExperience', Number(e.target.value))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 2-5 years, 5+ years, etc."
               />
             ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.yearsExperience}</p>
+              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.yearsExperience} years</p>
             )}
           </div>
         </div>
@@ -2397,6 +2401,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       }
     }
   }, [suggestions?.destinationZones, suggestions?.destination_zone]);
+
+  const handleSeniorityChange = (field: 'level' | 'yearsExperience', value: string) => {
+    if (!editableSuggestions) return;
+    
+    const newSuggestions = { ...editableSuggestions };
+    if (field === 'level') {
+      newSuggestions.seniority.level = value;
+    } else if (field === 'yearsExperience') {
+      const numValue = parseInt(value) || 0;
+      newSuggestions.seniority.yearsExperience = numValue;
+    }
+    setEditableSuggestions(newSuggestions);
+  };
 
   if (showMetadata) {
     return (
@@ -2777,7 +2794,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             category: suggestions?.sectors[0] || '',
             seniority: {
               level: suggestions?.seniority?.level || '',
-              yearsExperience: suggestions?.seniority?.yearsExperience || 1,
+              yearsExperience: suggestions?.seniority?.yearsExperience || 2,
               years: suggestions?.seniority?.years || ''
             },
             destination_zone: suggestions?.destinationZones?.[0] || "France",

@@ -55,6 +55,7 @@ export interface GigData {
       target: string;
       reward: string;
     }[];
+    additionalDetails?: string;
   };
   leads: {
     types: Array<{

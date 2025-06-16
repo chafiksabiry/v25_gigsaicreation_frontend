@@ -51,7 +51,7 @@ export async function analyzeTitleAndGenerateDescription(title: string): Promise
 
 IMPORTANT: All responses MUST be in English only.
 
-Available categories (for reference):
+Available categories (MUST choose EXACTLY one of these, no variations or new categories allowed):
 ${predefinedOptions.basic.categories.map(cat => `- ${cat}`).join('\n')}
 
 Available seniority levels:
@@ -69,7 +69,7 @@ ${predefinedOptions.basic.destinationZones.map(zone => `- ${zone}`).join('\n')}
 Return ONLY a valid JSON object with the following structure:
 {
   "description": string (detailed job description STRICTLY in 5-8 lines, separated by newlines),
-  "category": string (MUST be one of the available categories or a new one if none fit),
+  "category": string (MUST be EXACTLY one of the available categories, no variations or new categories allowed),
   "seniority": {
     "level": string (MUST be one of the available seniority levels),
     "yearsExperience": string
@@ -92,7 +92,7 @@ CRITICAL:
 - The description MUST contain EXACTLY between 5 and 8 lines, separated by newlines
 - Each line should be a complete, meaningful sentence
 - The seniority level MUST exactly match one of the provided options
-- The category MUST be one of the provided options or a new one if none fit
+- The category MUST be EXACTLY one of the provided options, no variations or new categories allowed
 - The time zone MUST be one of the provided options
 - The schedule flexibility options MUST be from the provided list
 - The destination zone MUST be one of the provided options`
@@ -139,6 +139,11 @@ CRITICAL:
         // Validate destination zone
         if (!predefinedOptions.basic.destinationZones.includes(parsed.destinationZone)) {
           throw new Error('Invalid destination zone suggestion');
+        }
+
+        // Add validation for category
+        if (!predefinedOptions.basic.categories.includes(parsed.category)) {
+          throw new Error(`Invalid category: ${parsed.category}. Must be one of: ${predefinedOptions.basic.categories.join(', ')}`);
         }
 
         return parsed;
@@ -1011,6 +1016,7 @@ CRITICAL RULES FOR yearsExperience:
 3. MUST NOT include any text like "years" or "ans"
 4. MUST NOT be in quotes
 5. MUST be a whole number
+6. MUST be between 0 and 30
 
 Examples of CORRECT format:
 {
@@ -1049,7 +1055,7 @@ Category: ${category}
 Based on this job title, description, and category, suggest an appropriate seniority level and years of experience. The seniority level MUST be one of the available options listed above. Return a single number for yearsExperience, not a string or range.`
         }
       ],
-      temperature: 0.3, // Reduced temperature for more consistent output
+      temperature: 0.3,
       max_tokens: 200
     });
 
@@ -1071,21 +1077,9 @@ Based on this job title, description, and category, suggest an appropriate senio
     if (typeof result.seniority.yearsExperience === 'number') {
       yearsExperience = result.seniority.yearsExperience;
     } else if (typeof result.seniority.yearsExperience === 'string') {
-      // Remove any non-numeric characters except for the hyphen
-      const cleanStr = result.seniority.yearsExperience.replace(/[^0-9-]/g, '');
-      
-      if (cleanStr.includes('-')) {
-        // If it's a range, take the average and round up
-        const [min, max] = cleanStr.split('-').map(Number);
-        if (!isNaN(min) && !isNaN(max)) {
-          yearsExperience = Math.ceil((min + max) / 2);
-        } else {
-          throw new Error('Invalid years of experience range');
-        }
-      } else {
-        // If it's a single number as string
-        yearsExperience = parseInt(cleanStr);
-      }
+      // Remove any non-numeric characters
+      const cleanStr = result.seniority.yearsExperience.replace(/[^0-9]/g, '');
+      yearsExperience = parseInt(cleanStr);
     } else {
       throw new Error('yearsExperience must be a number or a valid string representation');
     }
@@ -1190,38 +1184,22 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     "Tiered Commission",
     "Graduated Commission"
   ];
-  const commissionBase = generatedData.commission?.options?.[0]?.base;
-  const base =
-    validBaseTypes.includes(commissionBase)
-      ? commissionBase
-      : "Fixed Salary";
+  // Force base type to always be "Base + Commission"
+  const base = "Base + Commission";
 
   const validTransactionTypes = [
     "Fixed Amount",
     "Percentage",
     "Conversion"
   ];
-  const transactionType = generatedData.commission?.options?.[0]?.transactionCommission?.type;
+  // Force commission type to always be "Fixed Amount"
+  const finalTransactionType = "Fixed Amount";
   const transactionAmountRaw = generatedData.commission?.options?.[0]?.transactionCommission?.amount;
-
-  // Nettoyage du type
-  const safeTransactionType =
-    validTransactionTypes.includes(transactionType)
-      ? transactionType
-      : '';
-
-  // Nettoyage du montant
   const cleanedTransactionAmount = transactionAmountRaw
     ? transactionAmountRaw.replace(/[^0-9.]/g, '')
-    : '';
+    : '1';
 
-  let finalTransactionType = safeTransactionType;
-  let finalTransactionAmount = cleanedTransactionAmount;
-
-  if (!safeTransactionType || cleanedTransactionAmount === '' || cleanedTransactionAmount === '0') {
-    finalTransactionType = 'Fixed Amount';
-    finalTransactionAmount = '1'; // valeur par défaut
-  }
+  const finalTransactionAmount = cleanedTransactionAmount || '1';
 
   // Validate language levels
   const validLanguageLevels = ['Basic', 'Conversational', 'Professional', 'Native/Bilingual'];
@@ -1387,9 +1365,36 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   return {
     title: generatedData.jobTitles?.[0] || '',
     description: generatedData.deliverables?.join('\n') || '',
-    category: generatedData.sectors?.[0] || '',
+    category: predefinedOptions.basic.categories.includes(generatedData.sectors?.[0] || '') 
+      ? generatedData.sectors?.[0] 
+      : predefinedOptions.basic.categories[0], // Default to first category if invalid
     highlights: generatedData.highlights || [],
-    destinationZones: generatedData.destinationZones || [],
+    destinationZones: (generatedData.destinationZones || []).map(zone => {
+      // Convert continent names to appropriate country/region
+      const continentMap: { [key: string]: string } = {
+        'Europe': 'European Union',
+        'North America': 'United States',
+        'South America': 'Brazil',
+        'Asia': 'China',
+        'Africa': 'South Africa',
+        'Oceania': 'Australia',
+        'Antarctica': 'Australia' // Default to Australia for Antarctica
+      };
+
+      // If it's a continent, convert to appropriate country/region
+      if (continentMap[zone]) {
+        return continentMap[zone];
+      }
+
+      // If it's a city, try to get its country
+      if (zone.includes(',')) {
+        const parts = zone.split(',');
+        return parts[parts.length - 1].trim();
+      }
+
+      // If it's already a country or region, return as is
+      return zone;
+    }).filter(zone => zone && zone.length > 0),
     seniority: {
       level: generatedData.seniority?.level || '',
       yearsExperience: generatedData.seniority?.yearsExperience || 0,
@@ -1414,7 +1419,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
           ? generatedData.commission.options[0].baseAmount.replace(/[^0-9.]/g, '')
           : '3'
       ),
-      bonus: generatedData.commission?.options?.[0]?.bonus || 'Performance Bonus',
+      bonus: "Performance Bonus",
       bonusAmount: (
         generatedData.commission?.options?.[0]?.bonusAmount
           ? generatedData.commission.options[0].bonusAmount.replace(/[^0-9.]/g, '')
@@ -1432,8 +1437,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
           ? generatedData.commission.options[0].minimumVolume.period.charAt(0).toUpperCase() + generatedData.commission.options[0].minimumVolume.period.slice(1)
           : 'Monthly',
         unit: generatedData.commission?.options?.[0]?.minimumVolume?.unit
-          ? generatedData.commission.options[0].minimumVolume.unit.charAt(0).toUpperCase() + generatedData.commission.options[0].minimumVolume.unit.slice(1)
-          : 'USD'
+          ? (generatedData.commission.options[0].minimumVolume.unit.toLowerCase() === 'sales' ? 'Sales' : 'Calls')
+          : 'Calls'
       },
       transactionCommission: {
         type: finalTransactionType,
@@ -1616,7 +1621,12 @@ interface PredefinedOptions {
     roles: Array<{ id: string; name: string; description: string }>;
     territories: string[];
   };
-  // ... rest of the interface
+  basic: {
+    seniorityLevels: string[];
+    categories: string[];
+    timeZones: string[];
+    destinationZones: string[];
+  };
 }
 
 const predefinedOptions: PredefinedOptions = {
@@ -1628,8 +1638,54 @@ const predefinedOptions: PredefinedOptions = {
     soft: []
   },
   team: {
-    roles: [],
+    roles: [
+      {
+        id: 'entry-level',
+        name: 'Entry Level',
+        description: 'Entry level position with basic responsibilities and learning opportunities'
+      },
+      {
+        id: 'junior',
+        name: 'Junior',
+        description: 'Junior position with growing responsibilities and mentorship opportunities'
+      },
+      {
+        id: 'mid-level',
+        name: 'Mid-Level',
+        description: 'Mid-level position with significant responsibilities and independent work'
+      },
+      {
+        id: 'senior',
+        name: 'Senior',
+        description: 'Senior position with advanced responsibilities and leadership opportunities'
+      },
+      {
+        id: 'team-lead',
+        name: 'Team Lead',
+        description: 'Team lead position with supervisory responsibilities and team management'
+      },
+      {
+        id: 'supervisor',
+        name: 'Supervisor',
+        description: 'Supervisor position with oversight responsibilities and team guidance'
+      },
+      {
+        id: 'manager',
+        name: 'Manager',
+        description: 'Manager position with department leadership and strategic responsibilities'
+      },
+      {
+        id: 'director',
+        name: 'Director',
+        description: 'Director position with executive leadership and organizational strategy'
+      }
+    ],
     territories: []
+  },
+  basic: {
+    seniorityLevels: [],
+    categories: [],
+    timeZones: [],
+    destinationZones: []
   }
-  // ... rest of the object
 };

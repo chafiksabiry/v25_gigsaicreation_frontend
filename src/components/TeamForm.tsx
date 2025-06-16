@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlusCircle, X, Save } from 'lucide-react';
+import { predefinedOptions } from '../lib/guidance';
 
 interface TeamRole {
   roleId: string;
@@ -61,19 +62,21 @@ const TeamForm: React.FC<TeamFormProps> = ({
     }));
   };
 
-  const handleRoleChange = (index: number, field: keyof TeamRole, value: any) => {
-    setTeamData(prev => ({
-      ...prev,
-      structure: prev.structure.map((role, i) => {
-        if (i === index) {
-          if (field === 'seniority') {
-            return { ...role, seniority: value };
-          }
-          return { ...role, [field]: value };
-        }
-        return role;
-      })
-    }));
+  const handleRoleChange = (index: number, field: keyof TeamRole | 'seniority', value: any) => {
+    const newData = { ...teamData };
+    const role = { ...newData.structure[index] };
+
+    if (field === 'seniority') {
+      if (!predefinedOptions.basic.seniorityLevels.includes(value.level)) {
+        return;
+      }
+      role.seniority = value;
+    } else {
+      (role as any)[field] = value;
+    }
+
+    newData.structure[index] = role;
+    setTeamData(newData);
   };
 
   const handleTerritoriesChange = (territory: string) => {
@@ -160,14 +163,12 @@ const TeamForm: React.FC<TeamFormProps> = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         required
                       >
-                        <option value="Entry Level">Entry Level</option>
-                        <option value="Junior">Junior</option>
-                        <option value="Mid-Level">Mid-Level</option>
-                        <option value="Senior">Senior</option>
-                        <option value="Team Lead">Team Lead</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Director">Director</option>
+                        <option value="">Select seniority level</option>
+                        {predefinedOptions.basic.seniorityLevels.map((level) => (
+                          <option key={level} value={level}>
+                            {level}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>

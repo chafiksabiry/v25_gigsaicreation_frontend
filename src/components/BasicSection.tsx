@@ -283,15 +283,29 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} value - La nouvelle valeur
    */
   const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
-    const newData = {
-      ...data,
-      seniority: {
-        ...data.seniority,
-        [field]: value,
-        yearsExperience: field === 'yearsExperience' ? Number(value) : data.seniority?.yearsExperience || 0,
-        aiGenerated: data.seniority?.aiGenerated
+    const newData = { ...data };
+    
+    if (!newData.seniority) {
+      newData.seniority = {
+        level: '',
+        yearsExperience: 0,
+        years: ''
+      };
+    }
+
+    if (field === 'level') {
+      // Vérifier que le niveau est dans la liste prédéfinie
+      if (!predefinedOptions.basic.seniorityLevels.includes(value)) {
+        return; // Ignorer les niveaux non prédéfinis
       }
-    };
+      newData.seniority.level = value;
+    } else if (field === 'years' || field === 'yearsExperience') {
+      // Nettoyer la valeur pour n'avoir que des chiffres
+      const cleanValue = value.replace(/[^0-9]/g, '');
+      newData.seniority.years = cleanValue;
+      newData.seniority.yearsExperience = parseInt(cleanValue) || 0;
+    }
+
     onChange(newData);
   };
 
@@ -602,7 +616,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
               >
                 <option value="">Select seniority level</option>
-                {allSeniorityLevels.map((level) => (
+                {predefinedOptions.basic.seniorityLevels.map((level) => (
                   <option key={level} value={level}>
                     {level}
                   </option>
@@ -622,18 +636,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           </div>
 
-          {data.seniority?.level && data.seniority?.yearsExperience && (
-            <div className="mt-4 p-4 bg-white rounded-lg border border-emerald-200">
-              <div className="flex items-center gap-3">
-                <Brain className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <span className="font-medium text-gray-900">{data.seniority.level}</span>
-                  <span className="text-gray-600 mx-2">•</span>
-                  <span className="text-gray-700">
-                    {data.seniority.yearsExperience === 4 ? '3-5 years' : `${data.seniority.yearsExperience} years`} of experience
-                  </span>
-                </div>
-              </div>
+          {data.seniority?.level && data.seniority?.years && (
+            <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-300 flex items-center gap-3 transition-all duration-200">
+              <GraduationCap className="w-6 h-6 text-emerald-600" />
+              <span className="font-semibold text-emerald-800">{data.seniority.level}</span>
+              <span className="text-emerald-700">•</span>
+              <span className="text-emerald-700">{data.seniority.years} experience</span>
             </div>
           )}
         </div>
