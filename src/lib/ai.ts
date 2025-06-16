@@ -1244,7 +1244,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         
         return {
           name: language.trim(),
-          level: validLanguageLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+                 normalizedLevel : 'Basic'
         };
       }
       return { name: lang.trim(), level: 'Basic' }; // Default to Basic if format is invalid
@@ -1259,7 +1261,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       
       return {
         name: lang.name || '',
-        level: validLanguageLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+               normalizedLevel : 'Basic'
       };
     }
     return { name: '', level: 'Basic' }; // Default to empty name and Basic level if invalid
@@ -1280,7 +1284,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         
         return {
           name: skillName.trim(),
-          level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+                 normalizedLevel : 'Basic'
         };
       }
       return { name: skill.trim(), level: 'Basic' };
@@ -1294,7 +1300,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       
       return {
         name: skill.name || '',
-        level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+               normalizedLevel : 'Basic'
       };
     }
     return { name: '', level: 'Basic' };
@@ -1314,7 +1322,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         
         return {
           name: skillName.trim(),
-          level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+                 normalizedLevel : 'Basic'
         };
       }
       return { name: skill.trim(), level: 'Basic' };
@@ -1328,7 +1338,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       
       return {
         name: skill.name || '',
-        level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+               normalizedLevel : 'Basic'
       };
     }
     return { name: '', level: 'Basic' };
@@ -1348,7 +1360,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         
         return {
           name: skillName.trim(),
-          level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+                 normalizedLevel : 'Basic'
         };
       }
       return { name: skill.trim(), level: 'Basic' };
@@ -1362,7 +1376,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       
       return {
         name: skill.name || '',
-        level: predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? normalizedLevel : 'Basic'
+        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
+               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
+               normalizedLevel : 'Basic'
       };
     }
     return { name: '', level: 'Basic' };
@@ -1444,6 +1460,16 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         frequency: '',
         metrics: []
       }
+    },
+    team: {
+      size: generatedData.team?.size || "0",
+      structure: generatedData.team?.structure || [],
+      territories: generatedData.team?.territories || [],
+      reporting: {
+        to: generatedData.team?.reporting?.to || "Manager",
+        frequency: generatedData.team?.reporting?.frequency || "Weekly"
+      },
+      collaboration: generatedData.team?.collaboration || []
     }
   };
 }
@@ -1577,3 +1603,33 @@ Based on this job title and description, suggest appropriate skills. All skills 
     throw error;
   }
 }
+
+interface PredefinedOptions {
+  skills: {
+    skillLevels: string[];
+    languages: Array<{ name: string; code: string }>;
+    professional: string[];
+    technical: string[];
+    soft: string[];
+  };
+  team: {
+    roles: Array<{ id: string; name: string; description: string }>;
+    territories: string[];
+  };
+  // ... rest of the interface
+}
+
+const predefinedOptions: PredefinedOptions = {
+  skills: {
+    skillLevels: ['Basic', 'Conversational', 'Professional', 'Native/Bilingual'],
+    languages: [],
+    professional: [],
+    technical: [],
+    soft: []
+  },
+  team: {
+    roles: [],
+    territories: []
+  }
+  // ... rest of the object
+};

@@ -343,11 +343,16 @@ const fallbackSuggestions: SuggestionState = {
   commission: { options: [] },
   activity: { options: [] },
   team: { 
-    size: "", 
-    structure: [], 
-    territories: [],
-    reporting: { to: "", frequency: "" },
-    collaboration: []
+    size: 1,
+    structure: [{
+      roleId: "default",
+      count: 1,
+      seniority: {
+        level: "Senior",
+        yearsExperience: "5+"
+      }
+    }],
+    territories: ["Global"]
   },
   leads: { 
     types: [], 
@@ -469,18 +474,20 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         technical: suggestions.skills?.technical || [],
         certifications: suggestions.skills?.certifications || []
       },
-      seniority: {
-        level: suggestions.seniority?.level || "",
-        yearsExperience: typeof suggestions.seniority?.yearsExperience === 'string' 
-          ? parseInt(suggestions.seniority.yearsExperience) || 0 
-          : suggestions.seniority?.yearsExperience || 0,
-        years: suggestions.seniority?.years || ""
+      seniority: suggestions?.seniority ? {
+        level: suggestions.seniority.level || '',
+        yearsExperience: Number(suggestions.seniority.yearsExperience) || 0,
+        years: String(suggestions.seniority.yearsExperience) || '0'
+      } : {
+        level: '',
+        yearsExperience: 0,
+        years: '0'
       },
       commission: commissionData,
       activity: suggestions.activity || {
         options: []
       },
-      team: suggestions.team || { size: "", structure: [], territories: [] },
+      team: suggestions.team || { size: 1, structure: [{ roleId: "default", count: 1, seniority: { level: "Senior", yearsExperience: "5+" } }], territories: ["Global"] },
       leads: suggestions.leads || { types: [], sources: [] },
       documentation: suggestions.documentation || { 
         templates: null,
@@ -1089,7 +1096,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     requirements: string[]
                   }>
                 },
-                destinationZones: string[]
+                destinationZones: string[],
+                team: {
+                  size: string,
+                  structure: Array<{
+                    roleId: string,
+                    count: number,
+                    seniority: {
+                      level: string,
+                      yearsExperience: string
+                    }
+                  }>,
+                  territories: string[]
+                }
               }
 
               For destinationZones, analyze the input and suggest relevant geographic regions where the gig could be performed.
@@ -1162,12 +1181,29 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   requirements: ["Default requirement"]
                 }]
               },
+              team: {
+                size: 0,
+                structure: [{
+                  roleId: "default",
+                  count: 1,
+                  seniority: {
+                    level: "Senior",
+                    yearsExperience: "5+"
+                  }
+                }],
+                territories: ["Global"]
+              },
               destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
             };
 
             const finalSuggestions = {
               ...defaultSuggestions,
-              ...parsedSuggestions
+              ...parsedSuggestions,
+              team: {
+                ...defaultSuggestions.team,
+                ...parsedSuggestions.team,
+                structure: parsedSuggestions.team?.structure || defaultSuggestions.team.structure
+              }
             };
 
             setSuggestions(finalSuggestions);
@@ -2734,10 +2770,18 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       {showBasicSection ? (
         <BasicSection
           data={{
+            userId: '',
+            companyId: '',
             title: suggestions?.jobTitles[0] || '',
             description: suggestions?.deliverables.join('\n') || '',
             category: suggestions?.sectors[0] || '',
-            seniority: suggestions?.seniority || { level: '', yearsExperience: '' }
+            seniority: {
+              level: suggestions?.seniority?.level || '',
+              yearsExperience: suggestions?.seniority?.yearsExperience || 1,
+              years: suggestions?.seniority?.years || ''
+            },
+            destination_zone: suggestions?.destinationZones?.[0] || "France",
+            callTypes: [],
           }}
           onChange={(data) => {
             // Handle changes in basic section
@@ -2863,6 +2907,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         isOpen={isTeamModalOpen}
         onClose={() => setIsTeamModalOpen(false)}
         title="Team Structure"
+        
         onSave={() => setIsTeamModalOpen(false)}
         onSkip={handleTeamSkip}
       >
