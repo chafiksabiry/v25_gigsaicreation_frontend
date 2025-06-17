@@ -84,6 +84,8 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
 
     // Get companyId based on userId
     const companyId = Cookies.get('companyId') ?? "";
+    console.log('companyId', companyId);
+    
 
     const gigDataWithIds = {
       ...gigData,
