@@ -155,11 +155,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 <Clock className="w-5 h-5" />
                 <h3 className="font-medium">Schedule</h3>
               </div>
-              <div className="text-lg font-bold text-orange-900">
-                {data.schedule?.schedules?.[0]?.hours
-                  ? `${data.schedule.schedules[0].hours.start} - ${data.schedule.schedules[0].hours.end}`
-                  : 'Not specified'}
-              </div>
+              <div className="text-lg font-bold text-orange-900">{data.schedule?.hours}</div>
               <p className="text-sm text-orange-600 mt-1">{data.schedule?.timeZones?.join(', ')}</p>
             </div>
           </div>
@@ -265,8 +261,8 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                     <div className="space-y-2">
                       {data.skills.languages.map((lang, index) => (
                         <div key={index} className="flex items-center justify-between bg-purple-50 px-3 py-2 rounded-lg">
-                          <span className="text-purple-900">{lang.language}</span>
-                          <span className="text-sm text-purple-700">{lang.proficiency}</span>
+                          <span className="text-purple-900">{lang.name}</span>
+                          <span className="text-sm text-purple-700">{lang.level}</span>
                         </div>
                       ))}
                     </div>
@@ -280,7 +276,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                     <div className="flex flex-wrap gap-2">
                       {data.skills.professional.map((skill, index) => (
                         <span key={index} className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                          {skill.skill} (Level {skill.level})
+                          {skill}
                         </span>
                       ))}
                     </div>
@@ -304,7 +300,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                       <div key={type}>
                         <h4 className="text-sm font-medium text-gray-700 capitalize mb-2">{type}</h4>
                         <ul className="space-y-2">
-                          {docs.map((doc: { name: string; url: string }, index: number) => (
+                          {docs.map((doc, index) => (
                             <li key={index}>
                               <a
                                 href={doc.url}

@@ -60,7 +60,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
                     className="flex items-center gap-2 p-2 bg-indigo-50 text-indigo-700 rounded-lg"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    <span className="text-sm">{typeof skill === 'string' ? skill : skill.skill}</span>
+                    <span className="text-sm">{skill}</span>
                   </div>
                 ))}
               </div>
@@ -77,7 +77,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
               <div className="flex flex-wrap gap-2">
                 {data.skills.technical.map((skill, index) => (
                   <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                    {typeof skill === 'string' ? skill : skill.skill}
+                    {skill}
                   </span>
                 ))}
               </div>

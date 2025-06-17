@@ -1,3 +1,11 @@
+/**
+ * BasicSection.tsx
+ * 
+ * Ce composant est responsable de la section de base du formulaire de création de gig.
+ * Il gère les informations fondamentales comme le titre, la description, la catégorie,
+ * la zone de destination et le niveau d'expérience.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
@@ -8,6 +16,8 @@ import {
   Briefcase,
   FileText,
   Globe2,
+  DollarSign,
+  Users,
   Target,
   ArrowRight,
   ArrowLeft,
@@ -61,7 +71,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onAIAssist,
   onSectionChange
 }) => {
-  // États locaux pour la saisie de ville
+  // États locaux pour la recherche et la saisie de ville
   const [searchTerm, setSearchTerm] = useState('');
 
   console.log('BasicSection - Initial data:', data);
@@ -85,22 +95,40 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   }, [data]);
 
   /**
+   * Effet pour sélectionner automatiquement le premier pays de destinationZones
+   * S'exécute lorsque destinationZones ou destination_zone change
+   */
+  useEffect(() => {
+    console.log('BasicSection - Checking destinationZones:', data.destinationZones);
+    // Only set initial destination zone if none is selected
+    if (data.destinationZones && data.destinationZones.length > 0 && !data.destination_zone) {
+      const firstCountry = data.destinationZones[0];
+      const countryCode = Object.entries(i18n.getNames('en'))
+        .find(([_, name]) => name === firstCountry)?.[0];
+      
+      if (countryCode) {
+        console.log('Setting initial destination zone to:', countryCode);
+        onChange({ ...data, destination_zone: countryCode });
+      }
+    }
+  }, [data.destinationZones]); // Remove data.destination_zone from dependencies
+
+  /**
+   * Vérifie si un pays est sélectionné
+   * @param {string} countryCode - Le code du pays à vérifier
+   * @returns {boolean} - True si le pays est sélectionné
+   */
+  const isCountrySelected = (countryCode: string) => {
+    return data.destination_zone === countryCode;
+  };
+
+  /**
    * Gère la sélection d'un pays
    * @param {string} countryCode - Le code du pays sélectionné
    */
   const handleCountrySelect = (countryCode: string) => {
     console.log('handleCountrySelect called with code:', countryCode);
     console.log('Current data:', data);
-    
-    if (!countryCode) {
-      // Si aucun pays n'est sélectionné, on met à jour uniquement destination_zone
-      onChange({
-        ...data,
-        destination_zone: ''
-      });
-      return;
-    }
-
     const countryName = i18n.getName(countryCode, 'en');
     console.log('Country name:', countryName);
     
@@ -109,11 +137,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       return;
     }
     
-    // Mettre à jour uniquement destination_zone sans toucher à destinationZones
-    onChange({
+    const newData = {
       ...data,
-      destination_zone: countryCode
-    });
+      destination_zone: countryCode,
+      destinationZones: data.destinationZones || []
+    };
+    console.log('New data to be set:', newData);
+    onChange(newData);
   };
 
   /**
@@ -239,6 +269,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * Récupère tous les niveaux de séniorité disponibles
    * Inclut les niveaux prédéfinis et les nouveaux niveaux
    */
+  const allSeniorityLevels = React.useMemo(() => {
+    const levels = new Set(predefinedOptions.basic.seniorityLevels);
+    if (data.seniority?.level && !levels.has(data.seniority.level)) {
+      levels.add(data.seniority.level);
+    }
+    return Array.from(levels);
+  }, [data.seniority?.level]);
 
   /**
    * Gère les changements dans la section séniorité
@@ -246,27 +283,15 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} value - La nouvelle valeur
    */
   const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
-    const newData = { ...data };
-    
-    if (!newData.seniority) {
-      newData.seniority = {
-        level: '',
-        yearsExperience: 0,
-      };
-    }
-
-    if (field === 'level') {
-      // Vérifier que le niveau est dans la liste prédéfinie
-      if (!predefinedOptions.basic.seniorityLevels.includes(value)) {
-        return; // Ignorer les niveaux non prédéfinis
+    const newData = {
+      ...data,
+      seniority: {
+        ...data.seniority,
+        [field]: value,
+        yearsExperience: field === 'yearsExperience' ? Number(value) : data.seniority?.yearsExperience || 0,
+        aiGenerated: data.seniority?.aiGenerated
       }
-      newData.seniority.level = value;
-    } else if (field === 'years' || field === 'yearsExperience') {
-      // Nettoyer la valeur pour n'avoir que des chiffres
-      const cleanValue = value.replace(/[^0-9]/g, '');
-      newData.seniority.yearsExperience = parseInt(cleanValue) || 0;
-    }
-
+    };
     onChange(newData);
   };
 
@@ -452,16 +477,16 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           </div>
 
-          {/* Selected Country */}
+          {/* Affichage du pays sélectionné */}
           {data.destination_zone && (
-            <div className="mb-6 p-4 bg-white rounded-lg border border-amber-200 shadow-sm">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Selected Country:</h4>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 text-amber-700 text-sm font-medium">
+            <div className="mb-4 p-4 bg-white rounded-lg border border-amber-200">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Country:</h4>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm">
                   {i18n.getName(data.destination_zone, 'en')}
                   <button
                     onClick={() => handleCountrySelect('')}
-                    className="ml-1 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-full p-1"
+                    className="ml-1 text-amber-600 hover:text-amber-800"
                   >
                     ×
                   </button>
@@ -470,10 +495,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           )}
 
-          {/* Suggested Countries */}
+          {/* Suggestions from data.destinationZones */}
           {data.destinationZones && data.destinationZones.length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Suggested Countries:</h4>
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Suggested Countries:</h4>
               <div className="flex flex-wrap gap-2">
                 {data.destinationZones.map((country) => {
                   const countryCode = Object.entries(i18n.getNames('en'))
@@ -485,10 +510,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                     <button
                       key={countryCode}
                       onClick={() => handleCountrySelect(countryCode)}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
                         data.destination_zone === countryCode
-                          ? 'bg-amber-100 text-amber-700 border-2 border-amber-500 shadow-sm'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-amber-200'
+                          ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                       }`}
                     >
                       {country}
@@ -499,33 +524,60 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           )}
 
-          {/* Countries Select */}
-          <div className="space-y-4">
-            <select
-              value={data.destination_zone || ''}
-              onChange={(e) => handleCountrySelect(e.target.value)}
-              className="block w-full py-2.5 px-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-            >
-              <option value="">Select a country</option>
-              {['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].map((zone) => {
-                const countries = getCountriesByZone(zone);
-                if (countries.length === 0) return null;
+          <div className="mb-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                placeholder="Search for a country..."
+              />
+            </div>
+          </div>
 
-                return (
-                  <optgroup key={zone} label={zone}>
+          <div className="space-y-6">
+            {filteredZones.map((zone) => {
+              const countries = getCountriesByZone(zone);
+              if (countries.length === 0) return null;
+
+              return (
+                <div key={zone} className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">{zone}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {countries.map(({ code, name }) => (
-                      <option key={code} value={code}>
-                        {name}
-                      </option>
+                      <button
+                        key={code}
+                        onClick={() => handleCountrySelect(code)}
+                        className={`flex items-center gap-2 p-3 rounded-lg text-left transition-colors ${
+                          data.destination_zone === code
+                            ? 'bg-amber-100 text-amber-700 border-2 border-amber-500'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                        }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                          data.destination_zone === code
+                            ? 'bg-amber-600'
+                            : 'border-2 border-gray-300'
+                        }`}>
+                          {data.destination_zone === code && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <span className="flex-1">{name}</span>
+                      </button>
                     ))}
-                  </optgroup>
-                );
-              })}
-            </select>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {errors.destination_zone && (
-            <p className="mt-4 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>
+            <p className="mt-2 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>
           )}
         </div>
 
@@ -550,7 +602,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
               >
                 <option value="">Select seniority level</option>
-                {predefinedOptions.basic.seniorityLevels.map((level) => (
+                {allSeniorityLevels.map((level) => (
                   <option key={level} value={level}>
                     {level}
                   </option>
@@ -562,7 +614,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <label className="block text-sm font-medium text-gray-700">Years of Experience</label>
               <input
                 type="text"
-                value={data.seniority?.yearsExperience || ''}
+                value={data.seniority?.years || ''}
                 onChange={(e) => handleSeniorityChange('years', e.target.value)}
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
                 placeholder="e.g., 2"
@@ -571,11 +623,17 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           </div>
 
           {data.seniority?.level && data.seniority?.yearsExperience && (
-            <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-300 flex items-center gap-3 transition-all duration-200">
-              <GraduationCap className="w-6 h-6 text-emerald-600" />
-              <span className="font-semibold text-emerald-800">{data.seniority.level}</span>
-              <span className="text-emerald-700">•</span>
-              <span className="text-emerald-700">{data.seniority.yearsExperience} years of experience</span>
+            <div className="mt-4 p-4 bg-white rounded-lg border border-emerald-200">
+              <div className="flex items-center gap-3">
+                <Brain className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <span className="font-medium text-gray-900">{data.seniority.level}</span>
+                  <span className="text-gray-600 mx-2">•</span>
+                  <span className="text-gray-700">
+                    {data.seniority.yearsExperience === 4 ? '3-5 years' : `${data.seniority.yearsExperience} years`} of experience
+                  </span>
+                </div>
+              </div>
             </div>
           )}
         </div>
