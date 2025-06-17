@@ -266,7 +266,7 @@ interface GigData {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
+export function GigForm() {
   const { register, control, handleSubmit, formState: { errors } } = useForm<GigFormData>();
 
   const onSubmit = async (data: GigFormData) => {
