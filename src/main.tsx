@@ -5,6 +5,7 @@ import App from './App';
 import './index.css';
 import './public-path'; // For Qiankun public path setup
 import 'systemjs';
+import Cookies from 'js-cookie';
 
 // Keep a reference to the React Root instance
 let root: Root | null = null;
@@ -38,6 +39,25 @@ function render(props: { container?: HTMLElement }) {
 // Standalone mode check (if running outside Qiankun)
 if (!window.__POWERED_BY_QIANKUN__) {
   console.log('[App] Running in standalone mode');
+  
+  // Set user ID and company ID cookies in standalone mode
+  const userId = import.meta.env.VITE_USER_ID;
+  const companyId = import.meta.env.VITE_COMPANY_ID || "684ace43641398dc582f1acc"; // Default company ID from GigForm.tsx
+
+  if (userId) {
+    console.log('[App] Setting user ID cookie:', userId);
+    Cookies.set('userId', userId);
+  } else {
+    console.warn('[App] VITE_USER_ID environment variable not set');
+  }
+
+  if (companyId) {
+    console.log('[App] Setting company ID cookie:', companyId);
+    Cookies.set('companyId', companyId);
+  } else {
+    console.warn('[App] VITE_COMPANY_ID environment variable not set');
+  }
+  
   render({});
 }
 

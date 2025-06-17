@@ -36,8 +36,27 @@ export function SectionContent({
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
-      years: String(data.seniority?.yearsExperience || ''),
       aiGenerated: data.seniority?.aiGenerated,
+    },
+    skills: {
+      professional: data.skills?.professional || [{
+        skill: "Brand Identity Design",
+        level: 1
+      }],
+      technical: data.skills?.technical || [{
+        skill: "Adobe Illustrator",
+        level: 1
+      }],
+      soft: data.skills?.soft || [{
+        skill: "Communication",
+        level: 1
+      }],
+      languages: data.skills?.languages || [{
+        language: "English",
+        proficiency: "C1",
+        iso639_1: "en"
+      }],
+      certifications: data.skills?.certifications || []
     }
   }), [data]);
 
@@ -53,7 +72,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               }
             }}
             onChange={onChange}
@@ -69,36 +88,22 @@ export function SectionContent({
       case "schedule":
         return (
           <ScheduleSection
-            data={(initializedData.schedule as {
-              days: string[];
-              timeZones: TimezoneCode[];
-              flexibility: string[];
-              minimumHours: {
-                daily?: number;
-                weekly?: number;
-                monthly?: number;
-              };
-              startTime?: string;
-              endTime?: string;
-            }) || {
-              days: [],
+            data={initializedData.schedule ? {
+              ...initializedData.schedule,
+              timeZones: initializedData.schedule.timeZones as TimezoneCode[]
+            } : {
+              schedules: [],
               timeZones: [] as TimezoneCode[],
               flexibility: [],
               minimumHours: {
                 daily: undefined,
                 weekly: undefined,
                 monthly: undefined,
-              },
-              startTime: "09:00",
-              endTime: "17:00"
+              }
             }}
             onChange={(scheduleData) => onChange({
               ...initializedData,
-              seniority: {
-                ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
-              },
-              schedule: scheduleData
+              schedule: scheduleData,
             })}
             errors={errors}
             onPrevious={() => onSectionChange?.('basic')}
@@ -116,7 +121,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
               commission: initializedData.commission || {
                 base: "",
@@ -173,20 +178,38 @@ export function SectionContent({
       case "skills":
         return (
           <SkillsSection
-            data={initializedData.skills || {
-              languages: [],
-              soft: [],
-              professional: [],
-              technical: [],
-              certifications: []
-            }}
+            data={initializedData.skills}
             onChange={(skillsData) => onChange({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
-              skills: skillsData
+              skills: {
+                ...skillsData,
+                languages: skillsData.languages.map((lang: string | { language: string; proficiency: string; iso639_1: string }) => ({
+                  language: typeof lang === 'string' ? lang : lang.language,
+                  proficiency: typeof lang === 'string' ? 'A1' : (lang.proficiency || 'A1'),
+                  iso639_1: '' // This will be handled by the backend
+                })),
+                soft: skillsData.soft.map((skill: string | { skill: string; level: number }) => ({
+                  skill: typeof skill === 'string' ? skill : skill.skill,
+                  level: typeof skill === 'string' ? 1 : Number(skill.level)
+                })),
+                professional: skillsData.professional.map((skill: string | { skill: string; level: number }) => ({
+                  skill: typeof skill === 'string' ? skill : skill.skill,
+                  level: typeof skill === 'string' ? 1 : Number(skill.level)
+                })),
+                certifications: skillsData.certifications.map((cert: string | { name: string; required: boolean; provider?: string }) => ({
+                  name: typeof cert === 'string' ? cert : cert.name,
+                  required: typeof cert === 'string' ? true : cert.required,
+                  provider: typeof cert === 'string' ? '' : cert.provider
+                })),
+                technical: skillsData.technical.map((skill: string | { skill: string; level: number }) => ({
+                  skill: typeof skill === 'string' ? skill : skill.skill,
+                  level: typeof skill === 'string' ? 1 : Number(skill.level)
+                }))
+              }
             })}
             errors={errors}
             onPrevious={() => onSectionChange?.('leads')}
@@ -201,7 +224,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               }
             }}
             onChange={onChange}
@@ -221,7 +244,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               },
               documentation: newDocs
             })}
@@ -242,7 +265,7 @@ export function SectionContent({
               ...initializedData,
               seniority: {
                 ...initializedData.seniority,
-                years: String(initializedData.seniority.yearsExperience)
+                yearsExperience: initializedData.seniority.yearsExperience
               }
             }}
             onEdit={(section) => {

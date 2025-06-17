@@ -3,14 +3,23 @@ import { Plus, Trash2, Check, Globe, Users, Building2, ChevronRight, Briefcase, 
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
 
+interface TeamRoleOption {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface TeamRole {
   roleId: string;
   count: number;
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
 }
+
+// Type assertion pour predefinedOptions.team.roles
+const teamRoles = predefinedOptions.team.roles as TeamRoleOption[];
 
 interface TeamStructureProps {
   data: GigData;
@@ -40,7 +49,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   const initializedTeam = {
     ...data,
     team: {
-      size: data.team?.size || '0',
+      size: data.team?.size || 0,
       structure: data.team?.structure || [],
       territories: data.team?.territories || [],
       reporting: data.team?.reporting || { to: '', frequency: '' },
@@ -49,7 +58,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   };
 
   const handleAddRole = () => {
-    const availableRole = predefinedOptions.team.roles.find(
+    const availableRole = teamRoles.find(
       role => !initializedTeam.team.structure.some(s => s.roleId === role.id)
     );
     if (availableRole) {
@@ -62,7 +71,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
             count: 1,
             seniority: {
               level: '',
-              yearsExperience: ''
+              yearsExperience: 0
             }
           }]
         }
@@ -87,7 +96,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
       roleId,
       seniority: {
         level: '',
-        yearsExperience: ''
+        yearsExperience: 0
       }
     };
     onChange({
@@ -142,12 +151,13 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
     });
   };
 
-  const handleTeamSizeChange = (size: string) => {
+  const handleTeamSizeChange = (size: number) => {
+    const numericSize = size || 0;
     onChange({
       ...data,
       team: {
         ...initializedTeam.team,
-        size
+        size: numericSize
       }
     });
   };
@@ -194,10 +204,11 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
           <div>
             <label className="block text-sm font-medium text-gray-700">Target Team Size</label>
             <input
-              type="text"
-              value={initializedTeam.team.size || '0'}
+              type="number"
+              min="0"
+              value={initializedTeam.team.size || 0}
               onChange={(e) => handleTeamSizeChange(e.target.value)}
-              placeholder="e.g., 5-10 people"
+              placeholder="e.g., 5"
               className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                 errors?.team?.size ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -237,7 +248,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                       className="block w-full bg-white rounded-lg border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500"
                     >
                       <option value="">Select role</option>
-                      {predefinedOptions.team.roles.map((r) => (
+                      {teamRoles.map((r) => (
                         <option 
                           key={r.id} 
                           value={r.id}
@@ -259,7 +270,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                 </div>
                 {role.roleId && (
                   <p className="mt-2 text-sm text-purple-700">
-                    {predefinedOptions.team.roles.find(r => r.id === role.roleId)?.description}
+                    {teamRoles.find(r => r.id === role.roleId)?.description}
                   </p>
                 )}
               </div>
@@ -298,12 +309,6 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                       {predefinedOptions.basic.seniorityLevels.map((level) => (
                         <option key={level} value={level}>{level}</option>
                       ))}
-                      {role.seniority.level &&
-                        !predefinedOptions.basic.seniorityLevels.some(
-                          l => l.toLowerCase() === role.seniority.level.toLowerCase()
-                        ) && (
-                          <option value={role.seniority.level}>{role.seniority.level}</option>
-                        )}
                     </select>
                   </div>
 
@@ -316,7 +321,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                     </label>
                     <input
                       type="text"
-                      value={role.seniority.yearsExperience}
+                      value={role.seniority.yearsExperience.toString()}
                       onChange={(e) => handleSeniorityChange(index, 'yearsExperience', e.target.value)}
                       placeholder="e.g., 2-3 years"
                       className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500"

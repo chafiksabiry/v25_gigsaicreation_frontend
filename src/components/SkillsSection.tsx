@@ -5,10 +5,23 @@ import { predefinedOptions } from '../lib/guidance';
 
 interface SkillsSectionProps {
   data: {
-    languages: Array<{ name: string; level: string } | string>;
-    soft: string[];
-    professional: string[];
-    technical: string[];
+    languages: Array<{
+      language: string;
+      proficiency: string;
+      iso639_1: string;
+    }>;
+    soft: Array<{
+      skill: string;
+      level: number;
+    }>;
+    professional: Array<{
+      skill: string;
+      level: number;
+    }>;
+    technical: Array<{
+      skill: string;
+      level: number;
+    }>;
     certifications: Array<{
       name: string;
       required: boolean;
@@ -33,22 +46,38 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   // State for editing
   const [editingIndex, setEditingIndex] = useState<{ type: string; index: number } | null>(null);
-  const [newSkill, setNewSkill] = useState({ name: '', level: '' });
+  const [newSkill, setNewSkill] = useState({ language: '', proficiency: '', iso639_1: '' });
   const [addMode, setAddMode] = useState<{ type: string; active: boolean }>({ type: '', active: false });
 
   // Example options
   const languageOptions = [
-    'English', 'French', 'Spanish', 'German', 'Italian', 'Arabic', 'Chinese', 'Russian', 'Portuguese', 'Dutch'
+    { language: 'English', iso639_1: 'en' },
+    { language: 'French', iso639_1: 'fr' },
+    { language: 'Spanish', iso639_1: 'es' },
+    { language: 'German', iso639_1: 'de' },
+    { language: 'Italian', iso639_1: 'it' },
+    { language: 'Arabic', iso639_1: 'ar' },
+    { language: 'Chinese', iso639_1: 'zh' },
+    { language: 'Russian', iso639_1: 'ru' },
+    { language: 'Portuguese', iso639_1: 'pt' },
+    { language: 'Dutch', iso639_1: 'nl' }
   ];
-  const levelOptions = ['Beginner', 'Conversational', 'Professional', 'Native'];
+  const levelOptions = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   const professionalOptions = predefinedOptions.skills.professional;
   const technicalOptions = predefinedOptions.skills.technical;
   const softOptions = predefinedOptions.skills.soft;
 
   // Prevent duplicate skills
   const isDuplicate = (name: string, type: string, excludeIndex?: number) => {
-    const skills = safeData[type as keyof typeof safeData] as string[];
-    return skills.some((s, idx) => s === name && idx !== excludeIndex);
+    if (type === 'languages') {
+      const languages = safeData.languages;
+      return languages.some((lang, idx) => lang.language === name && idx !== excludeIndex);
+    }
+    const skills = safeData[type as keyof typeof safeData];
+    return skills.some((s: any, idx) => {
+      if (typeof s === 'string') return s === name;
+      return s.skill === name || s.name === name;
+    });
   };
 
   // Handlers
@@ -56,32 +85,36 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     setEditingIndex({ type, index: idx });
     const skill = safeData[type as keyof typeof safeData][idx];
     if (type === 'languages') {
-      if (typeof skill === 'string') {
-        setNewSkill({ name: skill, level: '' });
-      } else {
-        if ('level' in skill) {
-          setNewSkill({ name: skill.name, level: skill.level });
-        } else {
-          setNewSkill({ name: skill.name, level: '' });
-        }
-      }
+      const languageSkill = skill as { language: string; proficiency: string; iso639_1: string };
+      setNewSkill({
+        language: languageSkill.language,
+        proficiency: languageSkill.proficiency,
+        iso639_1: languageSkill.iso639_1
+      });
     } else {
-      setNewSkill({ name: typeof skill === 'string' ? skill : '', level: '' });
+      setNewSkill({ language: typeof skill === 'string' ? skill : '', proficiency: '', iso639_1: '' });
     }
   };
 
-  const handleEditChange = (field: 'name' | 'level', value: string) => {
+  const handleEditChange = (field: 'language' | 'proficiency' | 'iso639_1', value: string) => {
     setNewSkill({ ...newSkill, [field]: value });
   };
 
   const handleEditSave = () => {
-    if (!editingIndex || !newSkill.name || isDuplicate(newSkill.name, editingIndex.type, editingIndex.index)) return;
+    if (!editingIndex || !newSkill.language || isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
     
     const updated = [...safeData[editingIndex.type as keyof typeof safeData]];
     if (editingIndex.type === 'languages') {
-      updated[editingIndex.index] = { name: newSkill.name, level: newSkill.level };
+      updated[editingIndex.index] = {
+        language: newSkill.language,
+        proficiency: newSkill.proficiency,
+        iso639_1: newSkill.iso639_1
+      };
     } else {
-      updated[editingIndex.index] = newSkill.name;
+      updated[editingIndex.index] = {
+        skill: newSkill.language,
+        level: 1
+      };
     }
     
     onChange({ ...safeData, [editingIndex.type]: updated });
@@ -100,16 +133,20 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   // Add new skill
   const handleAdd = () => {
-    if (!addMode.active || !newSkill.name || isDuplicate(newSkill.name, addMode.type)) return;
+    if (!addMode.active || !newSkill.language || isDuplicate(newSkill.language, addMode.type)) return;
 
     let updated;
     if (addMode.type === 'languages') {
-      updated = [...safeData.languages, { name: newSkill.name, level: newSkill.level }];
+      updated = [...safeData.languages, {
+        language: newSkill.language,
+        proficiency: newSkill.proficiency,
+        iso639_1: newSkill.iso639_1
+      }];
     } else {
-      updated = [...safeData[addMode.type as keyof typeof safeData], newSkill.name];
+      updated = [...safeData[addMode.type as keyof typeof safeData], newSkill.language];
     }
     onChange({ ...safeData, [addMode.type]: updated });
-    setNewSkill({ name: '', level: '' });
+    setNewSkill({ language: '', proficiency: '', iso639_1: '' });
     setAddMode({ type: '', active: false });
   };
 
@@ -118,7 +155,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     title: string,
     description: string,
     icon: React.ReactNode,
-    options: string[],
+    options: any[],
     bgColor: string,
     iconColor: string,
     isLanguage: boolean = false
@@ -153,19 +190,27 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 <div className="flex gap-3 items-center w-full">
                   <select
                     className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-                    value={newSkill.name}
-                    onChange={e => handleEditChange('name', e.target.value)}
+                    value={newSkill.language}
+                    onChange={e => {
+                      const selected = languageOptions.find(opt => opt.language === e.target.value);
+                      handleEditChange('language', e.target.value);
+                      if (selected) {
+                        handleEditChange('iso639_1', selected.iso639_1);
+                      }
+                    }}
                   >
-                    <option value="">Select {type}</option>
-                    {options.map(opt => (
-                      <option key={opt} value={opt} disabled={isDuplicate(opt, type, editingIndex.index)}>{opt}</option>
+                    <option value="">Select language</option>
+                    {languageOptions.map(opt => (
+                      <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
+                        {opt.language}
+                      </option>
                     ))}
                   </select>
                   {isLanguage && (
                     <select
                       className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-                      value={newSkill.level}
-                      onChange={e => handleEditChange('level', e.target.value)}
+                      value={newSkill.proficiency}
+                      onChange={e => handleEditChange('proficiency', e.target.value)}
                     >
                       <option value="">Select level</option>
                       {levelOptions.map(opt => (
@@ -191,11 +236,23 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               ) : (
                 <>
                   <p className="text-gray-700 text-base flex-1">
-                    <span className="font-medium">{isLanguage ? skill.name : skill}</span>
+                    <span className="font-medium">
+                      {isLanguage 
+                        ? skill.language 
+                        : (typeof skill === 'string' 
+                            ? skill 
+                            : skill.skill || skill.name || '')}
+                    </span>
                     {isLanguage && (
                       <>
                         <span className="mx-2 text-gray-400">-</span>
-                        <span className="text-blue-600 font-medium">{skill.level}</span>
+                        <span className="text-blue-600 font-medium">{skill.proficiency}</span>
+                      </>
+                    )}
+                    {!isLanguage && typeof skill === 'object' && skill.level && (
+                      <>
+                        <span className="mx-2 text-gray-400">-</span>
+                        <span className="text-blue-600 font-medium">Level {skill.level}</span>
                       </>
                     )}
                   </p>
@@ -225,19 +282,28 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           <div className="flex gap-3 items-center mb-2 bg-blue-50/70 border border-blue-200 rounded-lg p-3.5 shadow-sm">
             <select
               className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-              value={newSkill.name}
-              onChange={e => setNewSkill({ ...newSkill, name: e.target.value })}
+              value={newSkill.language}
+              onChange={e => {
+                const selected = languageOptions.find(opt => opt.language === e.target.value);
+                setNewSkill({ 
+                  ...newSkill, 
+                  language: e.target.value,
+                  iso639_1: selected?.iso639_1 || ''
+                });
+              }}
             >
-              <option value="">Select {type}</option>
-              {options.map(opt => (
-                <option key={opt} value={opt} disabled={isDuplicate(opt, type)}>{opt}</option>
+              <option value="">Select language</option>
+              {languageOptions.map(opt => (
+                <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type)}>
+                  {opt.language}
+                </option>
               ))}
             </select>
             {isLanguage && (
               <select
                 className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-                value={newSkill.level}
-                onChange={e => setNewSkill({ ...newSkill, level: e.target.value })}
+                value={newSkill.proficiency}
+                onChange={e => setNewSkill({ ...newSkill, proficiency: e.target.value })}
               >
                 <option value="">Select level</option>
                 {levelOptions.map(opt => (
@@ -253,7 +319,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
             </button>
             <button
               className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow"
-              onClick={() => { setAddMode({ type: '', active: false }); setNewSkill({ name: '', level: '' }); }}
+              onClick={() => { setAddMode({ type: '', active: false }); setNewSkill({ language: '', proficiency: '', iso639_1: '' }); }}
             >
               Cancel
             </button>
@@ -261,7 +327,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         ) : (
           <button 
             className={`text-${iconColor}-600 hover:text-${iconColor}-700 flex items-center gap-1.5 font-medium transition-colors duration-200 hover:underline`} 
-            onClick={() => { setAddMode({ type, active: true }); setEditingIndex(null); setNewSkill({ name: '', level: '' }); }}
+            onClick={() => { setAddMode({ type, active: true }); setEditingIndex(null); setNewSkill({ language: '', proficiency: '', iso639_1: '' }); }}
           >
             + Add {type} skill
           </button>
