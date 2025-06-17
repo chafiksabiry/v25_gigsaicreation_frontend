@@ -61,6 +61,11 @@ if (!window.__POWERED_BY_QIANKUN__) {
   render({});
 }
 
+const userId = Cookies.get('userId');
+const companyId = Cookies.get('companyId');
+console.log('userId', userId);
+console.log('companyId', companyId);
+
 // Qiankun lifecycle methods
 export async function bootstrap() {
   console.log('[App] Bootstrapping...');

@@ -30,8 +30,8 @@ const sections = [
 ];
 
 const initialGigData: GigData = {
-  userId: "",
-  companyId: "",
+  userId: Cookies.get('userId') || "",
+  companyId: Cookies.get('companyId') || "",
   title: "",
   description: "",
   category: "",
@@ -279,22 +279,8 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       
 
-      if (isStandalone) {
-        // Valeurs par défaut pour le mode standalone
-        companyId = Cookies.get('companyId') ?? "";
-        userId = Cookies.get('userId') ?? "";
-      } else {
-        // Récupérer le companyId associé à l'utilisateur
-        await saveGigData(gigData);
-        
-        // Since saveGigData doesn't return data, we'll use the cookies directly
-        userId = Cookies.get("userId") || "";
-        companyId = Cookies.get("companyId") || "";
-
-        if (!userId || !companyId) {
-          throw new Error("User ID or Company ID not found in cookies");
-        }
-      }
+      companyId = Cookies.get('companyId') || "";
+      userId = Cookies.get('userId') || "";
 
       const gigDataToSave = {
         title: gigData.title,
