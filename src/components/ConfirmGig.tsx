@@ -37,14 +37,33 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           preferred: gig.requirements?.preferred || []
         },
         benefits: gig.benefits || [],
+        availability: {
+          schedule: gig.schedule?.schedules?.map(schedule => ({
+            day: schedule.day || "",
+            hours: {
+              start: schedule.hours?.start || "",
+              end: schedule.hours?.end || ""
+            }
+          })) || [],
+          timeZones: gig.schedule?.timeZones || [],
+          flexibility: gig.schedule?.flexibility || [],
+          minimumHours: gig.schedule?.minimumHours || {
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+          }
+        },
         schedule: {
-          days: gig.schedule?.days || [],
-          startTime: gig.schedule?.startTime || "",
-          endTime: gig.schedule?.endTime || "",
+          schedules: gig.schedule?.schedules?.map(schedule => ({
+            day: schedule.day || "",
+            hours: {
+              start: schedule.hours?.start || "",
+              end: schedule.hours?.end || ""
+            }
+          })) || [],
           timeZones: gig.schedule?.timeZones || [],
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {},
-
         },
         commission: {
           base: gig.commission?.base || "",
@@ -74,10 +93,23 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           qualificationCriteria: gig.leads?.qualificationCriteria || []
         },
         skills: {
-          languages: gig.skills?.languages.map(lang => ({ name: lang.name, level: lang.level })) || [],
-          soft: gig.skills?.soft || [],
-          professional: gig.skills?.professional || [],
-          technical: gig.skills?.technical || [],
+          languages: gig.skills?.languages.map(lang => ({ 
+            language: lang.language, 
+            proficiency: lang.proficiency,
+            iso639_1: lang.iso639_1 
+          })) || [],
+          soft: gig.skills?.soft.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })) || [],
+          professional: gig.skills?.professional.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })) || [],
+          technical: gig.skills?.technical.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })) || [],
           certifications: gig.skills?.certifications || []
         },
         seniority: {

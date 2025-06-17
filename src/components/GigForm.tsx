@@ -20,10 +20,30 @@ type GigFormData = {
   description: string;
   category: string;
   callTypes: string[];
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
     timeZones: string[];
     flexibility: string;
   };
@@ -43,10 +63,24 @@ type GigFormData = {
     sources: string[];
   };
   skills: {
-    languages: { name: string; level: string; }[];
-    soft: string[];
-    professional: string[];
-    technical: string[];
+    languages: { 
+      language: string; 
+      proficiency: string; 
+      iso639_1: string;
+      _id?: { $oid: string };
+    }[];
+    soft: {
+      skill: string;
+      level: number;
+    }[];
+    professional: {
+      skill: string;
+      level: number;
+    }[];
+    technical: {
+      skill: string;
+      level: number;
+    }[];
     certifications: string[];
     industry: string[];
   };
@@ -91,10 +125,30 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
           preferred: []
         },
         benefits: [],
+        availability: {
+          schedule: data.schedule?.schedules || [
+            {
+              day: "",
+              hours: {
+                start: "",
+                end: ""
+              }
+            }
+          ],
+          timeZones: data.schedule?.timeZones || [],
+          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
+          minimumHours: {
+            daily: undefined,
         schedule: {
-          days: data.schedule?.days || [],
-          startTime: data.schedule?.startTime || '',
-          endTime: data.schedule?.endTime || '',
+          schedules: data.schedule?.schedules || [
+            {
+              day: "",
+              hours: {
+                start: "",
+                end: ""
+              }
+            }
+          ],
           timeZones: data.schedule?.timeZones || [],
           flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
           minimumHours: {
@@ -132,9 +186,18 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
         },
         skills: {
           languages: data.skills.languages,
-          soft: data.skills.soft,
-          professional: data.skills.professional,
-          technical: [],
+          soft: data.skills.soft.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          professional: data.skills.professional.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          technical: data.skills.technical.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
           certifications: []
         },
         seniority: {
@@ -210,8 +273,9 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
         ...data.skills.languages.map(lang => ({
           gig_id: gig.id,
           category: 'language',
-          name: lang.name,
-          level: lang.level
+          language: lang.language,
+          proficiency: lang.proficiency,
+          iso639_1: lang.iso639_1
         })),
         ...data.skills.soft.map(skill => ({
           gig_id: gig.id,
@@ -314,7 +378,7 @@ export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
               <label className="block text-sm font-medium text-gray-700">Working Hours</label>
               <input
                 type="text"
-                {...register('schedule.hours', { required: true })}
+                {...register('schedule.schedules.0.hours.start', { required: true })}
                 placeholder="e.g., 08h00 - 17h00 EST"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />

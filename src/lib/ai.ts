@@ -822,10 +822,10 @@ export async function generateTeamAndTerritories(title: string, description: str
 IMPORTANT: All responses MUST be in English only.
 
 Available team roles:
-${predefinedOptions.team.roles.map(role => `- ${role.name} (${role.description})`).join('\n')}
+${(predefinedOptions.team.roles as Array<{id: string; name: string; description: string}>).map(role => `- ${role.name} (${role.description})`).join('\n')}
 
 Available territories:
-${predefinedOptions.team.territories.map(territory => `- ${territory}`).join('\n')}
+${(predefinedOptions.team.territories as string[]).map(territory => `- ${territory}`).join('\n')}
 
 Return ONLY a valid JSON object with the following structure:
 {
@@ -889,7 +889,7 @@ Based on this job title and description, suggest appropriate team structure and 
     
     // Validate team roles
     result.team.roles.forEach((role: any) => {
-      const validRole = predefinedOptions.team.roles.find(r => r.id === role.id);
+      const validRole = (predefinedOptions.team.roles as Array<{id: string; name: string; description: string}>).find(r => r.id === role.id);
       if (!validRole) {
         throw new Error(`Invalid role ID: ${role.id}`);
       }
@@ -901,7 +901,7 @@ Based on this job title and description, suggest appropriate team structure and 
     // Validate territories
     const allTerritories = [...result.territories.primary, ...result.territories.secondary];
     allTerritories.forEach((territory: string) => {
-      if (!predefinedOptions.team.territories.includes(territory)) {
+      if (!(predefinedOptions.team.territories as string[]).includes(territory)) {
         throw new Error(`Invalid territory: ${territory}`);
       }
     });
@@ -1138,34 +1138,53 @@ function convertTo24HourFormat(time: string): string {
 }
 
 // Add this function before mapGeneratedDataToGigData
-function convertDaysToEnglish(days: string[]): string[] {
-  const dayMap: { [key: string]: string } = {
-    'lundi': 'Monday',
-    'mardi': 'Tuesday',
-    'mercredi': 'Wednesday',
-    'jeudi': 'Thursday',
-    'vendredi': 'Friday',
-    'samedi': 'Saturday',
-    'dimanche': 'Sunday',
-    'monday': 'Monday',
-    'tuesday': 'Tuesday',
-    'wednesday': 'Wednesday',
-    'thursday': 'Thursday',
-    'friday': 'Friday',
-    'saturday': 'Saturday',
-    'sunday': 'Sunday'
-  };
-
-  return days.map(day => {
-    const normalizedDay = day.toLowerCase().trim();
-    return dayMap[normalizedDay] || day;
-  });
-}
 
 export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial<GigData> {
   // Convert times to 24h format
-  const startTime = convertTo24HourFormat(generatedData.schedule?.startTime || '10:00');
-  const endTime = convertTo24HourFormat(generatedData.schedule?.endTime || '12:00');
+  const startTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.start || '09:00');
+  const endTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.end || '17:00');
+
+  // Function to expand day ranges into individual days
+  const expandDayRange = (dayRange: string): string[] => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    
+    // Check if the input contains any range indicators or multiple days
+    if (dayRange.toLowerCase().includes('to') || 
+        dayRange.includes('-') || 
+        dayRange.includes(',') || 
+        dayRange.includes('through') ||
+        dayRange.includes('&') ||
+        dayRange.includes('and')) {
+      throw new Error('Only single days are allowed. Please specify a single day (e.g., "Monday", "Tuesday", etc.).');
+    }
+    
+    // Validate that it's a valid day
+    const normalizedDay = dayRange.trim();
+    if (!days.includes(normalizedDay)) {
+      throw new Error(`Invalid day: ${dayRange}. Must be one of: ${days.join(', ')}`);
+    }
+    
+    // Return single day
+    return [normalizedDay];
+  };
+
+  // Generate schedule based on input or default to weekdays
+  let scheduleDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  if (generatedData.schedule?.schedules?.[0]?.day) {
+    scheduleDays = expandDayRange(generatedData.schedule.schedules[0].day);
+  }
+
+  // Generate schedule for each day
+  const defaultSchedule = scheduleDays.map((day, index) => ({
+    day,
+    hours: {
+      start: startTime,
+      end: endTime
+    },
+    _id: {
+      $oid: `684fdd69e512be3d11a9edc${index + 6}`
+    }
+  }));
 
   // Validate time range
   const [startHour, startMin] = startTime.split(':').map(Number);
@@ -1175,23 +1194,13 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const startMinutes = startHour * 60 + startMin;
   const endMinutes = endHour * 60 + endMin;
   
-  const finalEndTime = endMinutes > startMinutes ? endTime : '12:00';
+  const finalEndTime = endMinutes > startMinutes ? endTime : '17:00';
 
-  const validBaseTypes = [
-    "Fixed Salary",
-    "Base + Commission",
-    "Pure Commission",
-    "Tiered Commission",
-    "Graduated Commission"
-  ];
+  const validBaseTypes = predefinedOptions.commission.baseTypes;
   // Force base type to always be "Base + Commission"
   const base = "Base + Commission";
 
-  const validTransactionTypes = [
-    "Fixed Amount",
-    "Percentage",
-    "Conversion"
-  ];
+  const validTransactionTypes = predefinedOptions.commission.transactionCommissionTypes;
   // Force commission type to always be "Fixed Amount"
   const finalTransactionType = "Fixed Amount";
   const transactionAmountRaw = generatedData.commission?.options?.[0]?.transactionCommission?.amount;
@@ -1202,7 +1211,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const finalTransactionAmount = cleanedTransactionAmount || '1';
 
   // Validate language levels
-  const validLanguageLevels = ['Basic', 'Conversational', 'Professional', 'Native/Bilingual'];
+  const validLanguageLevels = predefinedOptions.skills.skillLevels;
   const skills = generatedData.skills || {};
   const languages = skills.languages || [];
   
@@ -1215,159 +1224,99 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         const [_, language, level] = match;
         // Convert level to proper format if needed
         let normalizedLevel = level;
-        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+        if (level.toLowerCase() === 'fluent' || level.toLowerCase() === 'professional') normalizedLevel = 'C1';
+        if (level.toLowerCase() === 'native' || level.toLowerCase() === 'native/bilingual' || level.toLowerCase() === 'natif') normalizedLevel = 'C2';
+        if (level.toLowerCase() === 'basic') normalizedLevel = 'A1';
+        if (level.toLowerCase() === 'conversational') normalizedLevel = 'B1';
         
         return {
-          name: language.trim(),
-          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-                 normalizedLevel : 'Basic'
+          language: language.trim(),
+          proficiency: validLanguageLevels.includes(normalizedLevel) ? normalizedLevel : 'A1',
+          iso639_1: language.trim().toLowerCase().substring(0, 2) || 'en'
         };
       }
-      return { name: lang.trim(), level: 'Basic' }; // Default to Basic if format is invalid
+      return { 
+        language: lang.trim(), 
+        proficiency: 'A1',
+        iso639_1: lang.trim().toLowerCase().substring(0, 2) || 'en'
+      }; // Default to A1 if format is invalid
     }
     if (typeof lang === 'object' && lang !== null) {
-      // If it's already an object with name and level
-      let normalizedLevel = lang.level;
-      if (lang.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-      if (lang.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-      if (lang.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-      if (lang.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
+      // If it's already an object with language and proficiency
+      let normalizedLevel = lang.proficiency || lang.level;
+      if (normalizedLevel?.toLowerCase() === 'fluent' || normalizedLevel?.toLowerCase() === 'professional') normalizedLevel = 'C1';
+      if (normalizedLevel?.toLowerCase() === 'native' || normalizedLevel?.toLowerCase() === 'native/bilingual' || normalizedLevel?.toLowerCase() === 'natif') normalizedLevel = 'C2';
+      if (normalizedLevel?.toLowerCase() === 'basic') normalizedLevel = 'A1';
+      if (normalizedLevel?.toLowerCase() === 'conversational') normalizedLevel = 'B1';
       
       return {
-        name: lang.name || '',
-        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-               normalizedLevel : 'Basic'
+        language: lang.language || lang.name || '',
+        proficiency: validLanguageLevels.includes(normalizedLevel) ? normalizedLevel : 'A1',
+        iso639_1: lang.iso639_1 || (lang.language || lang.name || '').toLowerCase().substring(0, 2) || 'en'
       };
     }
-    return { name: '', level: 'Basic' }; // Default to empty name and Basic level if invalid
+    return { 
+      language: '', 
+      proficiency: 'A1',
+      iso639_1: 'en'
+    }; // Default to empty language and A1 level if invalid
   });
 
   // Validate soft skills
   const validatedSoftSkills = (skills.soft || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
-      // If it's a string like "Communication (Professional)", extract the skill and level
-      const match = skill.match(/^(.+?)\s*\((.+?)\)$/);
-      if (match) {
-        const [_, skillName, level] = match;
-        let normalizedLevel = level;
-        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
-        
-        return {
-          name: skillName.trim(),
-          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-                 normalizedLevel : 'Basic'
-        };
-      }
-      return { name: skill.trim(), level: 'Basic' };
+      return { skill: skill.trim(), level: 1 };
     }
     if (typeof skill === 'object' && skill !== null) {
-      let normalizedLevel = skill.level;
-      if (skill.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-      if (skill.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-      if (skill.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-      if (skill.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
-      
-      return {
-        name: skill.name || '',
-        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-               normalizedLevel : 'Basic'
-      };
+      return { skill: skill.skill || '', level: 1 };
     }
-    return { name: '', level: 'Basic' };
+    return { skill: '', level: 1 };
   });
 
   // Validate professional skills
   const validatedProfessionalSkills = (skills.professional || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
-      const match = skill.match(/^(.+?)\s*\((.+?)\)$/);
-      if (match) {
-        const [_, skillName, level] = match;
-        let normalizedLevel = level;
-        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
-        
-        return {
-          name: skillName.trim(),
-          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-                 normalizedLevel : 'Basic'
-        };
-      }
-      return { name: skill.trim(), level: 'Basic' };
+      return { skill: skill.trim(), level: 1 };
     }
     if (typeof skill === 'object' && skill !== null) {
-      let normalizedLevel = skill.level;
-      if (skill.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-      if (skill.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-      if (skill.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-      if (skill.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
-      
-      return {
-        name: skill.name || '',
-        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-               normalizedLevel : 'Basic'
-      };
+      return { skill: skill.skill || '', level: 1 };
     }
-    return { name: '', level: 'Basic' };
+    return { skill: '', level: 1 };
   });
 
   // Validate technical skills
   const validatedTechnicalSkills = (skills.technical || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
-      const match = skill.match(/^(.+?)\s*\((.+?)\)$/);
-      if (match) {
-        const [_, skillName, level] = match;
-        let normalizedLevel = level;
-        if (level.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-        if (level.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-        if (level.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-        if (level.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
-        
-        return {
-          name: skillName.trim(),
-          level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-                 predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-                 normalizedLevel : 'Basic'
-        };
-      }
-      return { name: skill.trim(), level: 'Basic' };
+      return { skill: skill.trim(), level: 1 };
     }
     if (typeof skill === 'object' && skill !== null) {
-      let normalizedLevel = skill.level;
-      if (skill.level?.toLowerCase() === 'fluent') normalizedLevel = 'Professional';
-      if (skill.level?.toLowerCase() === 'native') normalizedLevel = 'Native/Bilingual';
-      if (skill.level?.toLowerCase() === 'basic') normalizedLevel = 'Basic';
-      if (skill.level?.toLowerCase() === 'conversational') normalizedLevel = 'Conversational';
-      
-      return {
-        name: skill.name || '',
-        level: Array.isArray(predefinedOptions.skills.skillLevels) && 
-               predefinedOptions.skills.skillLevels.includes(normalizedLevel) ? 
-               normalizedLevel : 'Basic'
-      };
+      return { skill: skill.skill || '', level: 1 };
     }
-    return { name: '', level: 'Basic' };
+    return { skill: '', level: 1 };
   });
+
+  // Process all schedules instead of just the first one
+  const allSchedules = generatedData.schedule?.schedules?.map((schedule, index) => {
+    const scheduleStartTime = convertTo24HourFormat(schedule.hours?.start || startTime);
+    const scheduleEndTime = convertTo24HourFormat(schedule.hours?.end || endTime);
+    const currentScheduleDays = schedule.day ? expandDayRange(schedule.day) : scheduleDays;
+
+    return currentScheduleDays.map((day: string, dayIndex: number) => ({
+      day,
+      hours: {
+        start: scheduleStartTime,
+        end: scheduleEndTime
+      },
+      _id: {
+        $oid: `684fdd69e512be3d11a9edc${index * 100 + dayIndex + 6}`
+      }
+    }));
+  }).flat() || defaultSchedule;
 
   return {
     title: generatedData.jobTitles?.[0] || '',
     description: generatedData.deliverables?.join('\n') || '',
-    category: predefinedOptions.basic.categories.includes(generatedData.sectors?.[0] || '') 
-      ? generatedData.sectors?.[0] 
-      : predefinedOptions.basic.categories[0], // Default to first category if invalid
+    category: generatedData.sectors?.[0] || '',
     highlights: generatedData.highlights || [],
     destinationZones: (generatedData.destinationZones || []).map(zone => {
       // Convert continent names to appropriate country/region
@@ -1399,8 +1348,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       level: generatedData.seniority?.level || '',
       yearsExperience: generatedData.seniority?.yearsExperience || 0,
     },
-    schedule: {
-      days: convertDaysToEnglish(generatedData.schedule?.days || []),
+    availability: {
+      schedule: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
@@ -1408,8 +1357,16 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         weekly: generatedData.schedule?.minimumHours?.weekly || undefined,
         monthly: generatedData.schedule?.minimumHours?.monthly || undefined
       },
-      startTime: startTime,
-      endTime: finalEndTime
+    },
+    schedule: {
+      schedules: allSchedules,
+      timeZones: generatedData.schedule?.timeZones || [],
+      flexibility: generatedData.schedule?.flexibility || [],
+      minimumHours: {
+        daily: generatedData.schedule?.minimumHours?.daily || undefined,
+        weekly: generatedData.schedule?.minimumHours?.weekly || undefined,
+        monthly: generatedData.schedule?.minimumHours?.monthly || undefined
+      },
     },
     commission: {
       base,
@@ -1447,9 +1404,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     skills: {
       languages: validatedLanguages,
-      soft: validatedSoftSkills.map(skill => skill.name),
-      professional: validatedProfessionalSkills.map(skill => skill.name),
-      technical: validatedTechnicalSkills.map(skill => skill.name),
+      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1 })),
+      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
+      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
       certifications: generatedData.skills?.certifications || []
     },
     requirements: {
@@ -1480,9 +1437,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
 
 export async function generateSkills(title: string, description: string): Promise<{
   languages: Array<{
-    name: string;
-    level: string;
-
+    language: string;
+    proficiency: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+    iso639_1: string;
   }>;
   soft: string[];
   professional: string[];
@@ -1498,84 +1455,24 @@ export async function generateSkills(title: string, description: string): Promis
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content: `You are an AI assistant that helps determine appropriate skills for job positions.
-
-IMPORTANT: All responses MUST be in English only.
-
-Available languages:
-${predefinedOptions.skills.languages.map(lang => `- ${lang.name}`).join('\n')}
-
-Available professional skills:
-${predefinedOptions.skills.professional.map(skill => `- ${skill}`).join('\n')}
-
-Available technical skills:
-${predefinedOptions.skills.technical.map(skill => `- ${skill}`).join('\n')}
-
-Available soft skills:
-${predefinedOptions.skills.soft.map(skill => `- ${skill}`).join('\n')}
-
-Available skill levels:
-${predefinedOptions.skills.skillLevels.map(level => `- ${level}`).join('\n')}
-
-Return ONLY a valid JSON object with the following structure:
-{
-  "languages": [
-    {
-      "name": string (MUST be one of the available languages),
-      "level": string (MUST be one of the available skill levels),
-      "reading": string (MUST be one of the available skill levels),
-      "writing": string (MUST be one of the available skill levels),
-      "speaking": string (MUST be one of the available skill levels)
-    }
-  ],
-  "soft": string[] (MUST be from available soft skills),
-  "professional": string[] (MUST be from available professional skills),
-  "technical": string[] (MUST be from available technical skills)
-}
-
-Consider the following factors when determining skills:
-1. Job requirements and responsibilities
-2. Industry standards and expectations
-3. Team collaboration needs
-4. Technical requirements
-5. Communication requirements
-6. Problem-solving needs
-7. Leadership requirements
-8. Customer interaction needs
-
-For human languages:
-- Select 1-3 most relevant human languages
-- Consider the target market and team location
-- Assign appropriate proficiency levels for reading, writing, and speaking
-- Ensure all language skills (Basic, Conversational, Professional, Native/Bilingual) are specified
-
-For soft skills:
-- Select 3-5 most important soft skills
-- Focus on communication and interpersonal skills
-- Consider team dynamics and customer interaction
-
-For professional skills:
-- Select 2-4 most relevant professional skills
-- Focus on industry-specific expertise
-- Consider management and leadership needs
-
-For technical skills:
-- Select 3-6 most relevant technical skills
-- Focus on required tools and technologies
-- Consider development and maintenance needs`
+          content: `You are a job description expert. Generate skills for a "${title}" position.
+          For languages, use CEFR levels (A1, A2, B1, B2, C1, C2).
+          A1: Basic user
+          A2: Elementary user
+          B1: Intermediate user
+          B2: Upper intermediate user
+          C1: Advanced user
+          C2: Mastery user`
         },
         {
           role: "user",
-          content: `Title: ${title}
-Description: ${description}
-
-Based on this job title and description, suggest appropriate skills. All skills MUST be from the available options listed above.`
+          content: `Generate skills for this position: ${description}`
         }
       ],
+      model: "gpt-3.5-turbo",
       temperature: 0.7,
       max_tokens: 1000
     });
@@ -1589,7 +1486,7 @@ Based on this job title and description, suggest appropriate skills. All skills 
     
     // Validate languages
     const validLanguages = predefinedOptions.skills.languages.map(lang => lang.name);
-    const validLevels = predefinedOptions.skills.skillLevels;
+    const validLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
     
     result.languages.forEach((lang: any) => {
       // Ensure we're dealing with human languages, not programming languages
@@ -1607,84 +1504,3 @@ Based on this job title and description, suggest appropriate skills. All skills 
     throw error;
   }
 }
-
-interface PredefinedOptions {
-  skills: {
-    skillLevels: string[];
-    languages: Array<{ name: string; code: string }>;
-    professional: string[];
-    technical: string[];
-    soft: string[];
-  };
-  team: {
-    roles: Array<{ id: string; name: string; description: string }>;
-    territories: string[];
-  };
-  basic: {
-    seniorityLevels: string[];
-    categories: string[];
-    timeZones: string[];
-    destinationZones: string[];
-  };
-}
-
-const predefinedOptions: PredefinedOptions = {
-  skills: {
-    skillLevels: ['Basic', 'Conversational', 'Professional', 'Native/Bilingual'],
-    languages: [],
-    professional: [],
-    technical: [],
-    soft: []
-  },
-  team: {
-    roles: [
-      {
-        id: 'entry-level',
-        name: 'Entry Level',
-        description: 'Entry level position with basic responsibilities and learning opportunities'
-      },
-      {
-        id: 'junior',
-        name: 'Junior',
-        description: 'Junior position with growing responsibilities and mentorship opportunities'
-      },
-      {
-        id: 'mid-level',
-        name: 'Mid-Level',
-        description: 'Mid-level position with significant responsibilities and independent work'
-      },
-      {
-        id: 'senior',
-        name: 'Senior',
-        description: 'Senior position with advanced responsibilities and leadership opportunities'
-      },
-      {
-        id: 'team-lead',
-        name: 'Team Lead',
-        description: 'Team lead position with supervisory responsibilities and team management'
-      },
-      {
-        id: 'supervisor',
-        name: 'Supervisor',
-        description: 'Supervisor position with oversight responsibilities and team guidance'
-      },
-      {
-        id: 'manager',
-        name: 'Manager',
-        description: 'Manager position with department leadership and strategic responsibilities'
-      },
-      {
-        id: 'director',
-        name: 'Director',
-        description: 'Director position with executive leadership and organizational strategy'
-      }
-    ],
-    territories: []
-  },
-  basic: {
-    seniorityLevels: [],
-    categories: [],
-    timeZones: [],
-    destinationZones: []
-  }
-};

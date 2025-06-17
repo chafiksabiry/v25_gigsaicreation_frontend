@@ -7,8 +7,12 @@ export interface Profile {
   avatar_url: string | null;
   title: string | null;
   bio: string | null;
-  skills: string[];
-  languages: Language[];
+  skills: {
+    professional: { skill: string; level: number }[];
+    technical: { skill: string; level: number }[];
+    soft: { skill: string; level: number }[];
+    languages: Language[];
+  };
   rating: number;
   total_reviews: number;
   created_at: string;
@@ -17,7 +21,8 @@ export interface Profile {
 
 export interface Language {
   language: string;
-  proficiency: 'Basic' | 'Conversational' | 'Professional' | 'Native/Bilingual';
+  proficiency: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  iso639_1: string;
 }
 
 export interface ParsedGig {
@@ -32,9 +37,32 @@ export interface ParsedGig {
     level: string;
     yearsExperience: number;
   };
+  availability?: {
+    schedule?: {
+      schedules?: {
+        day?: string;
+        hours?: {
+          start?: string;
+          end?: string;
+        };
+      }[];
+    };
+    timeZones?: string[];
+    flexibility?: string[];
+    minimumHours?: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
   schedule?: {
-    days: string[];
-    hours: string;
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -168,10 +196,30 @@ export interface GigData {
     preferred: string[];
   };
   benefits: string[];
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  }
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -213,9 +261,9 @@ export interface GigData {
   };
   skills: {
     languages: Array<{ name: string; level: string; }>;
-    soft: string[];
-    professional: string[];
-    technical: string[];
+    soft: Array<{ skill: string; level: number }>;
+    professional: Array<{ skill: string; level: number }>;
+    technical: Array<{ skill: string; level: number }>;
     certifications: string[];
   };
   seniority: {
@@ -286,7 +334,12 @@ export interface GigSuggestion {
   jobTitles: string[];
   deliverables: string[];
   compensation: string[];
-  skills: string[];
+  skills: {
+    professional: { skill: string; level: number }[];
+    technical: { skill: string; level: number }[];
+    soft: { skill: string; level: number }[];
+    languages: Language[];
+  };
   kpis: string[];
   timeframes: string[];
   requirements: string[];
@@ -295,10 +348,33 @@ export interface GigSuggestion {
     level: string;
     yearsExperience: number;
   };
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+      _id: {
+        $oid: string;
+      };
+    }[];
     timeZones: string[];
     flexibility: string[];
     minimumHours: {

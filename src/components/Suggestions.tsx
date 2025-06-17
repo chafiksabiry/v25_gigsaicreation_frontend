@@ -259,10 +259,30 @@ interface GigData {
     level: string;
     yearsExperience: number;
   };
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily: number;
+      weekly: number;
+      monthly: number;
+    };
+    };
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -321,37 +341,79 @@ interface SuggestionState extends GigSuggestion {
   // Additional fields specific to SuggestionState can be added here
 }
 
-const fallbackSuggestions: SuggestionState = {
-  title: "Software Engineer",
-  description: "Looking for an experienced software engineer",
-  category: "Technology",
-  highlights: ["Remote work", "Competitive salary", "Growth opportunities"],
-  jobTitles: ["Software Engineer", "Full Stack Developer", "Backend Developer", "Frontend Developer"],
-  deliverables: ["Code implementation", "Technical documentation", "Unit tests", "Code review"],
-  skills: {
-    languages: [{ name: "English", level: "Professional" }],
-    soft: ["Communication", "Problem Solving", "Teamwork"],
-    professional: [],
-    technical: [],
-    certifications: []
+const fallbackSuggestions: GigSuggestion = {
+  title: "",
+  description: "",
+  category: "",
+  highlights: [],
+  jobTitles: [],
+  deliverables: [],
+  sectors: [],
+  destinationZones: [],
+  availability: {
+    schedule: [{
+      day: "",
+      hours: {
+        start: "",
+        end: ""
+      }
+    }],
+    timeZones: [],
+    flexibility: [],
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    }
   },
-  requirements: {
-    essential: ["Bachelor's degree", "3+ years experience"],
-    preferred: ["Master's degree", "5+ years experience"]
-  },
-  sectors: ["Technology", "Finance", "Healthcare"],
-  destinationZones: ["Spain", "France", "Italy", "Germany", "Portugal", "Greece", "Poland", "Czech Republic", "Hungary", "Romania", "Bulgaria", "Croatia", "Slovakia", "Slovenia", "Denmark", "Finland", "Sweden", "Norway", "Ireland", "Estonia", "Latvia", "Lithuania", "Luxembourg", "Malta", "Cyprus"],
   schedule: {
-    days: [],
-    startTime: "09:00",
-    endTime: "18:00",
+    schedules: [{
+      day: "",
+      hours: {
+        start: "",
+        end: ""
+      }
+    }],
     timeZones: ["CET"],
     flexibility: [],
-    minimumHours: { daily: 8, weekly: 40, monthly: 160 }
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    }
   },
-  commission: { options: [] },
-  activity: { options: [] },
-  team: { 
+  requirements: {
+    essential: [],
+    preferred: []
+  },
+  benefits: [],
+  skills: {
+    languages: [],
+    soft: [{
+      skill: "Communication",
+      level: 1
+    }],
+    professional: [{
+      skill: "Brand Identity Design",
+      level: 1
+    }],
+    technical: [{
+      skill: "Adobe Illustrator",
+      level: 1
+    }],
+    certifications: []
+  },
+  seniority: {
+    level: "",
+    yearsExperience: 0
+  },
+  commission: {
+    options: []
+  },
+  activity: {
+    options: []
+  },
+  team: {
     size: 1,
     structure: [{
       roleId: "default",
@@ -368,13 +430,16 @@ const fallbackSuggestions: SuggestionState = {
     },
     collaboration: ["Daily standups", "Weekly reviews"]
   },
-  leads: { 
-    types: [], 
+  leads: {
+    types: [],
     sources: [],
-    distribution: { method: "", rules: [] },
+    distribution: {
+      method: "",
+      rules: []
+    },
     qualificationCriteria: []
   },
-  documentation: { 
+  documentation: {
     templates: null,
     reference: null,
     product: [],
@@ -463,10 +528,30 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       deliverables: suggestions.deliverables || [],
       sectors: suggestions.sectors || [],
       destinationZones: suggestions.destinationZones || [],
+      availability:{
+        schedule: suggestions.schedule?.schedules || [{
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }],
+        timeZones: suggestions.schedule?.timeZones || [],
+        flexibility: suggestions.schedule?.flexibility || [],
+        minimumHours: {
+          daily: suggestions.schedule?.minimumHours?.daily || 8,
+          weekly: suggestions.schedule?.minimumHours?.weekly || 40,
+          monthly: suggestions.schedule?.minimumHours?.monthly || 160
+        }
+      },
       schedule: {
-        days: suggestions.schedule?.days || [],
-        startTime: suggestions.schedule?.startTime || "09:00",
-        endTime: suggestions.schedule?.endTime || "18:00",
+        schedules: suggestions.schedule?.schedules || [{
+          day: "Monday",
+          hours: {
+            start: "09:00",
+            end: "18:00"
+          }
+        }],
         timeZones: suggestions.schedule?.timeZones || ["CET"],
         flexibility: suggestions.schedule?.flexibility || [],
         minimumHours: {
@@ -482,11 +567,39 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       benefits: suggestions.benefits || [],
       skills: {
         languages: Array.isArray(suggestions.skills?.languages) 
-          ? suggestions.skills.languages.map(lang => ({ name: lang.name, level: lang.level })) 
+          ? suggestions.skills.languages.map(lang => ({ 
+              language: lang.language,
+              proficiency: lang.proficiency,
+              iso639_1: lang.iso639_1 || lang.language?.toLowerCase().substring(0, 2) || 'en'
+            })) 
           : [],
-        soft: suggestions.skills?.soft || [],
-        professional: suggestions.skills?.professional || [],
-        technical: suggestions.skills?.technical || [],
+        soft: Array.isArray(suggestions.skills?.soft) 
+          ? suggestions.skills.soft.map(skill => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return {
+                skill: skillName,
+                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
+              };
+            })
+          : [],
+        professional: Array.isArray(suggestions.skills?.professional)
+          ? suggestions.skills.professional.map(skill => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return {
+                skill: skillName,
+                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
+              };
+            })
+          : [],
+        technical: Array.isArray(suggestions.skills?.technical)
+          ? suggestions.skills.technical.map(skill => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return {
+                skill: skillName,
+                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
+              };
+            })
+          : [],
         certifications: suggestions.skills?.certifications || []
       },
       seniority: suggestions?.seniority ? {
@@ -726,6 +839,13 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         // Editing schedule hours
         const [day, time] = editValue.split(",");
         const [start, end] = time.split("-").map((t) => t.trim());
+        
+        // Validate the day
+        if (!validateDay(day.trim())) {
+          alert('Invalid day. Please use a single day from: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday');
+          return;
+        }
+
         updatedMetadata.schedules[editingScheduleIndex].hours[
           editingHourIndex
         ] = {
@@ -758,67 +878,80 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     cancelEdit();
   };
 
-  const addNewSchedule = () => {
-    if (!editableMetadata) return;
-
-    const newSchedule = {
-      name: "New Schedule",
-      description: "Description for new schedule",
-      hours: [{ day: "Monday", start: "09:00", end: "17:00" }],
-    };
-
-    const updatedMetadata = {
-      ...editableMetadata,
-      schedules: [...editableMetadata.schedules, newSchedule],
-    };
-
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
-    setEditingScheduleIndex(updatedMetadata.schedules.length - 1);
-    setEditingMetadataField("name");
-    setEditValue("New Schedule");
+  const generateWeeklySchedule = () => {
+    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    return weekdays.map((day) => ({
+      day,
+      hours: {
+        start: "09:00",
+        end: "17:00"
+      }
+    }));
   };
 
-  const addNewHour = (scheduleIndex: number) => {
-    if (!editableMetadata) return;
+  const validateDay = (day: string): boolean => {
+    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    return validDays.includes(day.trim());
+  };
 
-    const updatedMetadata = { ...editableMetadata };
-    updatedMetadata.schedules[scheduleIndex].hours.push({
-      day: "New Day",
-      start: "09:00",
-      end: "17:00",
-    });
+  const addNewSchedule = () => {
+    if (!editableSuggestions) return;
 
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
-    setEditingScheduleIndex(scheduleIndex);
-    setEditingHourIndex(
-      updatedMetadata.schedules[scheduleIndex].hours.length - 1
-    );
+    const newSchedule = {
+      schedules: generateWeeklySchedule(),
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {
+        daily: 8,
+        weekly: 40,
+        monthly: 160
+      }
+    };
+
+    const updatedSuggestions = {
+      ...editableSuggestions,
+      schedule: newSchedule
+    };
+
+    setEditableSuggestions(updatedSuggestions);
+    setSuggestions(updatedSuggestions);
   };
 
   const removeSchedule = (index: number) => {
-    if (!editableMetadata) return;
+    if (!editableSuggestions) return;
 
-    const updatedMetadata = {
-      ...editableMetadata,
-      schedules: editableMetadata.schedules.filter((_, i) => i !== index),
+    const updatedSuggestions = {
+      ...editableSuggestions,
+      schedule: {
+        ...editableSuggestions.schedule,
+        schedules: editableSuggestions.schedule.schedules.filter((_, i) => i !== index)
+      }
     };
 
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
+    setEditableSuggestions(updatedSuggestions);
+    setSuggestions(updatedSuggestions);
   };
 
   const removeHour = (scheduleIndex: number, hourIndex: number) => {
-    if (!editableMetadata) return;
+    if (!editableSuggestions) return;
 
-    const updatedMetadata = { ...editableMetadata };
-    updatedMetadata.schedules[scheduleIndex].hours = updatedMetadata.schedules[
-      scheduleIndex
-    ].hours.filter((_, i) => i !== hourIndex);
+    const updatedSuggestions = {
+      ...editableSuggestions,
+      schedule: {
+        ...editableSuggestions.schedule,
+        schedules: editableSuggestions.schedule.schedules.map(schedule => ({
+          ...schedule,
+          hours: {
+            ...schedule.hours,
+            start: schedule.hours.start,
+            end: schedule.hours.end
+          }
+        }))
+      }
+    };
 
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
+    setEditableSuggestions(updatedSuggestions);
+    setSuggestions(updatedSuggestions);
   };
 
   const generateMetadata = async () => {
@@ -977,10 +1110,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             "Track opportunities in CRM"
           ],
           skills: {
-            languages: [{ name: "English", level: "Fluent" }],
-            soft: ["B2B Sales", "CRM Software", "Lead Generation", "Negotiation"],
-            professional: [],
-            technical: [],
+            languages: [{ language: "English", proficiency: "C1", iso639_1: "en" }],
+            soft: [{
+              skill: "Communication",
+              level: 1
+            }],
+            professional: [{
+              skill: "Brand Identity Design",
+              level: 1
+            }],
+            technical: [{
+              skill: "Adobe Illustrator",
+              level: 1
+            }],
             certifications: []
           },
           timeframes: ["Full-time", "Remote"],
@@ -990,9 +1132,30 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             level: "",
             yearsExperience: 0
           },
+          availability: {
+            schedule: [{
+              day: "",
+              hours: {
+                start: "",
+                end: ""
+              } 
+            }],
+            timeZones: [],
+            flexibility: [],
+            minimumHours: {
+              daily: 8,
+              weekly: 40,
+              monthly: 160
+            }
+          },
           schedule: {
-            days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            hours: "9:00 AM - 6:00 PM CET",
+            schedules: [{
+              day: "",
+              hours: {
+                start: "",
+                end: ""
+              }
+            }],
             timeZones: ["CET"],
             flexibility: ["Remote work", "Flexible hours"],
             minimumHours: {
@@ -1000,8 +1163,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
               weekly: 40,
               monthly: 160
             },
-            startTime: "09:00",
-            endTime: "18:00"
           },
           commission: {
             options: [{
@@ -1055,10 +1216,10 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 compensation: string[],
                 skills: {
                   // Human languages required for the role (e.g. English, French, Spanish)
-                  languages: { name: string, level: string }[],
-                  soft: string[],
-                  professional: string[],
-                  technical: string[],
+                  languages: { language: string, proficiency: string, iso639_1: string }[],
+                  soft: { skill: string, level: number }[],
+                  professional: { skill: string, level: number }[],
+                  technical: { skill: string, level: number }[],
                   certifications: string[]
                 },
                 kpis: string[],
@@ -1069,8 +1230,30 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   level: string,
                   yearsExperience: number
                 },
+                availability: {
+                  schedule: {
+                    day: string,
+                    hours: {
+                      start: string,
+                      end: string
+                    }
+                  }[],
+                  timeZones: string[],
+                  flexibility: string[],
+                  minimumHours: {
+                    daily?: number,
+                    weekly?: number,
+                    monthly?: number
+                  },
+                },
                 schedule: {
-                  days: string[],
+                  schedules: {
+                    day: string,
+                    hours: {
+                      start: string,
+                      end: string
+                    }
+                  }[],
                   hours: string,
                   timeZones: string[],
                   flexibility: string[],
@@ -1079,8 +1262,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     weekly?: number,
                     monthly?: number
                   },
-                  startTime: string,
-                  endTime: string
                 },
                 commission: {
                   options: Array<{
@@ -1146,7 +1327,75 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         const content = response.choices[0]?.message?.content;
         if (content) {
           try {
-            const parsedSuggestions = JSON.parse(content);
+            console.log('Raw AI response:', content);
+            
+            // Try to clean the response if it contains any non-JSON text
+            const jsonStart = content.indexOf('{');
+            const jsonEnd = content.lastIndexOf('}') + 1;
+            let cleanedContent = content.slice(jsonStart, jsonEnd);
+            
+            // Fix common JSON syntax errors
+            cleanedContent = cleanedContent
+              // Fix escaped quotes in time values
+              .replace(/"(\d{2}):(\d{2})"/g, '"$1:$2"')
+              // Fix double quotes in time values
+              .replace(/""(\d{2}):(\d{2})""/g, '"$1:$2"')
+              // Fix malformed numbers with $3
+              .replace(/"(\d+)"\$3/g, '"$1"')
+              // Fix missing commas between properties
+              .replace(/"(\w+)"\s*"(\w+)"/g, '"$1", "$2"')
+              // Fix missing commas between array elements
+              .replace(/}\s*{/g, '}, {')
+              // Fix missing quotes around property names
+              .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
+              // Remove any trailing commas before closing braces/brackets
+              .replace(/,\s*([}\]])/g, '$1')
+              // Fix any remaining double quotes
+              .replace(/""/g, '"')
+              // Remove newlines and extra spaces
+              .replace(/\n/g, ' ')
+              .replace(/\r/g, '')
+              .replace(/\t/g, ' ')
+              .replace(/\s+/g, ' ');
+
+            console.log('Cleaned content:', cleanedContent);
+            
+            // Count opening and closing braces to ensure proper JSON structure
+            const openBraces = (cleanedContent.match(/{/g) || []).length;
+            const closeBraces = (cleanedContent.match(/}/g) || []).length;
+            
+            // Add missing closing braces if needed
+            if (openBraces > closeBraces) {
+              cleanedContent += '}'.repeat(openBraces - closeBraces);
+            }
+            
+            let parsedSuggestions;
+            try {
+              parsedSuggestions = JSON.parse(cleanedContent);
+            } catch (parseError: any) {
+              console.error('JSON Parse Error:', parseError);
+              console.error('Failed to parse content:', cleanedContent);
+              console.error('Error position:', parseError.message);
+              
+              // Try to fix common JSON syntax errors
+              try {
+                // Additional cleaning for specific error cases
+                cleanedContent = cleanedContent
+                  // Fix any remaining malformed time values
+                  .replace(/"(\d{2}):(\d{2})"/g, '"$1:$2"')
+                  // Fix any remaining malformed numbers
+                  .replace(/"(\d+)"\$3/g, '"$1"')
+                  // Fix any remaining missing commas
+                  .replace(/"(\w+)"\s*"(\w+)"/g, '"$1", "$2"')
+                  // Fix any remaining double quotes
+                  .replace(/""/g, '"');
+                
+                parsedSuggestions = JSON.parse(cleanedContent);
+              } catch (retryError) {
+                console.error('Failed to fix JSON:', retryError);
+                throw new Error(`Failed to parse JSON: ${parseError.message}`);
+              }
+            }
             
             // Ensure all required fields are present with default values if missing
             const defaultSuggestions = {
@@ -1154,9 +1403,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 level: "",
                 yearsExperience: 0
               },
-              schedule: {
-                days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                hours: "9:00 AM - 6:00 PM CET",
+              availability: {
+                schedule: [{
+                  day: "",
+                  hours: {
+                    start: "",
+                    end: ""
+                  }
+                }],
                 timeZones: ["CET"],
                 flexibility: ["Remote work", "Flexible hours"],
                 minimumHours: {
@@ -1164,8 +1418,22 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   weekly: 40,
                   monthly: 160
                 },
-                startTime: "09:00",
-                endTime: "18:00"
+              },
+              schedule: {
+                schedules: [{
+                  day: "",
+                  hours: {
+                    start: "",
+                    end: ""
+                  }
+                }],
+                timeZones: ["CET"],
+                flexibility: ["Remote work", "Flexible hours"],
+                minimumHours: {
+                  daily: 8,
+                  weekly: 40,
+                  monthly: 160
+                },
               },
               commission: {
                 options: [{
@@ -1269,10 +1537,16 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     if (!gigData.seniority?.yearsExperience) emptyFields.push('Years of Experience');
     
     // Check schedule fields
-    if (!gigData.schedule?.days || gigData.schedule.days.length === 0) {
+    if (!gigData.schedule?.schedules || gigData.schedule.schedules.length === 0) {
       gigData.schedule = {
         ...gigData.schedule,
-        days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        schedules: [{
+          day: "Monday",
+          hours: {
+            start: "09:00",
+            end: "18:00"
+          }
+        }]
       };
     }
     if (!gigData.schedule?.hours) {
@@ -1371,10 +1645,10 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         quantity: 1,
         timeline: suggestions?.timeframes?.[0] || "Flexible",
         skills: {
-          languages: suggestions?.skills?.languages.map(lang => ({ name: lang.name, level: lang.level })) || [],
-          soft: suggestions?.skills?.soft || [],
-          professional: suggestions?.skills?.professional || [],
-          technical: suggestions?.skills?.technical || [],
+          languages: suggestions?.skills?.languages.map(lang => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })) || [],
+          soft: suggestions?.skills?.soft.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
+          professional: suggestions?.skills?.professional.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
+          technical: suggestions?.skills?.technical.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
           certifications: suggestions?.skills?.certifications || []
         },
         requirements: suggestions?.requirements || { essential: [], preferred: [] },
@@ -1383,9 +1657,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           level: suggestions?.seniority?.level || "Mid Level",
           yearsExperience: suggestions?.seniority?.yearsExperience || 3
         },
-        schedule: {
-          days: suggestions?.schedule?.days || [],
-          hours: suggestions?.schedule?.hours || "9:00 AM - 6:00 PM CET",
+        availability: {
+          schedule: suggestions?.schedule?.schedules || [{
+            day: "Monday",
+            hours: {
+              start: "09:00",
+              end: "18:00"
+            }
+          }],
           timeZones: suggestions?.schedule?.timeZones || ["CET"],
           flexibility: suggestions?.schedule?.flexibility || [],
           minimumHours: {
@@ -1393,8 +1672,23 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
             monthly: suggestions?.schedule?.minimumHours?.monthly || 160
           },
-          startTime: suggestions?.schedule?.startTime || "09:00",
-          endTime: suggestions?.schedule?.endTime || "18:00"
+        },
+        schedule: {
+          schedules: suggestions?.schedule?.schedules || [{
+            day: "Monday",
+            hours: {
+              start: "09:00",
+              end: "18:00"
+            }
+          }],
+          timeZones: suggestions?.schedule?.timeZones || ["CET"],
+          flexibility: suggestions?.schedule?.flexibility || [],
+          minimumHours: {
+            daily: suggestions?.schedule?.minimumHours?.daily || 8,
+            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
+            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
+          },
+
         },
         commission: {
           base: suggestions?.commission?.options?.[0]?.base || "Fixed Salary",
@@ -1574,10 +1868,10 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         duration: gigData.duration,
         location: gigData.location,
         skills: {
-          languages: gigData.skills.languages.map((lang: { name: string; level: string }) => ({ name: lang.name, level: lang.level })),
-          soft: gigData.skills.soft,
-          professional: gigData.skills.professional,
-          technical: gigData.skills.technical,
+          languages: gigData.skills.languages.map((lang: { language: string; proficiency: string; iso639_1: string }) => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })),
+          soft: gigData.skills.soft.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
+          professional: gigData.skills.professional.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
+          technical: gigData.skills.technical.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
           certifications: gigData.skills.certifications
         },
         requirements: gigData.requirements,
@@ -2231,17 +2525,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             {isEditing ? (
               <input
                 type="time"
-                value={editableSuggestions.schedule.startTime || ""}
+                value={editableSuggestions.schedule.schedules[0]?.hours?.start || ""}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.schedule.startTime = e.target.value;
+                  if (newSuggestions.schedule.schedules[0]) {
+                    newSuggestions.schedule.schedules[0].hours.start = e.target.value;
+                  }
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="e.g. 09:00"
               />
             ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.startTime}</p>
+              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours?.start}</p>
             )}
           </div>
           <div>

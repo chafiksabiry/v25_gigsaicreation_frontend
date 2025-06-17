@@ -17,10 +17,30 @@ export interface GigData {
     type: string;
     description: string;
   }[];
+  availability: {
+    schedule: Array<{
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }>;
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  }
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: Array<{
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }>;
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -72,10 +92,23 @@ export interface GigData {
     qualificationCriteria: string[];
   };
   skills: {
-    languages: Array<{ name: string; level: string }>;
-    soft: string[];
-    professional: string[];
-    technical: string[];
+    languages: Array<{ 
+      language: string; 
+      proficiency: string;
+      iso639_1: string;
+    }>;
+    soft: Array<{
+      skill: string;
+      level: number;
+    }>;
+    professional: Array<{
+      skill: string;
+      level: number;
+    }>;
+    technical: Array<{
+      skill: string;
+      level: number;
+    }>;
     certifications: Array<{
       name: string;
       required: boolean;
@@ -170,10 +203,30 @@ export interface GigSuggestion {
   deliverables: string[];
   sectors: string[];
   destinationZones: string[];
+  availability: {
+    schedule: Array<{
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }>;
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily: number;
+      weekly: number;
+      monthly: number;
+    };
+  };
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: Array<{
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }>;
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -196,10 +249,25 @@ export interface GigSuggestion {
     description: string;
   }[];
   skills: {
-    languages: Array<{ name: string; level: string }>;
-    soft: string[];
-    professional: string[];
-    technical: string[];
+    languages: Array<{ 
+      language: string; 
+      proficiency: string;
+      iso639_1: string;
+    }>;
+    soft: Array<{
+      skill: string;
+      level: number;
+    }>;
+    professional: Array<{
+      skill: string;
+      level: number;
+      details?: string;
+    }>;
+    technical: Array<{
+      skill: string;
+      level: number;
+      details?: string;
+    }>;
     certifications: Array<{
       name: string;
       required: boolean;

@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
     base: 'https://gigsai.harx.ai/',
     plugins: [
       react({
-        jsxRuntime: 'classic',
+        jsxRuntime: 'automatic',
       }),
       qiankun('app6', {
         useDevMode: true,

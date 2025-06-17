@@ -34,6 +34,7 @@ const PrompAI: React.FC = () => {
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showGuidance, setShowGuidance] = useState(false);
   const [confirmedSuggestions, setConfirmedSuggestions] =
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
@@ -60,13 +61,29 @@ const PrompAI: React.FC = () => {
     title: "",
     description: "",
     category: "",
-    schedule: {
-      days: [],
+    availability: {
+      schedule: [{
+        day: "",
+        hours: {
+          start: "",
+          end: ""
+        }
+      }],
       timeZones: [],
       flexibility: [],
       minimumHours: {},
-      startTime: "",
-      endTime: ""
+    },
+    schedule: {
+      schedules: [{
+        day: "",
+        hours: {
+          start: "",
+          end: ""
+        }
+      }],
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {},
     },
     commission: {
       base: "",
@@ -96,10 +113,23 @@ const PrompAI: React.FC = () => {
       qualificationCriteria: []
     },
     skills: {
-      languages: [],
-      soft: [],
-      professional: [],
-      technical: [],
+      languages: [{
+        language: "French",
+        proficiency: "B1",
+        iso639_1: "fr"
+      }],
+      soft: [{
+        skill: "Communication",
+        level: 1
+      }],
+      professional: [{
+        skill: "Brand Identity Design",
+        level: 1
+      }],
+      technical: [{
+        skill: "Adobe Illustrator",
+        level: 1
+      }],
       certifications: []
     },
     seniority: {
@@ -272,10 +302,6 @@ const PrompAI: React.FC = () => {
     );
   }
 
-  function setShowGuidance(arg0: boolean): void {
-    throw new Error("Function not implemented.");
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <div className="max-w-4xl mx-auto py-16 px-4">
@@ -302,7 +328,7 @@ const PrompAI: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <button
                     type="button"
-                    onClick={() => setShowGuidance(!setShowGuidance)}
+                    onClick={() => setShowSuggestions(true)}
                     className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
                   >
                     <HelpCircle className="w-4 h-4 mr-1" />
@@ -319,6 +345,19 @@ const PrompAI: React.FC = () => {
                 </div>
               </div>
 
+              {showGuidance && (
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-medium text-blue-800 mb-2">Writing Tips</h3>
+                  <ul className="text-sm text-blue-600 space-y-2">
+                    <li>• Be specific about your target audience and location</li>
+                    <li>• Mention key requirements and qualifications</li>
+                    <li>• Include details about schedule and availability</li>
+                    <li>• Specify any technical requirements or tools needed</li>
+                    <li>• Describe the compensation structure if possible</li>
+                  </ul>
+                </div>
+              )}
+
               <div className="relative">
                 <textarea
                   id="description"
@@ -332,7 +371,7 @@ const PrompAI: React.FC = () => {
                   disabled={!input.trim()}
                   className="absolute bottom-3 right-3 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
-                  <Send className="w-5 h-5" />
+                  <Brain className="w-5 h-5" />
                 </button>
               </div>
             </div>

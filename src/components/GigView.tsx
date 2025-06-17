@@ -55,10 +55,34 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       preferred: []
     },
     benefits: [],
+    availability: {
+      schedule: gig.schedule_schedules || [
+        {
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }
+      ],
+      timeZones: gig.schedule_timezone || [],
+      flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
+      minimumHours: {
+        daily: gig.minimum_hours_daily,
+        weekly: gig.minimum_hours_weekly,
+        monthly: gig.minimum_hours_monthly
+      }
+    },
     schedule: {
-      days: gig.schedule_days || [],
-      startTime: gig.startTime || '',
-      endTime: gig.endTime || '',
+      schedules: gig.schedule_schedules || [
+        {
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }
+      ],
       timeZones: gig.schedule_timezone || [],
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
@@ -103,18 +127,28 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       languages: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'language')
         .map((skill: any) => ({
-          name: skill.name,
-          level: skill.level
+          language: skill.language,
+          proficiency: skill.proficiency,
+          iso639_1: skill.iso639_1
         })) || [],
       soft: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'soft')
-        .map((skill: any) => skill.name) || [],
+        .map((skill: any) => ({
+          skill: skill.skill,
+          level: skill.level,
+        })) || [],
       professional: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'professional')
-        .map((skill: any) => skill.name) || [],
+        .map((skill: any) => ({
+          skill: skill.skill,
+          level: skill.level,
+        })) || [],
       technical: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'technical')
-        .map((skill: any) => skill.name) || [],
+        .map((skill: any) => ({
+          skill: skill.skill,
+          level: skill.level,
+        })) || [],
       certifications: []
     },
     seniority: {

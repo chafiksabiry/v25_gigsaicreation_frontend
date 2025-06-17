@@ -25,11 +25,62 @@ const gigSchema = new Schema({
     type: String,
     required: true
   },
+  availability: {
+    schedule: [
+      {
+        day: String,
+        hours: {
+          start: String,
+          end: String
+        },
+      }
+    ],
+    timeZone: {
+      type: String,
+      required: true
+    },
+    flexibility: [String],
+    minimumHours: {
+      daily: Number,
+      weekly: Number,
+      monthly: Number
+    }
+  },
+  schedule: {
+    schedules: [
+      {
+        day: String,
+        hours: {
+          start: String,
+          end: String
+        }
+      }
+    ],
+    timeZones: [String],
+    flexibility: [String],
+    minimumHours: {
+      daily: Number,
+      weekly: Number,
+      monthly: Number
+    }
+  },
   requiredSkills: [{
     type: String
   }],
+  
   preferredLanguages: [{
-    type: String
+    language: {
+      type: String,
+      required: true
+    },
+    proficiency: {
+      type: String,
+      required: true
+    },
+    iso639_1: {
+      type: String,
+      required: true
+    }
   }],
   requiredExperience: {
     type: Number,

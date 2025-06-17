@@ -134,10 +134,30 @@ function App() {
       preferred: []
     },
     benefits: [],
+    availability: {
+      schedule: [{
+        day: "",
+        hours: {
+          start: "",
+          end: ""
+        },
+      }],
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {
+        daily: 8,
+        weekly: 40,
+        monthly: 160
+      }
+    },
     schedule: {
-      days: [],
-      startTime: "",
-      endTime: "",
+      schedules: [{
+        day: "",
+        hours: {
+          start: "",
+          end: ""
+        }
+      }],
       timeZones: [],
       flexibility: [],
       minimumHours: {
@@ -174,10 +194,19 @@ function App() {
       qualificationCriteria: []
     },
     skills: {
-      languages: [{ name: "English", level: "Fluent" }],
-      soft: [],
-      professional: [],
-      technical: [],
+      languages: [{ language: "English", proficiency: "C1", iso639_1: "en" }],
+      soft: [{
+        skill: "Communication",
+        level: 1
+      }],
+      professional: [{
+        skill: "Brand Identity Design",
+        level: 1
+      }],
+      technical: [{
+        skill: "Adobe Illustrator",
+        level: 1
+      }],
       certifications: []
     },
     seniority: {
@@ -307,31 +336,14 @@ function App() {
                 </div>
 
                 {showGuidance && (
-                  <div className="mb-4 p-4 bg-blue-50 rounded-lg text-sm text-gray-700">
-                    <h4 className="font-medium mb-2">
-                      How to describe your gig effectively:
-                    </h4>
-                    <ul className="space-y-2 list-disc pl-5">
-                      <li>
-                        <span className="font-medium">Desired Outcome:</span>{" "}
-                        Specify the expected results (e.g., "I need 100 sales
-                        calls that convert at least 20% to qualified leads")
-                      </li>
-                      <li>
-                        <span className="font-medium">Timeline:</span> Include
-                        your timeframe (e.g., "within the next 2 weeks" or "over
-                        a 3-month period")
-                      </li>
-                      <li>
-                        <span className="font-medium">Requirements:</span>{" "}
-                        Mention any specific skills or qualifications (e.g.,
-                        "must have insurance sales experience and speak fluent
-                        Spanish")
-                      </li>
-                      <li>
-                        <span className="font-medium">Example:</span>
-                        "I need an experiencedcomplete insurance sales representative to make 50 calls per week for 3 months, targeting Spanish-speaking customers. Looking for 25% conversion rate to qualified leads."
-                      </li>
+                  <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="text-sm font-medium text-blue-800 mb-2">Writing Tips</h3>
+                    <ul className="text-sm text-blue-600 space-y-2">
+                      <li>• Be specific about your target audience and location</li>
+                      <li>• Mention key requirements and qualifications</li>
+                      <li>• Include details about schedule and availability</li>
+                      <li>• Specify any technical requirements or tools needed</li>
+                      <li>• Describe the compensation structure if possible</li>
                     </ul>
                   </div>
                 )}

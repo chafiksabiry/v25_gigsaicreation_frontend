@@ -27,9 +27,6 @@
     "@tailwindcss/postcss": "^4.0.0",
     "@tailwindcss/postcss7-compat": "^2.2.17",
     "@tanstack/react-query": "^5.66.0",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
-    "@vitejs/plugin-react": "^4.3.4",
     "antd": "^5.26.1",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.9",
@@ -43,13 +40,13 @@
     "openai": "^4.92.1",
     "postcss": "^8.5.1",
     "qiankun": "^2.10.16",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-hook-form": "^7.54.2",
     "sweetalert2": "^11.15.10",
     "systemjs": "^6.15.1",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.7.3",
+    "typescript": "^5.3.3",
     "vite-plugin-qiankun": "^1.0.15"
   }
 }
