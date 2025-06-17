@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Cookies from 'js-cookie';
 import { Send, Briefcase, Brain, HelpCircle, PlusCircle } from "lucide-react";
 import { GigWorkflow } from "./GigWorkflow";
 import { Suggestions } from "./Suggestions";
@@ -121,8 +122,8 @@ function App() {
   };
 
   const convertToGigData = (parsedGig: ParsedGig): GigData => ({
-    userId: "",
-    companyId: "",
+    userId: Cookies.get('userId') || "",
+    companyId: Cookies.get('companyId') || "",
     title: parsedGig.title,
     description: parsedGig.description,
     category: "",

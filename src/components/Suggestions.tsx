@@ -16,6 +16,9 @@ import {
   CheckCircle,
   ArrowRight,
   PlusCircle,
+  XCircle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { JobDescription, GigMetadata } from "../lib/types";
@@ -29,6 +32,7 @@ import BasicSection from './BasicSection';
 import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
+import Cookies from 'js-cookie';
 
 // Register languages
 i18n.registerLocale(fr);
@@ -2862,8 +2866,8 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       {showBasicSection ? (
         <BasicSection
           data={{
-            userId: '',
-            companyId: '',
+            userId: Cookies.get('userId') || "",
+            companyId: Cookies.get('companyId') || "",
             title: suggestions?.jobTitles[0] || '',
             description: suggestions?.deliverables.join('\n') || '',
             category: suggestions?.sectors[0] || '',

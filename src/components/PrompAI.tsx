@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Cookies from 'js-cookie';
 import {
   Brain,
   Send,
@@ -39,8 +40,8 @@ const PrompAI: React.FC = () => {
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
   const [gigData, setGigData] = useState<GigData>({
-    userId: "",
-    companyId: "",
+    userId: Cookies.get('userId') || "",
+    companyId: Cookies.get('companyId') || "",
     destination_zone: "",
     destinationZones: [],
     callTypes: [],
