@@ -41,8 +41,8 @@ if (!window.__POWERED_BY_QIANKUN__) {
   console.log('[App] Running in standalone mode');
   
   // Set user ID and company ID cookies in standalone mode
-  const userId = Cookies.get('userId');
-  const companyId = Cookies.get('companyId');
+  const userId = import.meta.env.VITE_USER_ID;
+  const companyId = import.meta.env.VITE_COMPANY_ID || "684ace43641398dc582f1acc"; // Default company ID from GigForm.tsx
 
   if (userId) {
     console.log('[App] Setting user ID cookie:', userId);
@@ -60,11 +60,6 @@ if (!window.__POWERED_BY_QIANKUN__) {
   
   render({});
 }
-
-const userId = Cookies.get('userId');
-const companyId = Cookies.get('companyId');
-console.log('userId', userId);
-console.log('companyId', companyId);
 
 // Qiankun lifecycle methods
 export async function bootstrap() {
