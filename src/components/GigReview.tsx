@@ -249,7 +249,7 @@ export function GigReview({
                 <h3 className="font-medium">Coverage</h3>
               </div>
               <div className="text-lg font-bold text-gray-900">
-                {data.schedule?.hours || 'Not specified'}
+                {data.schedule?.schedules?.[0]?.hours?.start || 'Not specified'} - {data.schedule?.schedules?.[0]?.hours?.end || 'Not specified'}
               </div>
               <p className="text-sm text-gray-600 mt-1">
                 {data.schedule?.timeZones?.join(", ") || 'No time zones specified'}
@@ -418,24 +418,24 @@ export function GigReview({
                 </div>
                 <div className="p-6">
                   <div className="grid grid-cols-2 gap-6">
-                    {data.schedule.days && data.schedule.days.length > 0 && (
+                    {data.schedule.schedules && data.schedule.schedules.length > 0 && (
                       <div>
                         <h3 className="text-sm font-medium text-gray-700 mb-3">
                           Working Days
                         </h3>
                         <div className="flex flex-wrap gap-2">
-                          {data.schedule.days.map((day) => (
+                          {data.schedule.schedules.map((schedule) => (
                             <span
-                              key={day}
+                              key={schedule.day}
                               className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
                             >
-                              {day}
+                              {schedule.day}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
-                    {data.schedule.hours && (
+                    {data.schedule.schedules?.[0]?.hours && (
                       <div>
                         <h3 className="text-sm font-medium text-gray-700 mb-3">
                           Working Hours
@@ -443,7 +443,7 @@ export function GigReview({
                         <div className="flex items-center gap-2">
                           <Clock className="w-5 h-5 text-gray-400" />
                           <span className="text-gray-900">
-                            {data.schedule.hours}
+                            {data.schedule.schedules[0].hours.start} - {data.schedule.schedules[0].hours.end}
                           </span>
                         </div>
                       </div>
@@ -574,9 +574,9 @@ export function GigReview({
                           key={index}
                           className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg"
                         >
-                          <span className="text-gray-900">{lang.name}</span>
+                          <span className="text-gray-900">{lang.language}</span>
                           <span className="text-sm text-gray-600">
-                            {lang.level}
+                            {lang.proficiency}
                           </span>
                         </div>
                       ))}
@@ -598,7 +598,10 @@ export function GigReview({
                           className="flex items-center gap-2 p-2 bg-indigo-50 text-indigo-700 rounded-lg"
                         >
                           <CheckCircle className="w-4 h-4" />
-                          <span className="text-sm">{skill}</span>
+                          <span className="text-sm">{skill.skill}</span>
+                          <span className="text-xs bg-indigo-200 px-2 py-0.5 rounded-full">
+                            Level {skill.level}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -616,9 +619,12 @@ export function GigReview({
                       {data.skills.technical.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center gap-2"
                         >
-                          {skill}
+                          {skill.skill}
+                          <span className="text-xs bg-blue-200 px-2 py-0.5 rounded-full">
+                            Level {skill.level}
+                          </span>
                         </span>
                       ))}
                     </div>

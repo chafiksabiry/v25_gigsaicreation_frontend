@@ -7,9 +7,9 @@ export interface Profile {
   bio: string | null;
   skills: {
     languages: Language[];
-    professional: string[];
-    technical: string[];
-    softSkills: string[];
+    professional: Skill[];
+    technical: Skill[];
+    soft: Skill[];
   };
   
   rating: number;
@@ -20,7 +20,13 @@ export interface Profile {
 
 export interface Language {
   language: string;
-  proficiency: 'basic' | 'conversational' | 'fluent' | 'native';
+  proficiency: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  iso639_1: string;
+}
+
+export interface Skill {
+  skill: string;
+  level: number;
 }
 
 export interface ParsedGig {

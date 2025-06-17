@@ -16,6 +16,9 @@ import {
   CheckCircle,
   ArrowRight,
   PlusCircle,
+  XCircle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { JobDescription, GigMetadata } from "../lib/types";
@@ -29,6 +32,7 @@ import BasicSection from './BasicSection';
 import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
+import Cookies from 'js-cookie';
 
 // Register languages
 i18n.registerLocale(fr);
@@ -157,12 +161,12 @@ interface TeamRole {
   count: number;
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
 }
 
 interface TeamData {
-  size: string;
+  size: number;
   structure: TeamRole[];
   territories: string[];
 }
@@ -257,12 +261,32 @@ interface GigData {
   category: string;
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily: number;
+      weekly: number;
+      monthly: number;
+    };
+    };
   schedule: {
-    days: string[];
-    startTime: string;
-    endTime: string;
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
     timeZones: string[];
     flexibility: string[];
     minimumHours: {
@@ -295,7 +319,16 @@ interface GigData {
     requirements: string[];
   };
   leads?: LeadsData;
-  team?: TeamData;
+  team?: {
+    size: number;
+    structure: TeamRole[];
+    territories: string[];
+    reporting: {
+      to: string;
+      frequency: string;
+    };
+    collaboration: string[];
+  };
   documentation: {
     templates: null,
     reference: null,
@@ -312,50 +345,105 @@ interface SuggestionState extends GigSuggestion {
   // Additional fields specific to SuggestionState can be added here
 }
 
-const fallbackSuggestions: SuggestionState = {
-  title: "Software Engineer",
-  description: "Looking for an experienced software engineer",
-  category: "Technology",
-  highlights: ["Remote work", "Competitive salary", "Growth opportunities"],
-  jobTitles: ["Software Engineer", "Full Stack Developer", "Backend Developer", "Frontend Developer"],
-  deliverables: ["Code implementation", "Technical documentation", "Unit tests", "Code review"],
-  skills: {
-    languages: [{ name: "English", level: "Professional" }],
-    soft: ["Communication", "Problem Solving", "Teamwork"],
-    professional: [],
-    technical: [],
-    certifications: []
+const fallbackSuggestions: GigSuggestion = {
+  title: "",
+  description: "",
+  category: "",
+  highlights: [],
+  jobTitles: [],
+  deliverables: [],
+  sectors: [],
+  destinationZones: [],
+  availability: {
+    schedule: [{
+      day: "",
+      hours: {
+        start: "",
+        end: ""
+      }
+    }],
+    timeZones: [],
+    flexibility: [],
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    }
   },
-  requirements: {
-    essential: ["Bachelor's degree", "3+ years experience"],
-    preferred: ["Master's degree", "5+ years experience"]
-  },
-  sectors: ["Technology", "Finance", "Healthcare"],
-  destinationZones: ["Spain", "France", "Italy", "Germany", "Portugal", "Greece", "Poland", "Czech Republic", "Hungary", "Romania", "Bulgaria", "Croatia", "Slovakia", "Slovenia", "Denmark", "Finland", "Sweden", "Norway", "Ireland", "Estonia", "Latvia", "Lithuania", "Luxembourg", "Malta", "Cyprus"],
   schedule: {
-    days: [],
-    startTime: "09:00",
-    endTime: "18:00",
+    schedules: [{
+      day: "",
+      hours: {
+        start: "",
+        end: ""
+      }
+    }],
     timeZones: ["CET"],
     flexibility: [],
-    minimumHours: { daily: 8, weekly: 40, monthly: 160 }
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    }
   },
-  commission: { options: [] },
-  activity: { options: [] },
-  team: { 
-    size: "", 
-    structure: [], 
-    territories: [],
-    reporting: { to: "", frequency: "" },
-    collaboration: []
+  requirements: {
+    essential: [],
+    preferred: []
   },
-  leads: { 
-    types: [], 
+  benefits: [],
+  skills: {
+    languages: [],
+    soft: [{
+      skill: "Communication",
+      level: 1
+    }],
+    professional: [{
+      skill: "Brand Identity Design",
+      level: 1
+    }],
+    technical: [{
+      skill: "Adobe Illustrator",
+      level: 1
+    }],
+    certifications: []
+  },
+  seniority: {
+    level: "",
+    yearsExperience: 0
+  },
+  commission: {
+    options: []
+  },
+  activity: {
+    options: []
+  },
+  team: {
+    size: 1,
+    structure: [{
+      roleId: "default",
+      count: 1,
+      seniority: {
+        level: "Senior",
+        yearsExperience: 5
+      }
+    }],
+    territories: ["Global"],
+    reporting: {
+      to: "Project Manager",
+      frequency: "Weekly"
+    },
+    collaboration: ["Daily standups", "Weekly reviews"]
+  },
+  leads: {
+    types: [],
     sources: [],
-    distribution: { method: "", rules: [] },
+    distribution: {
+      method: "",
+      rules: []
+    },
     qualificationCriteria: []
   },
-  documentation: { 
+  documentation: {
     templates: null,
     reference: null,
     product: [],
@@ -401,6 +489,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
   const [showBasicSection, setShowBasicSection] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [leadsData, setLeadsData] = useState<any>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
 
   useEffect(() => {
     if (input.trim().length > 0) {
@@ -443,10 +532,30 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       deliverables: suggestions.deliverables || [],
       sectors: suggestions.sectors || [],
       destinationZones: suggestions.destinationZones || [],
+      availability:{
+        schedule: suggestions.schedule?.schedules || [{
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }],
+        timeZones: suggestions.schedule?.timeZones || [],
+        flexibility: suggestions.schedule?.flexibility || [],
+        minimumHours: {
+          daily: suggestions.schedule?.minimumHours?.daily || 8,
+          weekly: suggestions.schedule?.minimumHours?.weekly || 40,
+          monthly: suggestions.schedule?.minimumHours?.monthly || 160
+        }
+      },
       schedule: {
-        days: suggestions.schedule?.days || [],
-        startTime: suggestions.schedule?.startTime || "09:00",
-        endTime: suggestions.schedule?.endTime || "18:00",
+        schedules: suggestions.schedule?.schedules || [{
+          day: "Monday",
+          hours: {
+            start: "09:00",
+            end: "18:00"
+          }
+        }],
         timeZones: suggestions.schedule?.timeZones || ["CET"],
         flexibility: suggestions.schedule?.flexibility || [],
         minimumHours: {
@@ -462,25 +571,53 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       benefits: suggestions.benefits || [],
       skills: {
         languages: Array.isArray(suggestions.skills?.languages) 
-          ? suggestions.skills.languages.map(lang => ({ name: lang.name, level: lang.level })) 
+          ? suggestions.skills.languages.map(lang => ({ 
+              language: lang.language,
+              proficiency: lang.proficiency,
+              iso639_1: lang.iso639_1 || lang.language?.toLowerCase().substring(0, 2) || 'en'
+            })) 
           : [],
-        soft: suggestions.skills?.soft || [],
-        professional: suggestions.skills?.professional || [],
-        technical: suggestions.skills?.technical || [],
+        soft: Array.isArray(suggestions.skills?.soft) 
+          ? suggestions.skills.soft.map(skill => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return {
+                skill: skillName,
+                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
+              };
+            })
+          : [],
+        professional: Array.isArray(suggestions.skills?.professional)
+          ? suggestions.skills.professional.map(skill => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return {
+                skill: skillName,
+                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
+              };
+            })
+          : [],
+        technical: Array.isArray(suggestions.skills?.technical)
+          ? suggestions.skills.technical.map(skill => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return {
+                skill: skillName,
+                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
+              };
+            })
+          : [],
         certifications: suggestions.skills?.certifications || []
       },
-      seniority: {
-        level: suggestions.seniority?.level || "",
-        yearsExperience: typeof suggestions.seniority?.yearsExperience === 'string' 
-          ? parseInt(suggestions.seniority.yearsExperience) || 0 
-          : suggestions.seniority?.yearsExperience || 0,
-        years: suggestions.seniority?.years || ""
+      seniority: suggestions?.seniority ? {
+        level: suggestions.seniority.level || '',
+        yearsExperience: Number(suggestions.seniority.yearsExperience) || 0,
+      } : {
+        level: '',
+        yearsExperience: 0,
       },
       commission: commissionData,
       activity: suggestions.activity || {
         options: []
       },
-      team: suggestions.team || { size: "", structure: [], territories: [] },
+      team: suggestions.team || { size: 1, structure: [{ roleId: "default", count: 1, seniority: { level: "Senior", yearsExperience: "5+" } }], territories: ["Global"] },
       leads: suggestions.leads || { types: [], sources: [] },
       documentation: suggestions.documentation || { 
         templates: null,
@@ -706,6 +843,13 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         // Editing schedule hours
         const [day, time] = editValue.split(",");
         const [start, end] = time.split("-").map((t) => t.trim());
+        
+        // Validate the day
+        if (!validateDay(day.trim())) {
+          alert('Invalid day. Please use a single day from: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday');
+          return;
+        }
+
         updatedMetadata.schedules[editingScheduleIndex].hours[
           editingHourIndex
         ] = {
@@ -738,67 +882,80 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     cancelEdit();
   };
 
-  const addNewSchedule = () => {
-    if (!editableMetadata) return;
-
-    const newSchedule = {
-      name: "New Schedule",
-      description: "Description for new schedule",
-      hours: [{ day: "Monday", start: "09:00", end: "17:00" }],
-    };
-
-    const updatedMetadata = {
-      ...editableMetadata,
-      schedules: [...editableMetadata.schedules, newSchedule],
-    };
-
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
-    setEditingScheduleIndex(updatedMetadata.schedules.length - 1);
-    setEditingMetadataField("name");
-    setEditValue("New Schedule");
+  const generateWeeklySchedule = () => {
+    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    return weekdays.map((day) => ({
+      day,
+      hours: {
+        start: "09:00",
+        end: "17:00"
+      }
+    }));
   };
 
-  const addNewHour = (scheduleIndex: number) => {
-    if (!editableMetadata) return;
+  const validateDay = (day: string): boolean => {
+    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    return validDays.includes(day.trim());
+  };
 
-    const updatedMetadata = { ...editableMetadata };
-    updatedMetadata.schedules[scheduleIndex].hours.push({
-      day: "New Day",
-      start: "09:00",
-      end: "17:00",
-    });
+  const addNewSchedule = () => {
+    if (!editableSuggestions) return;
 
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
-    setEditingScheduleIndex(scheduleIndex);
-    setEditingHourIndex(
-      updatedMetadata.schedules[scheduleIndex].hours.length - 1
-    );
+    const newSchedule = {
+      schedules: generateWeeklySchedule(),
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {
+        daily: 8,
+        weekly: 40,
+        monthly: 160
+      }
+    };
+
+    const updatedSuggestions = {
+      ...editableSuggestions,
+      schedule: newSchedule
+    };
+
+    setEditableSuggestions(updatedSuggestions);
+    setSuggestions(updatedSuggestions);
   };
 
   const removeSchedule = (index: number) => {
-    if (!editableMetadata) return;
+    if (!editableSuggestions) return;
 
-    const updatedMetadata = {
-      ...editableMetadata,
-      schedules: editableMetadata.schedules.filter((_, i) => i !== index),
+    const updatedSuggestions = {
+      ...editableSuggestions,
+      schedule: {
+        ...editableSuggestions.schedule,
+        schedules: editableSuggestions.schedule.schedules.filter((_, i) => i !== index)
+      }
     };
 
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
+    setEditableSuggestions(updatedSuggestions);
+    setSuggestions(updatedSuggestions);
   };
 
   const removeHour = (scheduleIndex: number, hourIndex: number) => {
-    if (!editableMetadata) return;
+    if (!editableSuggestions) return;
 
-    const updatedMetadata = { ...editableMetadata };
-    updatedMetadata.schedules[scheduleIndex].hours = updatedMetadata.schedules[
-      scheduleIndex
-    ].hours.filter((_, i) => i !== hourIndex);
+    const updatedSuggestions = {
+      ...editableSuggestions,
+      schedule: {
+        ...editableSuggestions.schedule,
+        schedules: editableSuggestions.schedule.schedules.map(schedule => ({
+          ...schedule,
+          hours: {
+            ...schedule.hours,
+            start: schedule.hours.start,
+            end: schedule.hours.end
+          }
+        }))
+      }
+    };
 
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
+    setEditableSuggestions(updatedSuggestions);
+    setSuggestions(updatedSuggestions);
   };
 
   const generateMetadata = async () => {
@@ -946,82 +1103,13 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
     const generateSuggestions = async () => {
       if (!openai) {
-        // Fallback suggestions if OpenAI is not available
-        const fallbackSuggestions = {
-          jobTitles: ["Sales Development Representative", "Business Development Manager"],
-          deliverables: [
-            "Generate qualified leads",
-            "Convert prospects into customers",
-            "Achieve monthly revenue target of €50,000",
-            "Collaborate with marketing team",
-            "Track opportunities in CRM"
-          ],
-          skills: {
-            languages: [{ name: "English", level: "Fluent" }],
-            soft: ["B2B Sales", "CRM Software", "Lead Generation", "Negotiation"],
-            professional: [],
-            technical: [],
-            certifications: []
-          },
-          timeframes: ["Full-time", "Remote"],
-          requirements: { essential: [], preferred: [] },
-          // languages: ["English (Fluent)"],
-          seniority: {
-            years: "",
-            level: "",
-            yearsExperience: 0
-          },
-          schedule: {
-            days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            hours: "9:00 AM - 6:00 PM CET",
-            timeZones: ["CET"],
-            flexibility: ["Remote work", "Flexible hours"],
-            minimumHours: {
-              daily: 8,
-              weekly: 40,
-              monthly: 160
-            },
-            startTime: "09:00",
-            endTime: "18:00"
-          },
-          commission: {
-            options: [{
-              base: "Fixed Salary",
-              baseAmount: "0",
-              bonus: "quarterly",
-              bonusAmount: "5000",
-              currency: "USD",
-              minimumVolume: {
-                amount: "0",
-                period: "Monthly",
-                unit: "Projects"
-              },
-              transactionCommission: {
-                type: "Fixed Amount",
-                amount: "0"
-              }
-            }]
-          },
-          sectors: ["SaaS", "Software", "Technology"],
-          activity: {
-            options: [{
-              type: "B2B Sales",
-              description: "Direct B2B sales for SaaS products",
-              requirements: [
-                "B2B sales experience",
-                "CRM software proficiency",
-                "Strong communication skills"
-              ]
-            }]
-          },
-          destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
-        };
         setSuggestions(fallbackSuggestions);
         setEditableSuggestions(fallbackSuggestions);
         return;
       }
 
       try {
+        setIsSuggestionsLoading(true);
         const response = await openai.chat.completions.create({
           model: "gpt-4",
           messages: [
@@ -1035,23 +1123,43 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 deliverables: string[],
                 compensation: string[],
                 skills: {
-                  // Human languages required for the role (e.g. English, French, Spanish)
-                  languages: { name: string, level: string }[],
-                  soft: string[],
-                  professional: string[],
-                  technical: string[],
+                  languages: { language: string, proficiency: string, iso639_1: string }[],
+                  soft: { skill: string, level: number }[],
+                  professional: { skill: string, level: number }[],
+                  technical: { skill: string, level: number }[],
                   certifications: string[]
                 },
                 kpis: string[],
                 timeframes: string[],
                 requirements: string[],
-                // languages: string[],
                 seniority: {
                   level: string,
-                  yearsExperience: string
+                  yearsExperience: number
+                },
+                availability: {
+                  schedule: {
+                    day: string,
+                    hours: {
+                      start: string,
+                      end: string
+                    }
+                  }[],
+                  timeZones: string[],
+                  flexibility: string[],
+                  minimumHours: {
+                    daily?: number,
+                    weekly?: number,
+                    monthly?: number
+                  }
                 },
                 schedule: {
-                  days: string[],
+                  schedules: {
+                    day: string,
+                    hours: {
+                      start: string,
+                      end: string
+                    }
+                  }[],
                   hours: string,
                   timeZones: string[],
                   flexibility: string[],
@@ -1059,9 +1167,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     daily?: number,
                     weekly?: number,
                     monthly?: number
-                  },
-                  startTime: string,
-                  endTime: string
+                  }
                 },
                 commission: {
                   options: Array<{
@@ -1089,18 +1195,21 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     requirements: string[]
                   }>
                 },
-                destinationZones: string[]
+                destinationZones: string[],
+                team: {
+                  size: number,
+                  structure: Array<{
+                    roleId: string,
+                    count: number,
+                    seniority: {
+                      level: string,
+                      yearsExperience: number
+                    }
+                  }>,
+                  territories: string[]
+                }
               }
 
-              For destinationZones, analyze the input and suggest relevant geographic regions where the gig could be performed.
-              Consider factors like:
-              - Target market
-              - Time zone requirements
-              - Language requirements
-              - Cultural considerations
-              - Market potential
-              - Infrastructure requirements
-              
               Remember: Respond with ONLY the JSON object, no other text.`
             },
             {
@@ -1109,105 +1218,141 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             }
           ],
           temperature: 0.7,
-          max_tokens: 1000
+          max_tokens: 2000
         });
 
         const content = response.choices[0]?.message?.content;
-        if (content) {
-          try {
-            const parsedSuggestions = JSON.parse(content);
-            
-            // Ensure all required fields are present with default values if missing
-            const defaultSuggestions = {
-              seniority: {
-                years: "Senior",
-                level: "",
-                yearsExperience: ""
-              },
-              schedule: {
-                days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                hours: "9:00 AM - 6:00 PM CET",
-                timeZones: ["CET"],
-                flexibility: ["Remote work", "Flexible hours"],
-                minimumHours: {
-                  daily: 8,
-                  weekly: 40,
-                  monthly: 160
-                },
-                startTime: "09:00",
-                endTime: "18:00"
-              },
-              commission: {
-                options: [{
-                  base: "Fixed Salary",
-                  baseAmount: "0",
-                  bonus: "quarterly",
-                  bonusAmount: "5000",
-                  currency: "USD",
-                  minimumVolume: {
-                    amount: "0",
-                    period: "Monthly",
-                    unit: "Projects"
-                  },
-                  transactionCommission: {
-                    type: "Fixed Amount",
-                    amount: "2"
-                  }
-                }]
-              },
-              activity: {
-                options: [{
-                  type: "Default Activity",
-                  description: "Default activity description",
-                  requirements: ["Default requirement"]
-                }]
-              },
-              destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
-            };
-
-            const finalSuggestions = {
-              ...defaultSuggestions,
-              ...parsedSuggestions
-            };
-
-            setSuggestions(finalSuggestions);
-            setEditableSuggestions(finalSuggestions);
-            setGigData(finalSuggestions); // Set the gigData state with the generated suggestions
-            console.log('Generated Suggestions:', finalSuggestions);
-          } catch (error) {
-            console.error("Error parsing suggestions:", error);
-            // Fallback to default suggestions if parsing fails
-            setSuggestions(fallbackSuggestions);
-            setEditableSuggestions(fallbackSuggestions);
-          }
+        if (!content) {
+          throw new Error('No content received from AI');
         }
-      } catch (error: any) {
-        console.error("Error generating suggestions:", error);
-        
-        // Check if it's a rate limit error (429)
-        if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded') {
-          await Swal.fire({
-            title: "Service Temporarily Unavailable",
-            text: "The AI assistance service is temporarily unavailable. We will continue in manual mode.",
-            icon: "info",
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            customClass: {
-              popup: "rounded-lg shadow-lg",
-              title: "text-xl font-semibold text-gray-800",
-              htmlContainer: "text-gray-600"
-            }
-          });
+
+        // Clean the content to ensure it's valid JSON
+        const cleanedContent = content.trim()
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
+          .replace(/\n/g, ' ') // Replace newlines with spaces
+          .replace(/\s+/g, ' '); // Normalize whitespace
+
+        console.log('Cleaned content:', cleanedContent);
+
+        try {
+          const parsedSuggestions = JSON.parse(cleanedContent);
           
-          // Redirect to manual creation page
-          window.location.href = "/gigsmanual";
-          return;
-        }
+          // Validate required fields
+          const requiredFields = [
+            'jobTitles', 'deliverables', 'skills', 'seniority', 
+            'availability', 'schedule', 'commission', 'sectors', 
+            'activity', 'destinationZones'
+          ];
 
-        // For other errors, use fallback suggestions
+          for (const field of requiredFields) {
+            if (!parsedSuggestions[field]) {
+              throw new Error(`Missing required field: ${field}`);
+            }
+          }
+
+          // Ensure all required fields are present with default values if missing
+          const defaultSuggestions = {
+            seniority: {
+              level: "",
+              yearsExperience: 0
+            },
+            availability: {
+              schedule: [{
+                day: "",
+                hours: {
+                  start: "",
+                  end: ""
+                }
+              }],
+              timeZones: ["CET"],
+              flexibility: ["Remote work", "Flexible hours"],
+              minimumHours: {
+                daily: 8,
+                weekly: 40,
+                monthly: 160
+              }
+            },
+            schedule: {
+              schedules: [{
+                day: "",
+                hours: {
+                  start: "",
+                  end: ""
+                }
+              }],
+              timeZones: ["CET"],
+              flexibility: ["Remote work", "Flexible hours"],
+              minimumHours: {
+                daily: 8,
+                weekly: 40,
+                monthly: 160
+              }
+            },
+            commission: {
+              options: [{
+                base: "Fixed Salary",
+                baseAmount: "0",
+                bonus: "quarterly",
+                bonusAmount: "5000",
+                currency: "USD",
+                minimumVolume: {
+                  amount: "0",
+                  period: "Monthly",
+                  unit: "Projects"
+                },
+                transactionCommission: {
+                  type: "Fixed Amount",
+                  amount: "2"
+                }
+              }]
+            },
+            activity: {
+              options: [{
+                type: "Default Activity",
+                description: "Default activity description",
+                requirements: ["Default requirement"]
+              }]
+            },
+            team: {
+              size: 0,
+              structure: [{
+                roleId: "default",
+                count: 1,
+                seniority: {
+                  level: "Senior",
+                  yearsExperience: 2
+                }
+              }],
+              territories: ["Global"]
+            },
+            destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
+          };
+
+          const finalSuggestions = {
+            ...defaultSuggestions,
+            ...parsedSuggestions,
+            team: {
+              ...defaultSuggestions.team,
+              ...parsedSuggestions.team,
+              structure: parsedSuggestions.team?.structure || defaultSuggestions.team.structure
+            }
+          };
+
+          setSuggestions(finalSuggestions);
+          setEditableSuggestions(finalSuggestions);
+          setGigData(finalSuggestions);
+          console.log('Generated Suggestions:', finalSuggestions);
+        } catch (parseError) {
+          console.error("Error parsing suggestions:", parseError);
+          setSuggestions(fallbackSuggestions);
+          setEditableSuggestions(fallbackSuggestions);
+        }
+      } catch (error) {
+        console.error("Error generating suggestions:", error);
         setSuggestions(fallbackSuggestions);
         setEditableSuggestions(fallbackSuggestions);
+      } finally {
+        setIsSuggestionsLoading(false);
       }
     };
 
@@ -1222,10 +1367,16 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     if (!gigData.seniority?.yearsExperience) emptyFields.push('Years of Experience');
     
     // Check schedule fields
-    if (!gigData.schedule?.days || gigData.schedule.days.length === 0) {
+    if (!gigData.schedule?.schedules || gigData.schedule.schedules.length === 0) {
       gigData.schedule = {
         ...gigData.schedule,
-        days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        schedules: [{
+          day: "Monday",
+          hours: {
+            start: "09:00",
+            end: "18:00"
+          }
+        }]
       };
     }
     if (!gigData.schedule?.hours) {
@@ -1324,22 +1475,26 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         quantity: 1,
         timeline: suggestions?.timeframes?.[0] || "Flexible",
         skills: {
-          languages: suggestions?.skills?.languages.map(lang => ({ name: lang.name, level: lang.level })) || [],
-          soft: suggestions?.skills?.soft || [],
-          professional: suggestions?.skills?.professional || [],
-          technical: suggestions?.skills?.technical || [],
+          languages: suggestions?.skills?.languages.map(lang => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })) || [],
+          soft: suggestions?.skills?.soft.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
+          professional: suggestions?.skills?.professional.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
+          technical: suggestions?.skills?.technical.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
           certifications: suggestions?.skills?.certifications || []
         },
         requirements: suggestions?.requirements || { essential: [], preferred: [] },
         status: "draft",
         seniority: {
-          years: suggestions?.seniority?.years || "Mid Level",
           level: suggestions?.seniority?.level || "Mid Level",
-          yearsExperience: suggestions?.seniority?.yearsExperience || "2-5 years"
+          yearsExperience: suggestions?.seniority?.yearsExperience || 3
         },
-        schedule: {
-          days: suggestions?.schedule?.days || [],
-          hours: suggestions?.schedule?.hours || "9:00 AM - 6:00 PM CET",
+        availability: {
+          schedule: suggestions?.schedule?.schedules || [{
+            day: "Monday",
+            hours: {
+              start: "09:00",
+              end: "18:00"
+            }
+          }],
           timeZones: suggestions?.schedule?.timeZones || ["CET"],
           flexibility: suggestions?.schedule?.flexibility || [],
           minimumHours: {
@@ -1347,8 +1502,23 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
             monthly: suggestions?.schedule?.minimumHours?.monthly || 160
           },
-          startTime: suggestions?.schedule?.startTime || "09:00",
-          endTime: suggestions?.schedule?.endTime || "18:00"
+        },
+        schedule: {
+          schedules: suggestions?.schedule?.schedules || [{
+            day: "Monday",
+            hours: {
+              start: "09:00",
+              end: "18:00"
+            }
+          }],
+          timeZones: suggestions?.schedule?.timeZones || ["CET"],
+          flexibility: suggestions?.schedule?.flexibility || [],
+          minimumHours: {
+            daily: suggestions?.schedule?.minimumHours?.daily || 8,
+            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
+            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
+          },
+
         },
         commission: {
           base: suggestions?.commission?.options?.[0]?.base || "Fixed Salary",
@@ -1376,7 +1546,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           sources: []
         },
         team: {
-          size: gigData.team?.size || '0',
+          size: gigData.team?.size || 0,
           structure: gigData.team?.structure || [],
           territories: gigData.team?.territories || []
         },
@@ -1478,9 +1648,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     setGigData((prev: GigData) => ({
       ...prev,
       team: {
-        size: "1-5",
+        size: 0,
         structure: [],
-        territories: []
+        territories: [],
+        reporting: {
+          to: '',
+          frequency: ''
+        },
+        collaboration: []
       }
     }));
     setIsTeamModalOpen(false);
@@ -1523,10 +1698,10 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         duration: gigData.duration,
         location: gigData.location,
         skills: {
-          languages: gigData.skills.languages.map((lang: { name: string; level: string }) => ({ name: lang.name, level: lang.level })),
-          soft: gigData.skills.soft,
-          professional: gigData.skills.professional,
-          technical: gigData.skills.technical,
+          languages: gigData.skills.languages.map((lang: { language: string; proficiency: string; iso639_1: string }) => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })),
+          soft: gigData.skills.soft.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
+          professional: gigData.skills.professional.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
+          technical: gigData.skills.technical.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
           certifications: gigData.skills.certifications
         },
         requirements: gigData.requirements,
@@ -1597,17 +1772,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         }
       });
-    }
-  };
-
-
-  const updateItem = (section: StringArraySection, index: number, value: string) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (isStringArray(items)) {
-      items[index] = value;
-      setEditableSuggestions(newSuggestions);
     }
   };
 
@@ -1715,52 +1879,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     );
   };
 
-  const addNewCommissionOption = () => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    
-    if (!newSuggestions.commission) {
-      newSuggestions.commission = {
-        options: []
-      };
-    }
-    
-    if (!newSuggestions.commission.options) {
-      newSuggestions.commission.options = [];
-    }
 
-    newSuggestions.commission.options.push({
-      base: "Hourly",
-      baseAmount: "0",
-      currency: "USD",
-      minimumVolume: {
-        amount: "0",
-        period: "Weekly",
-        unit: "Hours"
-      },
-      transactionCommission: {
-        type: "Fixed Amount",
-        amount: "2"
-      }
-    });
-
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const editCommissionOption = (index: number) => {
-    if (!editableSuggestions?.commission?.options) return;
-    const option = editableSuggestions.commission.options[index];
-    setEditingSection('commission');
-    setEditingIndex(index);
-    setEditValue(JSON.stringify(option));
-  };
-
-  const removeCommissionOption = (index: number) => {
-    if (!editableSuggestions?.commission?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    newSuggestions.commission.options = newSuggestions.commission.options.filter((_, i) => i !== index);
-    setEditableSuggestions(newSuggestions);
-  };
 
   const renderCommissionSection = () => {
     return (
@@ -2030,8 +2149,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
           <div>
             <label className="text-sm font-medium text-gray-500">Seniority Level *</label>
             {isEditing ? (
-              <input
-                type="text"
+              <select
                 value={editableSuggestions.seniority.level}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
@@ -2039,8 +2157,12 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. Mid-level, Senior, etc."
-              />
+              >
+                <option value="">Select seniority level</option>
+                {predefinedOptions.basic.seniorityLevels.map((level) => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
             ) : (
               <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.level}</p>
             )}
@@ -2049,18 +2171,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             <label className="text-sm font-medium text-gray-500">Years of Experience *</label>
             {isEditing ? (
               <input
-                type="text"
+                type="number"
+                min={0}
                 value={editableSuggestions.seniority.yearsExperience}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.seniority.yearsExperience = Number(e.target.value);
-                  setEditableSuggestions(newSuggestions);
-                }}
+                onChange={e => handleSeniorityChange('yearsExperience', Number(e.target.value))}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 2-5 years, 5+ years, etc."
               />
             ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.yearsExperience}</p>
+              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.yearsExperience} years</p>
             )}
           </div>
         </div>
@@ -2181,17 +2299,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             {isEditing ? (
               <input
                 type="time"
-                value={editableSuggestions.schedule.startTime || ""}
+                value={editableSuggestions.schedule.schedules[0]?.hours?.start || ""}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.schedule.startTime = e.target.value;
+                  if (newSuggestions.schedule.schedules[0]) {
+                    newSuggestions.schedule.schedules[0].hours.start = e.target.value;
+                  }
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="e.g. 09:00"
               />
             ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.startTime}</p>
+              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours?.start}</p>
             )}
           </div>
           <div>
@@ -2199,17 +2319,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             {isEditing ? (
               <input
                 type="time"
-                value={editableSuggestions.schedule.endTime || ""}
+                value={editableSuggestions.schedule.schedules[0]?.hours.end || ""}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.schedule.endTime = e.target.value;
+                  if (newSuggestions.schedule.schedules[0]) {
+                    newSuggestions.schedule.schedules[0].hours.end = e.target.value;
+                  }
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="e.g. 18:00"
               />
             ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.endTime}</p>
+              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours.end}</p>
             )}
           </div>
         </div>
@@ -2351,16 +2473,26 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
   useEffect(() => {
     if (suggestions?.destinationZones && suggestions.destinationZones.length > 0 && 
-        (!suggestions.destination_zone || suggestions.destination_zone.length === 0)) {
+        (!suggestions.destinationZones || suggestions.destinationZones.length === 0)) {
       const firstCountry = suggestions.destinationZones[0];
       const countryCode = Object.entries(i18n.getNames('en'))
         .find(([_, name]) => name === firstCountry)?.[0];
-      
       if (countryCode) {
-        setSuggestions(prev => prev ? { ...prev, destination_zone: countryCode } : null);
+        setSelectedCountry(countryCode);
       }
     }
-  }, [suggestions?.destinationZones, suggestions?.destination_zone]);
+  }, [suggestions?.destinationZones]);
+
+  const handleSeniorityChange = (field: 'level' | 'yearsExperience', value: string | number) => {
+    if (!editableSuggestions) return;
+    setEditableSuggestions({
+      ...editableSuggestions,
+      seniority: {
+        ...editableSuggestions.seniority,
+        [field]: value
+      }
+    });
+  };
 
   if (showMetadata) {
     return (
@@ -2734,10 +2866,17 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       {showBasicSection ? (
         <BasicSection
           data={{
+            userId: Cookies.get('userId') || "",
+            companyId: Cookies.get('companyId') || "",
             title: suggestions?.jobTitles[0] || '',
             description: suggestions?.deliverables.join('\n') || '',
             category: suggestions?.sectors[0] || '',
-            seniority: suggestions?.seniority || { level: '', yearsExperience: '' }
+            seniority: {
+              level: suggestions?.seniority?.level || '',
+              yearsExperience: suggestions?.seniority?.yearsExperience || 2,
+            },
+            destination_zone: suggestions?.destinationZones?.[0] || "France",
+            callTypes: [],
           }}
           onChange={(data) => {
             // Handle changes in basic section
@@ -2863,6 +3002,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
         isOpen={isTeamModalOpen}
         onClose={() => setIsTeamModalOpen(false)}
         title="Team Structure"
+        
         onSave={() => setIsTeamModalOpen(false)}
         onSkip={handleTeamSkip}
       >
@@ -2887,4 +3027,14 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
       </Modal>
     </div>
   );
+}
+
+function parseYearsExperience(val) {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    // Prend le premier nombre trouvé dans la string
+    const match = val.match(/\\d+/);
+    return match ? parseInt(match[0], 10) : 0;
+  }
+  return 0;
 }

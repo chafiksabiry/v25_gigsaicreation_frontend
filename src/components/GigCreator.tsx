@@ -30,8 +30,8 @@ const sections = [
 ];
 
 const initialGigData: GigData = {
-  userId: "",
-  companyId: "",
+  userId: Cookies.get('userId') || "",
+  companyId: Cookies.get('companyId') || "",
   title: "",
   description: "",
   category: "",
@@ -44,16 +44,36 @@ const initialGigData: GigData = {
     preferred: [],
   },
   benefits: [],
-  schedule: {
-    days: ([] as unknown) as string[],
-    startTime: "",
-    endTime: "",
+  availability: {
+    schedule: [{
+      day: "Monday",
+      hours: {
+        start: "09:00",
+        end: "18:00"
+      }
+    }],
     timeZones: [],
     flexibility: [],
     minimumHours: {
-      daily: undefined,
-      weekly: undefined,
-      monthly: undefined,
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    },
+  },
+  schedule: {
+    schedules: [{
+      day: "Monday",
+      hours: {
+        start: "09:00",
+        end: "18:00"
+      }
+    }],
+    timeZones: [],
+    flexibility: [],
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
     },
   },
   commission: {
@@ -88,19 +108,18 @@ const initialGigData: GigData = {
     qualificationCriteria: [],
   },
   skills: {
-    languages: [{ name: "English", level: "fluent" }],
-    technical: ["Adobe Illustrator", "Adobe Photoshop", "Typography", "Color Theory"],
-    professional: ["Brand Identity Design", "Logo Design", "Marketing Collateral Design", "Portfolio Management"],
-    soft: ["Creativity", "Time Management", "Client Communication", "Attention to Detail"],
+    languages: [{ language: "English", proficiency: "C1", iso639_1: "en" }],
+    soft: [{ skill: "Creativity", level: 1 }, { skill: "Time Management", level: 1 }, { skill: "Client Communication", level: 1 }, { skill: "Attention to Detail", level: 1 }],
+    professional: [{ skill: "Brand Identity Design", level: 1 }, { skill: "Logo Design", level: 1 }, { skill: "Marketing Collateral Design", level: 1 }, { skill: "Portfolio Management", level: 1 }],
+    technical: [{ skill: "Adobe Illustrator", level: 1 }, { skill: "Adobe Photoshop", level: 1 }, { skill: "Typography", level: 1 }, { skill: "Color Theory", level: 1 }],
     certifications: []
   },
   seniority: {
-    years: "",
     level: "",
     yearsExperience: 0,
   },
   team: {
-    size: "",
+    size: 0,
     structure: [],
     territories: [],
     reporting: {
@@ -232,7 +251,11 @@ export function GigCreator({ children }: GigCreatorProps) {
         ...suggestions,
         skills: {
           ...prev.skills,
-          ...skills
+          languages: skills.languages || prev.skills.languages,
+          soft: skills.soft?.map(skill => ({ skill, level: 1 })) || prev.skills.soft,
+          professional: skills.professional?.map(skill => ({ skill, level: 1 })) || prev.skills.professional,
+          technical: skills.technical?.map(skill => ({ skill, level: 1 })) || prev.skills.technical,
+          certifications: prev.skills.certifications
         }
       }));
       setShowAIDialog(false);
@@ -256,22 +279,8 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       
 
-      if (isStandalone) {
-        // Valeurs par défaut pour le mode standalone
-        companyId = Cookies.get('companyId') ?? "";
-        userId = Cookies.get('userId') ?? "";
-      } else {
-        // Récupérer le companyId associé à l'utilisateur
-        await saveGigData(gigData);
-        
-        // Since saveGigData doesn't return data, we'll use the cookies directly
-        userId = Cookies.get("userId") || "";
-        companyId = Cookies.get("companyId") || "";
-
-        if (!userId || !companyId) {
-          throw new Error("User ID or Company ID not found in cookies");
-        }
-      }
+      companyId = Cookies.get('companyId') || "";
+      userId = Cookies.get('userId') || "";
 
       const gigDataToSave = {
         title: gigData.title,
@@ -284,17 +293,54 @@ export function GigCreator({ children }: GigCreatorProps) {
           yearsExperience: gigData.seniority.yearsExperience
         },
         skills: {
-          professional: gigData.skills.professional,
-          languages: gigData.skills.languages,
-          technical: gigData.skills.technical,
-          soft: gigData.skills.soft
+          professional: gigData.skills.professional.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          languages: gigData.skills.languages.map(lang => ({
+            language: lang.language,
+            proficiency: lang.proficiency,
+            iso639_1: lang.iso639_1
+          })),
+          technical: gigData.skills.technical.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          soft: gigData.skills.soft.map(skill => ({ 
+            skill: skill.skill,
+            level: skill.level
+          }))
+        },
+        availability: {
+          schedule: [
+            {
+              day: gigData.schedule?.day || "",
+              hours: {
+                start: gigData.schedule?.hours?.start || "",
+                end: gigData.schedule?.hours?.end || ""
+              }
+            }
+          ],
+          timeZones: gigData.availability?.timeZones || [],
+          flexibility: gigData.availability?.flexibility || [],
+          minimumHours: gigData.availability?.minimumHours || {
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+          }
         },
         schedule: {
-          days: gigData.schedule?.days || [],
-          startTime: gigData.schedule?.startTime || '',
-          endTime: gigData.schedule?.endTime || '',
+          schedules: [
+            {
+              day: gigData.schedule?.day || "",
+              hours: {
+                start: gigData.schedule?.hours?.start || "",
+                end: gigData.schedule?.hours?.end || ""
+              }
+            }
+          ],
           timeZones: gigData.schedule?.timeZones || [],
-          flexibility: gigData.schedule?.flexibility || '',
+          flexibility: gigData.schedule?.flexibility || [],
           minimumHours: {
             daily: gigData.schedule?.minimumHours?.daily || 0,
             weekly: gigData.schedule?.minimumHours?.weekly || 0,
@@ -322,7 +368,7 @@ export function GigCreator({ children }: GigCreatorProps) {
           sources: gigData.leads.sources
         },
         team: {
-          size: gigData.team?.size || '0',
+          size: gigData.team?.size || 0,
           structure: gigData.team?.structure || [],
           territories: gigData.team?.territories || []
         },
@@ -350,8 +396,9 @@ export function GigCreator({ children }: GigCreatorProps) {
             ...gigData.skills.languages.map((lang) => ({
               gig_id: gig.id,
               category: "language",
-              name: lang.name,
-              level: lang.level,
+              language: lang.language,
+              proficiency: lang.proficiency,
+              iso639_1: lang.iso639_1
             })),
             ...gigData.skills.professional.map((skill) => ({
               gig_id: gig.id,
