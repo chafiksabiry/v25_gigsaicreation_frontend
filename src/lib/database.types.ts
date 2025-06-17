@@ -28,7 +28,7 @@ export interface Database {
           commission_bonus_amount: string | null
           commission_currency: string | null
           commission_structure: string | null
-          team_size: number
+          team_size: string
           team_structure: Json
           team_territories: string[]
           prerequisites: string[]
@@ -54,7 +54,7 @@ export interface Database {
           commission_bonus_amount?: string | null
           commission_currency?: string | null
           commission_structure?: string | null
-          team_size: number
+          team_size: string
           team_structure: Json
           team_territories: string[]
           prerequisites: string[]
