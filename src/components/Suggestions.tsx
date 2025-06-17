@@ -1099,109 +1099,13 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
     const generateSuggestions = async () => {
       if (!openai) {
-        // Fallback suggestions if OpenAI is not available
-        const fallbackSuggestions = {
-          jobTitles: ["Sales Development Representative", "Business Development Manager"],
-          deliverables: [
-            "Generate qualified leads",
-            "Convert prospects into customers",
-            "Achieve monthly revenue target of €50,000",
-            "Collaborate with marketing team",
-            "Track opportunities in CRM"
-          ],
-          skills: {
-            languages: [{ language: "English", proficiency: "C1", iso639_1: "en" }],
-            soft: [{
-              skill: "Communication",
-              level: 1
-            }],
-            professional: [{
-              skill: "Brand Identity Design",
-              level: 1
-            }],
-            technical: [{
-              skill: "Adobe Illustrator",
-              level: 1
-            }],
-            certifications: []
-          },
-          timeframes: ["Full-time", "Remote"],
-          requirements: { essential: [], preferred: [] },
-          // languages: ["English (Fluent)"],
-          seniority: {
-            level: "",
-            yearsExperience: 0
-          },
-          availability: {
-            schedule: [{
-              day: "",
-              hours: {
-                start: "",
-                end: ""
-              } 
-            }],
-            timeZones: [],
-            flexibility: [],
-            minimumHours: {
-              daily: 8,
-              weekly: 40,
-              monthly: 160
-            }
-          },
-          schedule: {
-            schedules: [{
-              day: "",
-              hours: {
-                start: "",
-                end: ""
-              }
-            }],
-            timeZones: ["CET"],
-            flexibility: ["Remote work", "Flexible hours"],
-            minimumHours: {
-              daily: 8,
-              weekly: 40,
-              monthly: 160
-            },
-          },
-          commission: {
-            options: [{
-              base: "Fixed Salary",
-              baseAmount: "0",
-              bonus: "quarterly",
-              bonusAmount: "5000",
-              currency: "USD",
-              minimumVolume: {
-                amount: "0",
-                period: "Monthly",
-                unit: "Projects"
-              },
-              transactionCommission: {
-                type: "Fixed Amount",
-                amount: "0"
-              }
-            }]
-          },
-          sectors: ["SaaS", "Software", "Technology"],
-          activity: {
-            options: [{
-              type: "B2B Sales",
-              description: "Direct B2B sales for SaaS products",
-              requirements: [
-                "B2B sales experience",
-                "CRM software proficiency",
-                "Strong communication skills"
-              ]
-            }]
-          },
-          destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
-        };
         setSuggestions(fallbackSuggestions);
         setEditableSuggestions(fallbackSuggestions);
         return;
       }
 
       try {
+        setIsSuggestionsLoading(true);
         const response = await openai.chat.completions.create({
           model: "gpt-4",
           messages: [
@@ -1215,7 +1119,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 deliverables: string[],
                 compensation: string[],
                 skills: {
-                  // Human languages required for the role (e.g. English, French, Spanish)
                   languages: { language: string, proficiency: string, iso639_1: string }[],
                   soft: { skill: string, level: number }[],
                   professional: { skill: string, level: number }[],
@@ -1225,7 +1128,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 kpis: string[],
                 timeframes: string[],
                 requirements: string[],
-                // languages: string[],
                 seniority: {
                   level: string,
                   yearsExperience: number
@@ -1244,7 +1146,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     daily?: number,
                     weekly?: number,
                     monthly?: number
-                  },
+                  }
                 },
                 schedule: {
                   schedules: {
@@ -1261,7 +1163,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                     daily?: number,
                     weekly?: number,
                     monthly?: number
-                  },
+                  }
                 },
                 commission: {
                   options: Array<{
@@ -1304,15 +1206,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
                 }
               }
 
-              For destinationZones, analyze the input and suggest relevant geographic regions where the gig could be performed.
-              Consider factors like:
-              - Target market
-              - Time zone requirements
-              - Language requirements
-              - Cultural considerations
-              - Market potential
-              - Infrastructure requirements
-              
               Remember: Respond with ONLY the JSON object, no other text.`
             },
             {
@@ -1321,208 +1214,141 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             }
           ],
           temperature: 0.7,
-          max_tokens: 1000
+          max_tokens: 2000
         });
 
         const content = response.choices[0]?.message?.content;
-        if (content) {
-          try {
-            console.log('Raw AI response:', content);
-            
-            // Try to clean the response if it contains any non-JSON text
-            const jsonStart = content.indexOf('{');
-            const jsonEnd = content.lastIndexOf('}') + 1;
-            let cleanedContent = content.slice(jsonStart, jsonEnd);
-            
-            // Fix common JSON syntax errors
-            cleanedContent = cleanedContent
-              // Fix escaped quotes in time values
-              .replace(/"(\d{2}):(\d{2})"/g, '"$1:$2"')
-              // Fix double quotes in time values
-              .replace(/""(\d{2}):(\d{2})""/g, '"$1:$2"')
-              // Fix malformed numbers with $3
-              .replace(/"(\d+)"\$3/g, '"$1"')
-              // Fix missing commas between properties
-              .replace(/"(\w+)"\s*"(\w+)"/g, '"$1", "$2"')
-              // Fix missing commas between array elements
-              .replace(/}\s*{/g, '}, {')
-              // Fix missing quotes around property names
-              .replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3')
-              // Remove any trailing commas before closing braces/brackets
-              .replace(/,\s*([}\]])/g, '$1')
-              // Fix any remaining double quotes
-              .replace(/""/g, '"')
-              // Remove newlines and extra spaces
-              .replace(/\n/g, ' ')
-              .replace(/\r/g, '')
-              .replace(/\t/g, ' ')
-              .replace(/\s+/g, ' ');
-
-            console.log('Cleaned content:', cleanedContent);
-            
-            // Count opening and closing braces to ensure proper JSON structure
-            const openBraces = (cleanedContent.match(/{/g) || []).length;
-            const closeBraces = (cleanedContent.match(/}/g) || []).length;
-            
-            // Add missing closing braces if needed
-            if (openBraces > closeBraces) {
-              cleanedContent += '}'.repeat(openBraces - closeBraces);
-            }
-            
-            let parsedSuggestions;
-            try {
-              parsedSuggestions = JSON.parse(cleanedContent);
-            } catch (parseError: any) {
-              console.error('JSON Parse Error:', parseError);
-              console.error('Failed to parse content:', cleanedContent);
-              console.error('Error position:', parseError.message);
-              
-              // Try to fix common JSON syntax errors
-              try {
-                // Additional cleaning for specific error cases
-                cleanedContent = cleanedContent
-                  // Fix any remaining malformed time values
-                  .replace(/"(\d{2}):(\d{2})"/g, '"$1:$2"')
-                  // Fix any remaining malformed numbers
-                  .replace(/"(\d+)"\$3/g, '"$1"')
-                  // Fix any remaining missing commas
-                  .replace(/"(\w+)"\s*"(\w+)"/g, '"$1", "$2"')
-                  // Fix any remaining double quotes
-                  .replace(/""/g, '"');
-                
-                parsedSuggestions = JSON.parse(cleanedContent);
-              } catch (retryError) {
-                console.error('Failed to fix JSON:', retryError);
-                throw new Error(`Failed to parse JSON: ${parseError.message}`);
-              }
-            }
-            
-            // Ensure all required fields are present with default values if missing
-            const defaultSuggestions = {
-              seniority: {
-                level: "",
-                yearsExperience: 0
-              },
-              availability: {
-                schedule: [{
-                  day: "",
-                  hours: {
-                    start: "",
-                    end: ""
-                  }
-                }],
-                timeZones: ["CET"],
-                flexibility: ["Remote work", "Flexible hours"],
-                minimumHours: {
-                  daily: 8,
-                  weekly: 40,
-                  monthly: 160
-                },
-              },
-              schedule: {
-                schedules: [{
-                  day: "",
-                  hours: {
-                    start: "",
-                    end: ""
-                  }
-                }],
-                timeZones: ["CET"],
-                flexibility: ["Remote work", "Flexible hours"],
-                minimumHours: {
-                  daily: 8,
-                  weekly: 40,
-                  monthly: 160
-                },
-              },
-              commission: {
-                options: [{
-                  base: "Fixed Salary",
-                  baseAmount: "0",
-                  bonus: "quarterly",
-                  bonusAmount: "5000",
-                  currency: "USD",
-                  minimumVolume: {
-                    amount: "0",
-                    period: "Monthly",
-                    unit: "Projects"
-                  },
-                  transactionCommission: {
-                    type: "Fixed Amount",
-                    amount: "2"
-                  }
-                }]
-              },
-              activity: {
-                options: [{
-                  type: "Default Activity",
-                  description: "Default activity description",
-                  requirements: ["Default requirement"]
-                }]
-              },
-              team: {
-                size: 0,
-                structure: [{
-                  roleId: "default",
-                  count: 1,
-                  seniority: {
-                    level: "Senior",
-                    yearsExperience: 2
-                  }
-                }],
-                territories: ["Global"]
-              },
-              destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
-            };
-
-            const finalSuggestions = {
-              ...defaultSuggestions,
-              ...parsedSuggestions,
-              team: {
-                ...defaultSuggestions.team,
-                ...parsedSuggestions.team,
-                structure: parsedSuggestions.team?.structure || defaultSuggestions.team.structure
-              }
-            };
-
-            setSuggestions(finalSuggestions);
-            setEditableSuggestions(finalSuggestions);
-            setGigData(finalSuggestions); // Set the gigData state with the generated suggestions
-            console.log('Generated Suggestions:', finalSuggestions);
-          } catch (error) {
-            console.error("Error parsing suggestions:", error);
-            // Fallback to default suggestions if parsing fails
-            setSuggestions(fallbackSuggestions);
-            setEditableSuggestions(fallbackSuggestions);
-          }
+        if (!content) {
+          throw new Error('No content received from AI');
         }
-      } catch (error: any) {
-        console.error("Error generating suggestions:", error);
-        
-        // Check if it's a rate limit error (429)
-        if (error?.status === 429 || error?.error?.code === 'rate_limit_exceeded') {
-          await Swal.fire({
-            title: "Service Temporarily Unavailable",
-            text: "The AI assistance service is temporarily unavailable. We will continue in manual mode.",
-            icon: "info",
-            timer: 3000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            customClass: {
-              popup: "rounded-lg shadow-lg",
-              title: "text-xl font-semibold text-gray-800",
-              htmlContainer: "text-gray-600"
-            }
-          });
+
+        // Clean the content to ensure it's valid JSON
+        const cleanedContent = content.trim()
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
+          .replace(/\n/g, ' ') // Replace newlines with spaces
+          .replace(/\s+/g, ' '); // Normalize whitespace
+
+        console.log('Cleaned content:', cleanedContent);
+
+        try {
+          const parsedSuggestions = JSON.parse(cleanedContent);
           
-          // Redirect to manual creation page
-          window.location.href = "/gigsmanual";
-          return;
-        }
+          // Validate required fields
+          const requiredFields = [
+            'jobTitles', 'deliverables', 'skills', 'seniority', 
+            'availability', 'schedule', 'commission', 'sectors', 
+            'activity', 'destinationZones'
+          ];
 
-        // For other errors, use fallback suggestions
+          for (const field of requiredFields) {
+            if (!parsedSuggestions[field]) {
+              throw new Error(`Missing required field: ${field}`);
+            }
+          }
+
+          // Ensure all required fields are present with default values if missing
+          const defaultSuggestions = {
+            seniority: {
+              level: "",
+              yearsExperience: 0
+            },
+            availability: {
+              schedule: [{
+                day: "",
+                hours: {
+                  start: "",
+                  end: ""
+                }
+              }],
+              timeZones: ["CET"],
+              flexibility: ["Remote work", "Flexible hours"],
+              minimumHours: {
+                daily: 8,
+                weekly: 40,
+                monthly: 160
+              }
+            },
+            schedule: {
+              schedules: [{
+                day: "",
+                hours: {
+                  start: "",
+                  end: ""
+                }
+              }],
+              timeZones: ["CET"],
+              flexibility: ["Remote work", "Flexible hours"],
+              minimumHours: {
+                daily: 8,
+                weekly: 40,
+                monthly: 160
+              }
+            },
+            commission: {
+              options: [{
+                base: "Fixed Salary",
+                baseAmount: "0",
+                bonus: "quarterly",
+                bonusAmount: "5000",
+                currency: "USD",
+                minimumVolume: {
+                  amount: "0",
+                  period: "Monthly",
+                  unit: "Projects"
+                },
+                transactionCommission: {
+                  type: "Fixed Amount",
+                  amount: "2"
+                }
+              }]
+            },
+            activity: {
+              options: [{
+                type: "Default Activity",
+                description: "Default activity description",
+                requirements: ["Default requirement"]
+              }]
+            },
+            team: {
+              size: 0,
+              structure: [{
+                roleId: "default",
+                count: 1,
+                seniority: {
+                  level: "Senior",
+                  yearsExperience: 2
+                }
+              }],
+              territories: ["Global"]
+            },
+            destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
+          };
+
+          const finalSuggestions = {
+            ...defaultSuggestions,
+            ...parsedSuggestions,
+            team: {
+              ...defaultSuggestions.team,
+              ...parsedSuggestions.team,
+              structure: parsedSuggestions.team?.structure || defaultSuggestions.team.structure
+            }
+          };
+
+          setSuggestions(finalSuggestions);
+          setEditableSuggestions(finalSuggestions);
+          setGigData(finalSuggestions);
+          console.log('Generated Suggestions:', finalSuggestions);
+        } catch (parseError) {
+          console.error("Error parsing suggestions:", parseError);
+          setSuggestions(fallbackSuggestions);
+          setEditableSuggestions(fallbackSuggestions);
+        }
+      } catch (error) {
+        console.error("Error generating suggestions:", error);
         setSuggestions(fallbackSuggestions);
         setEditableSuggestions(fallbackSuggestions);
+      } finally {
+        setIsSuggestionsLoading(false);
       }
     };
 
@@ -1945,17 +1771,6 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     }
   };
 
-
-  const updateItem = (section: StringArraySection, index: number, value: string) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (isStringArray(items)) {
-      items[index] = value;
-      setEditableSuggestions(newSuggestions);
-    }
-  };
-
   const addItem = (section: StringArraySection) => {
     if (!editableSuggestions) return;
     const newSuggestions = { ...editableSuggestions };
@@ -2060,52 +1875,7 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
     );
   };
 
-  const addNewCommissionOption = () => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    
-    if (!newSuggestions.commission) {
-      newSuggestions.commission = {
-        options: []
-      };
-    }
-    
-    if (!newSuggestions.commission.options) {
-      newSuggestions.commission.options = [];
-    }
 
-    newSuggestions.commission.options.push({
-      base: "Hourly",
-      baseAmount: "0",
-      currency: "USD",
-      minimumVolume: {
-        amount: "0",
-        period: "Weekly",
-        unit: "Hours"
-      },
-      transactionCommission: {
-        type: "Fixed Amount",
-        amount: "2"
-      }
-    });
-
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const editCommissionOption = (index: number) => {
-    if (!editableSuggestions?.commission?.options) return;
-    const option = editableSuggestions.commission.options[index];
-    setEditingSection('commission');
-    setEditingIndex(index);
-    setEditValue(JSON.stringify(option));
-  };
-
-  const removeCommissionOption = (index: number) => {
-    if (!editableSuggestions?.commission?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    newSuggestions.commission.options = newSuggestions.commission.options.filter((_, i) => i !== index);
-    setEditableSuggestions(newSuggestions);
-  };
 
   const renderCommissionSection = () => {
     return (
@@ -2545,17 +2315,19 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
             {isEditing ? (
               <input
                 type="time"
-                value={editableSuggestions.schedule.endTime || ""}
+                value={editableSuggestions.schedule.schedules[0]?.hours.end || ""}
                 onChange={(e) => {
                   const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.schedule.endTime = e.target.value;
+                  if (newSuggestions.schedule.schedules[0]) {
+                    newSuggestions.schedule.schedules[0].hours.end = e.target.value;
+                  }
                   setEditableSuggestions(newSuggestions);
                 }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="e.g. 18:00"
               />
             ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.endTime}</p>
+              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours.end}</p>
             )}
           </div>
         </div>

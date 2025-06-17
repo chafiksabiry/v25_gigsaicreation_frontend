@@ -73,8 +73,11 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       const languages = safeData.languages;
       return languages.some((lang, idx) => lang.language === name && idx !== excludeIndex);
     }
-    const skills = safeData[type as keyof typeof safeData] as string[];
-    return skills.some((s, idx) => s === name && idx !== excludeIndex);
+    const skills = safeData[type as keyof typeof safeData];
+    return skills.some((s: any, idx) => {
+      if (typeof s === 'string') return s === name;
+      return s.skill === name || s.name === name;
+    });
   };
 
   // Handlers
@@ -108,7 +111,10 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         iso639_1: newSkill.iso639_1
       };
     } else {
-      updated[editingIndex.index] = newSkill.language;
+      updated[editingIndex.index] = {
+        skill: newSkill.language,
+        level: 1
+      };
     }
     
     onChange({ ...safeData, [editingIndex.type]: updated });
@@ -230,11 +236,23 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               ) : (
                 <>
                   <p className="text-gray-700 text-base flex-1">
-                    <span className="font-medium">{isLanguage ? skill.language : (typeof skill === 'string' ? skill : skill.skill)}</span>
+                    <span className="font-medium">
+                      {isLanguage 
+                        ? skill.language 
+                        : (typeof skill === 'string' 
+                            ? skill 
+                            : skill.skill || skill.name || '')}
+                    </span>
                     {isLanguage && (
                       <>
                         <span className="mx-2 text-gray-400">-</span>
                         <span className="text-blue-600 font-medium">{skill.proficiency}</span>
+                      </>
+                    )}
+                    {!isLanguage && typeof skill === 'object' && skill.level && (
+                      <>
+                        <span className="mx-2 text-gray-400">-</span>
+                        <span className="text-blue-600 font-medium">Level {skill.level}</span>
                       </>
                     )}
                   </p>

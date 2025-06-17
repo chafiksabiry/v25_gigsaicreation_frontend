@@ -232,7 +232,7 @@ export function ScheduleSection({
         schedules: updatedSchedules
       };
 
-      // Si availability existe, le mettre à jour aussi
+      // Update availability schedule as well
       if (data.availability) {
         updatedData.availability = {
           ...data.availability,
@@ -279,7 +279,7 @@ export function ScheduleSection({
       schedules: newSchedules
     };
 
-    // Si availability existe, le mettre à jour aussi
+    // Update availability schedule as well
     if (data.availability) {
       updatedData.availability = {
         ...data.availability,
@@ -401,10 +401,20 @@ export function ScheduleSection({
         predefinedOptions.availability.schedule.push(editingScheduleDay);
       }
 
-      onChange({
+      const updatedData = {
         ...data,
         schedules: updatedSchedules
-      });
+      };
+
+      // Update availability schedule as well
+      if (data.availability) {
+        updatedData.availability = {
+          ...data.availability,
+          schedule: updatedSchedules
+        };
+      }
+
+      onChange(updatedData);
 
       setEditingScheduleDay(null);
       setEditSchedule({ start: '', end: '' });

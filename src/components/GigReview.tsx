@@ -598,7 +598,7 @@ export function GigReview({
                           className="flex items-center gap-2 p-2 bg-indigo-50 text-indigo-700 rounded-lg"
                         >
                           <CheckCircle className="w-4 h-4" />
-                          <span className="text-sm">{skill}</span>
+                          <span className="text-sm">{typeof skill === 'string' ? skill : skill.skill}</span>
                         </div>
                       ))}
                     </div>
@@ -618,7 +618,7 @@ export function GigReview({
                           key={index}
                           className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                         >
-                          {skill}
+                          {typeof skill === 'string' ? skill : skill.skill}
                         </span>
                       ))}
                     </div>
