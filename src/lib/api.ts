@@ -113,11 +113,37 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       }))
     };
 
+    // Format schedule data to remove invalid ObjectId references
+    const formattedSchedule = {
+      ...gigData.schedule,
+      schedules: gigData.schedule.schedules.map(schedule => ({
+        day: schedule.day,
+        hours: schedule.hours
+      }))
+    };
+
+    // Format availability data
+    const formattedAvailability = {
+      ...gigData.availability,
+      timeZone: gigData.availability.timeZones?.[0] || 'UTC', // Use first timezone as default
+      schedule: gigData.availability.schedule.map(schedule => ({
+        day: schedule.day,
+        hours: schedule.hours
+      }))
+    };
+
+    // Format destination zone to ensure it's a valid country code
+    const destinationZone = gigData.destination_zone?.split(',')?.[0]?.trim() || 'US';
+    const formattedDestinationZone = destinationZone.length === 2 ? destinationZone : 'US';
+
     const gigDataWithIds = {
       ...gigData,
       userId,
       companyId,
-      skills: formattedSkills
+      skills: formattedSkills,
+      schedule: formattedSchedule,
+      availability: formattedAvailability,
+      destination_zone: formattedDestinationZone
     };
 
     const response = await fetch(`${API_URL}/gigs`, {
