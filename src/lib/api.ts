@@ -86,12 +86,40 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     const companyId = Cookies.get('companyId') ?? "";
     console.log('companyId', companyId);
     
+    // Format skills data to ensure proper structure
+    const formattedSkills = {
+      ...gigData.skills,
+      languages: gigData.skills.languages.map(lang => ({
+        language: lang.language,
+        proficiency: lang.proficiency,
+        iso639_1: lang.iso639_1
+      })),
+      soft: gigData.skills.soft.map(skill => ({
+        skill: skill.skill,
+        level: skill.level
+      })),
+      professional: gigData.skills.professional.map(skill => ({
+        skill: skill.skill,
+        level: skill.level
+      })),
+      technical: gigData.skills.technical.map(skill => ({
+        skill: skill.skill,
+        level: skill.level
+      })),
+      certifications: gigData.skills.certifications.map(cert => ({
+        name: cert.name,
+        required: cert.required,
+        provider: cert.provider
+      }))
+    };
 
     const gigDataWithIds = {
       ...gigData,
       userId,
-      companyId
+      companyId,
+      skills: formattedSkills
     };
+
     const response = await fetch(`${API_URL}/gigs`, {
       method: 'POST',
       headers: {
@@ -115,7 +143,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     try {
       const data = JSON.parse(responseText);
       console.log('Parsed response data:', data);
-      return { data, error: null };
+      return { data, error: undefined };
     } catch (parseError) {
       console.error('Error parsing success response:', parseError);
       return { data: null, error: new Error('Invalid JSON response from server') };
