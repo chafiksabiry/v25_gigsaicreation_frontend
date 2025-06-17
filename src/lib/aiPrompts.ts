@@ -8,27 +8,6 @@ export interface AIPrompt {
 }
 
 export const aiPrompts = {
-  availability: {
-    title: 'Availability',
-    description: 'Let AI help you determine the optimal availability based on your target markets and business hours.',
-    suggestions: [
-      'Optimal availability for global coverage',
-      'Working hours alignment',
-      'Schedule flexibility recommendations',
-      'Team distribution suggestions'
-    ],
-    systemPrompt: `Based on the following business requirements, suggest optimal availability:
-- Target markets: {markets}
-- Business hours: {hours}
-- Team distribution: {distribution}
-- Coverage requirements: {coverage}
-
-Please provide:
-1. Working days and hours
-2. Time zone recommendations
-3. Flexibility options
-4. Minimum hour requirements`
-  },
   schedule: {
     title: 'Schedule & Time Zone Suggestions',
     description: 'Let AI help you determine the optimal time zones based on your target markets and business hours.',

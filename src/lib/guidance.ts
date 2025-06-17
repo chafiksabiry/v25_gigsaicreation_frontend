@@ -78,23 +78,10 @@ export const predefinedOptions = {
       'Turkey'
     ]
   },
-  availability: {
-    schedule: [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday'
-    ],
-    timeZones: [
-      'America/New_York',
-      'America/Chicago',
-      'America/Denver',
-      'America/Los_Angeles',
-      'Europe/London',
-      'Europe/Paris',
+  schedule: {
+    flexibility: [
+      'Remote Work Available',
+      'Flexible hours',
       'Weekend Rotation',
       'Night Shift Available',
       'Split Shifts',
@@ -148,26 +135,11 @@ export const predefinedOptions = {
     ]
   },
   skills: {
-    languages: [
-      {
-        language: "French",
-        proficiency: "Natif",
-        iso639_1: "fr",
-      }
-    ],
-    professional: [{
-      skill: "Brand Identity Design",
-      level: 1
-    }],
-    technical: [{
-      skill: "Adobe Illustrator",
-      level: 1
-    }],
-    soft: [{
-      skill: "Communication",
-      level: 1
-    }],
-    skillLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    languages: [],
+    professional: [],
+    technical: [],
+    soft: [],
+    skillLevels: []
   },
   team: {
     roles: [],
@@ -192,22 +164,6 @@ export const sectionGuidance = {
       'Be specific about the role category to attract the right candidates',
       'Match seniority level with experience requirements',
       'Consider both minimum and preferred experience levels'
-    ]
-  },
-  availability: {
-    title: 'Availability',
-    steps: [
-      'Select working days',
-      'Define working hours',
-      'Specify time zones',
-      'Set minimum hour requirements',
-      'Choose flexibility options'
-    ],
-    tips: [
-      'Consider multiple time zones for global coverage',
-      'Be clear about shift patterns and rotations',
-      'Include any flexibility in scheduling',
-      'Specify both core hours and flexible time slots'
     ]
   },
   schedule: {

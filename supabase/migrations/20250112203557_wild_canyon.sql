@@ -33,7 +33,7 @@ ALTER TABLE gig_skills
   ADD CONSTRAINT valid_language_level_check
   CHECK (
     category != 'language' OR
-    level = ANY(ARRAY['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+    level = ANY(ARRAY['Basic', 'Conversational', 'Professional', 'Native/Bilingual'])
   );
 
 -- Insert common languages

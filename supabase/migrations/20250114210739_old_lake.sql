@@ -2,7 +2,7 @@
   # Fix Language Level Validation
 
   1. Changes
-    - Update the language level check constraint to use CEFR levels (A1-C2)
+    - Update the language level check constraint to match UI options
     - Ensure consistency between UI and database validation
 
   2. Security
@@ -19,11 +19,9 @@ ALTER TABLE gig_skills
   CHECK (
     category != 'language' OR
     level = ANY(ARRAY[
-      'A1',
-      'A2',
-      'B1',
-      'B2',
-      'C1',
-      'C2'
+      'Basic',
+      'Conversational',
+      'Professional',
+      'Native/Bilingual'
     ])
   );

@@ -5,7 +5,8 @@ export interface GigData {
   destination_zone: string;
   seniority: {
     level: string;
-    yearsExperience: number;
+    years: string;
+    yearsExperience: string;
     aiGenerated?: boolean;
   };
 } 
