@@ -20,30 +20,10 @@ type GigFormData = {
   description: string;
   category: string;
   callTypes: string[];
-  availability: {
-    schedule: {
-      day: string;
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily?: number;
-      weekly?: number;
-      monthly?: number;
-    };
-  };
   schedule: {
-    schedules: {
-      day: string;
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
+    days: string[];
+    startTime: string;
+    endTime: string;
     timeZones: string[];
     flexibility: string;
   };
@@ -63,33 +43,19 @@ type GigFormData = {
     sources: string[];
   };
   skills: {
-    languages: { 
-      language: string; 
-      proficiency: string; 
-      iso639_1: string;
-      _id?: { $oid: string };
-    }[];
-    soft: {
-      skill: string;
-      level: number;
-    }[];
-    professional: {
-      skill: string;
-      level: number;
-    }[];
-    technical: {
-      skill: string;
-      level: number;
-    }[];
+    languages: { name: string; level: string; }[];
+    soft: string[];
+    professional: string[];
+    technical: string[];
     certifications: string[];
     industry: string[];
   };
   seniority: {
     level: string;
-    yearsExperience: number;
+    yearsExperience: string;
   };
   team: {
-    size: number;
+    size: string;
     structure: string[];
     territories: string[];
   };
@@ -103,178 +69,17 @@ type GigFormData = {
   };
 };
 
-interface GigData {
-  companyId: string;
-  userId: string;
-  title: string;
-  description: string;
-  category: string;
-  destination_zone: string;
-  callTypes: string[];
-  highlights: any[];
-  requirements: {
-    essential: any[];
-    preferred: any[];
-  };
-  benefits: any[];
-  availability: {
-    schedule: {
-      day: string;
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily?: number;
-      weekly?: number;
-      monthly?: number;
-    };
-  };
-  schedule: {
-    schedules: {
-      day: string;
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily?: number;
-      weekly?: number;
-      monthly?: number;
-    };
-  };
-  commission: {
-    base: string;
-    baseAmount: string;
-    bonus: string;
-    bonusAmount: string;
-    structure: string;
-    currency: string;
-    minimumVolume: {
-      amount: string;
-      period: string;
-      unit: string;
-    };
-    transactionCommission: {
-      type: string;
-      amount: string;
-    };
-    kpis: any[];
-  };
-  leads: {
-    types: {
-      type: string;
-      percentage: number;
-      description: string;
-    }[];
-    sources: string[];
-    distribution: {
-      method: string;
-      rules: any[];
-    };
-    qualificationCriteria: any[];
-  };
-  skills: {
-    languages: {
-      language: string;
-      proficiency: string;
-      iso639_1: string;
-    }[];
-    soft: {
-      skill: string;
-      level: number;
-    }[];
-    professional: {
-      skill: string;
-      level: number;
-    }[];
-    technical: {
-      skill: string;
-      level: number;
-    }[];
-    certifications: string[];
-  };
-  seniority: {
-    level: string;
-    yearsExperience: number;
-  };
-  team: {
-    size: number;
-    structure: {
-      roleId: string;
-      count: number;
-      seniority: {
-        level: string;
-        yearsExperience: number;
-      };
-    }[];
-    territories: string[];
-    reporting: {
-      to: string;
-      frequency: string;
-    };
-    collaboration: any[];
-  };
-  documentation: {
-    templates: Record<string, any>;
-    reference: Record<string, any>;
-    product: { name: string; url: string; }[];
-    process: { name: string; url: string; }[];
-    training: { name: string; url: string; }[];
-  };
-  tools: {
-    provided: any[];
-    required: any[];
-  };
-  training: {
-    initial: {
-      duration: string;
-      format: string;
-      topics: any[];
-    };
-    ongoing: {
-      frequency: string;
-      format: string;
-      topics: any[];
-    };
-    support: any[];
-  };
-  metrics: {
-    kpis: any[];
-    targets: Record<string, any>;
-    reporting: {
-      frequency: string;
-      metrics: any[];
-    };
-  };
-  compliance: {
-    requirements: any[];
-    certifications: any[];
-    policies: any[];
-  };
-  equipment: {
-    required: any[];
-    provided: any[];
-  };
-}
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export function GigForm() {
+export function GigForm({ gig, onSave, onCancel }: GigFormProps) {
   const { register, control, handleSubmit, formState: { errors } } = useForm<GigFormData>();
 
   const onSubmit = async (data: GigFormData) => {
     try {
       // Insert main gig data
-      const gigData: GigData = {
-        companyId: Cookies.get('companyId') || "",
-        userId: Cookies.get('userId') || "",
+      const gigData = {
+        companyId: "684ace43641398dc582f1acc",
+        userId: "684acdfbcf52e87c3ad166cd",
         title: data.title,
         description: data.description,
         category: data.category,
@@ -286,34 +91,10 @@ export function GigForm() {
           preferred: []
         },
         benefits: [],
-        availability: {
-          schedule: data.schedule?.schedules || [
-            {
-              day: "",
-              hours: {
-                start: "",
-                end: ""
-              }
-            }
-          ],
-          timeZones: data.schedule?.timeZones || [],
-          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
-          minimumHours: {
-            daily: undefined,
-            weekly: undefined,
-            monthly: undefined
-          }
-        },
         schedule: {
-          schedules: data.schedule?.schedules || [
-            {
-              day: "",
-              hours: {
-                start: "",
-                end: ""
-              }
-            }
-          ],
+          days: data.schedule?.days || [],
+          startTime: data.schedule?.startTime || '',
+          endTime: data.schedule?.endTime || '',
           timeZones: data.schedule?.timeZones || [],
           flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
           minimumHours: {
@@ -351,32 +132,24 @@ export function GigForm() {
         },
         skills: {
           languages: data.skills.languages,
-          soft: data.skills.soft.map(skill => ({
-            skill: skill.skill,
-            level: skill.level
-          })),
-          professional: data.skills.professional.map(skill => ({
-            skill: skill.skill,
-            level: skill.level
-          })),
-          technical: data.skills.technical.map(skill => ({
-            skill: skill.skill,
-            level: skill.level
-          })),
+          soft: data.skills.soft,
+          professional: data.skills.professional,
+          technical: [],
           certifications: []
         },
         seniority: {
           level: data.seniority.level,
           yearsExperience: data.seniority.yearsExperience,
+          years: ""
         },
         team: {
-          size: data.team?.size || 0,
+          size: data.team?.size || "",
           structure: (data.team?.structure || []).map(role => ({
             roleId: role,
             count: 1,
             seniority: {
               level: "",
-              yearsExperience: 0
+              yearsExperience: ""
             }
           })),
           territories: data.team?.territories || [],
@@ -438,9 +211,8 @@ export function GigForm() {
         ...data.skills.languages.map(lang => ({
           gig_id: gig.id,
           category: 'language',
-          language: lang.language,
-          proficiency: lang.proficiency,
-          iso639_1: lang.iso639_1
+          name: lang.name,
+          level: lang.level
         })),
         ...data.skills.soft.map(skill => ({
           gig_id: gig.id,
@@ -543,7 +315,7 @@ export function GigForm() {
               <label className="block text-sm font-medium text-gray-700">Working Hours</label>
               <input
                 type="text"
-                {...register('schedule.schedules.0.hours.start', { required: true })}
+                {...register('schedule.hours', { required: true })}
                 placeholder="e.g., 08h00 - 17h00 EST"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />

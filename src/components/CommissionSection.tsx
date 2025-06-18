@@ -581,23 +581,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         </div>
       </div>
 
-      {/* Additional Details */}
-      <div className="bg-white rounded-xl p-6 border border-gray-100">
-        <label className="block text-base font-semibold text-gray-800 mb-2">Additional Details</label>
-        <textarea
-          className="w-full min-h-[100px] rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-3 text-gray-700"
-          placeholder="Add any additional details about the commission structure..."
-          value={data?.commission?.additionalDetails || ''}
-          onChange={e => onChange({
-            ...data,
-            commission: {
-              ...data.commission,
-              additionalDetails: e.target.value
-            }
-          })}
-        />
-      </div>
-
       {/* Validation Messages */}
       {((errors?.commission && errors.commission.length > 0) || (warnings?.commission && warnings.commission.length > 0)) && (
         <div className="space-y-3">
