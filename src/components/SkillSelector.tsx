@@ -14,20 +14,20 @@ export function SkillSelector({ skills, onChange, type, showLevel = false }: Ski
   const getOptions = () => {
     switch (type) {
       case 'language':
-        return predefinedOptions.skills.languages.map(lang => lang.name);
+        return predefinedOptions.skills.languages.map(lang => lang.language);
       case 'technical':
-        return predefinedOptions.skills.technical;
+        return predefinedOptions.skills.technical.map(skill => skill.skill);
       case 'soft':
-        return predefinedOptions.skills.soft;
+        return predefinedOptions.skills.soft.map(skill => skill.skill);
       case 'professional':
-        return predefinedOptions.skills.professional;
+        return predefinedOptions.skills.professional.map(skill => skill.skill);
       default:
         return [];
     }
   };
 
   const options = getOptions();
-  const levels = showLevel ? predefinedOptions.skills.skillLevels : [];
+  const levels = showLevel ? ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] : [];
 
   const handleAdd = () => {
     onChange([...skills, { name: '', level: showLevel ? levels[0] : undefined }]);
