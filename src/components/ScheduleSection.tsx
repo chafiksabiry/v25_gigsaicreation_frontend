@@ -40,13 +40,37 @@ interface ScheduleSectionProps {
   onPrevious?: () => void;
 }
 
-const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const workingDays = ["Monday", "Tuesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const groupSchedules = (schedules: DaySchedule[]): GroupedSchedule[] => {
   if (!schedules || schedules.length === 0) {
-    return [{ days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], hours: { start: '09:00', end: '17:00' } }];
+    return [{ days: ["Monday", "Tuesday", "Thursday", "Friday"], hours: { start: '09:00', end: '17:00' } }];
   }
-  const grouped = groupSchedulesUtil(schedules);
+  
+  // Filter out Wednesday and deduplicate entries
+  const filteredSchedules = schedules.filter(schedule => 
+    schedule && 
+    schedule.day && 
+    schedule.day !== "Wednesday" && 
+    schedule.hours && 
+    typeof schedule.hours.start === 'string' && 
+    typeof schedule.hours.end === 'string' &&
+    schedule.hours.start.trim() !== '' &&
+    schedule.hours.end.trim() !== ''
+  );
+  
+  // Deduplicate by day (keep the first occurrence of each day)
+  const uniqueSchedules: DaySchedule[] = [];
+  const seenDays = new Set<string>();
+  
+  filteredSchedules.forEach(schedule => {
+    if (!seenDays.has(schedule.day)) {
+      seenDays.add(schedule.day);
+      uniqueSchedules.push(schedule);
+    }
+  });
+  
+  const grouped = groupSchedulesUtil(uniqueSchedules);
   return grouped.length > 0 ? grouped : [{ days: [], hours: { start: '09:00', end: '17:00' } }];
 };
 
@@ -71,8 +95,9 @@ export function ScheduleSection({
   const [activeScheduleIndex, setActiveScheduleIndex] = useState(0);
   
   useEffect(() => {
-    setGroupedSchedules(groupSchedules(data.schedules));
-    if (activeScheduleIndex >= groupSchedules(data.schedules).length) {
+    const newGroupedSchedules = groupSchedules(data.schedules);
+    setGroupedSchedules(newGroupedSchedules);
+    if (activeScheduleIndex >= newGroupedSchedules.length) {
         setActiveScheduleIndex(0);
     }
   }, [data.schedules]);
@@ -187,7 +212,16 @@ export function ScheduleSection({
       </div>
       
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Time Slots</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Time Slots</h3>
+          <button
+            onClick={handleAddScheduleGroup}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" />
+            Add Slot
+          </button>
+        </div>
         <div className="space-y-4">
             {groupedSchedules.map((schedule, index) => (
                 <div

@@ -21,7 +21,14 @@ export const groupSchedules = (schedules: DaySchedule[]): GroupedSchedule[] => {
   const groups: { [key: string]: string[] } = {};
   
   schedules.forEach(schedule => {
-    if (schedule && schedule.hours && typeof schedule.hours.start === 'string' && typeof schedule.hours.end === 'string') {
+    if (schedule && 
+        schedule.day && 
+        schedule.hours && 
+        typeof schedule.hours.start === 'string' && 
+        typeof schedule.hours.end === 'string' &&
+        schedule.hours.start.trim() !== '' &&
+        schedule.hours.end.trim() !== '') {
+        
         const hoursKey = `${schedule.hours.start}-${schedule.hours.end}`;
         if (!groups[hoursKey]) {
             groups[hoursKey] = [];
@@ -32,10 +39,20 @@ export const groupSchedules = (schedules: DaySchedule[]): GroupedSchedule[] => {
     }
   });
   
-  const grouped = Object.entries(groups).map(([hoursKey, days]) => {
-    const [start, end] = hoursKey.split('-');
-    return { days, hours: { start, end } };
-  });
+  const grouped = Object.entries(groups)
+    .filter(([_, days]) => days.length > 0)
+    .map(([hoursKey, days]) => {
+      const [start, end] = hoursKey.split('-');
+      return { 
+        days: days.sort(),
+        hours: { start, end } 
+      };
+    })
+    .sort((a, b) => {
+      const aStart = a.hours.start;
+      const bStart = b.hours.start;
+      return aStart.localeCompare(bStart);
+    });
 
   return grouped;
 }; 

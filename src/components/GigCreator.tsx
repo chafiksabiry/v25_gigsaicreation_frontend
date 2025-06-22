@@ -44,22 +44,6 @@ const initialGigData: GigData = {
     preferred: [],
   },
   benefits: [],
-  availability: {
-    schedule: [{
-      day: "Monday",
-      hours: {
-        start: "09:00",
-        end: "18:00"
-      }
-    }],
-    timeZones: [],
-    flexibility: [],
-    minimumHours: {
-      daily: 8,
-      weekly: 40,
-      monthly: 160
-    },
-  },
   schedule: {
     schedules: [{
       day: "Monday",
@@ -246,18 +230,42 @@ export function GigCreator({ children }: GigCreatorProps) {
         generateSkills(gigData.title, gigData.description || "")
       ]);
       
-      setGigData((prev) => ({
-        ...prev,
-        ...suggestions,
-        skills: {
-          ...prev.skills,
-          languages: skills.languages || prev.skills.languages,
-          soft: skills.soft?.map(skill => ({ skill, level: 1 })) || prev.skills.soft,
-          professional: skills.professional?.map(skill => ({ skill, level: 1 })) || prev.skills.professional,
-          technical: skills.technical?.map(skill => ({ skill, level: 1 })) || prev.skills.technical,
-          certifications: prev.skills.certifications
-        }
-      }));
+      const formatTime = (time: string | undefined) => {
+        if (!time) return "00:00";
+        const parts = time.split(':');
+        const h = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        return `${h}:${m}`;
+      };
+
+      setGigData((prev) => {
+        const { availability, ...restOfPrev } = prev;
+        const newGigData = {
+          ...restOfPrev,
+          ...suggestions,
+          schedule: suggestions.schedule ? {
+            ...suggestions.schedule,
+            schedules: suggestions.schedule.schedules.map(s => ({
+              ...s,
+              hours: {
+                start: formatTime(s.hours.start),
+                end: formatTime(s.hours.end)
+              }
+            }))
+          } : prev.schedule,
+          skills: {
+            ...prev.skills,
+            ...skills,
+            soft: skills.soft || prev.skills.soft,
+            languages: skills.languages || prev.skills.languages,
+            professional: skills.professional?.map(skill => ({ skill, level: 1 })) || prev.skills.professional,
+            technical: skills.technical?.map(skill => ({ skill, level: 1 })) || prev.skills.technical,
+            certifications: skills.certifications || prev.skills.certifications,
+          },
+        };
+        console.log("Applied AI suggestions:", newGigData);
+        return newGigData;
+      });
       setShowAIDialog(false);
     } catch (error: any) {
       setValidationErrors({ ai: [error.message] });

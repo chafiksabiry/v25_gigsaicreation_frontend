@@ -11,6 +11,7 @@ import { DocumentationSection } from "./DocumentationSection";
 import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
 import { TimezoneCode } from "../lib/ai";
+import { DaySchedule } from "lib/types";
 
 interface SectionContentProps {
   section: string;
@@ -30,9 +31,40 @@ export function SectionContent({
 }: SectionContentProps) {
   console.log('SectionContent - Initial data:', data);
 
+  const cleanSchedules = (schedules: DaySchedule[]): DaySchedule[] => {
+    if (!schedules || schedules.length === 0) {
+      return [];
+    }
+  
+    const seen = new Set<string>();
+    const cleaned: DaySchedule[] = [];
+  
+    schedules.forEach(schedule => {
+      if (schedule && schedule.day && schedule.hours) {
+        const key = `${schedule.day}-${schedule.hours.start}-${schedule.hours.end}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          cleaned.push({
+            day: schedule.day,
+            hours: {
+              start: schedule.hours.start,
+              end: schedule.hours.end
+            }
+          });
+        }
+      }
+    });
+  
+    return cleaned;
+  };
+
   // Ensure seniority object is properly initialized
   const initializedData = React.useMemo(() => ({
     ...data,
+    schedule: data.schedule ? {
+      ...data.schedule,
+      schedules: cleanSchedules(data.schedule.schedules || []),
+    } : undefined,
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,

@@ -260,100 +260,6 @@ const predefinedOptions: PredefinedOptions = {
   }
 };
 
-interface GigData {
-  userId: string;
-  companyId: string;
-  title: string;
-  description: string;
-  type: string;
-  quantity: number;
-  timeline: string;
-  skills_required: string[];
-  languages_required: Array<{ code: string; name: string }>;
-  kpis: string[];
-  category: string;
-  seniority: {
-    level: string;
-    yearsExperience: number;
-  };
-  availability: {
-    schedule: {
-      days: string[];
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily: number;
-      weekly: number;
-      monthly: number;
-    };
-    };
-  schedule: {
-    schedules: {
-      days: string[];
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily: number;
-      weekly: number;
-      monthly: number;
-    };
-  };
-  commission: {
-    base: string;
-    baseAmount: string;
-    bonus?: string;
-    bonusAmount?: string;
-    structure?: string;
-    currency: string;
-    minimumVolume: {
-      amount: string;
-      period: string;
-      unit: string;
-    };
-    transactionCommission: {
-      type: string;
-      amount: string;
-    };
-  };
-  sectors: string[];
-  activity: {
-    type: string;
-    description: string;
-    requirements: string[];
-  };
-  leads?: LeadsData;
-  team?: {
-    size: number;
-    structure: TeamRole[];
-    territories: string[];
-    reporting: {
-      to: string;
-      frequency: string;
-    };
-    collaboration: string[];
-  };
-  documentation: {
-    templates: null,
-    reference: null,
-    product: [],
-    process: [],
-    training: []
-  };
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
 interface SuggestionState extends GigSuggestion {
   // Additional fields specific to SuggestionState can be added here
 }
@@ -370,7 +276,7 @@ const fallbackSuggestions: GigSuggestion = {
   timeframes: [],
   availability: {
     schedule: [{
-      days: [],
+      days: [""],
       hours: {
         start: "",
         end: ""
@@ -386,14 +292,14 @@ const fallbackSuggestions: GigSuggestion = {
   },
   schedule: {
     schedules: [{
-      days: [],
+      day: "",
       hours: {
         start: "",
         end: ""
       }
     }],
     timeZones: ["CET"],
-    flexibility: [],
+    flexibility: ["Part-Time Options"],
     minimumHours: {
       daily: 8,
       weekly: 40,
@@ -470,6 +376,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
 
   useEffect(() => {
     const generateSuggestions = async () => {
@@ -477,6 +386,67 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
         setLoading(true);
         setError(null);
         const result = await generateGigSuggestions(input);
+        console.log('Generated suggestions:', result);
+        
+        // Convert schedules from days array to individual day objects
+        if (result.schedule && result.schedule.schedules) {
+          const convertedSchedules: Array<{
+            day: string;
+            hours: { start: string; end: string };
+            _id?: { $oid: string };
+          }> = [];
+          result.schedule.schedules.forEach((schedule: any, index: number) => {
+            if (schedule.days && Array.isArray(schedule.days)) {
+              // Convert from days array to individual day objects
+              schedule.days.forEach((day: string) => {
+                convertedSchedules.push({
+                  day: day,
+                  hours: schedule.hours,
+                  _id: {
+                    $oid: `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+                  }
+                });
+              });
+            } else if (schedule.day) {
+              // Already in correct format
+              convertedSchedules.push({
+                ...schedule,
+                _id: schedule._id || {
+                  $oid: `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+                }
+              });
+            }
+          });
+          result.schedule.schedules = convertedSchedules;
+        }
+
+        // Convert commission structure to options format if needed
+        if (result.commission && !(result.commission as any).options) {
+          // Convert old structure to new options structure
+          const oldCommission = result.commission as any;
+          const commissionOption = {
+            base: oldCommission.base || "Base",
+            baseAmount: oldCommission.baseAmount || "0",
+            bonus: oldCommission.bonus,
+            bonusAmount: oldCommission.bonusAmount,
+            structure: oldCommission.structure,
+            currency: oldCommission.currency || "EUR",
+            minimumVolume: oldCommission.minimumVolume || {
+              amount: "0",
+              period: "Monthly",
+              unit: "Units"
+            },
+            transactionCommission: oldCommission.transactionCommission || {
+              type: "Fixed",
+              amount: "0"
+            }
+          };
+          
+          result.commission = {
+            options: [commissionOption]
+          };
+        }
+        
         setSuggestions(result);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate suggestions');
@@ -494,6 +464,397 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
     if (suggestions) {
       onConfirm(suggestions);
     }
+  };
+
+  const addItem = (section: string, item: string) => {
+    if (!suggestions) return;
+
+    const newSuggestions = { ...suggestions };
+    
+    switch (section) {
+      case 'highlights':
+        newSuggestions.highlights = [...(newSuggestions.highlights || []), item];
+        break;
+      case 'jobTitles':
+        newSuggestions.jobTitles = [...(newSuggestions.jobTitles || []), item];
+        break;
+      case 'deliverables':
+        newSuggestions.deliverables = [...(newSuggestions.deliverables || []), item];
+        break;
+      case 'sectors':
+        newSuggestions.sectors = [...(newSuggestions.sectors || []), item];
+        break;
+      case 'destinationZones':
+        newSuggestions.destinationZones = [...(newSuggestions.destinationZones || []), item];
+        break;
+      case 'requirements.essential':
+        newSuggestions.requirements.essential = [...(newSuggestions.requirements.essential || []), item];
+        break;
+      case 'requirements.preferred':
+        newSuggestions.requirements.preferred = [...(newSuggestions.requirements.preferred || []), item];
+        break;
+      case 'skills.technical':
+        newSuggestions.skills.technical = [...(newSuggestions.skills.technical || []), { skill: item, level: 1 }];
+        break;
+      case 'skills.soft':
+        newSuggestions.skills.soft = [...(newSuggestions.skills.soft || []), { skill: item, level: 1 }];
+        break;
+      case 'skills.languages':
+        newSuggestions.skills.languages = [...(newSuggestions.skills.languages || []), { language: item, proficiency: 'Intermediate', iso639_1: 'en' }];
+        break;
+    }
+    
+    setSuggestions(newSuggestions);
+  };
+
+  const updateItem = (section: string, index: number, newValue: string) => {
+    if (!suggestions) return;
+
+    const newSuggestions = { ...suggestions };
+    
+    switch (section) {
+      case 'highlights':
+        newSuggestions.highlights[index] = newValue;
+        break;
+      case 'jobTitles':
+        newSuggestions.jobTitles[index] = newValue;
+        break;
+      case 'deliverables':
+        newSuggestions.deliverables[index] = newValue;
+        break;
+      case 'sectors':
+        newSuggestions.sectors[index] = newValue;
+        break;
+      case 'destinationZones':
+        newSuggestions.destinationZones[index] = newValue;
+        break;
+      case 'requirements.essential':
+        newSuggestions.requirements.essential[index] = newValue;
+        break;
+      case 'requirements.preferred':
+        newSuggestions.requirements.preferred[index] = newValue;
+        break;
+      case 'skills.technical':
+        newSuggestions.skills.technical[index] = { skill: newValue, level: newSuggestions.skills.technical[index].level };
+        break;
+      case 'skills.soft':
+        newSuggestions.skills.soft[index] = { skill: newValue, level: newSuggestions.skills.soft[index].level };
+        break;
+      case 'skills.languages':
+        const currentLang = newSuggestions.skills.languages[index];
+        newSuggestions.skills.languages[index] = { 
+          language: newValue, 
+          proficiency: currentLang.proficiency, 
+          iso639_1: currentLang.iso639_1 || 'en' 
+        };
+        break;
+    }
+    
+    setSuggestions(newSuggestions);
+    setEditingSection(null);
+    setEditingIndex(null);
+    setEditValue('');
+  };
+
+  const deleteItem = (section: string, index: number) => {
+    if (!suggestions) return;
+
+    const newSuggestions = { ...suggestions };
+    
+    switch (section) {
+      case 'highlights':
+        newSuggestions.highlights = newSuggestions.highlights.filter((_, i) => i !== index);
+        break;
+      case 'jobTitles':
+        newSuggestions.jobTitles = newSuggestions.jobTitles.filter((_, i) => i !== index);
+        break;
+      case 'deliverables':
+        newSuggestions.deliverables = newSuggestions.deliverables.filter((_, i) => i !== index);
+        break;
+      case 'sectors':
+        newSuggestions.sectors = newSuggestions.sectors.filter((_, i) => i !== index);
+        break;
+      case 'destinationZones':
+        newSuggestions.destinationZones = newSuggestions.destinationZones.filter((_, i) => i !== index);
+        break;
+      case 'requirements.essential':
+        newSuggestions.requirements.essential = newSuggestions.requirements.essential.filter((_, i) => i !== index);
+        break;
+      case 'requirements.preferred':
+        newSuggestions.requirements.preferred = newSuggestions.requirements.preferred.filter((_, i) => i !== index);
+        break;
+      case 'skills.technical':
+        newSuggestions.skills.technical = newSuggestions.skills.technical.filter((_, i) => i !== index);
+        break;
+      case 'skills.soft':
+        newSuggestions.skills.soft = newSuggestions.skills.soft.filter((_, i) => i !== index);
+        break;
+      case 'skills.languages':
+        newSuggestions.skills.languages = newSuggestions.skills.languages.filter((_, i) => i !== index);
+        break;
+    }
+    
+    setSuggestions(newSuggestions);
+  };
+
+  const startEditing = (section: string, index: number, currentValue: any) => {
+    setEditingSection(section);
+    setEditingIndex(index);
+    if (typeof currentValue === 'string') {
+      setEditValue(currentValue);
+    } else if (currentValue && typeof currentValue === 'object') {
+      setEditValue(currentValue.skill || currentValue.language || '');
+    } else {
+      setEditValue('');
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingSection(null);
+    setEditingIndex(null);
+    setEditValue('');
+  };
+
+  const renderEditableList = (section: string, items: any[], title: string) => {
+    if (!items || items.length === 0) return null;
+
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+          <button
+            onClick={() => {
+              setEditingSection(section);
+              setEditingIndex(-1);
+              setEditValue('');
+            }}
+            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
+          </button>
+        </div>
+        
+        <div className="space-y-2">
+          {items.map((item, index) => (
+            <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+              {editingSection === section && editingIndex === index ? (
+                <div className="flex items-center space-x-2 flex-1">
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => updateItem(section, index, editValue)}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="text-gray-600 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-gray-700 flex-1">
+                    {typeof item === 'string' ? item : (item?.skill || item?.language || '')}
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => startEditing(section, index, item)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteItem(section, index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {editingSection === section && editingIndex === -1 && (
+          <div className="flex items-center space-x-2 mt-3">
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              placeholder={`Add new ${title.toLowerCase()}`}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+            <button
+              onClick={() => {
+                if (editValue.trim()) {
+                  addItem(section, editValue.trim());
+                  setEditValue('');
+                  setEditingSection(null);
+                  setEditingIndex(null);
+                }
+              }}
+              className="text-green-600 hover:text-green-700"
+            >
+              <Check className="w-5 h-5" />
+            </button>
+            <button
+              onClick={cancelEditing}
+              className="text-gray-600 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderEditableSchedules = () => {
+    if (!suggestions?.schedule?.schedules) return null;
+
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-blue-600" />
+            Schedule
+          </h3>
+          <button
+            onClick={() => {
+              if (suggestions) {
+                const newSchedule = {
+                  day: "Monday",
+                  hours: { start: "09:00", end: "17:00" },
+                  _id: { $oid: `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` }
+                };
+                const newSuggestions = {
+                  ...suggestions,
+                  schedule: {
+                    ...suggestions.schedule,
+                    schedules: [...suggestions.schedule.schedules, newSchedule]
+                  }
+                };
+                setSuggestions(newSuggestions);
+              }
+            }}
+            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Day</span>
+          </button>
+        </div>
+        
+        <div className="space-y-3">
+          {suggestions.schedule.schedules.map((schedule, index) => (
+            <div key={index} className="bg-gray-50 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Day</label>
+                  <select
+                    value={schedule.day}
+                    onChange={(e) => {
+                      if (suggestions) {
+                        const newSuggestions = { ...suggestions };
+                        newSuggestions.schedule.schedules[index].day = e.target.value;
+                        setSuggestions(newSuggestions);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Start Time</label>
+                  <input
+                    type="time"
+                    value={formatTimeForInput(schedule.hours.start)}
+                    onChange={(e) => {
+                      if (suggestions) {
+                        const newSuggestions = { ...suggestions };
+                        newSuggestions.schedule.schedules[index].hours.start = formatTimeForDisplay(e.target.value);
+                        setSuggestions(newSuggestions);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">End Time</label>
+                  <input
+                    type="time"
+                    value={formatTimeForInput(schedule.hours.end)}
+                    onChange={(e) => {
+                      if (suggestions) {
+                        const newSuggestions = { ...suggestions };
+                        newSuggestions.schedule.schedules[index].hours.end = formatTimeForDisplay(e.target.value);
+                        setSuggestions(newSuggestions);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end mt-3">
+                <button
+                  onClick={() => {
+                    if (suggestions) {
+                      const newSuggestions = { ...suggestions };
+                      newSuggestions.schedule.schedules = newSuggestions.schedule.schedules.filter((_, i) => i !== index);
+                      setSuggestions(newSuggestions);
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const formatTimeForInput = (time: string) => {
+    if (!time) return "";
+    // Convert "8:30" to "08:30" for HTML time input
+    const parts = time.split(':');
+    if (parts.length === 2) {
+      const hours = parts[0].padStart(2, '0');
+      const minutes = parts[1].padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    return time;
+  };
+
+  const formatTimeForDisplay = (time: string) => {
+    if (!time) return "";
+    // Convert "08:30" to "8:30" for display
+    const parts = time.split(':');
+    if (parts.length === 2) {
+      const hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      return `${hours}:${minutes}`;
+    }
+    return time;
   };
 
   if (loading) {
@@ -571,10 +932,53 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
         {/* Suggestions Card */}
         <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-              <Briefcase className="w-6 h-6 mr-2 text-blue-600" />
-              {suggestions.title}
-            </h2>
+            <div className="flex-1">
+              {editingSection === 'title' ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="text-2xl font-semibold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none flex-1"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => {
+                      if (suggestions && editValue.trim()) {
+                        setSuggestions({ ...suggestions, title: editValue.trim() });
+                        setEditingSection(null);
+                        setEditValue('');
+                      }
+                    }}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="text-gray-600 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+                    <Briefcase className="w-6 h-6 mr-2 text-blue-600" />
+                    {suggestions.title}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      setEditingSection('title');
+                      setEditValue(suggestions.title);
+                    }}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
               {suggestions.category}
             </span>
@@ -582,113 +986,65 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
 
           {/* Description */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Description</h3>
-            <p className="text-gray-700 leading-relaxed">{suggestions.description}</p>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-medium text-gray-900">Description</h3>
+              <button
+                onClick={() => {
+                  setEditingSection('description');
+                  setEditValue(suggestions.description);
+                }}
+                className="text-blue-600 hover:text-blue-700 text-sm"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            </div>
+            {editingSection === 'description' ? (
+              <div className="space-y-2">
+                <textarea
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                  autoFocus
+                />
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      if (editValue.trim()) {
+                        setSuggestions({ ...suggestions, description: editValue.trim() });
+                        setEditingSection(null);
+                        setEditValue('');
+                      }
+                    }}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="text-gray-600 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-700 leading-relaxed">{suggestions.description}</p>
+            )}
           </div>
 
           {/* Highlights */}
-          {suggestions.highlights && suggestions.highlights.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Key Highlights</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {suggestions.highlights.map((highlight, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span className="text-gray-700">{highlight}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {renderEditableList('highlights', suggestions.highlights, 'Key Highlights')}
 
           {/* Schedule */}
-          {suggestions.schedule && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-blue-600" />
-                Schedule
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                {suggestions.schedule.schedules && suggestions.schedule.schedules.length > 0 ? (
-                  <div className="space-y-3">
-                    {groupSchedules(suggestions.schedule.schedules).map((scheduleGroup, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-600">Days:</span>
-                          <span className="font-medium text-gray-900">
-                            {scheduleGroup.days.join(', ')}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-600">Hours:</span>
-                          <span className="font-medium text-gray-900">
-                            {scheduleGroup.hours.start} - {scheduleGroup.hours.end}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">No specific schedule defined</p>
-                )}
-                
-                {suggestions.schedule.timeZones && suggestions.schedule.timeZones.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">Time Zones:</span>
-                      <span className="font-medium text-gray-900">
-                        {suggestions.schedule.timeZones.join(', ')}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {suggestions.schedule.flexibility && suggestions.schedule.flexibility.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-600">Flexibility:</span>
-                      <span className="font-medium text-gray-900">
-                        {suggestions.schedule.flexibility.join(', ')}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {renderEditableSchedules()}
 
           {/* Requirements */}
           {suggestions.requirements && (
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-3">Requirements</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {suggestions.requirements.essential && suggestions.requirements.essential.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Essential</h4>
-                    <ul className="space-y-1">
-                      {suggestions.requirements.essential.map((req, index) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-gray-700 text-sm">{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {suggestions.requirements.preferred && suggestions.requirements.preferred.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Preferred</h4>
-                    <ul className="space-y-1">
-                      {suggestions.requirements.preferred.map((req, index) => (
-                        <li key={index} className="flex items-start space-x-2">
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <span className="text-gray-700 text-sm">{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {renderEditableList('requirements.essential', suggestions.requirements.essential, 'Essential Requirements')}
+                {renderEditableList('requirements.preferred', suggestions.requirements.preferred, 'Preferred Requirements')}
               </div>
             </div>
           )}
@@ -701,36 +1057,18 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                 Skills
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {suggestions.skills.languages && suggestions.skills.languages.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Languages</h4>
-                    <div className="space-y-1">
-                      {suggestions.skills.languages.map((lang, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span className="text-gray-700 text-sm">{lang.language}</span>
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                            {lang.proficiency}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {suggestions.skills.soft && suggestions.skills.soft.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Soft Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {suggestions.skills.soft.map((skill, index) => (
-                        <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {typeof skill === 'string' ? skill : skill.skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {renderEditableList('skills.languages', suggestions.skills.languages, 'Languages')}
+                {renderEditableList('skills.soft', suggestions.skills.soft, 'Soft Skills')}
+                {renderEditableList('skills.technical', suggestions.skills.technical, 'Technical Skills')}
               </div>
             </div>
           )}
+
+          {/* Additional editable sections */}
+          {renderEditableList('jobTitles', suggestions.jobTitles, 'Job Titles')}
+          {renderEditableList('deliverables', suggestions.deliverables, 'Deliverables')}
+          {renderEditableList('sectors', suggestions.sectors, 'Sectors')}
+          {renderEditableList('destinationZones', suggestions.destinationZones, 'Destination Zones')}
 
           {/* Commission */}
           {suggestions.commission && (
@@ -740,28 +1078,64 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                 Commission Structure
               </h3>
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-gray-600 text-sm">Base:</span>
-                    <p className="font-medium text-gray-900">{suggestions.commission.base}</p>
+                {suggestions.commission.options && suggestions.commission.options.length > 0 ? (
+                  <div className="space-y-4">
+                    {suggestions.commission.options.map((option, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div>
+                            <span className="text-gray-600 text-sm">Base:</span>
+                            <p className="font-medium text-gray-900">{option.base}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600 text-sm">Base Amount:</span>
+                            <p className="font-medium text-gray-900">{option.baseAmount}</p>
+                          </div>
+                          {option.bonus && (
+                            <div>
+                              <span className="text-gray-600 text-sm">Bonus:</span>
+                              <p className="font-medium text-gray-900">{option.bonus}</p>
+                            </div>
+                          )}
+                          {option.bonusAmount && (
+                            <div>
+                              <span className="text-gray-600 text-sm">Bonus Amount:</span>
+                              <p className="font-medium text-gray-900">{option.bonusAmount}</p>
+                            </div>
+                          )}
+                          {option.structure && (
+                            <div>
+                              <span className="text-gray-600 text-sm">Structure:</span>
+                              <p className="font-medium text-gray-900">{option.structure}</p>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-gray-600 text-sm">Currency:</span>
+                            <p className="font-medium text-gray-900">{option.currency}</p>
+                          </div>
+                          {option.minimumVolume && (
+                            <div>
+                              <span className="text-gray-600 text-sm">Minimum Volume:</span>
+                              <p className="font-medium text-gray-900">
+                                {option.minimumVolume.amount} {option.minimumVolume.unit} per {option.minimumVolume.period}
+                              </p>
+                            </div>
+                          )}
+                          {option.transactionCommission && (
+                            <div>
+                              <span className="text-gray-600 text-sm">Transaction Commission:</span>
+                              <p className="font-medium text-gray-900">
+                                {option.transactionCommission.amount} ({option.transactionCommission.type})
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <span className="text-gray-600 text-sm">Amount:</span>
-                    <p className="font-medium text-gray-900">{suggestions.commission.baseAmount}</p>
-                  </div>
-                  {suggestions.commission.bonus && (
-                    <div>
-                      <span className="text-gray-600 text-sm">Bonus:</span>
-                      <p className="font-medium text-gray-900">{suggestions.commission.bonus}</p>
-                    </div>
-                  )}
-                  {suggestions.commission.bonusAmount && (
-                    <div>
-                      <span className="text-gray-600 text-sm">Bonus Amount:</span>
-                      <p className="font-medium text-gray-900">{suggestions.commission.bonusAmount}</p>
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  <p className="text-gray-600">No commission structure defined</p>
+                )}
               </div>
             </div>
           )}

@@ -1299,18 +1299,36 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const allSchedules = generatedData.schedule?.schedules?.map((schedule, index) => {
     const scheduleStartTime = convertTo24HourFormat(schedule.hours?.start || startTime);
     const scheduleEndTime = convertTo24HourFormat(schedule.hours?.end || endTime);
-    const currentScheduleDays = schedule.days ? schedule.days : scheduleDays;
-
-    return currentScheduleDays.map((day: string, dayIndex: number) => ({
-      day,
-      hours: {
-        start: scheduleStartTime,
-        end: scheduleEndTime
-      },
-      _id: {
-        $oid: `684fdd69e512be3d11a9edc${index * 100 + dayIndex + 6}`
-      }
-    }));
+    
+    // Check if the schedule has a 'day' property (individual day) or 'days' array
+    if ('day' in schedule && schedule.day) {
+      // This is an individual day schedule
+      return {
+        day: schedule.day,
+        hours: {
+          start: scheduleStartTime,
+          end: scheduleEndTime
+        },
+        _id: {
+          $oid: `684fdd69e512be3d11a9edc${index + 6}`
+        }
+      };
+    } else if ('days' in schedule && Array.isArray(schedule.days)) {
+      // This is a grouped schedule with multiple days
+      return schedule.days.map((day: string, dayIndex: number) => ({
+        day,
+        hours: {
+          start: scheduleStartTime,
+          end: scheduleEndTime
+        },
+        _id: {
+          $oid: `684fdd69e512be3d11a9edc${index * 100 + dayIndex + 6}`
+        }
+      }));
+    } else {
+      // Fallback to default schedule
+      return defaultSchedule;
+    }
   }).flat() || defaultSchedule;
 
   return {
