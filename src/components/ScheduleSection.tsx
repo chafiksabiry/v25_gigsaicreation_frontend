@@ -10,7 +10,8 @@ import {
   Trash2,
   ArrowLeft,
   ArrowRight,
-  Globe
+  Globe,
+  X,
 } from "lucide-react";
 import { TimezoneCode, MAJOR_TIMEZONES } from "../lib/ai";
 import { DaySchedule, GroupedSchedule, groupSchedules as groupSchedulesUtil } from "../lib/scheduleUtils";
@@ -93,6 +94,7 @@ export function ScheduleSection({
 }: ScheduleSectionProps) {
   const [groupedSchedules, setGroupedSchedules] = useState<GroupedSchedule[]>(groupSchedules(data.schedules));
   const [activeScheduleIndex, setActiveScheduleIndex] = useState(0);
+  const [addDayDropdownIndex, setAddDayDropdownIndex] = useState<number | null>(null);
   
   useEffect(() => {
     const newGroupedSchedules = groupSchedules(data.schedules);
@@ -114,34 +116,50 @@ export function ScheduleSection({
   }
   
   const handleDayClick = (day: string) => {
+    const isAssigned = groupedSchedules.some(g => g.days.includes(day));
+    if (isAssigned) return; // Button should be disabled, but this is a safeguard
+
+    const newSchedules = [
+        ...groupedSchedules,
+        { days: [day], hours: { start: '09:00', end: '17:00' } }
+    ];
+    setActiveScheduleIndex(newSchedules.length - 1);
+    setGroupedSchedules(newSchedules);
+    updateParentState(newSchedules);
+  };
+
+  const handleRemoveDayFromGroup = (dayToRemove: string, groupIndex: number) => {
     let newSchedules = JSON.parse(JSON.stringify(groupedSchedules));
+    
+    newSchedules[groupIndex].days = newSchedules[groupIndex].days.filter((d: string) => d !== dayToRemove);
 
-    const groupIndex = newSchedules.findIndex((g: GroupedSchedule) => g.days.includes(day));
-
-    if (groupIndex !== -1) {
-        // Day is in a group, remove it
-        newSchedules[groupIndex].days = newSchedules[groupIndex].days.filter((d:string) => d !== day);
-
-        // If the group becomes empty, remove the group
-        if (newSchedules[groupIndex].days.length === 0 && newSchedules.length > 1) {
-            newSchedules = newSchedules.filter((_: GroupedSchedule, i: number) => i !== groupIndex);
-            setActiveScheduleIndex(prev => Math.max(0, prev -1));
+    if (newSchedules[groupIndex].days.length === 0 && newSchedules.length > 1) {
+        newSchedules = newSchedules.filter((_: any, i: number) => i !== groupIndex);
+        if (activeScheduleIndex >= groupIndex) {
+            setActiveScheduleIndex(prev => Math.max(0, prev - 1));
         }
-    } else {
-        // Day is unassigned, create a new group for it
-        newSchedules.push({ days: [day], hours: { start: '09:00', end: '17:00' } });
-        setActiveScheduleIndex(newSchedules.length - 1);
     }
     
     setGroupedSchedules(newSchedules);
     updateParentState(newSchedules);
   };
 
+  const handleAddDayToGroup = (day: string, groupIndex: number) => {
+    const newSchedules = JSON.parse(JSON.stringify(groupedSchedules));
+    newSchedules[groupIndex].days.push(day);
+    setGroupedSchedules(newSchedules);
+    updateParentState(newSchedules);
+    setAddDayDropdownIndex(null); // Close dropdown
+  };
+
   const handleTimeChange = (type: "start" | "end", value: string) => {
     const newSchedules = JSON.parse(JSON.stringify(groupedSchedules));
     newSchedules[activeScheduleIndex].hours[type] = value;
     setGroupedSchedules(newSchedules);
-    updateParentState(newSchedules);
+
+    if (newSchedules[activeScheduleIndex].days.length > 0) {
+      updateParentState(newSchedules);
+    }
   };
 
   const handleAddScheduleGroup = () => {
@@ -151,7 +169,6 @@ export function ScheduleSection({
     ];
     setActiveScheduleIndex(newSchedules.length - 1);
     setGroupedSchedules(newSchedules);
-    updateParentState(newSchedules);
   };
 
   const handleRemoveScheduleGroup = (index: number) => {
@@ -188,20 +205,21 @@ export function ScheduleSection({
     <div className="space-y-8">
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Working Days</h3>
-        <p className="text-sm text-gray-500 mb-4">Select an unassigned day to create a new time slot, or click a selected day to remove it.</p>
+        <p className="text-sm text-gray-500 mb-4">Select an unassigned day to create a new time slot.</p>
         <div className="flex flex-wrap gap-2">
           {workingDays.map(day => {
             const isSelected = allAssignedDays.includes(day);
             
             let buttonClass = 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300';
             if (isSelected) {
-              buttonClass = 'bg-blue-600 text-white shadow';
+              buttonClass = 'bg-gray-200 text-gray-400 cursor-not-allowed';
             }
 
             return (
               <button
                 key={day}
                 onClick={() => handleDayClick(day)}
+                disabled={isSelected}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${buttonClass}`}
               >
                 {day}
@@ -230,9 +248,58 @@ export function ScheduleSection({
                     className={`rounded-xl border transition-all ${activeScheduleIndex === index ? 'bg-blue-50 border-blue-300 shadow-md' : 'bg-white hover:bg-gray-50 border-gray-200'}`}
                 >
                     <div className="p-4 cursor-pointer flex justify-between items-center">
-                      <div>
-                          <p className="font-semibold text-gray-800">{schedule.days?.sort((a,b) => workingDays.indexOf(a) - workingDays.indexOf(b)).join(', ') || 'No days selected'}</p>
-                          <p className="text-sm text-gray-600">{formatTime(schedule.hours?.start || '')} - {formatTime(schedule.hours?.end || '')}</p>
+                      <div className="flex-grow">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {schedule.days?.sort((a,b) => workingDays.indexOf(a) - workingDays.indexOf(b)).map(day => (
+                                <span key={day} className="flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-1 rounded-full">
+                                    {day}
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveDayFromGroup(day, index);
+                                        }} 
+                                        className="text-blue-500 hover:text-blue-700"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </span>
+                            ))}
+                            {schedule.days?.length === 0 && (
+                                <p className="font-semibold text-gray-500">No days selected</p>
+                            )}
+                             <div className="relative inline-block">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setAddDayDropdownIndex(addDayDropdownIndex === index ? null : index);
+                                    }}
+                                    className="p-1.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                                {addDayDropdownIndex === index && (
+                                    <div className="absolute z-20 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200">
+                                        <div className="py-1">
+                                            {workingDays.filter(d => !allAssignedDays.includes(d)).length > 0 ? (
+                                                workingDays.filter(d => !allAssignedDays.includes(d)).map(day => (
+                                                    <a
+                                                        key={day}
+                                                        href="#"
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddDayToGroup(day, index); }}
+                                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        {day}
+                                                    </a>
+                                                ))
+                                            ) : (
+                                                <span className="block px-4 py-2 text-sm text-gray-500">No available days</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-2">{formatTime(schedule.hours?.start || '')} - {formatTime(schedule.hours?.end || '')}</p>
                       </div>
                       <div className="flex items-center gap-2">
                           <span className={`text-xs font-medium px-2 py-1 rounded-full ${activeScheduleIndex === index ? 'bg-blue-200 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
