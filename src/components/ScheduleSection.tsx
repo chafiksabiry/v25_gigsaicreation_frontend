@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { InfoText } from "./InfoText";
-import { predefinedOptions } from "../lib/guidance";
 import { SelectionList } from "./SelectionList";
 import {
   Clock,
@@ -11,26 +10,25 @@ import {
   Sun,
   Moon,
   Globe2,
-  ArrowLeft,
-  ArrowRight,
-  Save,
-  Brain,
-  Globe,
-  PenSquare,
   Plus,
   Trash2
 } from "lucide-react";
-import { MAJOR_TIMEZONES, TimezoneCode, analyzeTimezones, suggestTimezones, generateWorkingHoursSuggestions, formatTimeRange } from "../lib/ai";
+import { TimezoneCode } from "../lib/ai";
 
 interface TimeRange {
   start: string;
   end: string;
 }
 
+interface Schedule {
+  days: string[];
+  hours: TimeRange;
+}
+
 interface ScheduleSectionProps {
   data: {
     schedules: {
-      day: string;
+      days: string[];
       hours: {
         start: string;
         end: string;
@@ -45,7 +43,7 @@ interface ScheduleSectionProps {
     };
     availability?: {
       schedule: {
-        day: string;
+        days: string[];
         hours: {
           start: string;
           end: string;
@@ -62,274 +60,266 @@ interface ScheduleSectionProps {
   };
   onChange: (data: any) => void;
   errors: { [key: string]: string[] };
-  hasBaseCommission?: boolean;
   onNext?: () => void;
   onPrevious?: () => void;
-  onSave?: () => void;
-  onAIAssist?: () => void;
-  currentSection: string;
 }
 
-interface TimezoneOption {
-  value: TimezoneCode;
-  label: string;
-  description: string;
-}
+const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export function ScheduleSection({
-  data = {
-    schedules: [],
-    timeZones: [],
-    flexibility: [],
-    minimumHours: {
-      daily: undefined,
-      weekly: undefined,
-      monthly: undefined
-    },
-    availability: {
-      schedule: [],
-      timeZones: [],
-      flexibility: [],
-      minimumHours: {
-        daily: undefined,
-        weekly: undefined,
-        monthly: undefined
-      }
-    }
-  },
+  data,
   onChange,
   errors = {},
-  hasBaseCommission = false,
-  onNext,
-  onPrevious,
-  onSave,
-  onAIAssist,
-  currentSection = 'schedule'
 }: ScheduleSectionProps) {
-  const [startTime, setStartTime] = useState(data.schedules?.[0]?.hours?.start || "09:00");
-  const [endTime, setEndTime] = useState(data.schedules?.[0]?.hours?.end || "17:00");
-  const [selectedDay, setSelectedDay] = useState(data.schedules?.[0]?.day || "Monday");
-  const [isEditingHours, setIsEditingHours] = useState(false);
-  const [hoursEdit, setHoursEdit] = useState({
-    daily: data?.minimumHours?.daily ?? '',
-    weekly: data?.minimumHours?.weekly ?? '',
-    monthly: data?.minimumHours?.monthly ?? '',
-  });
-  const [isAddingSchedule, setIsAddingSchedule] = useState(false);
-  const [newSchedule, setNewSchedule] = useState({
-    day: '',
-    start: '09:00',
-    end: '17:00'
-  });
-  const [scheduleError, setScheduleError] = useState('');
-  const [editingScheduleDay, setEditingScheduleDay] = useState<string | null>(null);
-  const [editSchedule, setEditSchedule] = useState({
-    start: '',
-    end: ''
-  });
-  const [availabilityStartTime, setAvailabilityStartTime] = useState(data.availability?.schedule?.[0]?.hours?.start || "09:00");
-  const [availabilityEndTime, setAvailabilityEndTime] = useState(data.availability?.schedule?.[0]?.hours?.end || "17:00");
-  const [selectedAvailabilityDay, setSelectedAvailabilityDay] = useState(data.availability?.schedule?.[0]?.day || "Monday");
-  const [isAddingAvailability, setIsAddingAvailability] = useState(false);
-  const [newAvailability, setNewAvailability] = useState({
-    day: '',
-    start: '09:00',
-    end: '17:00'
-  });
-  const [availabilityError, setAvailabilityError] = useState('');
-  const [editingAvailabilityDay, setEditingAvailabilityDay] = useState<string | null>(null);
-  const [editAvailability, setEditAvailability] = useState({
-    start: '',
-    end: ''
-  });
-  const [timezoneAnalysis, setTimezoneAnalysis] = useState<any>(null);
-  const [timezoneSuggestions, setTimezoneSuggestions] = useState<any[]>([]);
-  const [workingHoursSuggestions, setWorkingHoursSuggestions] = useState<any[]>([]);
+  const [activeScheduleIndex, setActiveScheduleIndex] = useState(0);
 
-  const handleTimeChange = (type: "start" | "end", value: string) => {
-    if (type === "start") {
-      setStartTime(value);
-      const updatedSchedules = data.schedules.map(schedule =>
-        schedule.day === selectedDay ? { ...schedule, hours: { ...schedule.hours, start: value } } : schedule
-      );
-      
-      const updatedData = {
-        ...data,
-        schedules: updatedSchedules
-      };
-
-      // Si availability existe, le mettre à jour aussi
-      if (data.availability) {
-        updatedData.availability = {
-          ...data.availability,
-          schedule: updatedSchedules
-        };
-      }
-      
-      onChange(updatedData);
-    } else {
-      setEndTime(value);
-      const updatedSchedules = data.schedules.map(schedule =>
-        schedule.day === selectedDay ? { ...schedule, hours: { ...schedule.hours, end: value } } : schedule
-      );
-      
-      const updatedData = {
-        ...data,
-        schedules: updatedSchedules
-      };
-
-      // Si availability existe, le mettre à jour aussi
-      if (data.availability) {
-        updatedData.availability = {
-          ...data.availability,
-          schedule: updatedSchedules
-        };
-      }
-      
-      onChange(updatedData);
-    }
-  };
-
-  const handleAddSchedule = () => {
-    setIsAddingSchedule(true);
-  };
-
-  const validateScheduleTime = (start: string, end: string) => {
-    if (start && end) {
-      const startTime = new Date(`2000-01-01T${start}`);
-      const endTime = new Date(`2000-01-01T${end}`);
-      return endTime > startTime;
-    }
-    return true;
-  };
-
-  const handleSaveNewSchedule = () => {
-    if (!validateScheduleTime(newSchedule.start, newSchedule.end)) {
-      setScheduleError('End time must be after start time');
-      return;
-    }
-
-    if (newSchedule.day) {
-      setScheduleError('');
-      const newScheduleData = {
-        day: newSchedule.day,
-        hours: {
-          start: newSchedule.start,
-          end: newSchedule.end
-        }
-      };
-      
-      // Update schedules
-      const updatedSchedules = [...data.schedules, newScheduleData];
-      
-      // Update availability schedule if not already present
-      if (!predefinedOptions.availability.schedule.includes(newSchedule.day)) {
-        predefinedOptions.availability.schedule.push(newSchedule.day);
-      }
-      
-      const updatedData = {
-        ...data,
-        schedules: updatedSchedules
-      };
-
-      // Update availability schedule as well
-      if (data.availability) {
-        updatedData.availability = {
-          ...data.availability,
-          schedule: updatedSchedules
-        };
-      }
-      
-      onChange(updatedData);
-      
-      setSelectedDay(newSchedule.day);
-      setStartTime(newSchedule.start);
-      setEndTime(newSchedule.end);
-      setIsAddingSchedule(false);
-      setNewSchedule({
-        day: '',
-        start: '09:00',
-        end: '17:00'
-      });
-    }
-  };
-
-  const handleCancelNewSchedule = () => {
-    setIsAddingSchedule(false);
-    setNewSchedule({
-      day: '',
-      start: '09:00',
-      end: '17:00'
-    });
-  };
-
-  const handleRemoveSchedule = (dayToRemove: string) => {
-    const newSchedules = data.schedules.filter(schedule => schedule.day !== dayToRemove);
-    
-    // Remove from availability schedule if no other schedules use this day
-    if (!newSchedules.some(schedule => schedule.day === dayToRemove)) {
-      const index = predefinedOptions.availability.schedule.indexOf(dayToRemove);
-      if (index > -1) {
-        predefinedOptions.availability.schedule.splice(index, 1);
-      }
-    }
-    
-    const updatedData = {
-      ...data,
-      schedules: newSchedules
-    };
-
-    // Update availability schedule as well
-    if (data.availability) {
-      updatedData.availability = {
-        ...data.availability,
-        schedule: newSchedules
-      };
-    }
-    
-    onChange(updatedData);
-
-    if (selectedDay === dayToRemove) {
-      const nextSchedule = newSchedules[0];
-      if (nextSchedule) {
-        setSelectedDay(nextSchedule.day);
-        setStartTime(nextSchedule.hours.start);
-        setEndTime(nextSchedule.hours.end);
-      }
-    }
-  };
-
-  const handlePresetHours = (start: string, end: string) => {
-    setStartTime(start);
-    setEndTime(end);
+  // Ensure there's at least one schedule to avoid errors
+  if (!data.schedules || data.schedules.length === 0) {
     onChange({
       ...data,
-      schedules: data.schedules.map(schedule =>
-        schedule.day === selectedDay ? { ...schedule, hours: { start, end } } : schedule
-      )
+      schedules: [{ days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], hours: { start: '09:00', end: '17:00' } }]
     });
+    return <div>Loading...</div>;
+  }
+  
+  const activeSchedule = data.schedules[activeScheduleIndex];
+  if (!activeSchedule) {
+      if(data.schedules.length > 0) {
+        setActiveScheduleIndex(0);
+      }
+      return <div>Loading...</div>
+  }
+
+  const handleDayClick = (day: string) => {
+    const newSchedules = JSON.parse(JSON.stringify(data.schedules));
+    const schedule = newSchedules[activeScheduleIndex];
+    const dayIndex = schedule.days.indexOf(day);
+
+    // Check if day is in another schedule group
+    const otherScheduleIndex = newSchedules.findIndex((s: Schedule, index: number) => index !== activeScheduleIndex && s.days.includes(day));
+
+    if (dayIndex > -1) {
+      // Day is in active schedule, remove it
+      schedule.days.splice(dayIndex, 1);
+    } else if (otherScheduleIndex > -1) {
+        // Day is in another schedule, remove it from there and add to current
+        newSchedules[otherScheduleIndex].days = newSchedules[otherScheduleIndex].days.filter((d: string) => d !== day);
+        schedule.days.push(day);
+    } 
+    else {
+      // Day is not in any schedule, add to active
+      schedule.days.push(day);
+    }
+
+    const updatedData = { ...data, schedules: newSchedules };
+    if (data.availability) {
+      updatedData.availability = { ...data.availability, schedule: newSchedules };
+    }
+    onChange(updatedData);
+  };
+
+  const handleTimeChange = (type: "start" | "end", value: string) => {
+    const newSchedules = JSON.parse(JSON.stringify(data.schedules));
+    newSchedules[activeScheduleIndex].hours[type] = value;
+
+    const updatedData = { ...data, schedules: newSchedules };
+    if (data.availability) {
+      updatedData.availability = { ...data.availability, schedule: newSchedules };
+    }
+    onChange(updatedData);
+  };
+
+  const handleAddScheduleGroup = () => {
+    const newSchedules = [
+      ...data.schedules,
+      { days: [], hours: { start: '09:00', end: '17:00' } }
+    ];
+    const updatedData = { ...data, schedules: newSchedules };
+    if (data.availability) {
+      updatedData.availability = { ...data.availability, schedule: newSchedules };
+    }
+    onChange(updatedData);
+    setActiveScheduleIndex(newSchedules.length - 1);
+  };
+
+  const handleRemoveScheduleGroup = (index: number) => {
+    const newSchedules = data.schedules.filter((_, i) => i !== index);
+    const updatedData = { ...data, schedules: newSchedules };
+    if (data.availability) {
+      updatedData.availability = { ...data.availability, schedule: newSchedules };
+    }
+    onChange(updatedData);
+    if (activeScheduleIndex >= newSchedules.length) {
+      setActiveScheduleIndex(Math.max(0, newSchedules.length - 1));
+    }
+  };
+  
+  const handlePresetHours = (start: string, end: string) => {
+    const newSchedules = JSON.parse(JSON.stringify(data.schedules));
+    newSchedules[activeScheduleIndex].hours = { start, end };
+
+    const updatedData = { ...data, schedules: newSchedules };
+    if (data.availability) {
+      updatedData.availability = { ...data.availability, schedule: newSchedules };
+    }
+    onChange(updatedData);
   };
 
   const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    return `${hours}h${minutes}`;
+    if (!time) return "";
+    const [hour, minute] = time.split(":");
+    const h = parseInt(hour, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const formattedHour = h % 12 || 12;
+    return `${formattedHour}:${minute} ${ampm}`;
   };
 
-  const formatTimeFr = (time: string) => {
-    if (!time) return '';
-    const [h, m] = time.split(':');
-    return `${h}h${m}`;
-  };
+  const allAssignedDays = data.schedules.flatMap(s => s.days);
 
-  const weekdays = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Working Days</h3>
+        <div className="flex flex-wrap gap-2">
+          {workingDays.map(day => {
+            const isSelected = activeSchedule.days.includes(day);
+            const isInOtherGroup = !isSelected && data.schedules.some((s, i) => i !== activeScheduleIndex && s.days.includes(day));
+            
+            return (
+              <button
+                key={day}
+                onClick={() => handleDayClick(day)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  isSelected
+                    ? 'bg-blue-600 text-white shadow'
+                    : isInOtherGroup
+                    ? 'bg-gray-300 text-gray-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
+            <Clock className="w-5 h-5 mr-2 text-gray-500" />
+            Working Hours
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label htmlFor="start-time" className="text-sm font-medium text-gray-700 flex items-center">
+                <Sunrise className="w-4 h-4 mr-2 text-yellow-500" /> Start Time
+            </label>
+            <input
+              id="start-time"
+              type="time"
+              value={activeSchedule.hours.start}
+              onChange={e => handleTimeChange('start', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="end-time" className="text-sm font-medium text-gray-700 flex items-center">
+                <Sunset className="w-4 h-4 mr-2 text-orange-500" /> End Time
+            </label>
+            <input
+              id="end-time"
+              type="time"
+              value={activeSchedule.hours.end}
+              onChange={e => handleTimeChange('end', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200 text-center text-gray-600 font-medium">
+            Working Hours: {formatTime(activeSchedule.hours.start)} - {formatTime(activeSchedule.hours.end)}
+        </div>
+        
+        <div className="mt-4 flex flex-wrap gap-2 justify-center">
+            <button onClick={() => handlePresetHours('09:00', '17:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Sun className="w-4 h-4 mr-2"/>9-5</button>
+            <button onClick={() => handlePresetHours('07:00', '15:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Sunrise className="w-4 h-4 mr-2"/>Early</button>
+            <button onClick={() => handlePresetHours('11:00', '19:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Sunset className="w-4 h-4 mr-2"/>Late</button>
+            <button onClick={() => handlePresetHours('13:00', '21:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Moon className="w-4 h-4 mr-2"/>Evening</button>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Time Slots</h3>
+        <div className="space-y-2">
+            {data.schedules.map((schedule, index) => (
+                <div
+                    key={index}
+                    onClick={() => setActiveScheduleIndex(index)}
+                    className={`p-3 rounded-lg cursor-pointer flex justify-between items-center transition-all ${activeScheduleIndex === index ? 'bg-blue-100 border-blue-300 border' : 'bg-white hover:bg-gray-50 border'}`}
+                >
+                    <div>
+                        <p className="font-semibold text-gray-800">{schedule.days.join(', ') || 'No days selected'}</p>
+                        <p className="text-sm text-gray-600">{formatTime(schedule.hours.start)} - {formatTime(schedule.hours.end)}</p>
+                    </div>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveScheduleGroup(index);
+                        }}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded-full"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ))}
+        </div>
+        <button
+            onClick={handleAddScheduleGroup}
+            className="mt-4 w-full flex items-center justify-center px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+            <Plus className="w-4 h-4 mr-2" /> Add Time Slot
+        </button>
+      </div>
+
+      <InfoText text="Define the working days and hours for this gig. You can create multiple time slots for different groups of days (e.g., Mon-Thu 9-5, Fri 9-1)." />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Flexibility
+          </label>
+          <SelectionList
+            options={[
+                { value: 'full-remote', label: 'Full Remote' },
+                { value: 'hybrid', label: 'Hybrid' },
+                { value: 'on-site', label: 'On-site' },
+                { value: 'flexible-hours', label: 'Flexible Hours' },
+            ]}
+            selected={data.flexibility}
+            onChange={(selected) => onChange({ ...data, flexibility: selected })}
+          />
+        </div>
+        <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Minimum Hours</h3>
+            <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Daily</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours.daily || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, daily: +e.target.value}})} />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Weekly</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours.weekly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, weekly: +e.target.value}})} />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours.monthly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, monthly: +e.target.value}})} />
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const handleMinimumHoursChange = (
     period: "daily" | "weekly" | "monthly",
@@ -645,343 +635,148 @@ export function ScheduleSection({
 
   return (
     <div className="space-y-6">
-      <InfoText>
-        Define the working schedule and time zone coverage.
-        {hasBaseCommission && ' Minimum hours are required for base commission.'}
-      </InfoText>
-
-      <div className="space-y-6">
-        {/* Working Days */}
-        <div className="bg-white rounded-xl border border-blue-100 overflow-hidden">
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <h3 className="font-medium text-gray-900">Working Days</h3>
-              </div>
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Working Days</h3>
+        <div className="flex flex-wrap gap-2">
+          {workingDays.map(day => {
+            const isSelected = activeSchedule.days.includes(day);
+            const isInOtherGroup = !isSelected && data.schedules.some((s, i) => i !== activeScheduleIndex && s.days.includes(day));
+            
+            return (
               <button
-                onClick={handleAddSchedule}
-                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
+                key={day}
+                onClick={() => handleDayClick(day)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  isSelected
+                    ? 'bg-blue-600 text-white shadow'
+                    : isInOtherGroup
+                    ? 'bg-gray-300 text-gray-600'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
               >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm">Add Day</span>
+                {day}
               </button>
-            </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
+            <Clock className="w-5 h-5 mr-2 text-gray-500" />
+            Working Hours
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label htmlFor="start-time" className="text-sm font-medium text-gray-700 flex items-center">
+                <Sunrise className="w-4 h-4 mr-2 text-yellow-500" /> Start Time
+            </label>
+            <input
+              id="start-time"
+              type="time"
+              value={activeSchedule.hours.start}
+              onChange={e => handleTimeChange('start', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
-          <div className="p-4">
-            <div className="grid gap-4">
-              {data.schedules.map((schedule) => (
-                <div
-                  key={schedule.day}
-                  className={`p-4 rounded-lg border ${
-                    selectedDay === schedule.day
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {editingScheduleDay === schedule.day ? (
-                    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="font-medium text-gray-900">{schedule.day}</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Sunrise className="w-4 h-4 text-orange-500" />
-                              <span>Start Time</span>
-                            </div>
-                          </label>
-                          <input
-                            type="time"
-                            value={editSchedule.start}
-                            onChange={(e) => {
-                              const updatedSchedule = { ...editSchedule, start: e.target.value };
-                              setEditSchedule(updatedSchedule);
-                              if (validateScheduleTime(updatedSchedule.start, updatedSchedule.end)) {
-                                setScheduleError('');
-                              } else {
-                                setScheduleError('End time must be after start time');
-                              }
-                            }}
-                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Sunset className="w-4 h-4 text-indigo-500" />
-                              <span>End Time</span>
-                            </div>
-                          </label>
-                          <input
-                            type="time"
-                            value={editSchedule.end}
-                            onChange={(e) => {
-                              const updatedSchedule = { ...editSchedule, end: e.target.value };
-                              setEditSchedule(updatedSchedule);
-                              if (validateScheduleTime(updatedSchedule.start, updatedSchedule.end)) {
-                                setScheduleError('');
-                              } else {
-                                setScheduleError('End time must be after start time');
-                              }
-                            }}
-                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-
-                      {scheduleError && (
-                        <div className="text-sm text-red-600">
-                          {scheduleError}
-                        </div>
-                      )}
-
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => {
-                            setEditingScheduleDay(null);
-                            setEditSchedule({ start: '', end: '' });
-                            setScheduleError('');
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (!scheduleError) {
-                              const updatedSchedules = data.schedules.map(s => 
-                                s.day === schedule.day
-                                  ? { ...s, hours: { start: editSchedule.start, end: editSchedule.end } }
-                                  : s
-                              );
-                              onChange({
-                                ...data,
-                                schedules: updatedSchedules
-                              });
-                              setEditingScheduleDay(null);
-                              setEditSchedule({ start: '', end: '' });
-                            }
-                          }}
-                          disabled={!!scheduleError}
-                          className="px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="font-medium text-gray-900">{schedule.day}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-600">
-                          {formatTimeFr(schedule.hours.start)} - {formatTimeFr(schedule.hours.end)}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingScheduleDay(schedule.day);
-                            setEditSchedule({
-                              start: schedule.hours.start,
-                              end: schedule.hours.end
-                            });
-                          }}
-                          className="p-1 rounded-full hover:bg-blue-100 text-blue-500"
-                        >
-                          <PenSquare className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveSchedule(schedule.day);
-                          }}
-                          className="p-1 rounded-full hover:bg-red-100 text-red-500"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {isAddingSchedule && (
-                <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Day
-                      </label>
-                      <select
-                        value={newSchedule.day}
-                        onChange={(e) => setNewSchedule({ ...newSchedule, day: e.target.value })}
-                        className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Select a day</option>
-                        {weekdays
-                          .filter(day => !data.schedules.find(s => s.day === day))
-                          .map(day => (
-                            <option key={day} value={day}>{day}</option>
-                          ))}
-                      </select>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <div className="flex items-center gap-2">
-                            <Sunrise className="w-4 h-4 text-orange-500" />
-                            <span>Start Time</span>
-                          </div>
-                        </label>
-                        <input
-                          type="time"
-                          value={newSchedule.start}
-                          onChange={(e) => handleNewScheduleChange('start', e.target.value)}
-                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <div className="flex items-center gap-2">
-                            <Sunset className="w-4 h-4 text-indigo-500" />
-                            <span>End Time</span>
-                          </div>
-                        </label>
-                        <input
-                          type="time"
-                          value={newSchedule.end}
-                          onChange={(e) => handleNewScheduleChange('end', e.target.value)}
-                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    {scheduleError && (
-                      <div className="mt-2 text-sm text-red-600">
-                        {scheduleError}
-                      </div>
-                    )}
-
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={handleCancelNewSchedule}
-                        className="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSaveNewSchedule}
-                        disabled={!newSchedule.day || !!scheduleError}
-                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Add Schedule
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="space-y-2">
+            <label htmlFor="end-time" className="text-sm font-medium text-gray-700 flex items-center">
+                <Sunset className="w-4 h-4 mr-2 text-orange-500" /> End Time
+            </label>
+            <input
+              id="end-time"
+              type="time"
+              value={activeSchedule.hours.end}
+              onChange={e => handleTimeChange('end', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
         </div>
 
-        {/* Availability Days */}
-        <div className="bg-white rounded-xl border border-blue-100 overflow-hidden">
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <h3 className="font-medium text-gray-900">Availability Days</h3>
-              </div>
-              <button
-                onClick={handleAddAvailability}
-                className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm">Add Day</span>
-              </button>
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="grid gap-4">
-              {data.availability?.schedule.map((availability) => (
+        <div className="mt-4 pt-4 border-t border-gray-200 text-center text-gray-600 font-medium">
+            Working Hours: {formatTime(activeSchedule.hours.start)} - {formatTime(activeSchedule.hours.end)}
+        </div>
+        
+        <div className="mt-4 flex flex-wrap gap-2 justify-center">
+            <button onClick={() => handlePresetHours('09:00', '17:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Sun className="w-4 h-4 mr-2"/>9-5</button>
+            <button onClick={() => handlePresetHours('07:00', '15:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Sunrise className="w-4 h-4 mr-2"/>Early</button>
+            <button onClick={() => handlePresetHours('11:00', '19:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Sunset className="w-4 h-4 mr-2"/>Late</button>
+            <button onClick={() => handlePresetHours('13:00', '21:00')} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center"><Moon className="w-4 h-4 mr-2"/>Evening</button>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Time Slots</h3>
+        <div className="space-y-2">
+            {data.schedules.map((schedule, index) => (
                 <div
-                  key={availability.day}
-                  className={`p-4 rounded-lg border ${
-                    selectedAvailabilityDay === availability.day
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
+                    key={index}
+                    onClick={() => setActiveScheduleIndex(index)}
+                    className={`p-3 rounded-lg cursor-pointer flex justify-between items-center transition-all ${activeScheduleIndex === index ? 'bg-blue-100 border-blue-300 border' : 'bg-white hover:bg-gray-50 border'}`}
                 >
-                  {editingAvailabilityDay === availability.day ? (
-                    <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="font-medium text-gray-900">{availability.day}</span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Sunrise className="w-4 h-4 text-orange-500" />
-                              <span>Start Time</span>
-                            </div>
-                          </label>
-                          <input
-                            type="time"
-                            value={editAvailability.start}
-                            onChange={(e) => handleEditAvailabilityChange('start', e.target.value)}
-                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <div className="flex items-center gap-2">
-                              <Sunset className="w-4 h-4 text-indigo-500" />
-                              <span>End Time</span>
-                            </div>
-                          </label>
-                          <input
-                            type="time"
-                            value={editAvailability.end}
-                            onChange={(e) => handleEditAvailabilityChange('end', e.target.value)}
-                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-
-                      {availabilityError && (
-                        <div className="text-sm text-red-600">
-                          {availabilityError}
-                        </div>
-                      )}
-
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={handleCancelEditAvailability}
-                          className="px-3 py-1.5 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleSaveEditAvailability}
-                          disabled={!!availabilityError}
-                          className="px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Save
-                        </button>
-                      </div>
+                    <div>
+                        <p className="font-semibold text-gray-800">{schedule.days.join(', ') || 'No days selected'}</p>
+                        <p className="text-sm text-gray-600">{formatTime(schedule.hours.start)} - {formatTime(schedule.hours.end)}</p>
                     </div>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveScheduleGroup(index);
+                        }}
+                        className="p-1 text-red-500 hover:bg-red-100 rounded-full"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            ))}
+        </div>
+        <button
+            onClick={handleAddScheduleGroup}
+            className="mt-4 w-full flex items-center justify-center px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+            <Plus className="w-4 h-4 mr-2" /> Add Time Slot
+        </button>
+      </div>
+
+      <InfoText text="Define the working days and hours for this gig. You can create multiple time slots for different groups of days (e.g., Mon-Thu 9-5, Fri 9-1)." />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Flexibility
+          </label>
+          <SelectionList
+            options={[
+                { value: 'full-remote', label: 'Full Remote' },
+                { value: 'hybrid', label: 'Hybrid' },
+                { value: 'on-site', label: 'On-site' },
+                { value: 'flexible-hours', label: 'Flexible Hours' },
+            ]}
+            selected={data.flexibility}
+            onChange={(selected) => onChange({ ...data, flexibility: selected })}
+          />
+        </div>
+        <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Minimum Hours</h3>
+            <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Daily</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours.daily || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, daily: +e.target.value}})} />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Weekly</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours.weekly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, weekly: +e.target.value}})} />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours.monthly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, monthly: +e.target.value}})} />
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+}
                   ) : (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -1330,28 +1125,16 @@ export function ScheduleSection({
         {/* Schedule Flexibility */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Schedule Flexibility</label>
-          {(() => {
-            console.log('Flexibility data:', {
-              options: predefinedOptions.availability.timeZones,
-              selected: data?.flexibility,
-              data: data
-            });
-            return null;
-          })()}
           <SelectionList
-            options={allOptions}
-            selected={selectedFlex}
-            onChange={(flexibility) => {
-              console.log('Flexibility changed:', flexibility);
-              onChange({ ...data, flexibility });
-            }}
-            multiple={true}
-            layout="flow"
-            size="sm"
+            options={[
+                { value: 'full-remote', label: 'Full Remote' },
+                { value: 'hybrid', label: 'Hybrid' },
+                { value: 'on-site', label: 'On-site' },
+                { value: 'flexible-hours', label: 'Flexible Hours' },
+            ]}
+            selected={data.flexibility}
+            onChange={(selected) => onChange({ ...data, flexibility: selected })}
           />
-          <p className="mt-2 text-sm text-gray-500">
-            Select all applicable schedule flexibility options
-          </p>
         </div>
       </div>
 
@@ -1375,5 +1158,5 @@ export function ScheduleSection({
     </div>
   );
 }
-
 export default ScheduleSection;
+

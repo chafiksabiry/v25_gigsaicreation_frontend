@@ -19,6 +19,10 @@ import {
   XCircle,
   Plus,
   Trash2,
+  Check,
+  Loader2,
+  MapPin,
+  Users,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { JobDescription, GigMetadata } from "../lib/types";
@@ -33,6 +37,7 @@ import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
 import Cookies from 'js-cookie';
+import { generateGigSuggestions } from '../lib/ai';
 
 // Register languages
 i18n.registerLocale(fr);
@@ -59,22 +64,29 @@ const setNestedProperty = (obj: any, path: string, value: any) => {
   target[lastPart] = value;
 };
 
-type StringArraySection = 
-  | 'jobTitles' 
-  | 'deliverables' 
-  | 'sectors' 
-  | 'destinationZones' 
-  | 'highlights' 
-  | 'requirements.essential' 
-  | 'requirements.preferred' 
-  | 'skills.technical' 
-  | 'skills.soft' 
-  | 'skills.professional' 
-  | 'skills.languages' 
-  | 'skills.certifications' 
+type StringArraySection =
+  | 'jobTitles'
+  | 'deliverables'
+  | 'sectors'
+  | 'destinationZones'
+  | 'highlights'
+  | 'requirements.essential'
+  | 'requirements.preferred'
+  | 'skills.technical'
+  | 'skills.soft'
+  | 'skills.professional'
+  | 'skills.languages'
+  | 'skills.certifications'
   | 'commission.kpis'
   | 'commission'
-  | 'activity';
+  | 'activity'
+  | 'kpis'
+  | 'timeframes'
+  | 'requirements'
+  | 'compensation'
+  | 'languages'
+  | 'skills'
+  | 'activity-requirement';
 
 interface ActivityOption {
   type: string;
@@ -114,7 +126,7 @@ type EditableGigSuggestion = Omit<GigSuggestion, 'commission' | 'activity'> & {
 interface SuggestionsProps {
   input: string;
   onBack: () => void;
-  onConfirm?: (suggestions: GigSuggestion) => void;
+  onConfirm: (suggestions: GigSuggestion) => void;
 }
 
 let openai: OpenAI | null = null;
@@ -265,7 +277,7 @@ interface GigData {
   };
   availability: {
     schedule: {
-      day: string;
+      days: string[];
       hours: {
         start: string;
         end: string;
@@ -281,7 +293,7 @@ interface GigData {
     };
   schedule: {
     schedules: {
-      day: string;
+      days: string[];
       hours: {
         start: string;
         end: string;
@@ -354,9 +366,10 @@ const fallbackSuggestions: GigSuggestion = {
   deliverables: [],
   sectors: [],
   destinationZones: [],
+  timeframes: [],
   availability: {
     schedule: [{
-      day: "",
+      days: [],
       hours: {
         start: "",
         end: ""
@@ -372,7 +385,7 @@ const fallbackSuggestions: GigSuggestion = {
   },
   schedule: {
     schedules: [{
-      day: "",
+      days: [],
       hours: {
         start: "",
         end: ""
@@ -452,2410 +465,88 @@ const fallbackSuggestions: GigSuggestion = {
   }
 };
 
-export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
+export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfirm }) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
-  const [editableSuggestions, setEditableSuggestions] = useState<EditableGigSuggestion | null>(null);
-  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
-  const [apiKeyMissing] = useState(!openai);
-  const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
-  const [jobDescription, setJobDescription] = useState<JobDescription | null>(
-    null
-  );
-  const [isJobDescriptionLoading, setIsJobDescriptionLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingSection, setEditingSection] = useState<StringArraySection | null>(null);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [showMetadata, setShowMetadata] = useState(false);
-  const [metadata, setMetadata] = useState<GigMetadata | null>(null);
-  const [editableMetadata, setEditableMetadata] = useState<GigMetadata | null>(
-    null
-  );
-  const [isMetadataLoading, setIsMetadataLoading] = useState(false);
-  const [isSuggestionsConfirmed, setIsSuggestionsConfirmed] = useState(false);
-  const [editingMetadataField, setEditingMetadataField] = useState<
-    string | null
-  >(null);
-  const [editingScheduleIndex, setEditingScheduleIndex] = useState<
-    number | null
-  >(null);
-  const [editingHourIndex, setEditingHourIndex] = useState<number | null>(null);
-  const [isLeadsModalOpen, setIsLeadsModalOpen] = useState(false);
-  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-  const [gigData, setGigData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showBasicSection, setShowBasicSection] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [leadsData, setLeadsData] = useState<any>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
 
   useEffect(() => {
-    if (input.trim().length > 0) {
-      setIsSuggestionsLoading(true);
-      generateSuggestions().finally(() => {
-        setIsSuggestionsLoading(false);
-      });
+    const generateSuggestions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await generateGigSuggestions(input);
+        setSuggestions(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to generate suggestions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (input.trim()) {
+      generateSuggestions();
     }
   }, [input]);
 
   const handleConfirm = () => {
-    if (!suggestions) return;
-
-    // Transform commission data from suggestions format to CommissionSection format
-    const commissionData = {
-      options: [{
-        base: suggestions.commission?.options?.[0]?.base || "Fixed Salary",
-        baseAmount: suggestions.commission?.options?.[0]?.baseAmount || "2",
-        bonus: suggestions.commission?.options?.[0]?.bonus,
-        bonusAmount: suggestions.commission?.options?.[0]?.bonusAmount,
-        currency: suggestions.commission?.options?.[0]?.currency || "USD",
-        minimumVolume: {
-          amount: suggestions.commission?.options?.[0]?.minimumVolume?.amount || "4",
-          period: suggestions.commission?.options?.[0]?.minimumVolume?.period || "Monthly",
-          unit: suggestions.commission?.options?.[0]?.minimumVolume?.unit || "Projects"
-        },
-        transactionCommission: {
-          type: suggestions.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount",
-          amount: suggestions.commission?.options?.[0]?.transactionCommission?.amount || "3"
-        }
-      }]
-    };
-
-    const transformedSuggestions: GigSuggestion = {
-      title: suggestions.title || "",
-      description: suggestions.description || "",
-      category: suggestions.category || "",
-      highlights: suggestions.highlights || [],
-      jobTitles: suggestions.jobTitles || [],
-      deliverables: suggestions.deliverables || [],
-      sectors: suggestions.sectors || [],
-      destinationZones: suggestions.destinationZones || [],
-      availability:{
-        schedule: suggestions.schedule?.schedules || [{
-          day: "",
-          hours: {
-            start: "",
-            end: ""
-          }
-        }],
-        timeZones: suggestions.schedule?.timeZones || [],
-        flexibility: suggestions.schedule?.flexibility || [],
-        minimumHours: {
-          daily: suggestions.schedule?.minimumHours?.daily || 8,
-          weekly: suggestions.schedule?.minimumHours?.weekly || 40,
-          monthly: suggestions.schedule?.minimumHours?.monthly || 160
-        }
-      },
-      schedule: {
-        schedules: suggestions.schedule?.schedules || [{
-          day: "Monday",
-          hours: {
-            start: "09:00",
-            end: "18:00"
-          }
-        }],
-        timeZones: suggestions.schedule?.timeZones || ["CET"],
-        flexibility: suggestions.schedule?.flexibility || [],
-        minimumHours: {
-          daily: suggestions.schedule?.minimumHours?.daily || 8,
-          weekly: suggestions.schedule?.minimumHours?.weekly || 40,
-          monthly: suggestions.schedule?.minimumHours?.monthly || 160
-        }
-      },
-      requirements: {
-        essential: suggestions.requirements?.essential || [],
-        preferred: suggestions.requirements?.preferred || []
-      },
-      benefits: suggestions.benefits || [],
-      skills: {
-        languages: Array.isArray(suggestions.skills?.languages) 
-          ? suggestions.skills.languages.map(lang => ({ 
-              language: lang.language,
-              proficiency: lang.proficiency,
-              iso639_1: lang.iso639_1 || lang.language?.toLowerCase().substring(0, 2) || 'en'
-            })) 
-          : [],
-        soft: Array.isArray(suggestions.skills?.soft) 
-          ? suggestions.skills.soft.map(skill => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              return {
-                skill: skillName,
-                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
-              };
-            })
-          : [],
-        professional: Array.isArray(suggestions.skills?.professional)
-          ? suggestions.skills.professional.map(skill => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              return {
-                skill: skillName,
-                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
-              };
-            })
-          : [],
-        technical: Array.isArray(suggestions.skills?.technical)
-          ? suggestions.skills.technical.map(skill => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              return {
-                skill: skillName,
-                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
-              };
-            })
-          : [],
-        certifications: suggestions.skills?.certifications || []
-      },
-      seniority: suggestions?.seniority ? {
-        level: suggestions.seniority.level || '',
-        yearsExperience: Number(suggestions.seniority.yearsExperience) || 0,
-      } : {
-        level: '',
-        yearsExperience: 0,
-      },
-      commission: commissionData,
-      activity: suggestions.activity || {
-        options: []
-      },
-      team: suggestions.team || { size: 1, structure: [{ roleId: "default", count: 1, seniority: { level: "Senior", yearsExperience: "5+" } }], territories: ["Global"] },
-      leads: suggestions.leads || { types: [], sources: [] },
-      documentation: suggestions.documentation || { 
-        templates: null,
-        reference: null,
-        product: [],
-        process: [],
-        training: []
-      }
-    };
-
-    if (onConfirm) {
-      onConfirm(transformedSuggestions);
+    if (suggestions) {
+      onConfirm(suggestions);
     }
   };
 
-  const generateJobDescription = async (title: string) => {
-    if (!openai) {
-      const fallbackDescriptions: Record<string, JobDescription> = {
-        "Sales Representative": {
-          title: "Sales Representative",
-          description:
-            "A Sales Representative is responsible for actively seeking out and engaging with potential customers to generate leads and close sales deals.",
-          responsibilities: [
-            "Identify and contact potential customers",
-            "Present products and services effectively",
-            "Maintain relationships with existing clients",
-            "Meet or exceed sales targets",
-            "Track and report sales activities",
-          ],
-          qualifications: [
-            "2+ years of sales experience",
-            "Strong communication and negotiation skills",
-            "Proven track record of meeting sales goals",
-            "CRM software proficiency",
-            "Bachelor's degree in business or related field preferred",
-          ],
-          languages: {
-            required: ["English (Fluent)"],
-            preferred: ["Spanish (Conversational)", "Mandarin (Basic)"],
-          },
-        },
-      };
-
-      setJobDescription(
-        fallbackDescriptions[title] || {
-          title,
-          description: "Position details currently unavailable.",
-          responsibilities: [],
-          qualifications: [],
-          languages: {
-            required: [],
-            preferred: [],
-          },
-        }
-      );
-      return;
-    }
-
-    try {
-      setIsJobDescriptionLoading(true);
-
-      const prompt = `Create a detailed job description for a "${title}" position in JSON format with the following structure:
-      {
-        "title": "${title}",
-        "description": "A concise overview of the role",
-        "responsibilities": ["List of 5 key responsibilities"],
-        "qualifications": ["List of 5 key qualifications"],
-        "languages": {
-          "required": ["List of required languages with proficiency levels"],
-          "preferred": ["List of preferred languages with proficiency levels"]
-        }
-      }
-      Make it specific and professional, including relevant language requirements for the role.`;
-
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-      });
-
-      const response = completion.choices[0]?.message?.content;
-      if (response) {
-        const jobData = JSON.parse(response);
-        setJobDescription(jobData);
-      }
-    } catch (error) {
-      console.error("Error generating job description:", error);
-      setJobDescription({
-        title,
-        description: "Failed to load job description. Please try again later.",
-        responsibilities: [],
-        qualifications: [],
-        languages: {
-          required: [],
-          preferred: [],
-        },
-      });
-    } finally {
-      setIsJobDescriptionLoading(false);
-    }
-  };
-
-  const handleJobTitleClick = (title: string) => {
-    if (selectedJobTitle === title) {
-      setSelectedJobTitle(null);
-      setJobDescription(null);
-    } else {
-      setSelectedJobTitle(title);
-      generateJobDescription(title);
-    }
-  };
-
-  const startEditing = (section: StringArraySection, index: number, value: string) => {
-    setEditingSection(section);
-    setEditingIndex(index);
-    setEditValue(value);
-  };
-
-  const saveEdit = () => {
-    if (editingSection && editingIndex !== null && editableSuggestions) {
-      const newSuggestions = { ...editableSuggestions };
-      const items = getNestedProperty(newSuggestions, editingSection);
-      if (isStringArray(items)) {
-        items[editingIndex] = editValue;
-        setEditableSuggestions({
-          ...newSuggestions,
-          commission: newSuggestions.commission || { options: [] },
-          activity: newSuggestions.activity || { options: [] }
-        });
-        setSuggestions({
-          ...newSuggestions,
-          commission: newSuggestions.commission || { options: [] },
-          activity: newSuggestions.activity || { options: [] }
-        });
-      }
-      setEditingSection(null);
-      setEditingIndex(null);
-      setEditValue("");
-    }
-  };
-
-  const cancelEdit = () => {
-    setEditingSection(null);
-    setEditingIndex(null);
-    setEditValue("");
-  };
-
-  const addNewItem = (section: StringArraySection) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (section === 'commission') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          base: '',
-          baseAmount: '',
-          currency: 'EUR',
-          minimumVolume: { amount: '', period: '', unit: '' },
-          transactionCommission: { type: '', amount: '' }
-        }]
-      };
-    } else if (section === 'activity') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          type: '',
-          description: '',
-          requirements: []
-        }]
-      };
-    } else if (isStringArray(items)) {
-      setNestedProperty(newSuggestions, section, [...items, ""]);
-    }
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const removeItem = (section: StringArraySection, index: number) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (isStringArray(items)) {
-      const filteredItems = items.filter((_, i) => i !== index);
-      setNestedProperty(newSuggestions, section, filteredItems);
-      setEditableSuggestions({
-        ...newSuggestions,
-        commission: newSuggestions.commission || { options: [] },
-        activity: newSuggestions.activity || { options: [] }
-      });
-      setSuggestions({
-        ...newSuggestions,
-        commission: newSuggestions.commission || { options: [] },
-        activity: newSuggestions.activity || { options: [] }
-      });
-    }
-  };
-
-  const startEditingMetadata = (field: string, value: string) => {
-    setEditingMetadataField(field);
-    setEditValue(value);
-  };
-
-  const startEditingSchedule = (
-    scheduleIndex: number,
-    field: string,
-    value: string
-  ) => {
-    setEditingScheduleIndex(scheduleIndex);
-    setEditingMetadataField(field);
-    setEditValue(value);
-  };
-
-  const startEditingHour = (scheduleIndex: number, hourIndex: number) => {
-    setEditingScheduleIndex(scheduleIndex);
-    setEditingHourIndex(hourIndex);
-  };
-
-  const saveMetadataEdit = () => {
-    if (!editableMetadata || !editingMetadataField) return;
-
-    const updatedMetadata = { ...editableMetadata };
-
-    if (editingScheduleIndex !== null) {
-      if (editingHourIndex !== null) {
-        // Editing schedule hours
-        const [day, time] = editValue.split(",");
-        const [start, end] = time.split("-").map((t) => t.trim());
-        
-        // Validate the day
-        if (!validateDay(day.trim())) {
-          alert('Invalid day. Please use a single day from: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday');
-          return;
-        }
-
-        updatedMetadata.schedules[editingScheduleIndex].hours[
-          editingHourIndex
-        ] = {
-          day: day.trim(),
-          start,
-          end,
-        };
-      } else {
-        // Editing schedule name or description
-        updatedMetadata.schedules[editingScheduleIndex] = {
-          ...updatedMetadata.schedules[editingScheduleIndex],
-          [editingMetadataField]: editValue,
-        };
-      }
-    } else if (
-      Array.isArray(updatedMetadata[editingMetadataField as keyof GigMetadata])
-    ) {
-      // Editing arrays (suggestedNames or industries)
-      const arrayField = editingMetadataField as keyof Pick<
-        GigMetadata,
-        "suggestedNames" | "industries"
-      >;
-      updatedMetadata[arrayField] = editValue
-        .split(",")
-        .map((item) => item.trim());
-    }
-
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
-    cancelEdit();
-  };
-
-  const generateWeeklySchedule = () => {
-    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    return weekdays.map((day) => ({
-      day,
-      hours: {
-        start: "09:00",
-        end: "17:00"
-      }
-    }));
-  };
-
-  const validateDay = (day: string): boolean => {
-    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    return validDays.includes(day.trim());
-  };
-
-  const addNewSchedule = () => {
-    if (!editableSuggestions) return;
-
-    const newSchedule = {
-      schedules: generateWeeklySchedule(),
-      timeZones: [],
-      flexibility: [],
-      minimumHours: {
-        daily: 8,
-        weekly: 40,
-        monthly: 160
-      }
-    };
-
-    const updatedSuggestions = {
-      ...editableSuggestions,
-      schedule: newSchedule
-    };
-
-    setEditableSuggestions(updatedSuggestions);
-    setSuggestions(updatedSuggestions);
-  };
-
-  const removeSchedule = (index: number) => {
-    if (!editableSuggestions) return;
-
-    const updatedSuggestions = {
-      ...editableSuggestions,
-      schedule: {
-        ...editableSuggestions.schedule,
-        schedules: editableSuggestions.schedule.schedules.filter((_, i) => i !== index)
-      }
-    };
-
-    setEditableSuggestions(updatedSuggestions);
-    setSuggestions(updatedSuggestions);
-  };
-
-  const removeHour = (scheduleIndex: number, hourIndex: number) => {
-    if (!editableSuggestions) return;
-
-    const updatedSuggestions = {
-      ...editableSuggestions,
-      schedule: {
-        ...editableSuggestions.schedule,
-        schedules: editableSuggestions.schedule.schedules.map(schedule => ({
-          ...schedule,
-          hours: {
-            ...schedule.hours,
-            start: schedule.hours.start,
-            end: schedule.hours.end
-          }
-        }))
-      }
-    };
-
-    setEditableSuggestions(updatedSuggestions);
-    setSuggestions(updatedSuggestions);
-  };
-
-  const generateMetadata = async () => {
-    if (!openai) {
-      const fallbackMetadata: GigMetadata = {
-        suggestedNames: [
-          "Professional Sales Development Program",
-          "Enterprise Sales Excellence Initiative",
-          "Strategic Sales Growth Campaign",
-          "Sales Performance Optimization Project",
-        ],
-        industries: [
-          "Technology & Software",
-          "Financial Services",
-          "Healthcare & Medical",
-          "Professional Services",
-          "Manufacturing & Industrial",
-        ],
-        schedules: [
-          {
-            name: "Standard Business Hours",
-            description:
-              "Traditional work schedule aligned with most business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "17:00" },
-              { day: "Tuesday", start: "9:00", end: "17:00" },
-              { day: "Wednesday", start: "9:00", end: "17:00" },
-              { day: "Thursday", start: "9:00", end: "17:00" },
-              { day: "Friday", start: "9:00", end: "17:00" },
-            ],
-          },
-          {
-            name: "Extended Business Hours",
-            description: "Extended coverage for global business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "19:00" },
-              { day: "Tuesday", start: "9:00", end: "19:00" },
-              { day: "Wednesday", start: "9:00", end: "19:00" },
-              { day: "Thursday", start: "9:00", end: "19:00" },
-              { day: "Friday", start: "9:00", end: "19:00" },
-              { day: "Saturday", start: "10:00", end: "15:00" },
-            ],
-          },
-        ],
-      };
-      setMetadata(fallbackMetadata);
-      setEditableMetadata(fallbackMetadata);
-      return;
-    }
-
-    try {
-      setIsMetadataLoading(true);
-
-      const prompt = `Based on this gig description: "${input}"
-
-      Please provide suggestions in the following JSON format:
-      {
-        "suggestedNames": [4 professional and catchy names for the gig],
-        "industries": [5 relevant industries for this type of work],
-        "schedules": [
-          {
-            "name": "schedule name",
-            "description": "brief description of the schedule",
-            "hours": [
-              {
-                "day": "day of week",
-                "start": "start time (HH:MM)",
-                "end": "end time (HH:MM)"
-              }
-            ]
-          }
-        ]
-      }
-
-      Include at least 2 different schedule options with appropriate working hours.`;
-
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-      });
-
-      const response = completion.choices[0]?.message?.content;
-      if (response) {
-        const metadataData = JSON.parse(response);
-        setMetadata(metadataData);
-        setEditableMetadata(metadataData);
-        console.log('Generated Metadata:', metadataData);
-      }
-    } catch (error) {
-      console.error("Error generating metadata:", error);
-      const fallbackMetadata: GigMetadata = {
-        suggestedNames: [
-          "Professional Sales Development Program",
-          "Enterprise Sales Excellence Initiative",
-          "Strategic Sales Growth Campaign",
-          "Sales Performance Optimization Project",
-        ],
-        industries: [
-          "Technology & Software",
-          "Financial Services",
-          "Healthcare & Medical",
-          "Professional Services",
-          "Manufacturing & Industrial",
-        ],
-        schedules: [
-          {
-            name: "Standard Business Hours",
-            description:
-              "Traditional work schedule aligned with most business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "17:00" },
-              { day: "Tuesday", start: "9:00", end: "17:00" },
-              { day: "Wednesday", start: "9:00", end: "17:00" },
-              { day: "Thursday", start: "9:00", end: "17:00" },
-              { day: "Friday", start: "9:00", end: "17:00" },
-            ],
-          },
-          {
-            name: "Extended Business Hours",
-            description: "Extended coverage for global business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "19:00" },
-              { day: "Tuesday", start: "9:00", end: "19:00" },
-              { day: "Wednesday", start: "9:00", end: "19:00" },
-              { day: "Thursday", start: "9:00", end: "19:00" },
-              { day: "Friday", start: "9:00", end: "19:00" },
-              { day: "Saturday", start: "10:00", end: "15:00" },
-            ],
-          },
-        ],
-      };
-      setMetadata(fallbackMetadata);
-      setEditableMetadata(fallbackMetadata);
-    } finally {
-      setIsMetadataLoading(false);
-    }
-  };
-
-  const handleValidate = () => {
-    generateMetadata();
-    setShowMetadata(true);
-  };
-
-
-    const generateSuggestions = async () => {
-      if (!openai) {
-        setSuggestions(fallbackSuggestions);
-        setEditableSuggestions(fallbackSuggestions);
-        return;
-      }
-
-      try {
-        setIsSuggestionsLoading(true);
-        const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: `You are a gig creation assistant. Your task is to generate suggestions for a gig based on the input provided.
-              IMPORTANT: You must respond with ONLY a valid JSON object. Do not include any other text, explanations, or markdown formatting.
-              The response must be a single JSON object matching this exact structure:
-              {
-                jobTitles: string[],
-                deliverables: string[],
-                compensation: string[],
-                skills: {
-                  languages: { language: string, proficiency: string, iso639_1: string }[],
-                  soft: { skill: string, level: number }[],
-                  professional: { skill: string, level: number }[],
-                  technical: { skill: string, level: number }[],
-                  certifications: string[]
-                },
-                kpis: string[],
-                timeframes: string[],
-                requirements: string[],
-                seniority: {
-                  level: string,
-                  yearsExperience: number
-                },
-                availability: {
-                  schedule: {
-                    day: string,
-                    hours: {
-                      start: string,
-                      end: string
-                    }
-                  }[],
-                  timeZones: string[],
-                  flexibility: string[],
-                  minimumHours: {
-                    daily?: number,
-                    weekly?: number,
-                    monthly?: number
-                  }
-                },
-                schedule: {
-                  schedules: {
-                    day: string,
-                    hours: {
-                      start: string,
-                      end: string
-                    }
-                  }[],
-                  hours: string,
-                  timeZones: string[],
-                  flexibility: string[],
-                  minimumHours: {
-                    daily?: number,
-                    weekly?: number,
-                    monthly?: number
-                  }
-                },
-                commission: {
-                  options: Array<{
-                    base: string,
-                    baseAmount: string,
-                    bonus?: string,
-                    bonusAmount?: string,
-                    currency: string,
-                    minimumVolume: {
-                      amount: string,
-                      period: string,
-                      unit: string
-                    },
-                    transactionCommission: {
-                      type: string,
-                      amount: string
-                    }
-                  }>
-                },
-                sectors: string[],
-                activity: {
-                  options: Array<{
-                    type: string,
-                    description: string,
-                    requirements: string[]
-                  }>
-                },
-                destinationZones: string[],
-                team: {
-                  size: number,
-                  structure: Array<{
-                    roleId: string,
-                    count: number,
-                    seniority: {
-                      level: string,
-                      yearsExperience: number
-                    }
-                  }>,
-                  territories: string[]
-                }
-              }
-
-              Remember: Respond with ONLY the JSON object, no other text.`
-            },
-            {
-              role: "user",
-              content: input
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        });
-
-        const content = response.choices[0]?.message?.content;
-        if (!content) {
-          throw new Error('No content received from AI');
-        }
-
-        // Clean the content to ensure it's valid JSON
-        const cleanedContent = content.trim()
-          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
-          .replace(/\n/g, ' ') // Replace newlines with spaces
-          .replace(/\s+/g, ' '); // Normalize whitespace
-
-        console.log('Cleaned content:', cleanedContent);
-
-        try {
-          const parsedSuggestions = JSON.parse(cleanedContent);
-          
-          // Validate required fields
-          const requiredFields = [
-            'jobTitles', 'deliverables', 'skills', 'seniority', 
-            'availability', 'schedule', 'commission', 'sectors', 
-            'activity', 'destinationZones'
-          ];
-
-          for (const field of requiredFields) {
-            if (!parsedSuggestions[field]) {
-              throw new Error(`Missing required field: ${field}`);
-            }
-          }
-
-          // Ensure all required fields are present with default values if missing
-          const defaultSuggestions = {
-            seniority: {
-              level: "",
-              yearsExperience: 0
-            },
-            availability: {
-              schedule: [{
-                day: "",
-                hours: {
-                  start: "",
-                  end: ""
-                }
-              }],
-              timeZones: ["CET"],
-              flexibility: ["Remote work", "Flexible hours"],
-              minimumHours: {
-                daily: 8,
-                weekly: 40,
-                monthly: 160
-              }
-            },
-            schedule: {
-              schedules: [{
-                day: "",
-                hours: {
-                  start: "",
-                  end: ""
-                }
-              }],
-              timeZones: ["CET"],
-              flexibility: ["Remote work", "Flexible hours"],
-              minimumHours: {
-                daily: 8,
-                weekly: 40,
-                monthly: 160
-              }
-            },
-            commission: {
-              options: [{
-                base: "Fixed Salary",
-                baseAmount: "0",
-                bonus: "quarterly",
-                bonusAmount: "5000",
-                currency: "USD",
-                minimumVolume: {
-                  amount: "0",
-                  period: "Monthly",
-                  unit: "Projects"
-                },
-                transactionCommission: {
-                  type: "Fixed Amount",
-                  amount: "2"
-                }
-              }]
-            },
-            activity: {
-              options: [{
-                type: "Default Activity",
-                description: "Default activity description",
-                requirements: ["Default requirement"]
-              }]
-            },
-            team: {
-              size: 0,
-              structure: [{
-                roleId: "default",
-                count: 1,
-                seniority: {
-                  level: "Senior",
-                  yearsExperience: 2
-                }
-              }],
-              territories: ["Global"]
-            },
-            destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
-          };
-
-          const finalSuggestions = {
-            ...defaultSuggestions,
-            ...parsedSuggestions,
-            team: {
-              ...defaultSuggestions.team,
-              ...parsedSuggestions.team,
-              structure: parsedSuggestions.team?.structure || defaultSuggestions.team.structure
-            }
-          };
-
-          setSuggestions(finalSuggestions);
-          setEditableSuggestions(finalSuggestions);
-          setGigData(finalSuggestions);
-          console.log('Generated Suggestions:', finalSuggestions);
-        } catch (parseError) {
-          console.error("Error parsing suggestions:", parseError);
-          setSuggestions(fallbackSuggestions);
-          setEditableSuggestions(fallbackSuggestions);
-        }
-      } catch (error) {
-        console.error("Error generating suggestions:", error);
-        setSuggestions(fallbackSuggestions);
-        setEditableSuggestions(fallbackSuggestions);
-      } finally {
-        setIsSuggestionsLoading(false);
-      }
-    };
-
-  const validateGigData = (gigData: any) => {
-    const emptyFields: string[] = [];
-    
-    // Check basic fields
-    if (!gigData.title) emptyFields.push('Title');
-    if (!gigData.description) emptyFields.push('Description');
-    if (!gigData.category) emptyFields.push('Category');
-    if (!gigData.seniority?.level) emptyFields.push('Seniority Level');
-    if (!gigData.seniority?.yearsExperience) emptyFields.push('Years of Experience');
-    
-    // Check schedule fields
-    if (!gigData.schedule?.schedules || gigData.schedule.schedules.length === 0) {
-      gigData.schedule = {
-        ...gigData.schedule,
-        schedules: [{
-          day: "Monday",
-          hours: {
-            start: "09:00",
-            end: "18:00"
-          }
-        }]
-      };
-    }
-    if (!gigData.schedule?.hours) {
-      gigData.schedule = {
-        ...gigData.schedule,
-        hours: "9:00 AM - 6:00 PM"
-      };
-    }
-    if (!gigData.schedule?.timeZones || gigData.schedule.timeZones.length === 0) {
-      gigData.schedule = {
-        ...gigData.schedule,
-        timeZones: ["UTC"]
-      };
-    }
-    if (!gigData.schedule?.minimumHours?.daily) {
-      gigData.schedule.minimumHours = {
-        ...gigData.schedule?.minimumHours,
-        daily: 8
-      };
-    }
-    if (!gigData.schedule?.minimumHours?.weekly) {
-      gigData.schedule.minimumHours = {
-        ...gigData.schedule?.minimumHours,
-        weekly: 40
-      };
-    }
-    if (!gigData.schedule?.minimumHours?.monthly) {
-      gigData.schedule.minimumHours = {
-        ...gigData.schedule?.minimumHours,
-        monthly: 160
-      };
-    }
-    
-    // Check commission fields
-    if (!gigData.commission?.base) {
-      gigData.commission = {
-        ...gigData.commission,
-        base: "percentage"
-      };
-    }
-    if (!gigData.commission?.baseAmount) {
-      gigData.commission = {
-        ...gigData.commission,
-        baseAmount: "15"
-      };
-    }
-    if (!gigData.commission?.currency) {
-      gigData.commission = {
-        ...gigData.commission,
-        currency: "USD"
-      };
-    }
-    if (!gigData.commission?.minimumVolume?.amount) {
-      gigData.commission.minimumVolume = {
-        ...gigData.commission?.minimumVolume,
-        amount: "50000"
-      };
-    }
-    if (!gigData.commission?.minimumVolume?.period) {
-      gigData.commission.minimumVolume = {
-        ...gigData.commission?.minimumVolume,
-        period: "monthly"
-      };
-    }
-    if (!gigData.commission?.minimumVolume?.unit) {
-      gigData.commission.minimumVolume = {
-        ...gigData.commission?.minimumVolume,
-        unit: "USD"
-      };
-    }
-    if (!gigData.commission?.transactionCommission?.type) {
-      gigData.commission.transactionCommission = {
-        ...gigData.commission?.transactionCommission,
-        type: "percentage"
-      };
-    }
-    if (!gigData.commission?.transactionCommission?.amount) {
-      gigData.commission.transactionCommission = {
-        ...gigData.commission?.transactionCommission,
-        amount: "5"
-      };
-    }
-    
-    return emptyFields;
-  };
-
-  // Ajouter les styles globaux pour SweetAlert2
-
-  const handleSaveAndOnBack = async (documentation?: any) => {
-    try {
-      const initialGigData = {
-        title: selectedJobTitle || suggestions?.jobTitles?.[0] || "Untitled Gig",
-        description: jobDescription?.description || suggestions?.activity?.options?.[0]?.description || "No description provided",
-        type: suggestions?.activity?.options?.[0]?.type || "General",
-        category: suggestions?.sectors?.[0] || "General",
-        quantity: 1,
-        timeline: suggestions?.timeframes?.[0] || "Flexible",
-        skills: {
-          languages: suggestions?.skills?.languages.map(lang => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })) || [],
-          soft: suggestions?.skills?.soft.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
-          professional: suggestions?.skills?.professional.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
-          technical: suggestions?.skills?.technical.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
-          certifications: suggestions?.skills?.certifications || []
-        },
-        requirements: suggestions?.requirements || { essential: [], preferred: [] },
-        status: "draft",
-        seniority: {
-          level: suggestions?.seniority?.level || "Mid Level",
-          yearsExperience: suggestions?.seniority?.yearsExperience || 3
-        },
-        availability: {
-          schedule: suggestions?.schedule?.schedules || [{
-            day: "Monday",
-            hours: {
-              start: "09:00",
-              end: "18:00"
-            }
-          }],
-          timeZones: suggestions?.schedule?.timeZones || ["CET"],
-          flexibility: suggestions?.schedule?.flexibility || [],
-          minimumHours: {
-            daily: suggestions?.schedule?.minimumHours?.daily || 8,
-            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
-            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
-          },
-        },
-        schedule: {
-          schedules: suggestions?.schedule?.schedules || [{
-            day: "Monday",
-            hours: {
-              start: "09:00",
-              end: "18:00"
-            }
-          }],
-          timeZones: suggestions?.schedule?.timeZones || ["CET"],
-          flexibility: suggestions?.schedule?.flexibility || [],
-          minimumHours: {
-            daily: suggestions?.schedule?.minimumHours?.daily || 8,
-            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
-            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
-          },
-
-        },
-        commission: {
-          base: suggestions?.commission?.options?.[0]?.base || "Fixed Salary",
-          baseAmount: suggestions?.commission?.options?.[0]?.baseAmount || "2",
-          bonus: suggestions?.commission?.options?.[0]?.bonus,
-          bonusAmount: suggestions?.commission?.options?.[0]?.bonusAmount,
-          currency: suggestions?.commission?.options?.[0]?.currency || "USD",
-          minimumVolume: {
-            amount: suggestions?.commission?.options?.[0]?.minimumVolume?.amount || "4",
-            period: suggestions?.commission?.options?.[0]?.minimumVolume?.period || "Monthly",
-            unit: suggestions?.commission?.options?.[0]?.minimumVolume?.unit || "Projects"
-          },
-          transactionCommission: {
-            type: suggestions?.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount",
-            amount: suggestions?.commission?.options?.[0]?.transactionCommission?.amount || "3"
-          },
-          kpis: []
-        },
-        leads: {
-          types: [
-            { type: 'hot', percentage: 0, description: "", conversionRate: 0 },
-            { type: 'warm', percentage: 0, description: "", conversionRate: 0 },
-            { type: 'cold', percentage: 0, description: "", conversionRate: 0 }
-          ],
-          sources: []
-        },
-        team: {
-          size: gigData.team?.size || 0,
-          structure: gigData.team?.structure || [],
-          territories: gigData.team?.territories || []
-        },
-        documentation: {
-          templates: null,
-          reference: null,
-          product: [],
-          process: [],
-          training: []
-        }
-      };
-
-      // Ajouter les données de documentation si elles existent
-      if (documentation) {
-        initialGigData.documentation = {
-          templates: documentation.templates,
-          reference: documentation.reference,
-          product: documentation.product.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url })),
-          process: documentation.process.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url })),
-          training: documentation.training.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url }))
-        };
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(initialGigData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error: ${response.statusText}`);
-      }
-
-      const savedData = await response.json();
-
-      await Swal.fire({
-        title: "Success",
-        text: "Gig data saved successfully!",
-        icon: "success",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          htmlContainer: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      }).then(() => {
-        onBack();
-      });
-    } catch (error) {
-      console.error("Error saving gig data:", error);
-      await Swal.fire({
-        title: "Error",
-        text: error instanceof Error ? error.message : "Failed to save gig data. Please try again.",
-        icon: "error",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          htmlContainer: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      });
-    }
-  };
-
-  const handleLeadsSave = (data: any) => {
-    setLeadsData(data);
-    setIsLeadsModalOpen(false);
-  };
-
-  const handleLeadsSkip = () => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      leads: {
-        types: [
-          { type: 'hot', percentage: 0, description: "", conversionRate: 0 },
-          { type: 'warm', percentage: 0, description: "", conversionRate: 0 },
-          { type: 'cold', percentage: 0, description: "", conversionRate: 0 }
-        ],
-        sources: []
-      }
-    }));
-    setIsLeadsModalOpen(false);
-    setIsTeamModalOpen(true);
-  };
-
-  const handleTeamSave = (teamData: any) => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      team: teamData
-    }));
-    setIsTeamModalOpen(false);
-    setIsDocModalOpen(true);
-  };
-
-  const handleTeamSkip = () => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      team: {
-        size: 0,
-        structure: [],
-        territories: [],
-        reporting: {
-          to: '',
-          frequency: ''
-        },
-        collaboration: []
-      }
-    }));
-    setIsTeamModalOpen(false);
-    setIsDocModalOpen(true);
-  };
-
-  const handleDocumentationSave = (documentationData: any) => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      documentation: documentationData
-    }));
-    setIsDocModalOpen(false);
-    handleSaveAndOnBack();
-  };
-
-  const handleDocumentationSkip = () => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      documentation: {
-        templates: null,
-        reference: null,
-        product: [],
-        process: [],
-        training: []
-      }
-    }));
-    setIsDocModalOpen(false);
-    handleSaveAndOnBack();
-  };
-
-  const saveToDatabase = async () => {
-    try {
-      // Préparer les données pour l'API
-      const apiData = {
-        title: gigData.title,
-        description: gigData.description,
-        type: gigData.type,
-        quantity: gigData.quantity,
-        price: gigData.price,
-        duration: gigData.duration,
-        location: gigData.location,
-        skills: {
-          languages: gigData.skills.languages.map((lang: { language: string; proficiency: string; iso639_1: string }) => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })),
-          soft: gigData.skills.soft.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
-          professional: gigData.skills.professional.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
-          technical: gigData.skills.technical.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
-          certifications: gigData.skills.certifications
-        },
-        requirements: gigData.requirements,
-        benefits: gigData.benefits,
-        status: gigData.status,
-        leads: {
-          types: [
-            { type: 'hot', ...gigData.leads.hot },
-            { type: 'warm', ...gigData.leads.warm },
-            { type: 'cold', ...gigData.leads.cold }
-          ],
-          sources: gigData.leads.sources
-        },
-        team: {
-          size: gigData.team.size,
-          structure: gigData.team.structure,
-          territories: gigData.team.territories
-        },
-        documentation: {
-          templates: gigData.documentation.templates,
-          reference: gigData.documentation.reference,
-          product: gigData.documentation.product,
-          process: gigData.documentation.process,
-          training: gigData.documentation.training
-        }
-      };
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(apiData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API Error Response:', errorData);
-        throw new Error(errorData.message || `Error: ${response.statusText}`);
-      }
-
-      const savedData = await response.json();
-
-      Swal.fire({
-        title: "Success",
-        text: "Gig data saved successfully!",
-          icon: "success",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          content: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      }).then(() => {
-        onBack();
-      });
-      console.log('Saving to database:', gigData);
-    } catch (error) {
-      console.error("Error saving gig data:", error);
-      Swal.fire({
-        title: "Error",
-        text: error instanceof Error ? error.message : "Failed to save gig data. Please try again.",
-        icon: "error",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          content: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      });
-    }
-  };
-
-  const addItem = (section: StringArraySection) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (section === 'commission') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          base: '',
-          baseAmount: '',
-          currency: 'EUR',
-          minimumVolume: { amount: '', period: '', unit: '' },
-          transactionCommission: { type: '', amount: '' }
-        }]
-      };
-    } else if (section === 'activity') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          type: '',
-          description: '',
-          requirements: []
-        }]
-      };
-    } else if (isStringArray(items)) {
-      setNestedProperty(newSuggestions, section, [...items, ""]);
-    }
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const renderEditableList = (
-    section: StringArraySection,
-    title: string,
-    icon: React.ReactNode
-  ) => {
-    if (!editableSuggestions) return null;
-    
-    const items = getNestedProperty(editableSuggestions, section);
-    if (!isStringArray(items)) return null;
-
+  if (loading) {
     return (
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            {icon}
-            {title}
-          </h3>
-          <button
-            onClick={() => addItem(section)}
-            className="text-blue-600 hover:text-blue-700 text-sm flex items-center"
-          >
-            <Edit2 className="w-4 h-4 mr-1" />
-            Add New
-          </button>
-        </div>
-        <ul className="space-y-2">
-          {items.map((item, index) => (
-            <li key={index} className="flex items-center justify-between group">
-              {editingSection === section && editingIndex === index ? (
-                <div className="flex-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-2 py-1 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between text-gray-700 group">
-                  <span>{item}</span>
-                  <div className="hidden group-hover:flex items-center space-x-2">
-                    <button
-                      onClick={() => startEditing(section, index, item)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => removeItem(section, index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
-
-
-
-  const renderCommissionSection = () => {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <DollarSign className="w-6 h-6 text-green-600 mr-2" />
-            <h2 className="text-2xl font-semibold">Base Commission</h2>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+          <div className="flex items-center justify-center space-x-3">
+            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+            <span className="text-lg text-gray-700">Generating suggestions...</span>
           </div>
-          <button
-            onClick={() => startEditingMetadata('commission', '')}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            <Edit2 className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Base</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.base || "Not set"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Base Amount</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.baseAmount || "0"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Bonus</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.bonus || "Not set"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Bonus Amount</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.bonusAmount || "0"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Currency</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.currency || "USD"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Structure</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.structure || "Not set"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-3">Minimum Volume</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Amount</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.minimumVolume?.amount || "0"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Period</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.minimumVolume?.period || "Not set"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Unit</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.minimumVolume?.unit || "Not set"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-3">Transaction Commission</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Type</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Amount</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.transactionCommission?.amount || "0"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-center text-gray-500 mt-4">
+            Analyzing your requirements and creating personalized gig suggestions
+          </p>
         </div>
       </div>
     );
-  };
+  }
 
-  const renderSectorsSection = () => {
-    if (!editableSuggestions?.sectors) return null;
-
+  if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
-            Target Sectors
-          </h3>
-          <button
-            onClick={() => addNewItem('sectors')}
-            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-1" />
-            Add Sector
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {editableSuggestions.sectors.map((sector, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded group">
-              {editingSection === 'sectors' && editingIndex === index ? (
-                <div className="flex-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-gray-700">{sector}</span>
-                  <div className="hidden group-hover:flex items-center space-x-2">
-                    <button
-                      onClick={() => startEditing('sectors', index, sector)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => removeItem('sectors', index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              )}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Brain className="w-6 h-6 text-red-600" />
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderActivitySection = () => {
-    if (!editableSuggestions?.activity) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Target className="w-5 h-5 mr-2 text-purple-600" />
-            Activity Details
-          </h3>
-          <button
-            onClick={() => addNewActivityOption()}
-            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-1" />
-            Add Option
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {editableSuggestions.activity.options?.map((option, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg group">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{option.type}</h4>
-                <div className="hidden group-hover:flex items-center space-x-2">
-                  <button
-                    onClick={() => editActivityOption(index)}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => removeActivityOption(index)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-3">{option.description}</p>
-              <div className="space-y-2">
-                {option.requirements.map((req, reqIndex) => (
-                  <div key={reqIndex} className="flex items-center justify-between p-2 bg-white rounded group">
-                    <span className="text-gray-700">{req}</span>
-                    <div className="hidden group-hover:flex items-center space-x-2">
-                      <button
-                        onClick={() => editActivityRequirement(index, reqIndex)}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => removeActivityRequirement(index, reqIndex)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  onClick={() => addActivityRequirement(index)}
-                  className="w-full text-blue-600 hover:text-blue-700 text-sm flex items-center justify-center py-2"
-                >
-                  <PlusCircle className="w-4 h-4 mr-1" />
-                  Add Requirement
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderSenioritySection = () => {
-    if (!editableSuggestions?.seniority) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Award className="w-5 h-5 mr-2 text-yellow-600" />
-            Seniority Requirements
-          </h3>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            {isEditing ? "Done" : "Edit"}
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Seniority Level *</label>
-            {isEditing ? (
-              <select
-                value={editableSuggestions.seniority.level}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.seniority.level = e.target.value;
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Select seniority level</option>
-                {predefinedOptions.basic.seniorityLevels.map((level) => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.level}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Years of Experience *</label>
-            {isEditing ? (
-              <input
-                type="number"
-                min={0}
-                value={editableSuggestions.seniority.yearsExperience}
-                onChange={e => handleSeniorityChange('yearsExperience', Number(e.target.value))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.yearsExperience} years</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderScheduleSection = () => {
-    if (!editableSuggestions?.schedule) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-blue-600" />
-            Schedule
-          </h3>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            {isEditing ? "Done" : "Edit"}
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Working Hours *</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editableSuggestions.schedule.hours}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.schedule.hours = e.target.value;
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 08h00 - 17h00 CET"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.hours}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Working Days</label>
-            <div className="mt-2 space-x-2">
-              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                <label key={day} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={editableSuggestions.schedule.days.includes(day)}
-                    onChange={(e) => {
-                      const newSuggestions = { ...editableSuggestions };
-                      if (e.target.checked) {
-                        newSuggestions.schedule.days = [...newSuggestions.schedule.days, day];
-                      } else {
-                        newSuggestions.schedule.days = newSuggestions.schedule.days.filter(d => d !== day);
-                      }
-                      setEditableSuggestions(newSuggestions);
-                    }}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                  <span className="ml-2">{day}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Time Zones</label>
-            <div className="mt-2 space-y-2">
-              {editableSuggestions.schedule.timeZones.map((timezone, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-gray-700">{timezone}</span>
-                  {isEditing && (
-                    <button
-                      onClick={() => {
-                        const newSuggestions = { ...editableSuggestions };
-                        newSuggestions.schedule.timeZones = newSuggestions.schedule.timeZones.filter((_, i) => i !== index);
-                        setEditableSuggestions(newSuggestions);
-                      }}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              {isEditing && (
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <select
-                      className="flex-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          const newSuggestions = { ...editableSuggestions };
-                          newSuggestions.schedule.timeZones = [...newSuggestions.schedule.timeZones, e.target.value];
-                          setEditableSuggestions(newSuggestions);
-                          e.target.value = "";
-                        }
-                      }}
-                      value=""
-                    >
-                      <option value="">Select a timezone...</option>
-                      {COMMON_TIMEZONES.map((tz) => (
-                        <option key={tz} value={tz}>
-                          {tz}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Start Time *</label>
-            {isEditing ? (
-              <input
-                type="time"
-                value={editableSuggestions.schedule.schedules[0]?.hours?.start || ""}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  if (newSuggestions.schedule.schedules[0]) {
-                    newSuggestions.schedule.schedules[0].hours.start = e.target.value;
-                  }
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 09:00"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours?.start}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">End Time *</label>
-            {isEditing ? (
-              <input
-                type="time"
-                value={editableSuggestions.schedule.schedules[0]?.hours.end || ""}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  if (newSuggestions.schedule.schedules[0]) {
-                    newSuggestions.schedule.schedules[0].hours.end = e.target.value;
-                  }
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 18:00"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours.end}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const addNewActivityOption = () => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    if (!newSuggestions.activity) {
-      newSuggestions.activity = { options: [] };
-    }
-    newSuggestions.activity.options.push({
-      type: "New Activity",
-      description: "Description for new activity",
-      requirements: []
-    });
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const editActivityOption = (index: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const option = editableSuggestions.activity.options[index];
-    setEditingSection('activity');
-    setEditingIndex(index);
-    setEditValue(JSON.stringify(option));
-  };
-
-  const removeActivityOption = (index: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    newSuggestions.activity.options = newSuggestions.activity.options.filter((_, i) => i !== index);
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const editActivityRequirement = (optionIndex: number, reqIndex: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const option = editableSuggestions.activity.options[optionIndex];
-    if (!option.requirements) return;
-    const requirement = option.requirements[reqIndex];
-    setEditingSection('activity-requirement');
-    setEditingIndex(reqIndex);
-    setEditValue(requirement);
-  };
-
-  const removeActivityRequirement = (optionIndex: number, reqIndex: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    const option = newSuggestions.activity.options[optionIndex];
-    if (option.requirements) {
-      option.requirements = option.requirements.filter((_, i) => i !== reqIndex);
-    }
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const addActivityRequirement = (optionIndex: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    const option = newSuggestions.activity.options[optionIndex];
-    if (!option.requirements) {
-      option.requirements = [];
-    }
-    option.requirements.push("New requirement");
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const renderDestinationZonesSection = () => {
-    
-    if (!editableSuggestions?.destinationZones) {
-      return null;
-    }
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Globe2 className="w-5 h-5 mr-2 text-blue-600" />
-            Destination Zones
-          </h3>
-          <button
-            onClick={() => addNewItem('destinationZones')}
-            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-1" />
-            Add Zone
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {editableSuggestions.destinationZones.map((zone, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded group">
-              {editingSection === 'destinationZones' && editingIndex === index ? (
-                <div className="flex-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-gray-700">{zone}</span>
-                  <div className="hidden group-hover:flex items-center space-x-2">
-                    <button
-                      onClick={() => startEditing('destinationZones', index, zone)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => removeItem('destinationZones', index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  useEffect(() => {
-    if (suggestions?.destinationZones && suggestions.destinationZones.length > 0 && 
-        (!suggestions.destinationZones || suggestions.destinationZones.length === 0)) {
-      const firstCountry = suggestions.destinationZones[0];
-      const countryCode = Object.entries(i18n.getNames('en'))
-        .find(([_, name]) => name === firstCountry)?.[0];
-      if (countryCode) {
-        setSelectedCountry(countryCode);
-      }
-    }
-  }, [suggestions?.destinationZones]);
-
-  const handleSeniorityChange = (field: 'level' | 'yearsExperience', value: string | number) => {
-    if (!editableSuggestions) return;
-    setEditableSuggestions({
-      ...editableSuggestions,
-      seniority: {
-        ...editableSuggestions.seniority,
-        [field]: value
-      }
-    });
-  };
-
-  if (showMetadata) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
-        <div className="max-w-4xl mx-auto pt-16 px-4">
-          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Generating Suggestions</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
             <button
-              onClick={() => setShowMetadata(false)}
-              className="flex items-center text-gray-600 hover:text-gray-900"
+              onClick={onBack}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Suggestions
+              Go Back
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Gig Details & Scheduling
-            </h1>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          {isMetadataLoading ? (
-            <div className="bg-white rounded-xl shadow-xl p-6 mb-8">
-              <div className="flex items-center justify-center py-8">
-                <Brain className="w-6 h-6 text-blue-600 animate-pulse mr-2" />
-                <span className="text-gray-600">Generating suggestions...</span>
-              </div>
-            </div>
-          ) : (
-            metadata && (
-              <div className="space-y-8">
-                {renderSenioritySection()}
-                {renderScheduleSection()}
-                {renderDestinationZonesSection()}
-                {/* Suggested Names Section */}
-                <div className="bg-white rounded-xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Suggested Names
-                    </h2>
-                    <button
-                      onClick={() =>
-                        startEditingMetadata(
-                          "suggestedNames",
-                          metadata.suggestedNames.join(", ")
-                        )
-                      }
-                      className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit Names
-                    </button>
-                  </div>
-                  {editingMetadataField === "suggestedNames" ? (
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter names separated by commas"
-                      />
-                      <button
-                        onClick={saveMetadataEdit}
-                        className="text-green-600 hover:text-green-700"
-                      >
-                        <Save className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4">
-                      {metadata.suggestedNames.map((name, index) => (
-                        <div key={index} className="p-4 bg-blue-50 rounded-lg">
-                          <p className="text-blue-900 font-medium">{name}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Industries Section */}
-                <div className="bg-white rounded-xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Relevant Industries
-                    </h2>
-                    <button
-                      onClick={() =>
-                        startEditingMetadata(
-                          "industries",
-                          metadata.industries.join(", ")
-                        )
-                      }
-                      className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit Industries
-                    </button>
-                  </div>
-                  {editingMetadataField === "industries" ? (
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter industries separated by commas"
-                      />
-                      <button
-                        onClick={saveMetadataEdit}
-                        className="text-green-600 hover:text-green-700"
-                      >
-                        <Save className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-3">
-                      {metadata.industries.map((industry, index) => (
-                        <span
-                          key={index}
-                          className="px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium"
-                        >
-                          {industry}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Schedules Section */}
-                <div className="bg-white rounded-xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Recommended Schedules
-                    </h2>
-                    <button
-                      onClick={addNewSchedule}
-                      className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Add Schedule
-                    </button>
-                  </div>
-                  <div className="space-y-6">
-                    {metadata.schedules.map((schedule, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          {editingScheduleIndex === index &&
-                          editingMetadataField === "name" ? (
-                            <div className="flex items-center space-x-2 flex-1">
-                              <input
-                                type="text"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <button
-                                onClick={saveMetadataEdit}
-                                className="text-green-600 hover:text-green-700"
-                              >
-                                <Save className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={cancelEdit}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                              {schedule.name}
-                              <button
-                                onClick={() =>
-                                  startEditingSchedule(
-                                    index,
-                                    "name",
-                                    schedule.name
-                                  )
-                                }
-                                className="ml-2 text-blue-600 hover:text-blue-700"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            </h3>
-                          )}
-                          <button
-                            onClick={() => removeSchedule(index)}
-                            className="text-red-600 hover:text-red-700 ml-2"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        {editingScheduleIndex === index &&
-                        editingMetadataField === "description" ? (
-                          <div className="flex items-center space-x-2 mb-4">
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <button
-                              onClick={saveMetadataEdit}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <Save className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center mb-4">
-                            <p className="text-gray-600 flex-1">
-                              {schedule.description}
-                            </p>
-                            <button
-                              onClick={() =>
-                                startEditingSchedule(
-                                  index,
-                                  "description",
-                                  schedule.description
-                                )
-                              }
-                              className="text-blue-600 hover:text-blue-700 ml-2"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          {schedule.hours.map((hour, hourIndex) => (
-                            <div
-                              key={hourIndex}
-                              className="flex items-center justify-between bg-gray-50 p-3 rounded group"
-                            >
-                              {editingScheduleIndex === index &&
-                              editingHourIndex === hourIndex ? (
-                                <div className="flex-1 flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={`${hour.day}, ${hour.start}-${hour.end}`}
-                                    onChange={(e) =>
-                                      setEditValue(e.target.value)
-                                    }
-                                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Day, HH:MM-HH:MM"
-                                  />
-                                  <button
-                                    onClick={saveMetadataEdit}
-                                    className="text-green-600 hover:text-green-700"
-                                  >
-                                    <Save className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEdit}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <span className="font-medium text-gray-700">
-                                    {hour.day}
-                                  </span>
-                                  <div className="flex items-center space-x-4">
-                                    <span className="text-gray-600">
-                                      {hour.start.replace(':', 'h')} - {hour.end.replace(':', 'h')}
-                                    </span>
-                                    <div className="hidden group-hover:flex items-center space-x-2">
-                                      <button
-                                        onClick={() =>
-                                          startEditingHour(index, hourIndex)
-                                        }
-                                        className="text-blue-600 hover:text-blue-700"
-                                      >
-                                        <Edit2 className="w-4 h-4" />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          removeHour(index, hourIndex)
-                                        }
-                                        className="text-red-600 hover:text-red-700"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                          <button
-                            onClick={() => addNewHour(index)}
-                            className="w-full text-blue-600 hover:text-blue-700 text-sm flex items-center justify-center py-2 border border-dashed border-blue-300 rounded-lg mt-2"
-                          >
-                            <Edit2 className="w-4 h-4 mr-1" />
-                            Add Working Hours
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="fixed bottom-8 right-8">
-                  <button
-                    onClick={() => {
-                      Swal.fire({
-                        title: "Complete Gig Creation",
-                        text: "Would you like to add additional information?",
-                        icon: "question",
-                        showDenyButton: true,
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, add details",
-                        denyButtonText: "No, save and return",
-                        cancelButtonText: "Cancel",
-                        customClass: {
-                          popup: "rounded-lg shadow-lg",
-                          title: "text-xl font-semibold text-gray-800",
-                          htmlContainer: "text-gray-600",
-                          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700",
-                          denyButton: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700",
-                          cancelButton: "px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                        }
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          // Ouvrir le modal des leads
-                          setIsLeadsModalOpen(true);
-                        } else if (result.isDenied) {
-                          // Sauvegarder directement
-                          handleSaveAndOnBack();
-                        }
-                      });
-                    }}
-                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-                  >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Complete & Return to Gig Creation
-                  </button>
-                </div>
-              </div>
-            )
-          )}
+  if (!suggestions) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Suggestions Available</h3>
+            <p className="text-gray-600 mb-6">Unable to generate suggestions for your input.</p>
+            <button
+              onClick={onBack}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -2863,173 +554,264 @@ export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
-      {showBasicSection ? (
-        <BasicSection
-          data={{
-            userId: Cookies.get('userId') || "",
-            companyId: Cookies.get('companyId') || "",
-            title: suggestions?.jobTitles[0] || '',
-            description: suggestions?.deliverables.join('\n') || '',
-            category: suggestions?.sectors[0] || '',
-            seniority: {
-              level: suggestions?.seniority?.level || '',
-              yearsExperience: suggestions?.seniority?.yearsExperience || 2,
-            },
-            destination_zone: suggestions?.destinationZones?.[0] || "France",
-            callTypes: [],
-          }}
-          onChange={(data) => {
-            // Handle changes in basic section
-            console.log('Basic section data changed:', data);
-          }}
-          errors={{}}
-        />
-      ) : (
-        <div className="max-w-4xl mx-auto pt-16 px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              {!isSuggestionsLoading && suggestions && !isSuggestionsConfirmed && (
-                <button
-                  onClick={() => setIsSuggestionsConfirmed(true)}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Confirm Suggestions
-                </button>
-              )}
-              {isSuggestionsConfirmed && (
-                <button
-                  onClick={handleConfirm}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  disabled={!suggestions || isConfirming}
-                >
-                  <ArrowRight className="w-5 h-5 mr-2" />
-                  Next: Review Details
-                </button>
-              )}
-            </div>
+      <div className="max-w-4xl mx-auto pt-16 px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={onBack}
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Input</span>
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900">AI-Generated Suggestions</h1>
+        </div>
+
+        {/* Suggestions Card */}
+        <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+              <Briefcase className="w-6 h-6 mr-2 text-blue-600" />
+              {suggestions.title}
+            </h2>
+            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+              {suggestions.category}
+            </span>
           </div>
 
-          {apiKeyMissing && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
-                <p className="text-sm text-yellow-700">
-                  OpenAI API key is missing. AI-powered suggestions are currently
-                  using fallback data. Please add your API key to enable real AI
-                  suggestions.
-                </p>
+          {/* Description */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Description</h3>
+            <p className="text-gray-700 leading-relaxed">{suggestions.description}</p>
+          </div>
+
+          {/* Highlights */}
+          {suggestions.highlights && suggestions.highlights.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3">Key Highlights</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {suggestions.highlights.map((highlight, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <span className="text-gray-700">{highlight}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {(suggestions || isSuggestionsLoading) && (
-            <div className="bg-white rounded-xl shadow-xl p-6 mb-8">
-              {isSuggestionsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Brain className="w-6 h-6 text-blue-600 animate-pulse mr-2" />
-                  <span className="text-gray-600">Generating suggestions...</span>
-                </div>
-              ) : (
-                suggestions && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      {renderSenioritySection()}
-                      {renderEditableList("jobTitles", "Job Titles", <Briefcase className="w-5 h-5 mr-2 text-blue-600" />)}
-                      {renderEditableList("deliverables", "Deliverables", <Target className="w-5 h-5 mr-2 text-purple-600" />)}
-                      {renderEditableList("kpis", "KPIs", <Gauge className="w-5 h-5 mr-2 text-green-600" />)}
-                    </div>
-
-                    <div className="space-y-6">
-                      {renderEditableList("timeframes", "Timeframes", <Clock className="w-5 h-5 mr-2 text-gray-600" />)}
-                      {renderEditableList("requirements", "Requirements", <Target className="w-5 h-5 mr-2 text-purple-600" />)}
-                      {renderEditableList("compensation", "Compensation", <DollarSign className="w-5 h-5 mr-2 text-green-600" />)}
-                      {renderEditableList("languages", "Languages", <Globe2 className="w-5 h-5 mr-2 text-blue-600" />)}
-                    </div>
-
-                    <div className="lg:col-span-2 space-y-6">
-                      {renderEditableList("skills", "Skills", <Brain className="w-5 h-5 mr-2 text-blue-600" />)}
-                      {renderCommissionSection()}
-                      {renderSectorsSection()}
-                      {renderActivitySection()}
-                      {renderDestinationZonesSection()}
+          {/* Schedule */}
+          {suggestions.schedule && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                Schedule
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                {suggestions.schedule.schedules && suggestions.schedule.schedules.length > 0 ? (
+                  <div className="space-y-3">
+                    {suggestions.schedule.schedules.map((schedule, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600">Days:</span>
+                          <span className="font-medium text-gray-900">
+                            {schedule.days.join(', ')}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600">Hours:</span>
+                          <span className="font-medium text-gray-900">
+                            {schedule.hours.start} - {schedule.hours.end}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-600">No specific schedule defined</p>
+                )}
+                
+                {suggestions.schedule.timeZones && suggestions.schedule.timeZones.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-600">Time Zones:</span>
+                      <span className="font-medium text-gray-900">
+                        {suggestions.schedule.timeZones.join(', ')}
+                      </span>
                     </div>
                   </div>
-                )
-              )}
+                )}
+
+                {suggestions.schedule.flexibility && suggestions.schedule.flexibility.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-600">Flexibility:</span>
+                      <span className="font-medium text-gray-900">
+                        {suggestions.schedule.flexibility.join(', ')}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {isSuggestionsConfirmed && (
-            <div className="fixed bottom-8 right-8 flex items-center space-x-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg shadow-lg">
-              <CheckCircle className="w-5 h-5" />
-              <span>Suggestions confirmed! Click "Next" to continue</span>
+          {/* Requirements */}
+          {suggestions.requirements && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3">Requirements</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {suggestions.requirements.essential && suggestions.requirements.essential.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Essential</h4>
+                    <ul className="space-y-1">
+                      {suggestions.requirements.essential.map((req, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <span className="text-gray-700 text-sm">{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {suggestions.requirements.preferred && suggestions.requirements.preferred.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Preferred</h4>
+                    <ul className="space-y-1">
+                      {suggestions.requirements.preferred.map((req, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <span className="text-gray-700 text-sm">{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          <div className="flex justify-end space-x-4 mt-8">
-            <button
-              onClick={onBack}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          </div>
+          {/* Skills */}
+          {suggestions.skills && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
+                <Brain className="w-5 h-5 mr-2 text-blue-600" />
+                Skills
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {suggestions.skills.languages && suggestions.skills.languages.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Languages</h4>
+                    <div className="space-y-1">
+                      {suggestions.skills.languages.map((lang, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className="text-gray-700 text-sm">{lang.language}</span>
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                            {lang.proficiency}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {suggestions.skills.soft && suggestions.skills.soft.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Soft Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.skills.soft.map((skill, index) => (
+                        <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {typeof skill === 'string' ? skill : skill.skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Commission */}
+          {suggestions.commission && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
+                <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
+                Commission Structure
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-600 text-sm">Base:</span>
+                    <p className="font-medium text-gray-900">{suggestions.commission.base}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 text-sm">Amount:</span>
+                    <p className="font-medium text-gray-900">{suggestions.commission.baseAmount}</p>
+                  </div>
+                  {suggestions.commission.bonus && (
+                    <div>
+                      <span className="text-gray-600 text-sm">Bonus:</span>
+                      <p className="font-medium text-gray-900">{suggestions.commission.bonus}</p>
+                    </div>
+                  )}
+                  {suggestions.commission.bonusAmount && (
+                    <div>
+                      <span className="text-gray-600 text-sm">Bonus Amount:</span>
+                      <p className="font-medium text-gray-900">{suggestions.commission.bonusAmount}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Team */}
+          {suggestions.team && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
+                <Users className="w-5 h-5 mr-2 text-blue-600" />
+                Team Structure
+              </h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-gray-600 text-sm">Team Size:</span>
+                    <p className="font-medium text-gray-900">{suggestions.team.size} members</p>
+                  </div>
+                  {suggestions.team.territories && suggestions.team.territories.length > 0 && (
+                    <div>
+                      <span className="text-gray-600 text-sm">Territories:</span>
+                      <p className="font-medium text-gray-900">{suggestions.team.territories.join(', ')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      
-      <Modal
-        isOpen={isLeadsModalOpen}
-        onClose={() => setIsLeadsModalOpen(false)}
-        title="Leads Information"
-        onSave={() => setIsLeadsModalOpen(false)}
-        onSkip={handleLeadsSkip}
-      >
-        <LeadsForm
-          onSave={(data) => {
-            setGigData((prev: GigData) => ({
-              ...prev,
-              leads: data
-            }));
-            setIsLeadsModalOpen(false);
-            setIsTeamModalOpen(true);
-          }}
-          predefinedSources={predefinedOptions.leads.sources}
-        />
-      </Modal>
 
-      <Modal
-        isOpen={isTeamModalOpen}
-        onClose={() => setIsTeamModalOpen(false)}
-        title="Team Structure"
-        
-        onSave={() => setIsTeamModalOpen(false)}
-        onSkip={handleTeamSkip}
-      >
-        <TeamForm
-          onSave={handleTeamSave}
-          predefinedRoles={predefinedOptions.team.roles}
-          predefinedTerritories={predefinedOptions.team.territories}
-        />
-      </Modal>
-
-      <Modal
-        isOpen={isDocModalOpen}
-        onClose={() => setIsDocModalOpen(false)}
-        title="Documentation Requirements"
-        onSave={() => setIsDocModalOpen(false)}
-        onSkip={handleDocumentationSkip}
-      >
-        <DocumentationForm
-          onSave={handleDocumentationSave}
-          cloudinaryUrl="https://api.cloudinary.com/v1_1/dyqg8x26j/raw/upload"
-        />
-      </Modal>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-center space-x-4">
+          <button
+            onClick={onBack}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Back to Input
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+          >
+            <Check className="w-5 h-5" />
+            <span>Use These Suggestions</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
-function parseYearsExperience(val) {
+function parseYearsExperience(val: any) {
   if (typeof val === 'number') return val;
   if (typeof val === 'string') {
     // Prend le premier nombre trouvé dans la string
@@ -3037,4 +819,4 @@ function parseYearsExperience(val) {
     return match ? parseInt(match[0], 10) : 0;
   }
   return 0;
-}
+} 

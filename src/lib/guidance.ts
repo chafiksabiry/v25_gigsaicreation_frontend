@@ -175,6 +175,18 @@ export const predefinedOptions = {
   },
   leads: {
     sources: []
+  },
+  schedule: {
+    flexibility: [
+      "Remote Work Available",
+      "Flexible Hours",
+      "Weekend Rotation",
+      "Night Shift Available",
+      "Split Shifts",
+      "Part-Time Options",
+      "Compressed Work Week",
+      "Shift Swapping Allowed"
+    ]
   }
 };
 

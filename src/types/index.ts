@@ -203,9 +203,10 @@ export interface GigSuggestion {
   deliverables: string[];
   sectors: string[];
   destinationZones: string[];
+  timeframes: string[];
   availability: {
     schedule: Array<{
-      day: string;
+      days: string[];
       hours: {
         start: string;
         end: string;
@@ -221,7 +222,7 @@ export interface GigSuggestion {
   };
   schedule: {
     schedules: Array<{
-      day: string;
+      days: string[];
       hours: {
         start: string;
         end: string;

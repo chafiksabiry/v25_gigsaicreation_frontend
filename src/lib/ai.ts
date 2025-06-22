@@ -1170,8 +1170,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
 
   // Generate schedule based on input or default to weekdays
   let scheduleDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  if (generatedData.schedule?.schedules?.[0]?.day) {
-    scheduleDays = expandDayRange(generatedData.schedule.schedules[0].day);
+  if (generatedData.schedule?.schedules?.[0]?.days) {
+    scheduleDays = generatedData.schedule.schedules[0].days;
   }
 
   // Generate schedule for each day
@@ -1299,7 +1299,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const allSchedules = generatedData.schedule?.schedules?.map((schedule, index) => {
     const scheduleStartTime = convertTo24HourFormat(schedule.hours?.start || startTime);
     const scheduleEndTime = convertTo24HourFormat(schedule.hours?.end || endTime);
-    const currentScheduleDays = schedule.day ? expandDayRange(schedule.day) : scheduleDays;
+    const currentScheduleDays = schedule.days ? schedule.days : scheduleDays;
 
     return currentScheduleDays.map((day: string, dayIndex: number) => ({
       day,
@@ -1485,13 +1485,13 @@ export async function generateSkills(title: string, description: string): Promis
     const result = JSON.parse(content);
     
     // Validate languages
-    const validLanguages = predefinedOptions.skills.languages.map(lang => lang.name);
+    const validLanguages = predefinedOptions.skills.languages.map(lang => lang.language);
     const validLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
     
     result.languages.forEach((lang: any) => {
       // Ensure we're dealing with human languages, not programming languages
-      if (!validLanguages.includes(lang.name)) {
-        throw new Error(`Invalid human language: ${lang.name}`);
+      if (!validLanguages.includes(lang.language)) {
+        throw new Error(`Invalid human language: ${lang.language}`);
       }
       if (!validLevels.includes(lang.level)) {
         throw new Error(`Invalid language level: ${lang.level}`);
@@ -1502,5 +1502,171 @@ export async function generateSkills(title: string, description: string): Promis
   } catch (error) {
     console.error('Error generating skills:', error);
     throw error;
+  }
+}
+
+export async function generateGigSuggestions(description: string): Promise<GigSuggestion> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!description) {
+    throw new Error('Description is required');
+  }
+
+  try {
+    const result = await retryWithBackoff(async () => {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: `You are an AI assistant that helps create job listings. Analyze the user's description and generate a detailed gig suggestion.
+
+IMPORTANT: All responses MUST be in English only. Return ONLY a valid JSON object with the structure defined below.
+
+${JSON.stringify(predefinedOptions, null, 2)}
+
+Return a JSON object with the following structure:
+{
+  "title": "string",
+  "description": "string (detailed job description)",
+  "category": "string (from predefinedOptions.basic.categories)",
+  "highlights": "string[]",
+  "jobTitles": "string[]",
+  "deliverables": "string[]",
+  "sectors": "string[]",
+  "destinationZones": "string[] (from predefinedOptions.basic.destinationZones)",
+  "timeframes": "string[]",
+  "schedule": {
+    "schedules": [
+      {
+        "days": "string[] (e.g., [\"Monday\", \"Tuesday\"])",
+        "hours": {
+          "start": "string (HH:mm)",
+          "end": "string (HH:mm)"
+        }
+      }
+    ],
+    "timeZones": "string[] (from predefinedOptions.basic.timeZones)",
+    "flexibility": "string[] (from predefinedOptions.schedule.flexibility)",
+    "minimumHours": {
+      "daily": "number",
+      "weekly": "number",
+      "monthly": "number"
+    }
+  },
+  "requirements": {
+    "essential": "string[]",
+    "preferred": "string[]"
+  },
+  "benefits": [
+    {
+      "type": "string",
+      "description": "string"
+    }
+  ],
+  "skills": {
+    "languages": [
+      {
+        "language": "string",
+        "proficiency": "string (e.g., 'B2')",
+        "iso639_1": "string (e.g., 'en')"
+      }
+    ],
+    "soft": [
+      {
+        "skill": "string",
+        "level": "number"
+      }
+    ],
+    "professional": [
+      {
+        "skill": "string",
+        "level": "number"
+      }
+    ],
+    "technical": [
+      {
+        "skill": "string",
+        "level": "number"
+      }
+    ],
+    "certifications": [
+      {
+        "name": "string",
+        "required": "boolean"
+      }
+    ]
+  },
+  "seniority": {
+    "level": "string (from predefinedOptions.basic.seniorityLevels)",
+    "yearsExperience": "number"
+  },
+  "team": {
+    "size": "number",
+    "structure": "string[]",
+    "territories": "string[]",
+    "reporting": {
+      "to": "string",
+      "frequency": "string"
+    },
+    "collaboration": "string[]"
+  },
+  "commission": {
+    "base": "string",
+    "baseAmount": "string",
+    "bonus": "string",
+    "bonusAmount": "string",
+    "structure": "string",
+    "currency": "string",
+    "minimumVolume": {
+      "amount": "string",
+      "period": "string",
+      "unit": "string"
+    },
+    "transactionCommission": {
+      "type": "string",
+      "amount": "string"
+    },
+    "kpis": [
+      {
+        "metric": "string",
+        "target": "string",
+        "reward": "string"
+      }
+    ]
+  }
+}
+`
+          },
+          {
+            role: "user",
+            content: `Description: ${description}`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000
+      });
+
+      const content = completion.choices[0].message.content;
+      if (!content) {
+        throw new Error('Failed to generate suggestions');
+      }
+
+      try {
+        return JSON.parse(content);
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', content);
+        throw new Error('Failed to parse AI suggestions');
+      }
+    });
+
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`AI suggestion failed: ${error.message}`);
+    }
+    throw new Error('AI suggestion failed');
   }
 }
