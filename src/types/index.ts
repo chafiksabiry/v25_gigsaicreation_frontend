@@ -222,7 +222,7 @@ export interface GigSuggestion {
   };
   schedule: {
     schedules: Array<{
-      days: string[];
+      day: string;
       hours: {
         start: string;
         end: string;

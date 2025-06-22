@@ -117,7 +117,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     const formattedSchedule = {
       ...gigData.schedule,
       schedules: gigData.schedule.schedules.map(schedule => ({
-        day: schedule.day,
+        days: schedule.days,
         hours: schedule.hours
       }))
     };
@@ -127,7 +127,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       ...gigData.availability,
       timeZone: gigData.availability.timeZones?.[0] || 'UTC', // Use first timezone as default
       schedule: gigData.availability.schedule.map(schedule => ({
-        day: schedule.day,
+        days: [schedule.day], // Convert single day to array for compatibility
         hours: schedule.hours
       }))
     };

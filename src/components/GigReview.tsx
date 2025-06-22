@@ -426,10 +426,10 @@ export function GigReview({
                         <div className="flex flex-wrap gap-2">
                           {data.schedule.schedules.map((schedule) => (
                             <span
-                              key={schedule.day}
+                              key={schedule.days.join(',')}
                               className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
                             >
-                              {schedule.day}
+                              {schedule.days.join(', ')}
                             </span>
                           ))}
                         </div>

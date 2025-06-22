@@ -89,8 +89,14 @@ export function SectionContent({
         return (
           <ScheduleSection
             data={initializedData.schedule ? {
-              ...initializedData.schedule,
-              timeZones: initializedData.schedule.timeZones as TimezoneCode[]
+              schedules: initializedData.schedule.schedules || [],
+              timeZones: initializedData.schedule.timeZones as TimezoneCode[],
+              flexibility: initializedData.schedule.flexibility || [],
+              minimumHours: initializedData.schedule.minimumHours || {
+                daily: undefined,
+                weekly: undefined,
+                monthly: undefined,
+              }
             } : {
               schedules: [],
               timeZones: [] as TimezoneCode[],
@@ -103,7 +109,12 @@ export function SectionContent({
             }}
             onChange={(scheduleData) => onChange({
               ...initializedData,
-              schedule: scheduleData,
+              schedule: {
+                schedules: scheduleData.schedules,
+                timeZones: scheduleData.timeZones,
+                flexibility: scheduleData.flexibility,
+                minimumHours: scheduleData.minimumHours,
+              },
             })}
             errors={errors}
             onPrevious={() => onSectionChange?.('basic')}

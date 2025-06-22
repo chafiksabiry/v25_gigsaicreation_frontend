@@ -38,6 +38,7 @@ import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
 import Cookies from 'js-cookie';
 import { generateGigSuggestions } from '../lib/ai';
+import { groupSchedules } from "../lib/scheduleUtils";
 
 // Register languages
 i18n.registerLocale(fr);
@@ -610,18 +611,18 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
               <div className="bg-gray-50 rounded-lg p-4">
                 {suggestions.schedule.schedules && suggestions.schedule.schedules.length > 0 ? (
                   <div className="space-y-3">
-                    {suggestions.schedule.schedules.map((schedule, index) => (
+                    {groupSchedules(suggestions.schedule.schedules).map((scheduleGroup, index) => (
                       <div key={index} className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <span className="text-gray-600">Days:</span>
                           <span className="font-medium text-gray-900">
-                            {schedule.days.join(', ')}
+                            {scheduleGroup.days.join(', ')}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-gray-600">Hours:</span>
                           <span className="font-medium text-gray-900">
-                            {schedule.hours.start} - {schedule.hours.end}
+                            {scheduleGroup.hours.start} - {scheduleGroup.hours.end}
                           </span>
                         </div>
                       </div>
