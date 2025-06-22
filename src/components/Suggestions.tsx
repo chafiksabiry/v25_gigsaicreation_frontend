@@ -23,6 +23,10 @@ import {
   Loader2,
   MapPin,
   Users,
+  Sun,
+  Sunrise,
+  Sunset,
+  Moon,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { JobDescription, GigMetadata } from "../lib/types";
@@ -39,6 +43,17 @@ import en from 'i18n-iso-countries/langs/en.json';
 import Cookies from 'js-cookie';
 import { generateGigSuggestions } from '../lib/ai';
 import { groupSchedules } from "../lib/scheduleUtils";
+
+type ScheduleEntry = {
+  day: string;
+  hours: { start: string; end: string };
+  _id?: { $oid: string };
+};
+
+type GroupedSchedule = {
+  hours: { start: string; end: string };
+  days: string[];
+};
 
 // Register languages
 i18n.registerLocale(fr);
@@ -296,7 +311,8 @@ const fallbackSuggestions: GigSuggestion = {
       hours: {
         start: "",
         end: ""
-      }
+      },
+      _id: { $oid: "fallback" }
     }],
     timeZones: ["CET"],
     flexibility: ["Part-Time Options"],
@@ -390,11 +406,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
         
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
-          const convertedSchedules: Array<{
-            day: string;
-            hours: { start: string; end: string };
-            _id?: { $oid: string };
-          }> = [];
+          const convertedSchedules: Array<ScheduleEntry> = [];
           result.schedule.schedules.forEach((schedule: any, index: number) => {
             if (schedule.days && Array.isArray(schedule.days)) {
               // Convert from days array to individual day objects
@@ -417,6 +429,18 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
               });
             }
           });
+
+          // Format times to be compliant with <input type="time">
+          result.schedule.schedules.forEach(schedule => {
+            const formatTime = (timeStr: string) => {
+              if (!timeStr || !timeStr.includes(':')) return '00:00';
+              const [h, m] = timeStr.split(':');
+              return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+            };
+            schedule.hours.start = formatTime(schedule.hours.start);
+            schedule.hours.end = formatTime(schedule.hours.end);
+          });
+
           result.schedule.schedules = convertedSchedules;
         }
 
@@ -720,1094 +744,333 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
     );
   };
 
-  const renderEditableSchedules = () => {
-    if (!suggestions?.schedule?.schedules) return null;
+  const formatTo12Hour = (time: string) => {
+    if (!time || !time.includes(':')) return time;
+    let [hoursStr, minutesStr] = time.split(':');
+    let hours = parseInt(hoursStr, 10);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; 
+    return `${hours}:${minutesStr} ${ampm}`;
+  };
 
+  const renderEditableSchedules = () => {
+    if (!suggestions?.schedule) return null;
+
+    const groupedSchedules = (suggestions.schedule.schedules || []).reduce((groups, schedule) => {
+      const key = `${schedule.hours.start}-${schedule.hours.end}`;
+      if (!groups[key]) {
+        groups[key] = { hours: schedule.hours, days: [] };
+      }
+      groups[key].days.push(schedule.day);
+      return groups;
+    }, {} as Record<string, GroupedSchedule>);
+
+    const allWeekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    const handleDayToggle = (dayToToggle: string, groupHours: { start: string; end: string }) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex((s: ScheduleEntry) => s.day === dayToToggle);
+
+      if (scheduleIndex > -1) {
+        const currentHours = newSuggestions.schedule.schedules[scheduleIndex].hours;
+        if (currentHours.start === groupHours.start && currentHours.end === groupHours.end) {
+          newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
+        } else {
+          newSuggestions.schedule.schedules[scheduleIndex].hours = groupHours;
+        }
+      } else {
+        newSuggestions.schedule.schedules.push({
+          day: dayToToggle,
+          hours: groupHours,
+          _id: { $oid: `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` }
+        });
+      }
+      setSuggestions(newSuggestions);
+    };
+    
+    const handleHoursChange = (group: GroupedSchedule, field: 'start' | 'end', value: string) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      group.days.forEach((day: string) => {
+        const schedule = newSuggestions.schedule.schedules.find((s: ScheduleEntry) => s.day === day);
+        if (schedule) {
+          schedule.hours[field] = value;
+        }
+      });
+      setSuggestions(newSuggestions);
+    };
+
+    const handlePresetClick = (group: GroupedSchedule, preset: string) => {
+      let newHours;
+      switch (preset) {
+        case '9-5': newHours = { start: '09:00', end: '17:00' }; break;
+        case 'Early': newHours = { start: '07:00', end: '15:00' }; break;
+        case 'Late': newHours = { start: '11:00', end: '19:00' }; break;
+        case 'Evening': newHours = { start: '14:00', end: '22:00' }; break;
+        default: newHours = group.hours;
+      }
+
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      group.days.forEach((day: string) => {
+        const schedule = newSuggestions.schedule.schedules.find((s: ScheduleEntry) => s.day === day);
+        if (schedule) {
+          schedule.hours = newHours;
+        }
+      });
+      setSuggestions(newSuggestions);
+    };
+    
+    const addNewScheduleGroup = () => {
+      if (!suggestions) return;
+      const scheduledDays = suggestions.schedule.schedules.map(s => s.day);
+      const firstUnscheduledDay = allWeekDays.find(d => !scheduledDays.includes(d));
+
+      if (firstUnscheduledDay) {
+        const newSchedule: ScheduleEntry = {
+          day: firstUnscheduledDay,
+          hours: { start: "09:00", end: "17:00" },
+          _id: { $oid: `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` }
+        };
+        const newSuggestions = {
+          ...suggestions,
+          schedule: {
+            ...suggestions.schedule,
+            schedules: [...suggestions.schedule.schedules, newSchedule]
+          }
+        };
+        setSuggestions(newSuggestions);
+      }
+    };
+    
     return (
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-lg font-semibold text-blue-900 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-green-700" />
-            Detailed Schedule
-          </h4>
-          <button
-            onClick={() => {
-              if (suggestions) {
-                const newSchedule = {
-                  day: "Monday",
-                  hours: { start: "09:00", end: "17:00" },
-                  _id: { $oid: `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` }
-                };
-                const newSuggestions = {
-                  ...suggestions,
-                  schedule: {
-                    ...suggestions.schedule,
-                    schedules: [...suggestions.schedule.schedules, newSchedule]
-                  }
-                };
-                setSuggestions(newSuggestions);
-              }
-            }}
-            className="flex items-center space-x-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Day</span>
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          {suggestions.schedule.schedules.map((schedule, index) => (
-            <div key={index} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Day</label>
-                  <select
-                    value={schedule.day}
-                    onChange={(e) => {
-                      if (suggestions) {
-                        const newSuggestions = { ...suggestions };
-                        newSuggestions.schedule.schedules[index].day = e.target.value;
-                        setSuggestions(newSuggestions);
-                      }
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
-                  >
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Start Time</label>
-                  <input
-                    type="time"
-                    value={formatTimeForInput(schedule.hours.start)}
-                    onChange={(e) => {
-                      if (suggestions) {
-                        const newSuggestions = { ...suggestions };
-                        newSuggestions.schedule.schedules[index].hours.start = formatTimeForDisplay(e.target.value);
-                        setSuggestions(newSuggestions);
-                      }
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">End Time</label>
-                  <input
-                    type="time"
-                    value={formatTimeForInput(schedule.hours.end)}
-                    onChange={(e) => {
-                      if (suggestions) {
-                        const newSuggestions = { ...suggestions };
-                        newSuggestions.schedule.schedules[index].hours.end = formatTimeForDisplay(e.target.value);
-                        setSuggestions(newSuggestions);
-                      }
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
-                  />
-                </div>
+      <div className="space-y-6">
+        {Object.keys(groupedSchedules).length > 0 ? (
+          Object.entries(groupedSchedules).map(([key, group], index) => (
+            <div key={key} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+              <h5 className="text-md font-semibold text-gray-800 mb-4">Working Days</h5>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {allWeekDays.map(day => {
+                  const isSelected = group.days.includes(day);
+                  const isInOtherGroup = !isSelected && suggestions.schedule.schedules.some(s => s.day === day);
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => handleDayToggle(day, group.hours)}
+                      disabled={isInOtherGroup}
+                      className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-600 text-white shadow-md' 
+                          : isInOtherGroup 
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => {
-                    if (suggestions) {
-                      const newSuggestions = { ...suggestions };
-                      newSuggestions.schedule.schedules = newSuggestions.schedule.schedules.filter((_, i) => i !== index);
-                      setSuggestions(newSuggestions);
-                    }
-                  }}
-                  className="text-red-600 hover:text-red-700 p-2"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+
+              <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
+                <h5 className="text-md font-semibold text-gray-700 mb-4 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                  Working Hours
+                </h5>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunrise className="w-4 h-4 mr-1.5 text-orange-400" />
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={group.hours.start}
+                      onChange={(e) => handleHoursChange(group, 'start', e.target.value)}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunset className="w-4 h-4 mr-1.5 text-indigo-400" />
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={group.hours.end}
+                      onChange={(e) => handleHoursChange(group, 'end', e.target.value)}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center bg-white border border-gray-200 rounded-lg p-3 mb-6">
+                  <span className="font-semibold text-gray-700 text-lg">
+                    {formatTo12Hour(group.hours.start)} - {formatTo12Hour(group.hours.end)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <button onClick={() => handlePresetClick(group, '9-5')} className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm">
+                    <Sun className="w-5 h-5 text-yellow-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">9-5</span>
+                  </button>
+                  <button onClick={() => handlePresetClick(group, 'Early')} className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm">
+                    <Sunrise className="w-5 h-5 text-orange-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">Early</span>
+                  </button>
+                  <button onClick={() => handlePresetClick(group, 'Late')} className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm">
+                    <Clock className="w-5 h-5 text-indigo-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">Late</span>
+                  </button>
+                  <button onClick={() => handlePresetClick(group, 'Evening')} className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm">
+                    <Moon className="w-5 h-5 text-purple-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">Evening</span>
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
+          ))
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-gray-500 mb-4">No schedule defined.</p>
+          </div>
+        )}
+
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={addNewScheduleGroup}
+            className="flex items-center space-x-2 px-5 py-2 border-2 border-dashed border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Schedule Group</span>
+          </button>
         </div>
       </div>
     );
   };
 
-  const formatTimeForInput = (time: string) => {
-    if (!time) return "";
-    // Convert "8:30" to "08:30" for HTML time input
-    const parts = time.split(':');
-    if (parts.length === 2) {
-      const hours = parts[0].padStart(2, '0');
-      const minutes = parts[1].padStart(2, '0');
-      return `${hours}:${minutes}`;
-    }
-    return time;
-  };
-
-  const formatTimeForDisplay = (time: string) => {
-    if (!time) return "";
-    // Convert "08:30" to "8:30" for display
-    const parts = time.split(':');
-    if (parts.length === 2) {
-      const hours = parseInt(parts[0], 10);
-      const minutes = parts[1];
-      return `${hours}:${minutes}`;
-    }
-    return time;
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
-          <div className="flex items-center justify-center space-x-3">
-            <Loader2 className="w-7 h-7 text-blue-900 animate-spin" />
-            <span className="text-lg text-blue-900 font-semibold">Generating suggestions...</span>
-          </div>
-          <p className="text-center text-gray-600 mt-4">
-            Analyzing your requirements and creating personalized suggestions
-          </p>
-        </div>
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 text-blue-700 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
-          <div className="text-center">
-            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Brain className="w-7 h-7 text-red-600" />
-            </div>
-            <h3 className="text-xl font-bold text-blue-900 mb-2">Error Generating Suggestions</h3>
-            <p className="text-gray-700 mb-6">{error}</p>
-            <button
-              onClick={onBack}
-              className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors font-semibold shadow"
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-screen bg-red-50 text-red-800 p-8">
+        <AlertCircle className="w-16 h-16 mb-4 text-red-600" />
+        <h2 className="text-2xl font-bold mb-2">Error Generating Suggestions</h2>
+        <p className="text-center mb-6">{error}</p>
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
       </div>
     );
   }
 
   if (!suggestions) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-blue-900 mb-2">No Suggestions Available</h3>
-            <p className="text-gray-700 mb-6">Unable to generate suggestions for your input.</p>
-            <button
-              onClick={onBack}
-              className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors font-semibold shadow"
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 text-gray-700 p-8">
+        <Brain className="w-16 h-16 mb-4 text-gray-400" />
+        <h2 className="text-2xl font-bold mb-2">No Suggestions Available</h2>
+        <p className="text-center mb-6">We couldn't generate suggestions based on your input. Please try again.</p>
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 pb-16">
-      <div className="max-w-4xl mx-auto pt-16 px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-blue-900 hover:text-blue-700 transition-colors font-semibold"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Input</span>
-          </button>
-          <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight">AI-Generated Suggestions</h1>
-        </div>
-
-        {/* Suggestions Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-10 mb-10 border border-blue-100">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex-1">
-              {editingSection === 'title' ? (
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="text-2xl font-bold text-blue-900 bg-transparent border-b-2 border-blue-700 focus:outline-none flex-1"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => {
-                      if (suggestions && editValue.trim()) {
-                        setSuggestions({ ...suggestions, title: editValue.trim() });
-                        setEditingSection(null);
-                        setEditValue('');
-                      }
-                    }}
-                    className="text-green-700 hover:text-green-800"
-                  >
-                    <Check className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={cancelEditing}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <h2 className="text-2xl font-bold text-blue-900 flex items-center">
-                    <Briefcase className="w-6 h-6 mr-2 text-blue-900" />
-                    {suggestions.title}
-                  </h2>
-                  <button
-                    onClick={() => {
-                      setEditingSection('title');
-                      setEditValue(suggestions.title);
-                    }}
-                    className="text-blue-900 hover:text-blue-700"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-            <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-semibold">
-              {suggestions.category}
-            </span>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <button
+              onClick={onBack}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back</span>
+            </button>
+            <h1 className="text-3xl font-bold text-gray-800">Review & Refine Suggestions</h1>
+            <button
+              onClick={handleConfirm}
+              className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              <span>Confirm & Continue</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Description */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-blue-900 flex items-center">
-                <Target className="w-5 h-5 mr-2 text-blue-900" />
-                Description
+          <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
+            
+            {/* Basic Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Briefcase className="w-7 h-7 mr-3 text-blue-700" />
+                Basic Information
               </h3>
-              <button
-                onClick={() => {
-                  setEditingSection('description');
-                  setEditValue(suggestions.description);
-                }}
-                className="text-blue-900 hover:text-blue-700 text-sm"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-            </div>
-            {editingSection === 'description' ? (
-              <div className="space-y-2">
-                <textarea
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700 min-h-[120px]"
-                  autoFocus
-                />
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => {
-                      if (editValue.trim()) {
-                        setSuggestions({ ...suggestions, description: editValue.trim() });
-                        setEditingSection(null);
-                        setEditValue('');
-                      }
-                    }}
-                    className="text-green-700 hover:text-green-800"
-                  >
-                    <Check className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={cancelEditing}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-700 leading-relaxed text-lg">{suggestions.description}</p>
-            )}
-          </div>
-
-          {/* Basic Section */}
-          <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                <Briefcase className="w-5 h-5 text-blue-900" />
-              </div>
-              <h3 className="text-xl font-bold text-blue-900">Basic Section</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Job Titles */}
+              {renderEditableList('highlights', suggestions.highlights, 'Highlights')}
               {renderEditableList('jobTitles', suggestions.jobTitles, 'Job Titles')}
-              
-              {/* Category from Sectors */}
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                  <Award className="w-4 h-4 mr-2 text-blue-900" />
-                  Category (Sectors)
-                </h4>
-                {suggestions.sectors && suggestions.sectors.length > 0 ? (
-                  <div className="space-y-3">
-                    {suggestions.sectors.map((sector, index) => (
-                      <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                        <span className="text-gray-700 font-medium">{sector}</span>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => startEditing('sectors', index, sector)}
-                            className="text-blue-900 hover:text-blue-700 p-1"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => deleteItem('sectors', index)}
-                            className="text-red-600 hover:text-red-700 p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 italic">No sectors defined</p>
-                )}
-              </div>
-
-              {/* Destination Zones */}
+              {renderEditableList('deliverables', suggestions.deliverables, 'Deliverables')}
+              {renderEditableList('sectors', suggestions.sectors, 'Sectors')}
               {renderEditableList('destinationZones', suggestions.destinationZones, 'Destination Zones')}
-              
-              {/* Seniority */}
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-                  <Gauge className="w-4 h-4 mr-2 text-blue-900" />
-                  Seniority Level
-                </h4>
-                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600 text-sm font-medium">Level:</span>
-                        <button
-                          onClick={() => {
-                            setEditingSection('seniority.level');
-                            setEditValue(suggestions.seniority?.level || '');
-                          }}
-                          className="text-blue-900 hover:text-blue-700 p-1"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      {editingSection === 'seniority.level' ? (
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => {
-                              if (editValue.trim()) {
-                                const newSuggestions = { ...suggestions };
-                                if (!newSuggestions.seniority) newSuggestions.seniority = { level: '', yearsExperience: 0 };
-                                newSuggestions.seniority.level = editValue.trim();
-                                setSuggestions(newSuggestions);
-                                setEditingSection(null);
-                                setEditValue('');
-                              }
-                            }}
-                            className="text-green-700 hover:text-green-800"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={cancelEditing}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="font-semibold text-blue-900">{suggestions.seniority?.level || 'Not defined'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600 text-sm font-medium">Years of experience:</span>
-                        <button
-                          onClick={() => {
-                            setEditingSection('seniority.yearsExperience');
-                            setEditValue(suggestions.seniority?.yearsExperience?.toString() || '0');
-                          }}
-                          className="text-blue-900 hover:text-blue-700 p-1"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      {editingSection === 'seniority.yearsExperience' ? (
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="number"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => {
-                              const years = parseInt(editValue) || 0;
-                              const newSuggestions = { ...suggestions };
-                              if (!newSuggestions.seniority) newSuggestions.seniority = { level: '', yearsExperience: 0 };
-                              newSuggestions.seniority.yearsExperience = years;
-                              setSuggestions(newSuggestions);
-                              setEditingSection(null);
-                              setEditValue('');
-                            }}
-                            className="text-green-700 hover:text-green-800"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={cancelEditing}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="font-semibold text-blue-900">{suggestions.seniority?.yearsExperience || 0} years</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
 
-          {/* Schedule Section */}
-          <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                <Clock className="w-5 h-5 text-green-700" />
-              </div>
-              <h3 className="text-xl font-bold text-blue-900">Schedule Section</h3>
+            {/* Schedule Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Clock className="w-7 h-7 mr-3 text-blue-700" />
+                Schedule
+              </h3>
+              {renderEditableSchedules()}
             </div>
             
-            {renderEditableSchedules()}
+            {/* Commission Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
+                Commission
+              </h3>
+              {/* Commission content goes here */}
+            </div>
+
+            {/* Skills Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Award className="w-7 h-7 mr-3 text-blue-700" />
+                Skills & Requirements
+              </h3>
+              {renderEditableList('requirements.essential', suggestions.requirements?.essential, 'Essential Requirements')}
+              {renderEditableList('requirements.preferred', suggestions.requirements?.preferred, 'Preferred Requirements')}
+              {renderEditableList('skills.technical', suggestions.skills?.technical, 'Technical Skills')}
+              {renderEditableList('skills.soft', suggestions.skills?.soft, 'Soft Skills')}
+              {renderEditableList('skills.languages', suggestions.skills?.languages, 'Languages')}
+            </div>
+
+            {/* Team Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Users className="w-7 h-7 mr-3 text-blue-700" />
+                Team Structure
+              </h3>
+              {/* Team content goes here */}
+            </div>
+
           </div>
-
-          {/* Commission Section */}
-          {suggestions.commission && (
-            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
-                  <DollarSign className="w-5 h-5 text-yellow-700" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900">Commission Section</h3>
-              </div>
-              
-              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                {suggestions.commission.options && suggestions.commission.options.length > 0 ? (
-                  <div className="space-y-6">
-                    {suggestions.commission.options.map((option, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-gray-600 text-sm font-medium">Base:</span>
-                              <button
-                                onClick={() => {
-                                  setEditingSection(`commission.${index}.base`);
-                                  setEditValue(option.base || '');
-                                }}
-                                className="text-blue-900 hover:text-blue-700 p-1"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                            {editingSection === `commission.${index}.base` ? (
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newSuggestions = { ...suggestions };
-                                    newSuggestions.commission.options[index].base = editValue.trim();
-                                    setSuggestions(newSuggestions);
-                                    setEditingSection(null);
-                                    setEditValue('');
-                                  }}
-                                  className="text-green-700 hover:text-green-800"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  className="text-gray-500 hover:text-gray-700"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <p className="font-semibold text-blue-900">{option.base}</p>
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-gray-600 text-sm font-medium">Base Amount:</span>
-                              <button
-                                onClick={() => {
-                                  setEditingSection(`commission.${index}.baseAmount`);
-                                  setEditValue(option.baseAmount || '');
-                                }}
-                                className="text-blue-900 hover:text-blue-700 p-1"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                            {editingSection === `commission.${index}.baseAmount` ? (
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newSuggestions = { ...suggestions };
-                                    newSuggestions.commission.options[index].baseAmount = editValue.trim();
-                                    setSuggestions(newSuggestions);
-                                    setEditingSection(null);
-                                    setEditValue('');
-                                  }}
-                                  className="text-green-700 hover:text-green-800"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  className="text-gray-500 hover:text-gray-700"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <p className="font-semibold text-blue-900">{option.baseAmount}</p>
-                            )}
-                          </div>
-                          {option.bonus && (
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-600 text-sm font-medium">Bonus:</span>
-                                <button
-                                  onClick={() => {
-                                    setEditingSection(`commission.${index}.bonus`);
-                                    setEditValue(option.bonus || '');
-                                  }}
-                                  className="text-blue-900 hover:text-blue-700 p-1"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              {editingSection === `commission.${index}.bonus` ? (
-                                <div className="flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      const newSuggestions = { ...suggestions };
-                                      newSuggestions.commission.options[index].bonus = editValue.trim();
-                                      setSuggestions(newSuggestions);
-                                      setEditingSection(null);
-                                      setEditValue('');
-                                    }}
-                                    className="text-green-700 hover:text-green-800"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEditing}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <p className="font-semibold text-blue-900">{option.bonus}</p>
-                              )}
-                            </div>
-                          )}
-                          {option.bonusAmount && (
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-600 text-sm font-medium">Bonus Amount:</span>
-                                <button
-                                  onClick={() => {
-                                    setEditingSection(`commission.${index}.bonusAmount`);
-                                    setEditValue(option.bonusAmount || '');
-                                  }}
-                                  className="text-blue-900 hover:text-blue-700 p-1"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              {editingSection === `commission.${index}.bonusAmount` ? (
-                                <div className="flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      const newSuggestions = { ...suggestions };
-                                      newSuggestions.commission.options[index].bonusAmount = editValue.trim();
-                                      setSuggestions(newSuggestions);
-                                      setEditingSection(null);
-                                      setEditValue('');
-                                    }}
-                                    className="text-green-700 hover:text-green-800"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEditing}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <p className="font-semibold text-blue-900">{option.bonusAmount}</p>
-                              )}
-                            </div>
-                          )}
-                          {option.structure && (
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-600 text-sm font-medium">Structure:</span>
-                                <button
-                                  onClick={() => {
-                                    setEditingSection(`commission.${index}.structure`);
-                                    setEditValue(option.structure || '');
-                                  }}
-                                  className="text-blue-900 hover:text-blue-700 p-1"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              {editingSection === `commission.${index}.structure` ? (
-                                <div className="flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      const newSuggestions = { ...suggestions };
-                                      newSuggestions.commission.options[index].structure = editValue.trim();
-                                      setSuggestions(newSuggestions);
-                                      setEditingSection(null);
-                                      setEditValue('');
-                                    }}
-                                    className="text-green-700 hover:text-green-800"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEditing}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <p className="font-semibold text-blue-900">{option.structure}</p>
-                              )}
-                            </div>
-                          )}
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-gray-600 text-sm font-medium">Currency:</span>
-                              <button
-                                onClick={() => {
-                                  setEditingSection(`commission.${index}.currency`);
-                                  setEditValue(option.currency || '');
-                                }}
-                                className="text-blue-900 hover:text-blue-700 p-1"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                            {editingSection === `commission.${index}.currency` ? (
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={() => {
-                                    const newSuggestions = { ...suggestions };
-                                    newSuggestions.commission.options[index].currency = editValue.trim();
-                                    setSuggestions(newSuggestions);
-                                    setEditingSection(null);
-                                    setEditValue('');
-                                  }}
-                                  className="text-green-700 hover:text-green-800"
-                                >
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  className="text-gray-500 hover:text-gray-700"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
-                              <p className="font-semibold text-blue-900">{option.currency}</p>
-                            )}
-                          </div>
-                          {option.minimumVolume && (
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-600 text-sm font-medium">Minimum Volume:</span>
-                                <button
-                                  onClick={() => {
-                                    setEditingSection(`commission.${index}.minimumVolume`);
-                                    setEditValue(`${option.minimumVolume.amount} ${option.minimumVolume.unit} per ${option.minimumVolume.period}`);
-                                  }}
-                                  className="text-blue-900 hover:text-blue-700 p-1"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              {editingSection === `commission.${index}.minimumVolume` ? (
-                                <div className="flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                    placeholder="e.g., 100 Units per Monthly"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      const newSuggestions = { ...suggestions };
-                                      // Parse the input to extract amount, unit, and period
-                                      const parts = editValue.split(' ');
-                                      if (parts.length >= 4) {
-                                        newSuggestions.commission.options[index].minimumVolume = {
-                                          amount: parts[0],
-                                          unit: parts[1],
-                                          period: parts[3]
-                                        };
-                                      }
-                                      setSuggestions(newSuggestions);
-                                      setEditingSection(null);
-                                      setEditValue('');
-                                    }}
-                                    className="text-green-700 hover:text-green-800"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEditing}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <p className="font-semibold text-blue-900">
-                                  {option.minimumVolume.amount} {option.minimumVolume.unit} per {option.minimumVolume.period}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          {option.transactionCommission && (
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-gray-600 text-sm font-medium">Transaction Commission:</span>
-                                <button
-                                  onClick={() => {
-                                    setEditingSection(`commission.${index}.transactionCommission`);
-                                    setEditValue(`${option.transactionCommission.amount} (${option.transactionCommission.type})`);
-                                  }}
-                                  className="text-blue-900 hover:text-blue-700 p-1"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              {editingSection === `commission.${index}.transactionCommission` ? (
-                                <div className="flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={editValue}
-                                    onChange={(e) => setEditValue(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                                    placeholder="e.g., 5% (Percentage)"
-                                    autoFocus
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      const newSuggestions = { ...suggestions };
-                                      // Parse the input to extract amount and type
-                                      const match = editValue.match(/(.+)\s*\((.+)\)/);
-                                      if (match) {
-                                        newSuggestions.commission.options[index].transactionCommission = {
-                                          amount: match[1].trim(),
-                                          type: match[2].trim()
-                                        };
-                                      }
-                                      setSuggestions(newSuggestions);
-                                      setEditingSection(null);
-                                      setEditValue('');
-                                    }}
-                                    className="text-green-700 hover:text-green-800"
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEditing}
-                                    className="text-gray-500 hover:text-gray-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <p className="font-semibold text-blue-900">
-                                  {option.transactionCommission.amount} ({option.transactionCommission.type})
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600 italic">No commission structure defined</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Skills Section */}
-          {suggestions.skills && (
-            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                  <Brain className="w-5 h-5 text-purple-700" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900">Skills Section</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderEditableList('skills.languages', suggestions.skills.languages, 'Languages')}
-                {renderEditableList('skills.soft', suggestions.skills.soft, 'Soft Skills')}
-                {renderEditableList('skills.technical', suggestions.skills.technical, 'Technical Skills')}
-              </div>
-            </div>
-          )}
-
-          {/* Team Section */}
-          {suggestions.team && (
-            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
-                  <Users className="w-5 h-5 text-indigo-700" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900">Team Section</h3>
-              </div>
-              
-              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-600 text-sm font-medium">Team Size:</span>
-                      <button
-                        onClick={() => {
-                          setEditingSection('team.size');
-                          setEditValue(suggestions.team.size?.toString() || '1');
-                        }}
-                        className="text-blue-900 hover:text-blue-700 p-1"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {editingSection === 'team.size' ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="number"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => {
-                            const size = parseInt(editValue) || 1;
-                            const newSuggestions = { ...suggestions };
-                            if (!newSuggestions.team) {
-                              newSuggestions.team = {
-                                size: 1,
-                                structure: [],
-                                territories: [],
-                                reporting: { to: "Project Manager", frequency: "Weekly" },
-                                collaboration: ["Daily standups", "Weekly reviews"]
-                              } as any;
-                            }
-                            newSuggestions.team.size = size;
-                            setSuggestions(newSuggestions);
-                            setEditingSection(null);
-                            setEditValue('');
-                          }}
-                          className="text-green-700 hover:text-green-800"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="text-gray-500 hover:text-gray-700"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="font-semibold text-blue-900">{suggestions.team.size} members</p>
-                    )}
-                  </div>
-                  {suggestions.team.territories && suggestions.team.territories.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-600 text-sm font-medium">Territories:</span>
-                        <button
-                          onClick={() => {
-                            setEditingSection('team.territories');
-                            setEditValue(suggestions.team.territories.join(', '));
-                          }}
-                          className="text-blue-900 hover:text-blue-700 p-1"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                      {editingSection === 'team.territories' ? (
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                            placeholder="Enter territories separated by commas"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => {
-                              const territories = editValue.split(',').map(t => t.trim()).filter(t => t);
-                              const newSuggestions = { ...suggestions };
-                              if (!newSuggestions.team) {
-                                newSuggestions.team = {
-                                  size: 1,
-                                  structure: [],
-                                  territories: [],
-                                  reporting: { to: "Project Manager", frequency: "Weekly" },
-                                  collaboration: ["Daily standups", "Weekly reviews"]
-                                } as any;
-                              }
-                              newSuggestions.team.territories = territories;
-                              setSuggestions(newSuggestions);
-                              setEditingSection(null);
-                              setEditValue('');
-                            }}
-                            className="text-green-700 hover:text-green-800"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={cancelEditing}
-                            className="text-gray-500 hover:text-gray-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="font-semibold text-blue-900">{suggestions.team.territories.join(', ')}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Additional sections */}
-          {renderEditableList('highlights', suggestions.highlights, 'Key Highlights')}
-          {renderEditableList('deliverables', suggestions.deliverables, 'Deliverables')}
-
-          {/* Requirements */}
-          {suggestions.requirements && (
-            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                  <Target className="w-5 h-5 text-orange-700" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900">Requirements</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderEditableList('requirements.essential', suggestions.requirements.essential, 'Essential Requirements')}
-                {renderEditableList('requirements.preferred', suggestions.requirements.preferred, 'Preferred Requirements')}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-center space-x-6">
-          <button
-            onClick={onBack}
-            className="px-8 py-3 border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-900 hover:text-white transition-colors font-semibold shadow"
-          >
-            Back to Input
-          </button>
-          <button
-            onClick={handleConfirm}
-            className="px-8 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors flex items-center space-x-2 font-semibold shadow"
-          >
-            <Check className="w-5 h-5" />
-            <span>Use These Suggestions</span>
-          </button>
         </div>
       </div>
     </div>
@@ -1818,7 +1081,7 @@ function parseYearsExperience(val: any) {
   if (typeof val === 'number') return val;
   if (typeof val === 'string') {
     // Prend le premier nombre trouvé dans la string
-    const match = val.match(/\\d+/);
+    const match = val.match(/\d+/);
     return match ? parseInt(match[0], 10) : 0;
   }
   return 0;

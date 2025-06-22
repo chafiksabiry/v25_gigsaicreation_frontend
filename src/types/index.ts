@@ -227,6 +227,7 @@ export interface GigSuggestion {
         start: string;
         end: string;
       };
+      _id?: { $oid: string };
     }>;
     timeZones: string[];
     flexibility: string[];
