@@ -859,14 +859,14 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
           <div className="flex items-center justify-center space-x-3">
-            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-            <span className="text-lg text-gray-700">Generating suggestions...</span>
+            <Loader2 className="w-7 h-7 text-blue-900 animate-spin" />
+            <span className="text-lg text-blue-900 font-semibold">Génération des suggestions...</span>
           </div>
-          <p className="text-center text-gray-500 mt-4">
-            Analyzing your requirements and creating personalized gig suggestions
+          <p className="text-center text-gray-600 mt-4">
+            Analyse de vos besoins et création de suggestions personnalisées
           </p>
         </div>
       </div>
@@ -875,19 +875,19 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
           <div className="text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Brain className="w-6 h-6 text-red-600" />
+            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Brain className="w-7 h-7 text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Generating Suggestions</h3>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <h3 className="text-xl font-bold text-blue-900 mb-2">Erreur lors de la génération</h3>
+            <p className="text-gray-700 mb-6">{error}</p>
             <button
               onClick={onBack}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors font-semibold shadow"
             >
-              Go Back
+              Retour
             </button>
           </div>
         </div>
@@ -897,16 +897,16 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
 
   if (!suggestions) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-xl p-8 max-w-md w-full mx-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Suggestions Available</h3>
-            <p className="text-gray-600 mb-6">Unable to generate suggestions for your input.</p>
+            <h3 className="text-xl font-bold text-blue-900 mb-2">Aucune suggestion disponible</h3>
+            <p className="text-gray-700 mb-6">Impossible de générer des suggestions pour votre saisie.</p>
             <button
               onClick={onBack}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors font-semibold shadow"
             >
-              Go Back
+              Retour
             </button>
           </div>
         </div>
@@ -915,23 +915,23 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 pb-16">
       <div className="max-w-4xl mx-auto pt-16 px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-10">
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+            className="flex items-center space-x-2 text-blue-900 hover:text-blue-700 transition-colors font-semibold"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to Input</span>
+            <span>Retour à la saisie</span>
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">AI-Generated Suggestions</h1>
+          <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight">Suggestions générées par l'IA</h1>
         </div>
 
         {/* Suggestions Card */}
-        <div className="bg-white rounded-xl shadow-xl p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="bg-white rounded-2xl shadow-lg p-10 mb-10 border border-blue-100">
+          <div className="flex items-center justify-between mb-8">
             <div className="flex-1">
               {editingSection === 'title' ? (
                 <div className="flex items-center space-x-2">
@@ -939,7 +939,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                     type="text"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="text-2xl font-semibold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none flex-1"
+                    className="text-2xl font-bold text-blue-900 bg-transparent border-b-2 border-blue-700 focus:outline-none flex-1"
                     autoFocus
                   />
                   <button
@@ -950,21 +950,21 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                         setEditValue('');
                       }
                     }}
-                    className="text-green-600 hover:text-green-700"
+                    className="text-green-700 hover:text-green-800"
                   >
                     <Check className="w-5 h-5" />
                   </button>
                   <button
                     onClick={cancelEditing}
-                    className="text-gray-600 hover:text-gray-700"
+                    className="text-gray-500 hover:text-gray-700"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-                    <Briefcase className="w-6 h-6 mr-2 text-blue-600" />
+                  <h2 className="text-2xl font-bold text-blue-900 flex items-center">
+                    <Briefcase className="w-6 h-6 mr-2 text-blue-900" />
                     {suggestions.title}
                   </h2>
                   <button
@@ -972,14 +972,14 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                       setEditingSection('title');
                       setEditValue(suggestions.title);
                     }}
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-900 hover:text-blue-700"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                 </div>
               )}
             </div>
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-sm font-semibold">
               {suggestions.category}
             </span>
           </div>
@@ -1021,7 +1021,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                   </button>
                   <button
                     onClick={cancelEditing}
-                    className="text-gray-600 hover:text-gray-700"
+                    className="text-gray-500 hover:text-gray-700"
                   >
                     <X className="w-5 h-5" />
                   </button>
