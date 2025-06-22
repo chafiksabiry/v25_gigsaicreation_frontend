@@ -620,61 +620,61 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
 
     return (
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-blue-900">{title}</h4>
           <button
             onClick={() => {
               setEditingSection(section);
               setEditingIndex(-1);
               setEditValue('');
             }}
-            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+            className="flex items-center space-x-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             <span>Add</span>
           </button>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-3">
           {items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+            <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
               {editingSection === section && editingIndex === index ? (
                 <div className="flex items-center space-x-2 flex-1">
                   <input
                     type="text"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                     autoFocus
                   />
                   <button
                     onClick={() => updateItem(section, index, editValue)}
-                    className="text-green-600 hover:text-green-700"
+                    className="text-green-700 hover:text-green-800 p-1"
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-5 h-5" />
                   </button>
                   <button
                     onClick={cancelEditing}
-                    className="text-gray-600 hover:text-gray-700"
+                    className="text-gray-500 hover:text-gray-700 p-1"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
                 <>
-                  <span className="text-gray-700 flex-1">
+                  <span className="text-gray-700 flex-1 font-medium">
                     {typeof item === 'string' ? item : (item?.skill || item?.language || '')}
                   </span>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => startEditing(section, index, item)}
-                      className="text-blue-600 hover:text-blue-700"
+                      className="text-blue-900 hover:text-blue-700 p-1"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => deleteItem(section, index)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 p-1"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -686,13 +686,13 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
         </div>
 
         {editingSection === section && editingIndex === -1 && (
-          <div className="flex items-center space-x-2 mt-3">
+          <div className="flex items-center space-x-3 mt-4">
             <input
               type="text"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              placeholder={`Add new ${title.toLowerCase()}`}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={`Add a new ${title.toLowerCase()}`}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
               autoFocus
             />
             <button
@@ -704,13 +704,13 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                   setEditingIndex(null);
                 }
               }}
-              className="text-green-600 hover:text-green-700"
+              className="text-green-700 hover:text-green-800 p-2"
             >
               <Check className="w-5 h-5" />
             </button>
             <button
               onClick={cancelEditing}
-              className="text-gray-600 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 p-2"
             >
               <X className="w-5 h-5" />
             </button>
@@ -725,11 +725,11 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
 
     return (
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-blue-600" />
-            Schedule
-          </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-blue-900 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-green-700" />
+            Detailed Schedule
+          </h4>
           <button
             onClick={() => {
               if (suggestions) {
@@ -748,19 +748,19 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                 setSuggestions(newSuggestions);
               }
             }}
-            className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+            className="flex items-center space-x-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             <span>Add Day</span>
           </button>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {suggestions.schedule.schedules.map((schedule, index) => (
-            <div key={index} className="bg-gray-50 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div key={index} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Day</label>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Day</label>
                   <select
                     value={schedule.day}
                     onChange={(e) => {
@@ -770,7 +770,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                         setSuggestions(newSuggestions);
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
                   >
                     <option value="Monday">Monday</option>
                     <option value="Tuesday">Tuesday</option>
@@ -782,7 +782,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Start Time</label>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Start Time</label>
                   <input
                     type="time"
                     value={formatTimeForInput(schedule.hours.start)}
@@ -793,11 +793,11 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                         setSuggestions(newSuggestions);
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">End Time</label>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">End Time</label>
                   <input
                     type="time"
                     value={formatTimeForInput(schedule.hours.end)}
@@ -808,11 +808,11 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                         setSuggestions(newSuggestions);
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
                   />
                 </div>
               </div>
-              <div className="flex justify-end mt-3">
+              <div className="flex justify-end mt-4">
                 <button
                   onClick={() => {
                     if (suggestions) {
@@ -821,9 +821,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                       setSuggestions(newSuggestions);
                     }
                   }}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-600 hover:text-red-700 p-2"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -863,10 +863,10 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
         <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
           <div className="flex items-center justify-center space-x-3">
             <Loader2 className="w-7 h-7 text-blue-900 animate-spin" />
-            <span className="text-lg text-blue-900 font-semibold">Génération des suggestions...</span>
+            <span className="text-lg text-blue-900 font-semibold">Generating suggestions...</span>
           </div>
           <p className="text-center text-gray-600 mt-4">
-            Analyse de vos besoins et création de suggestions personnalisées
+            Analyzing your requirements and creating personalized suggestions
           </p>
         </div>
       </div>
@@ -881,13 +881,13 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
             <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Brain className="w-7 h-7 text-red-600" />
             </div>
-            <h3 className="text-xl font-bold text-blue-900 mb-2">Erreur lors de la génération</h3>
+            <h3 className="text-xl font-bold text-blue-900 mb-2">Error Generating Suggestions</h3>
             <p className="text-gray-700 mb-6">{error}</p>
             <button
               onClick={onBack}
               className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors font-semibold shadow"
             >
-              Retour
+              Go Back
             </button>
           </div>
         </div>
@@ -900,13 +900,13 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full mx-4 border border-blue-100">
           <div className="text-center">
-            <h3 className="text-xl font-bold text-blue-900 mb-2">Aucune suggestion disponible</h3>
-            <p className="text-gray-700 mb-6">Impossible de générer des suggestions pour votre saisie.</p>
+            <h3 className="text-xl font-bold text-blue-900 mb-2">No Suggestions Available</h3>
+            <p className="text-gray-700 mb-6">Unable to generate suggestions for your input.</p>
             <button
               onClick={onBack}
               className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors font-semibold shadow"
             >
-              Retour
+              Go Back
             </button>
           </div>
         </div>
@@ -924,9 +924,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
             className="flex items-center space-x-2 text-blue-900 hover:text-blue-700 transition-colors font-semibold"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Retour à la saisie</span>
+            <span>Back to Input</span>
           </button>
-          <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight">Suggestions générées par l'IA</h1>
+          <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight">AI-Generated Suggestions</h1>
         </div>
 
         {/* Suggestions Card */}
@@ -985,15 +985,18 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
           </div>
 
           {/* Description */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Description</h3>
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-blue-900 flex items-center">
+                <Target className="w-5 h-5 mr-2 text-blue-900" />
+                Description
+              </h3>
               <button
                 onClick={() => {
                   setEditingSection('description');
                   setEditValue(suggestions.description);
                 }}
-                className="text-blue-600 hover:text-blue-700 text-sm"
+                className="text-blue-900 hover:text-blue-700 text-sm"
               >
                 <Edit2 className="w-4 h-4" />
               </button>
@@ -1003,7 +1006,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                 <textarea
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700 min-h-[120px]"
                   autoFocus
                 />
                 <div className="flex items-center space-x-2">
@@ -1015,7 +1018,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                         setEditValue('');
                       }
                     }}
-                    className="text-green-600 hover:text-green-700"
+                    className="text-green-700 hover:text-green-800"
                   >
                     <Check className="w-5 h-5" />
                   </button>
@@ -1028,34 +1031,608 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                 </div>
               </div>
             ) : (
-              <p className="text-gray-700 leading-relaxed">{suggestions.description}</p>
+              <p className="text-gray-700 leading-relaxed text-lg">{suggestions.description}</p>
             )}
           </div>
 
-          {/* Highlights */}
-          {renderEditableList('highlights', suggestions.highlights, 'Key Highlights')}
+          {/* Basic Section */}
+          <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                <Briefcase className="w-5 h-5 text-blue-900" />
+              </div>
+              <h3 className="text-xl font-bold text-blue-900">Basic Section</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Job Titles */}
+              {renderEditableList('jobTitles', suggestions.jobTitles, 'Job Titles')}
+              
+              {/* Category from Sectors */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                  <Award className="w-4 h-4 mr-2 text-blue-900" />
+                  Category (Sectors)
+                </h4>
+                {suggestions.sectors && suggestions.sectors.length > 0 ? (
+                  <div className="space-y-3">
+                    {suggestions.sectors.map((sector, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                        <span className="text-gray-700 font-medium">{sector}</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => startEditing('sectors', index, sector)}
+                            className="text-blue-900 hover:text-blue-700 p-1"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteItem('sectors', index)}
+                            className="text-red-600 hover:text-red-700 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No sectors defined</p>
+                )}
+              </div>
 
-          {/* Schedule */}
-          {renderEditableSchedules()}
+              {/* Destination Zones */}
+              {renderEditableList('destinationZones', suggestions.destinationZones, 'Destination Zones')}
+              
+              {/* Seniority */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+                  <Gauge className="w-4 h-4 mr-2 text-blue-900" />
+                  Seniority Level
+                </h4>
+                <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-600 text-sm font-medium">Level:</span>
+                        <button
+                          onClick={() => {
+                            setEditingSection('seniority.level');
+                            setEditValue(suggestions.seniority?.level || '');
+                          }}
+                          className="text-blue-900 hover:text-blue-700 p-1"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {editingSection === 'seniority.level' ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              if (editValue.trim()) {
+                                const newSuggestions = { ...suggestions };
+                                if (!newSuggestions.seniority) newSuggestions.seniority = { level: '', yearsExperience: 0 };
+                                newSuggestions.seniority.level = editValue.trim();
+                                setSuggestions(newSuggestions);
+                                setEditingSection(null);
+                                setEditValue('');
+                              }
+                            }}
+                            className="text-green-700 hover:text-green-800"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={cancelEditing}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="font-semibold text-blue-900">{suggestions.seniority?.level || 'Not defined'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-600 text-sm font-medium">Years of experience:</span>
+                        <button
+                          onClick={() => {
+                            setEditingSection('seniority.yearsExperience');
+                            setEditValue(suggestions.seniority?.yearsExperience?.toString() || '0');
+                          }}
+                          className="text-blue-900 hover:text-blue-700 p-1"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {editingSection === 'seniority.yearsExperience' ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              const years = parseInt(editValue) || 0;
+                              const newSuggestions = { ...suggestions };
+                              if (!newSuggestions.seniority) newSuggestions.seniority = { level: '', yearsExperience: 0 };
+                              newSuggestions.seniority.yearsExperience = years;
+                              setSuggestions(newSuggestions);
+                              setEditingSection(null);
+                              setEditValue('');
+                            }}
+                            className="text-green-700 hover:text-green-800"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={cancelEditing}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="font-semibold text-blue-900">{suggestions.seniority?.yearsExperience || 0} years</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          {/* Requirements */}
-          {suggestions.requirements && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Requirements</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderEditableList('requirements.essential', suggestions.requirements.essential, 'Essential Requirements')}
-                {renderEditableList('requirements.preferred', suggestions.requirements.preferred, 'Preferred Requirements')}
+          {/* Schedule Section */}
+          <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                <Clock className="w-5 h-5 text-green-700" />
+              </div>
+              <h3 className="text-xl font-bold text-blue-900">Schedule Section</h3>
+            </div>
+            
+            {renderEditableSchedules()}
+          </div>
+
+          {/* Commission Section */}
+          {suggestions.commission && (
+            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                  <DollarSign className="w-5 h-5 text-yellow-700" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-900">Commission Section</h3>
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                {suggestions.commission.options && suggestions.commission.options.length > 0 ? (
+                  <div className="space-y-6">
+                    {suggestions.commission.options.map((option, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-gray-600 text-sm font-medium">Base:</span>
+                              <button
+                                onClick={() => {
+                                  setEditingSection(`commission.${index}.base`);
+                                  setEditValue(option.base || '');
+                                }}
+                                className="text-blue-900 hover:text-blue-700 p-1"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            {editingSection === `commission.${index}.base` ? (
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newSuggestions = { ...suggestions };
+                                    newSuggestions.commission.options[index].base = editValue.trim();
+                                    setSuggestions(newSuggestions);
+                                    setEditingSection(null);
+                                    setEditValue('');
+                                  }}
+                                  className="text-green-700 hover:text-green-800"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={cancelEditing}
+                                  className="text-gray-500 hover:text-gray-700"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="font-semibold text-blue-900">{option.base}</p>
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-gray-600 text-sm font-medium">Base Amount:</span>
+                              <button
+                                onClick={() => {
+                                  setEditingSection(`commission.${index}.baseAmount`);
+                                  setEditValue(option.baseAmount || '');
+                                }}
+                                className="text-blue-900 hover:text-blue-700 p-1"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            {editingSection === `commission.${index}.baseAmount` ? (
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newSuggestions = { ...suggestions };
+                                    newSuggestions.commission.options[index].baseAmount = editValue.trim();
+                                    setSuggestions(newSuggestions);
+                                    setEditingSection(null);
+                                    setEditValue('');
+                                  }}
+                                  className="text-green-700 hover:text-green-800"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={cancelEditing}
+                                  className="text-gray-500 hover:text-gray-700"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="font-semibold text-blue-900">{option.baseAmount}</p>
+                            )}
+                          </div>
+                          {option.bonus && (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600 text-sm font-medium">Bonus:</span>
+                                <button
+                                  onClick={() => {
+                                    setEditingSection(`commission.${index}.bonus`);
+                                    setEditValue(option.bonus || '');
+                                  }}
+                                  className="text-blue-900 hover:text-blue-700 p-1"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {editingSection === `commission.${index}.bonus` ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newSuggestions = { ...suggestions };
+                                      newSuggestions.commission.options[index].bonus = editValue.trim();
+                                      setSuggestions(newSuggestions);
+                                      setEditingSection(null);
+                                      setEditValue('');
+                                    }}
+                                    className="text-green-700 hover:text-green-800"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="font-semibold text-blue-900">{option.bonus}</p>
+                              )}
+                            </div>
+                          )}
+                          {option.bonusAmount && (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600 text-sm font-medium">Bonus Amount:</span>
+                                <button
+                                  onClick={() => {
+                                    setEditingSection(`commission.${index}.bonusAmount`);
+                                    setEditValue(option.bonusAmount || '');
+                                  }}
+                                  className="text-blue-900 hover:text-blue-700 p-1"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {editingSection === `commission.${index}.bonusAmount` ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newSuggestions = { ...suggestions };
+                                      newSuggestions.commission.options[index].bonusAmount = editValue.trim();
+                                      setSuggestions(newSuggestions);
+                                      setEditingSection(null);
+                                      setEditValue('');
+                                    }}
+                                    className="text-green-700 hover:text-green-800"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="font-semibold text-blue-900">{option.bonusAmount}</p>
+                              )}
+                            </div>
+                          )}
+                          {option.structure && (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600 text-sm font-medium">Structure:</span>
+                                <button
+                                  onClick={() => {
+                                    setEditingSection(`commission.${index}.structure`);
+                                    setEditValue(option.structure || '');
+                                  }}
+                                  className="text-blue-900 hover:text-blue-700 p-1"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {editingSection === `commission.${index}.structure` ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newSuggestions = { ...suggestions };
+                                      newSuggestions.commission.options[index].structure = editValue.trim();
+                                      setSuggestions(newSuggestions);
+                                      setEditingSection(null);
+                                      setEditValue('');
+                                    }}
+                                    className="text-green-700 hover:text-green-800"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="font-semibold text-blue-900">{option.structure}</p>
+                              )}
+                            </div>
+                          )}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-gray-600 text-sm font-medium">Currency:</span>
+                              <button
+                                onClick={() => {
+                                  setEditingSection(`commission.${index}.currency`);
+                                  setEditValue(option.currency || '');
+                                }}
+                                className="text-blue-900 hover:text-blue-700 p-1"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            {editingSection === `commission.${index}.currency` ? (
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => {
+                                    const newSuggestions = { ...suggestions };
+                                    newSuggestions.commission.options[index].currency = editValue.trim();
+                                    setSuggestions(newSuggestions);
+                                    setEditingSection(null);
+                                    setEditValue('');
+                                  }}
+                                  className="text-green-700 hover:text-green-800"
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={cancelEditing}
+                                  className="text-gray-500 hover:text-gray-700"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="font-semibold text-blue-900">{option.currency}</p>
+                            )}
+                          </div>
+                          {option.minimumVolume && (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600 text-sm font-medium">Minimum Volume:</span>
+                                <button
+                                  onClick={() => {
+                                    setEditingSection(`commission.${index}.minimumVolume`);
+                                    setEditValue(`${option.minimumVolume.amount} ${option.minimumVolume.unit} per ${option.minimumVolume.period}`);
+                                  }}
+                                  className="text-blue-900 hover:text-blue-700 p-1"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {editingSection === `commission.${index}.minimumVolume` ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                    placeholder="e.g., 100 Units per Monthly"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newSuggestions = { ...suggestions };
+                                      // Parse the input to extract amount, unit, and period
+                                      const parts = editValue.split(' ');
+                                      if (parts.length >= 4) {
+                                        newSuggestions.commission.options[index].minimumVolume = {
+                                          amount: parts[0],
+                                          unit: parts[1],
+                                          period: parts[3]
+                                        };
+                                      }
+                                      setSuggestions(newSuggestions);
+                                      setEditingSection(null);
+                                      setEditValue('');
+                                    }}
+                                    className="text-green-700 hover:text-green-800"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="font-semibold text-blue-900">
+                                  {option.minimumVolume.amount} {option.minimumVolume.unit} per {option.minimumVolume.period}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {option.transactionCommission && (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-gray-600 text-sm font-medium">Transaction Commission:</span>
+                                <button
+                                  onClick={() => {
+                                    setEditingSection(`commission.${index}.transactionCommission`);
+                                    setEditValue(`${option.transactionCommission.amount} (${option.transactionCommission.type})`);
+                                  }}
+                                  className="text-blue-900 hover:text-blue-700 p-1"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {editingSection === `commission.${index}.transactionCommission` ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                                    placeholder="e.g., 5% (Percentage)"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newSuggestions = { ...suggestions };
+                                      // Parse the input to extract amount and type
+                                      const match = editValue.match(/(.+)\s*\((.+)\)/);
+                                      if (match) {
+                                        newSuggestions.commission.options[index].transactionCommission = {
+                                          amount: match[1].trim(),
+                                          type: match[2].trim()
+                                        };
+                                      }
+                                      setSuggestions(newSuggestions);
+                                      setEditingSection(null);
+                                      setEditValue('');
+                                    }}
+                                    className="text-green-700 hover:text-green-800"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="font-semibold text-blue-900">
+                                  {option.transactionCommission.amount} ({option.transactionCommission.type})
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-600 italic">No commission structure defined</p>
+                )}
               </div>
             </div>
           )}
 
-          {/* Skills */}
+          {/* Skills Section */}
           {suggestions.skills && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-                <Brain className="w-5 h-5 mr-2 text-blue-600" />
-                Skills
-              </h3>
+            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                  <Brain className="w-5 h-5 text-purple-700" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-900">Skills Section</h3>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {renderEditableList('skills.languages', suggestions.skills.languages, 'Languages')}
                 {renderEditableList('skills.soft', suggestions.skills.soft, 'Soft Skills')}
@@ -1064,118 +1641,169 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
             </div>
           )}
 
-          {/* Additional editable sections */}
-          {renderEditableList('jobTitles', suggestions.jobTitles, 'Job Titles')}
-          {renderEditableList('deliverables', suggestions.deliverables, 'Deliverables')}
-          {renderEditableList('sectors', suggestions.sectors, 'Sectors')}
-          {renderEditableList('destinationZones', suggestions.destinationZones, 'Destination Zones')}
-
-          {/* Commission */}
-          {suggestions.commission && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2 text-blue-600" />
-                Commission Structure
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                {suggestions.commission.options && suggestions.commission.options.length > 0 ? (
-                  <div className="space-y-4">
-                    {suggestions.commission.options.map((option, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div>
-                            <span className="text-gray-600 text-sm">Base:</span>
-                            <p className="font-medium text-gray-900">{option.base}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600 text-sm">Base Amount:</span>
-                            <p className="font-medium text-gray-900">{option.baseAmount}</p>
-                          </div>
-                          {option.bonus && (
-                            <div>
-                              <span className="text-gray-600 text-sm">Bonus:</span>
-                              <p className="font-medium text-gray-900">{option.bonus}</p>
-                            </div>
-                          )}
-                          {option.bonusAmount && (
-                            <div>
-                              <span className="text-gray-600 text-sm">Bonus Amount:</span>
-                              <p className="font-medium text-gray-900">{option.bonusAmount}</p>
-                            </div>
-                          )}
-                          {option.structure && (
-                            <div>
-                              <span className="text-gray-600 text-sm">Structure:</span>
-                              <p className="font-medium text-gray-900">{option.structure}</p>
-                            </div>
-                          )}
-                          <div>
-                            <span className="text-gray-600 text-sm">Currency:</span>
-                            <p className="font-medium text-gray-900">{option.currency}</p>
-                          </div>
-                          {option.minimumVolume && (
-                            <div>
-                              <span className="text-gray-600 text-sm">Minimum Volume:</span>
-                              <p className="font-medium text-gray-900">
-                                {option.minimumVolume.amount} {option.minimumVolume.unit} per {option.minimumVolume.period}
-                              </p>
-                            </div>
-                          )}
-                          {option.transactionCommission && (
-                            <div>
-                              <span className="text-gray-600 text-sm">Transaction Commission:</span>
-                              <p className="font-medium text-gray-900">
-                                {option.transactionCommission.amount} ({option.transactionCommission.type})
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-600">No commission structure defined</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Team */}
+          {/* Team Section */}
           {suggestions.team && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3 flex items-center">
-                <Users className="w-5 h-5 mr-2 text-blue-600" />
-                Team Structure
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                  <Users className="w-5 h-5 text-indigo-700" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-900">Team Section</h3>
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <span className="text-gray-600 text-sm">Team Size:</span>
-                    <p className="font-medium text-gray-900">{suggestions.team.size} members</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600 text-sm font-medium">Team Size:</span>
+                      <button
+                        onClick={() => {
+                          setEditingSection('team.size');
+                          setEditValue(suggestions.team.size?.toString() || '1');
+                        }}
+                        className="text-blue-900 hover:text-blue-700 p-1"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {editingSection === 'team.size' ? (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => {
+                            const size = parseInt(editValue) || 1;
+                            const newSuggestions = { ...suggestions };
+                            if (!newSuggestions.team) {
+                              newSuggestions.team = {
+                                size: 1,
+                                structure: [],
+                                territories: [],
+                                reporting: { to: "Project Manager", frequency: "Weekly" },
+                                collaboration: ["Daily standups", "Weekly reviews"]
+                              } as any;
+                            }
+                            newSuggestions.team.size = size;
+                            setSuggestions(newSuggestions);
+                            setEditingSection(null);
+                            setEditValue('');
+                          }}
+                          className="text-green-700 hover:text-green-800"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="font-semibold text-blue-900">{suggestions.team.size} members</p>
+                    )}
                   </div>
                   {suggestions.team.territories && suggestions.team.territories.length > 0 && (
                     <div>
-                      <span className="text-gray-600 text-sm">Territories:</span>
-                      <p className="font-medium text-gray-900">{suggestions.team.territories.join(', ')}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-600 text-sm font-medium">Territories:</span>
+                        <button
+                          onClick={() => {
+                            setEditingSection('team.territories');
+                            setEditValue(suggestions.team.territories.join(', '));
+                          }}
+                          className="text-blue-900 hover:text-blue-700 p-1"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {editingSection === 'team.territories' ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                            placeholder="Enter territories separated by commas"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => {
+                              const territories = editValue.split(',').map(t => t.trim()).filter(t => t);
+                              const newSuggestions = { ...suggestions };
+                              if (!newSuggestions.team) {
+                                newSuggestions.team = {
+                                  size: 1,
+                                  structure: [],
+                                  territories: [],
+                                  reporting: { to: "Project Manager", frequency: "Weekly" },
+                                  collaboration: ["Daily standups", "Weekly reviews"]
+                                } as any;
+                              }
+                              newSuggestions.team.territories = territories;
+                              setSuggestions(newSuggestions);
+                              setEditingSection(null);
+                              setEditValue('');
+                            }}
+                            className="text-green-700 hover:text-green-800"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={cancelEditing}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="font-semibold text-blue-900">{suggestions.team.territories.join(', ')}</p>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
             </div>
           )}
+
+          {/* Additional sections */}
+          {renderEditableList('highlights', suggestions.highlights, 'Key Highlights')}
+          {renderEditableList('deliverables', suggestions.deliverables, 'Deliverables')}
+
+          {/* Requirements */}
+          {suggestions.requirements && (
+            <div className="mb-10 bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                  <Target className="w-5 h-5 text-orange-700" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-900">Requirements</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {renderEditableList('requirements.essential', suggestions.requirements.essential, 'Essential Requirements')}
+                {renderEditableList('requirements.preferred', suggestions.requirements.preferred, 'Preferred Requirements')}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-center space-x-4">
+        <div className="flex items-center justify-center space-x-6">
           <button
             onClick={onBack}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-8 py-3 border-2 border-blue-900 text-blue-900 rounded-lg hover:bg-blue-900 hover:text-white transition-colors font-semibold shadow"
           >
             Back to Input
           </button>
           <button
             onClick={handleConfirm}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            className="px-8 py-3 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors flex items-center space-x-2 font-semibold shadow"
           >
             <Check className="w-5 h-5" />
             <span>Use These Suggestions</span>
