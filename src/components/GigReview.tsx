@@ -224,7 +224,7 @@ export function GigReview({
         {renderValidationSummary()}
 
         {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -278,17 +278,38 @@ export function GigReview({
               </div>
               <h3 className="font-semibold text-gray-900">Coverage</h3>
             </div>
-            <div className="text-lg font-bold text-gray-900 mb-1">
-              {data.schedule?.schedules?.[0]?.hours?.start || 'Not specified'} - {data.schedule?.schedules?.[0]?.hours?.end || 'Not specified'}
+            <div className="space-y-3">
+              {data.schedule?.schedules && data.schedule.schedules.length > 0 ? (
+                groupSchedules(data.schedule.schedules).map((group, index) => (
+                  <div key={`coverage-${index}`} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <div className="text-lg font-bold text-gray-900 mb-1">
+                      {group.hours.start} - {group.hours.end}
+                    </div>
+                    <p className="text-gray-600 text-sm mb-2">Working Hours</p>
+                    <div className="flex flex-wrap gap-1">
+                      {group.days.map((day, dayIndex) => (
+                        <span
+                          key={`${day}-${dayIndex}`}
+                          className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium"
+                        >
+                          {day}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-gray-600 text-xs mt-1">Working Days</p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-sm">No schedule specified</div>
+              )}
             </div>
-            <p className="text-gray-600 text-sm">Working Hours</p>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Main Content Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Basic Information */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
               <div className="border-b border-gray-200 px-6 py-4">
