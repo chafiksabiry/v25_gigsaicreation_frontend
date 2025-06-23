@@ -11,6 +11,7 @@ import { DocumentationSection } from "./DocumentationSection";
 import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
 import { TimezoneCode } from "../lib/ai";
+import { DaySchedule } from "../lib/scheduleUtils";
 
 interface SectionContentProps {
   section: string;
@@ -30,9 +31,47 @@ export function SectionContent({
 }: SectionContentProps) {
   console.log('SectionContent - Initial data:', data);
 
+  const cleanSchedules = (schedules: DaySchedule[]): DaySchedule[] => {
+    if (!schedules || schedules.length === 0) {
+      return [];
+    }
+  
+    const seen = new Set<string>();
+    const cleaned: DaySchedule[] = [];
+  
+    schedules.forEach(schedule => {
+      if (schedule && schedule.day && schedule.hours) {
+        const key = `${schedule.day}-${schedule.hours.start}-${schedule.hours.end}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          cleaned.push({
+            day: schedule.day,
+            hours: {
+              start: schedule.hours.start,
+              end: schedule.hours.end
+            }
+          });
+        }
+      }
+    });
+  
+    return cleaned;
+  };
+
   // Ensure seniority object is properly initialized
   const initializedData = React.useMemo(() => ({
     ...data,
+    schedule: {
+      schedules: cleanSchedules(data.schedule?.schedules || []),
+      timeZones: data.schedule?.timeZones || [],
+      flexibility: data.schedule?.flexibility || [],
+      minimumHours: data.schedule?.minimumHours || {
+        daily: undefined,
+        weekly: undefined,
+        monthly: undefined,
+      },
+      shifts: data.schedule?.shifts || []
+    },
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
@@ -89,8 +128,14 @@ export function SectionContent({
         return (
           <ScheduleSection
             data={initializedData.schedule ? {
-              ...initializedData.schedule,
-              timeZones: initializedData.schedule.timeZones as TimezoneCode[]
+              schedules: initializedData.schedule.schedules || [],
+              timeZones: initializedData.schedule.timeZones as TimezoneCode[],
+              flexibility: initializedData.schedule.flexibility || [],
+              minimumHours: initializedData.schedule.minimumHours || {
+                daily: undefined,
+                weekly: undefined,
+                monthly: undefined,
+              }
             } : {
               schedules: [],
               timeZones: [] as TimezoneCode[],
@@ -103,14 +148,15 @@ export function SectionContent({
             }}
             onChange={(scheduleData) => onChange({
               ...initializedData,
-              schedule: scheduleData,
+              schedule: {
+                schedules: scheduleData.schedules,
+                timeZones: scheduleData.timeZones,
+                flexibility: scheduleData.flexibility,
+                minimumHours: scheduleData.minimumHours,
+              },
             })}
-            errors={errors}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
-            currentSection={section}
           />
         );
 
@@ -290,6 +336,8 @@ export function SectionContent({
     }
   };
 
+  console.log('SectionContent - About to render SectionGuidance for section:', section);
+  
   return (
     <div className="space-y-6">
       <SectionGuidance section={section} />

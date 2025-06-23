@@ -8,11 +8,19 @@ interface SectionGuidanceProps {
 }
 
 export function SectionGuidance({ section }: SectionGuidanceProps) {
+  console.log('SectionGuidance - section:', section);
+  console.log('SectionGuidance - sectionGuidance keys:', Object.keys(sectionGuidance));
+  
   const guidance = sectionGuidance[section as keyof typeof sectionGuidance];
   
+  console.log('SectionGuidance - guidance found:', guidance);
+  
   if (!guidance) {
+    console.log('SectionGuidance - No guidance found for section:', section);
     return null;
   }
+
+  console.log('SectionGuidance - Rendering guidance for section:', section);
 
   return (
     <div className="space-y-4 mb-6">

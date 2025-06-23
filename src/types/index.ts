@@ -56,19 +56,19 @@ export interface GigData {
   };
   commission: {
     base: string;
-    baseAmount: string;
+    baseAmount: number;
     bonus: string;
-    bonusAmount: string;
+    bonusAmount: number;
     structure: string;
     currency: string;
     minimumVolume: {
-      amount: string;
+      amount: number;
       period: string;
       unit: string;
     };
     transactionCommission: {
       type: string;
-      amount: string;
+      amount: number;
     };
     kpis: {
       metric: string;
@@ -203,9 +203,10 @@ export interface GigSuggestion {
   deliverables: string[];
   sectors: string[];
   destinationZones: string[];
+  timeframes: string[];
   availability: {
     schedule: Array<{
-      day: string;
+      days: string[];
       hours: {
         start: string;
         end: string;
@@ -226,6 +227,7 @@ export interface GigSuggestion {
         start: string;
         end: string;
       };
+      _id?: { $oid: string };
     }>;
     timeZones: string[];
     flexibility: string[];
@@ -298,19 +300,19 @@ export interface GigSuggestion {
   commission: {
     options: Array<{
       base: string;
-      baseAmount: string;
+      baseAmount: number;
       bonus?: string;
-      bonusAmount?: string;
+      bonusAmount?: number;
       structure?: string;
       currency: string;
       minimumVolume: {
-        amount: string;
+        amount: number;
         period: string;
         unit: string;
       };
       transactionCommission: {
         type: string;
-        amount: string;
+        amount: number;
       };
     }>;
   };

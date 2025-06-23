@@ -62,7 +62,7 @@ export const defaultAvailability: Availability = {
       }
     }
   ],
-  timeZone: "Europe/Paris",
+  timeZone: "Paris (CET/CEST)",
   flexibility: [
     "Remote Work Available",
     "Flexible Hours"

@@ -39,7 +39,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         benefits: gig.benefits || [],
         availability: {
           schedule: gig.schedule?.schedules?.map(schedule => ({
-            day: schedule.day || "",
+            day: schedule.days?.[0] || "",
             hours: {
               start: schedule.hours?.start || "",
               end: schedule.hours?.end || ""
@@ -55,7 +55,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         },
         schedule: {
           schedules: gig.schedule?.schedules?.map(schedule => ({
-            day: schedule.day || "",
+            days: schedule.days || [],
             hours: {
               start: schedule.hours?.start || "",
               end: schedule.hours?.end || ""
