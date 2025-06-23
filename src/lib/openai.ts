@@ -22,7 +22,7 @@ Please provide:
 
 Format your response as a JSON object with the following structure:
 {
-  "suggestedTimezones": ["America/New_York", "Europe/London", ...],
+  "suggestedTimezones": ["New York (EST/EDT)", "London (GMT/BST)", ...],
   "workingHours": {
     "start": "09:00",
     "end": "17:00"
@@ -78,4 +78,4 @@ Format your response as a JSON object with the following structure:
     console.error('Error calling OpenAI API:', error);
     throw error;
   }
-} 
+}

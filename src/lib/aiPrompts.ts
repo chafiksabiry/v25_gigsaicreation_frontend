@@ -88,7 +88,7 @@ export async function generateTimezoneRecommendations(
     
     // Return a fallback response if the API call fails
     return {
-      suggestedTimezones: ['America/New_York', 'Europe/London', 'Asia/Singapore'],
+      suggestedTimezones: ['New York (EST/EDT)', 'London (GMT/BST)', 'Singapore (SGT)'],
       workingHours: {
         start: '09:00',
         end: '17:00'

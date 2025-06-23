@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Brain,
@@ -19,20 +19,41 @@ import {
   XCircle,
   Plus,
   Trash2,
+  Check,
+  Loader2,
+  MapPin,
+  Users,
+  Sun,
+  Sunrise,
+  Sunset,
+  Moon,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { JobDescription, GigMetadata } from "../lib/types";
 import type { GigSuggestion } from "../types";
 import Swal from "sweetalert2";
-import Modal from './Modal';
-import LeadsForm from './LeadsForm';
-import TeamForm from './TeamForm';
-import DocumentationForm from './DocumentationForm';
-import BasicSection from './BasicSection';
-import i18n from 'i18n-iso-countries';
-import fr from 'i18n-iso-countries/langs/fr.json';
-import en from 'i18n-iso-countries/langs/en.json';
-import Cookies from 'js-cookie';
+import Modal from "./Modal";
+import LeadsForm from "./LeadsForm";
+import TeamForm from "./TeamForm";
+import DocumentationForm from "./DocumentationForm";
+import BasicSection from "./BasicSection";
+import i18n from "i18n-iso-countries";
+import fr from "i18n-iso-countries/langs/fr.json";
+import en from "i18n-iso-countries/langs/en.json";
+import Cookies from "js-cookie";
+import { generateGigSuggestions } from "../lib/ai";
+import { groupSchedules } from "../lib/scheduleUtils";
+
+type ScheduleEntry = {
+  day: string;
+  hours: { start: string; end: string };
+  _id?: { $oid: string };
+};
+
+type GroupedSchedule = {
+  hours: { start: string; end: string };
+  days: string[];
+};
 
 // Register languages
 i18n.registerLocale(fr);
@@ -40,15 +61,17 @@ i18n.registerLocale(en);
 
 // Helper function to check if a value is a string array
 const isStringArray = (value: unknown): value is string[] => {
-  return Array.isArray(value) && value.every(item => typeof item === 'string');
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
 };
 
 const getNestedProperty = (obj: any, path: string) => {
-  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+  return path.split(".").reduce((acc, part) => acc && acc[part], obj);
 };
 
 const setNestedProperty = (obj: any, path: string, value: any) => {
-  const parts = path.split('.');
+  const parts = path.split(".");
   const lastPart = parts.pop()!;
   const target = parts.reduce((acc, part) => {
     if (!acc[part]) {
@@ -59,22 +82,29 @@ const setNestedProperty = (obj: any, path: string, value: any) => {
   target[lastPart] = value;
 };
 
-type StringArraySection = 
-  | 'jobTitles' 
-  | 'deliverables' 
-  | 'sectors' 
-  | 'destinationZones' 
-  | 'highlights' 
-  | 'requirements.essential' 
-  | 'requirements.preferred' 
-  | 'skills.technical' 
-  | 'skills.soft' 
-  | 'skills.professional' 
-  | 'skills.languages' 
-  | 'skills.certifications' 
-  | 'commission.kpis'
-  | 'commission'
-  | 'activity';
+type StringArraySection =
+  | "jobTitles"
+  | "deliverables"
+  | "sectors"
+  | "destinationZones"
+  | "highlights"
+  | "requirements.essential"
+  | "requirements.preferred"
+  | "skills.technical"
+  | "skills.soft"
+  | "skills.professional"
+  | "skills.languages"
+  | "skills.certifications"
+  | "commission.kpis"
+  | "commission"
+  | "activity"
+  | "kpis"
+  | "timeframes"
+  | "requirements"
+  | "compensation"
+  | "languages"
+  | "skills"
+  | "activity-requirement";
 
 interface ActivityOption {
   type: string;
@@ -82,39 +112,10 @@ interface ActivityOption {
   requirements: string[];
 }
 
-type EditableGigSuggestion = Omit<GigSuggestion, 'commission' | 'activity'> & {
-  commission?: {
-    options: Array<{
-      base: string;
-      baseAmount: string;
-      bonus?: string;
-      bonusAmount?: string;
-      structure?: string;
-      currency: string;
-      minimumVolume: {
-        amount: string;
-        period: string;
-        unit: string;
-      };
-      transactionCommission: {
-        type: string;
-        amount: string;
-      };
-    }>;
-  };
-  activity?: {
-    options: Array<{
-      type: string;
-      description: string;
-      requirements: string[];
-    }>;
-  };
-};
-
 interface SuggestionsProps {
   input: string;
   onBack: () => void;
-  onConfirm?: (suggestions: GigSuggestion) => void;
+  onConfirm: (suggestions: GigSuggestion) => void;
 }
 
 let openai: OpenAI | null = null;
@@ -141,11 +142,110 @@ const COMMON_TIMEZONES = [
   "IST (India Standard Time)",
   "JST (Japan Standard Time)",
   "AEDT (Australian Eastern Daylight Time)",
-  "NZDT (New Zealand Daylight Time)"
+  "NZDT (New Zealand Daylight Time)",
+];
+
+const DESTINATION_ZONES = [
+  "France",
+  "United States",
+  "United Kingdom",
+  "Germany",
+  "Canada",
+  "Australia",
+  "Japan",
+  "India",
+  "Brazil",
+  "Mexico",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Sweden",
+  "Norway",
+  "Denmark",
+  "Finland",
+  "Switzerland",
+  "Austria",
+  "Belgium",
+  "Portugal",
+  "Ireland",
+  "New Zealand",
+  "Singapore",
+  "South Korea",
+  "China",
+  "Russia",
+  "South Africa",
+  "Argentina",
+  "Chile",
+  "Colombia",
+  "Peru",
+  "Venezuela",
+  "Uruguay",
+  "Paraguay",
+  "Bolivia",
+  "Ecuador",
+  "Guyana",
+  "Suriname",
+  "French Guiana",
+];
+
+const SECTORS = [
+  "Inbound Sales",
+  "Outbound Sales",
+  "Customer Service",
+  "Technical Support",
+  "Account Management",
+  "Lead Generation",
+  "Market Research",
+  "Appointment Setting",
+  "Order Processing",
+  "Customer Retention",
+  "Billing Support",
+  "Product Support",
+  "Help Desk",
+  "Chat Support",
+  "Email Support",
+  "Social Media Support",
+  "Survey Calls",
+  "Welcome Calls",
+  "Follow-up Calls",
+  "Complaint Resolution",
+  "Warranty Support",
+  "Collections",
+  "Dispatch Services",
+  "Emergency Support",
+  "Technology",
+  "Healthcare",
+  "Finance",
+  "Education",
+  "Retail",
+  "Manufacturing",
+  "Real Estate",
+  "Transportation",
+  "Energy",
+  "Media",
+  "Entertainment",
+  "Sports",
+  "Food & Beverage",
+  "Fashion",
+  "Automotive",
+  "Aerospace",
+  "Pharmaceuticals",
+  "Biotechnology",
+  "Telecommunications",
+  "Consulting",
+  "Legal",
+  "Accounting",
+  "Marketing",
+  "Sales",
+  "Human Resources",
+  "Operations",
+  "Research & Development",
+  "Quality Assurance",
+  "Project Management",
 ];
 
 interface LeadType {
-  type: 'hot' | 'warm' | 'cold';
+  type: "hot" | "warm" | "cold";
   percentage: number;
   description: string;
   conversionRate?: number;
@@ -191,155 +291,61 @@ interface PredefinedOptions {
 const predefinedOptions: PredefinedOptions = {
   leads: {
     sources: [
-      'LinkedIn',
-      'Email Marketing',
-      'Social Media',
-      'Referrals',
-      'Events',
-      'Cold Calling',
-      'Website',
-      'Other'
-    ]
+      "LinkedIn",
+      "Email Marketing",
+      "Social Media",
+      "Referrals",
+      "Events",
+      "Cold Calling",
+      "Website",
+      "Other",
+    ],
   },
   team: {
     roles: [
       {
-        id: 'manager',
-        name: 'Manager',
-        description: 'Team leader responsible for overall performance'
+        id: "manager",
+        name: "Manager",
+        description: "Team leader responsible for overall performance",
       },
       {
-        id: 'senior',
-        name: 'Senior',
-        description: 'Experienced professional with leadership capabilities'
+        id: "senior",
+        name: "Senior",
+        description: "Experienced professional with leadership capabilities",
       },
       {
-        id: 'mid',
-        name: 'Mid-level',
-        description: 'Professional with solid experience'
+        id: "mid",
+        name: "Mid-level",
+        description: "Professional with solid experience",
       },
       {
-        id: 'junior',
-        name: 'Junior',
-        description: 'Entry-level professional'
-      }
+        id: "junior",
+        name: "Junior",
+        description: "Entry-level professional",
+      },
     ],
     territories: [
-      'North America',
-      'Europe',
-      'Asia',
-      'South America',
-      'Africa',
-      'Oceania'
-    ]
+      "North America",
+      "Europe",
+      "Asia",
+      "South America",
+      "Africa",
+      "Oceania",
+    ],
   },
   basic: {
     seniorityLevels: [
-      'Entry Level',
-      'Junior',
-      'Mid-Level',
-      'Senior',
-      'Team Lead',
-      'Supervisor',
-      'Manager',
-      'Director'
-    ]
-  }
+      "Entry Level",
+      "Junior",
+      "Mid-Level",
+      "Senior",
+      "Team Lead",
+      "Supervisor",
+      "Manager",
+      "Director",
+    ],
+  },
 };
-
-interface GigData {
-  userId: string;
-  companyId: string;
-  title: string;
-  description: string;
-  type: string;
-  quantity: number;
-  timeline: string;
-  skills_required: string[];
-  languages_required: Array<{ code: string; name: string }>;
-  kpis: string[];
-  category: string;
-  seniority: {
-    level: string;
-    yearsExperience: number;
-  };
-  availability: {
-    schedule: {
-      day: string;
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily: number;
-      weekly: number;
-      monthly: number;
-    };
-    };
-  schedule: {
-    schedules: {
-      day: string;
-      hours: {
-        start: string;
-        end: string;
-      };
-    }[];
-    timeZones: string[];
-    flexibility: string[];
-    minimumHours: {
-      daily: number;
-      weekly: number;
-      monthly: number;
-    };
-  };
-  commission: {
-    base: string;
-    baseAmount: string;
-    bonus?: string;
-    bonusAmount?: string;
-    structure?: string;
-    currency: string;
-    minimumVolume: {
-      amount: string;
-      period: string;
-      unit: string;
-    };
-    transactionCommission: {
-      type: string;
-      amount: string;
-    };
-  };
-  sectors: string[];
-  activity: {
-    type: string;
-    description: string;
-    requirements: string[];
-  };
-  leads?: LeadsData;
-  team?: {
-    size: number;
-    structure: TeamRole[];
-    territories: string[];
-    reporting: {
-      to: string;
-      frequency: string;
-    };
-    collaboration: string[];
-  };
-  documentation: {
-    templates: null,
-    reference: null,
-    product: [],
-    process: [],
-    training: []
-  };
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface SuggestionState extends GigSuggestion {
   // Additional fields specific to SuggestionState can be added here
@@ -354,2686 +360,3055 @@ const fallbackSuggestions: GigSuggestion = {
   deliverables: [],
   sectors: [],
   destinationZones: [],
+  timeframes: [],
   availability: {
-    schedule: [{
-      day: "",
-      hours: {
-        start: "",
-        end: ""
-      }
-    }],
+    schedule: [
+      {
+        days: [""],
+        hours: {
+          start: "",
+          end: "",
+        },
+      },
+    ],
     timeZones: [],
     flexibility: [],
     minimumHours: {
       daily: 8,
       weekly: 40,
-      monthly: 160
-    }
+      monthly: 160,
+    },
   },
   schedule: {
-    schedules: [{
-      day: "",
-      hours: {
-        start: "",
-        end: ""
-      }
-    }],
+    schedules: [
+      {
+        day: "",
+        hours: {
+          start: "",
+          end: "",
+        },
+        _id: { $oid: "fallback" },
+      },
+    ],
     timeZones: ["CET"],
-    flexibility: [],
+    flexibility: ["Part-Time Options"],
     minimumHours: {
       daily: 8,
       weekly: 40,
-      monthly: 160
-    }
+      monthly: 160,
+    },
   },
   requirements: {
     essential: [],
-    preferred: []
+    preferred: [],
   },
   benefits: [],
   skills: {
     languages: [],
-    soft: [{
-      skill: "Communication",
-      level: 1
-    }],
-    professional: [{
-      skill: "Brand Identity Design",
-      level: 1
-    }],
-    technical: [{
-      skill: "Adobe Illustrator",
-      level: 1
-    }],
-    certifications: []
+    soft: [
+      {
+        skill: "Communication",
+        level: 1,
+      },
+    ],
+    professional: [
+      {
+        skill: "Brand Identity Design",
+        level: 1,
+      },
+    ],
+    technical: [
+      {
+        skill: "Adobe Illustrator",
+        level: 1,
+      },
+    ],
+    certifications: [],
   },
   seniority: {
     level: "",
-    yearsExperience: 0
+    yearsExperience: 0,
   },
   commission: {
-    options: []
+    options: [],
   },
   activity: {
-    options: []
+    options: [],
   },
   team: {
     size: 1,
-    structure: [{
-      roleId: "default",
-      count: 1,
-      seniority: {
-        level: "Senior",
-        yearsExperience: 5
-      }
-    }],
+    structure: [
+      {
+        roleId: "default",
+        count: 1,
+        seniority: {
+          level: "Senior",
+          yearsExperience: 5,
+        },
+      },
+    ],
     territories: ["Global"],
     reporting: {
       to: "Project Manager",
-      frequency: "Weekly"
+      frequency: "Weekly",
     },
-    collaboration: ["Daily standups", "Weekly reviews"]
+    collaboration: ["Daily standups", "Weekly reviews"],
   },
   leads: {
     types: [],
     sources: [],
     distribution: {
       method: "",
-      rules: []
+      rules: [],
     },
-    qualificationCriteria: []
+    qualificationCriteria: [],
   },
   documentation: {
     templates: null,
     reference: null,
     product: [],
     process: [],
-    training: []
-  }
+    training: [],
+  },
 };
 
-export function Suggestions({ input, onBack, onConfirm }: SuggestionsProps) {
+const TIMEZONE_OPTIONS = [
+  "New York (EST/EDT)",
+  "Chicago (CST/CDT)",
+  "Denver (MST/MDT)",
+  "Los Angeles (PST/PDT)",
+  "London (GMT/BST)",
+  "Paris (CET/CEST)",
+  "Dubai (GST)",
+  "Singapore (SGT)",
+  "Tokyo (JST)",
+  "Sydney (AEST/AEDT)",
+];
+
+const FLEXIBILITY_OPTIONS = [
+  "Remote Work Available",
+  "Flexible Hours",
+  "Weekend Rotation",
+  "Night Shift Available",
+  "Split Shifts",
+  "Part-Time Options",
+  "Compressed Work Week",
+  "Shift Swapping Allowed",
+];
+
+const LANGUAGE_LEVELS = [
+  "A1 - Beginner",
+  "A2 - Elementary",
+  "B1 - Intermediate",
+  "B2 - Upper Intermediate",
+  "C1 - Advanced",
+  "C2 - Mastery",
+];
+
+const SKILL_LEVELS = [
+  { value: 1, label: "Basic" },
+  { value: 2, label: "Intermediate" },
+  { value: 3, label: "Advanced" },
+  { value: 4, label: "Expert" },
+  { value: 5, label: "Master" },
+];
+
+const LANGUAGES = [
+  "English",
+  "French",
+  "Spanish",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Dutch",
+  "Russian",
+  "Chinese (Mandarin)",
+  "Japanese",
+  "Korean",
+  "Arabic",
+  "Hindi",
+  "Turkish",
+  "Polish",
+  "Swedish",
+  "Norwegian",
+  "Danish",
+  "Finnish",
+  "Greek",
+  "Hebrew",
+  "Thai",
+  "Vietnamese",
+  "Indonesian",
+  "Malay",
+  "Filipino",
+  "Urdu",
+  "Bengali",
+  "Persian",
+  "Czech",
+  "Hungarian",
+  "Romanian",
+  "Bulgarian",
+  "Croatian",
+  "Serbian",
+  "Slovak",
+  "Slovenian",
+  "Estonian",
+  "Latvian",
+  "Lithuanian",
+];
+
+const PROFESSIONAL_SKILLS = [
+  "Sales Management",
+  "Account Management",
+  "Customer Relationship Management",
+  "Lead Generation",
+  "Market Research",
+  "Business Development",
+  "Strategic Planning",
+  "Project Management",
+  "Team Leadership",
+  "Negotiation",
+  "Presentation Skills",
+  "Client Communication",
+  "Contract Management",
+  "Budget Management",
+  "Performance Analysis",
+  "Process Improvement",
+  "Quality Assurance",
+  "Compliance Management",
+  "Risk Assessment",
+  "Stakeholder Management",
+  "Vendor Management",
+  "Supply Chain Management",
+  "Inventory Management",
+  "Logistics Coordination",
+  "Event Planning",
+  "Public Relations",
+  "Brand Management",
+  "Digital Marketing",
+  "Content Strategy",
+  "Social Media Management",
+];
+
+const TECHNICAL_SKILLS = [
+  "CRM Systems (Salesforce, HubSpot)",
+  "Microsoft Office Suite",
+  "Google Workspace",
+  "Data Analysis",
+  "Excel Advanced Functions",
+  "Power BI",
+  "Tableau",
+  "SQL",
+  "Python",
+  "JavaScript",
+  "HTML/CSS",
+  "WordPress",
+  "Shopify",
+  "Zendesk",
+  "Intercom",
+  "LiveChat",
+  "Freshdesk",
+  "Help Scout",
+  "Zapier",
+  "Integromat",
+  "API Integration",
+  "Web Scraping",
+  "SEO Tools",
+  "Google Analytics",
+  "Google Ads",
+  "Facebook Ads",
+  "LinkedIn Ads",
+  "Email Marketing Platforms",
+  "Video Editing",
+  "Graphic Design",
+  "Adobe Creative Suite",
+  "Canva",
+  "Figma",
+  "Sketch",
+  "Video Conferencing Tools",
+  "Project Management Tools",
+  "Accounting Software",
+  "E-commerce Platforms",
+  "Payment Processing",
+  "Cybersecurity",
+];
+
+const SOFT_SKILLS = [
+  "Communication",
+  "Active Listening",
+  "Empathy",
+  "Problem Solving",
+  "Critical Thinking",
+  "Creativity",
+  "Adaptability",
+  "Flexibility",
+  "Time Management",
+  "Organization",
+  "Attention to Detail",
+  "Multitasking",
+  "Stress Management",
+  "Conflict Resolution",
+  "Teamwork",
+  "Collaboration",
+  "Leadership",
+  "Mentoring",
+  "Coaching",
+  "Motivation",
+  "Initiative",
+  "Self-motivation",
+  "Reliability",
+  "Dependability",
+  "Professionalism",
+  "Customer Service",
+  "Patience",
+  "Tolerance",
+  "Cultural Awareness",
+  "Interpersonal Skills",
+  "Networking",
+  "Public Speaking",
+  "Presentation Skills",
+  "Persuasion",
+  "Influence",
+  "Decision Making",
+  "Judgment",
+  "Analytical Thinking",
+  "Strategic Thinking",
+  "Innovation",
+];
+
+const BONUS_TYPES = ["Performance Bonus", "Team Bonus"];
+
+const TRANSACTION_TYPES = [
+  "Fixed Amount",
+  "Percentage",
+  "Tiered Amount",
+  "Volume Based",
+  "Performance Based",
+];
+
+const TEAM_ROLES = [
+  "Team Lead",
+  "Senior Agent",
+  "Agent",
+  "Junior Agent",
+  "Supervisor",
+  "Manager",
+  "Coordinator",
+  "Specialist",
+  "Consultant",
+  "Representative",
+  "Associate",
+  "Assistant",
+  "Trainee",
+  "Intern",
+];
+
+const TEAM_TERRITORIES = [
+  "North America",
+  "Europe",
+  "Asia Pacific",
+  "Latin America",
+  "Middle East & Africa",
+  "Global",
+  "United States",
+  "Canada",
+  "United Kingdom",
+  "France",
+  "Germany",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Belgium",
+  "Switzerland",
+  "Austria",
+  "Scandinavia",
+  "Eastern Europe",
+  "Australia",
+  "New Zealand",
+  "Japan",
+  "South Korea",
+  "China",
+  "India",
+  "Southeast Asia",
+];
+
+export const Suggestions: React.FC<SuggestionsProps> = ({
+  input,
+  onBack,
+  onConfirm,
+}) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
-  const [editableSuggestions, setEditableSuggestions] = useState<EditableGigSuggestion | null>(null);
-  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
-  const [apiKeyMissing] = useState(!openai);
-  const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
-  const [jobDescription, setJobDescription] = useState<JobDescription | null>(
-    null
-  );
-  const [isJobDescriptionLoading, setIsJobDescriptionLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingSection, setEditingSection] = useState<StringArraySection | null>(null);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [showMetadata, setShowMetadata] = useState(false);
-  const [metadata, setMetadata] = useState<GigMetadata | null>(null);
-  const [editableMetadata, setEditableMetadata] = useState<GigMetadata | null>(
-    null
-  );
-  const [isMetadataLoading, setIsMetadataLoading] = useState(false);
-  const [isSuggestionsConfirmed, setIsSuggestionsConfirmed] = useState(false);
-  const [editingMetadataField, setEditingMetadataField] = useState<
-    string | null
-  >(null);
-  const [editingScheduleIndex, setEditingScheduleIndex] = useState<
-    number | null
-  >(null);
-  const [editingHourIndex, setEditingHourIndex] = useState<number | null>(null);
-  const [isLeadsModalOpen, setIsLeadsModalOpen] = useState(false);
-  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-  const [gigData, setGigData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showBasicSection, setShowBasicSection] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [leadsData, setLeadsData] = useState<any>(null);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const isGeneratingRef = useRef(false);
+  const lastProcessedInputRef = useRef<string>("");
+
+  // Ensure all team roles have valid seniority structure
+  const validateAndFixTeamStructure = () => {
+    if (!suggestions?.team?.structure) return;
+    
+    let needsUpdate = false;
+    const newSuggestions = { ...suggestions };
+    
+    newSuggestions.team.structure.forEach((role, index) => {
+      // Check if role is a string and convert it to proper object structure
+      if (typeof role === 'string') {
+        newSuggestions.team.structure[index] = {
+          roleId: role,
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
+        };
+        needsUpdate = true;
+      } else if (typeof role === 'object' && role !== null) {
+        // Ensure role has required properties
+        if (!role.roleId) {
+          newSuggestions.team.structure[index] = {
+            ...role,
+            roleId: "Agent",
+            count: role.count || 1,
+            seniority: role.seniority || {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+          needsUpdate = true;
+        } else if (!role.seniority) {
+          newSuggestions.team.structure[index] = {
+            ...role,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+          needsUpdate = true;
+        } else if (!role.seniority.level || !role.seniority.yearsExperience) {
+          newSuggestions.team.structure[index] = {
+            ...role,
+            seniority: {
+              level: role.seniority.level || "Mid-Level",
+              yearsExperience: role.seniority.yearsExperience || 3,
+            },
+          };
+          needsUpdate = true;
+        }
+      } else {
+        // If role is null, undefined, or invalid, replace with default structure
+        newSuggestions.team.structure[index] = {
+          roleId: "Agent",
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
+        };
+        needsUpdate = true;
+      }
+    });
+    
+    if (needsUpdate) {
+      setSuggestions(newSuggestions);
+    }
+  };
+
+  // Validate team structure when suggestions change
+  useEffect(() => {
+    validateAndFixTeamStructure();
+  }, [suggestions?.team?.structure]);
 
   useEffect(() => {
-    if (input.trim().length > 0) {
-      setIsSuggestionsLoading(true);
-      generateSuggestions().finally(() => {
-        setIsSuggestionsLoading(false);
-      });
+    const generateSuggestions = async () => {
+      // Prevent multiple simultaneous API calls
+      if (isGeneratingRef.current) {
+        return;
+      }
+
+      // Don't regenerate if we already processed this exact input
+      if (lastProcessedInputRef.current === input.trim()) {
+        return;
+      }
+
+      try {
+        isGeneratingRef.current = true;
+        lastProcessedInputRef.current = input.trim();
+        setLoading(true);
+        setError(null);
+        const result = await generateGigSuggestions(input);
+        console.log("Generated suggestions:", result);
+
+        // Convert schedules from days array to individual day objects
+        if (result.schedule && result.schedule.schedules) {
+          const convertedSchedules: Array<ScheduleEntry> = [];
+          result.schedule.schedules.forEach((schedule: any, index: number) => {
+            if (schedule.days && Array.isArray(schedule.days)) {
+              // Convert from days array to individual day objects
+              schedule.days.forEach((day: string) => {
+                convertedSchedules.push({
+                  day: day,
+                  hours: schedule.hours,
+                  _id: {
+                    $oid: `generated_${Date.now()}_${Math.random()
+                      .toString(36)
+                      .substr(2, 9)}`,
+                  },
+                });
+              });
+            } else if (schedule.day) {
+              // Already in correct format
+              convertedSchedules.push({
+                ...schedule,
+                _id: schedule._id || {
+                  $oid: `generated_${Date.now()}_${Math.random()
+                    .toString(36)
+                    .substr(2, 9)}`,
+                },
+              });
+            }
+          });
+
+          // Format times to be compliant with <input type="time">
+          result.schedule.schedules.forEach((schedule) => {
+            const formatTime = (timeStr: string) => {
+              if (!timeStr || !timeStr.includes(":")) return "00:00";
+              const [h, m] = timeStr.split(":");
+              return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+            };
+            schedule.hours.start = formatTime(schedule.hours.start);
+            schedule.hours.end = formatTime(schedule.hours.end);
+          });
+
+          result.schedule.schedules = convertedSchedules;
+        }
+
+        // Convert commission structure to options format if needed
+        if (result.commission && !(result.commission as any).options) {
+          // Convert old structure to new options structure
+          const oldCommission = result.commission as any;
+          const commissionOption = {
+            base: oldCommission.base || "Base + Commission",
+            baseAmount:
+              typeof oldCommission.baseAmount === "string"
+                ? parseFloat(oldCommission.baseAmount) || 0
+                : oldCommission.baseAmount || 0,
+            bonus: "Performance Bonus",
+            bonusAmount:
+              typeof oldCommission.bonusAmount === "string"
+                ? parseFloat(oldCommission.bonusAmount) || 0
+                : oldCommission.bonusAmount || 0,
+            structure: oldCommission.structure,
+            currency: oldCommission.currency || "EUR",
+            minimumVolume: oldCommission.minimumVolume || {
+              amount: 0,
+              period: "Monthly",
+              unit: "Sales",
+            },
+            transactionCommission: oldCommission.transactionCommission || {
+              type: "Fixed Amount",
+              amount: 0,
+            },
+          };
+
+          result.commission = {
+            options: [commissionOption],
+          };
+        }
+
+        setSuggestions(result);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to generate suggestions"
+        );
+      } finally {
+        setLoading(false);
+        isGeneratingRef.current = false;
+      }
+    };
+
+    if (input.trim()) {
+      generateSuggestions();
     }
+
+    // Cleanup function to reset the generating flag
+    return () => {
+      isGeneratingRef.current = false;
+    };
   }, [input]);
 
+  const handleMinimumHoursChange = (
+    period: "daily" | "weekly" | "monthly",
+    value: string
+  ) => {
+    if (!suggestions) return;
+    const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+    const numericValue = parseInt(value, 10);
+    if (!isNaN(numericValue)) {
+      if (!newSuggestions.schedule.minimumHours) {
+        newSuggestions.schedule.minimumHours = {};
+      }
+      newSuggestions.schedule.minimumHours[period] = numericValue;
+      setSuggestions(newSuggestions);
+    } else if (value === "") {
+      if (!newSuggestions.schedule.minimumHours) {
+        newSuggestions.schedule.minimumHours = {};
+      }
+      delete newSuggestions.schedule.minimumHours[period];
+      setSuggestions(newSuggestions);
+    }
+  };
+
+  const handleAddTimeZone = (zone: string) => {
+    if (!suggestions || !zone || suggestions.schedule.timeZones.includes(zone))
+      return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        timeZones: [...suggestions.schedule.timeZones, zone],
+      },
+    };
+    setSuggestions(newSuggestions);
+  };
+
+  const handleRemoveTimeZone = (zoneToRemove: string) => {
+    if (!suggestions) return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        timeZones: suggestions.schedule.timeZones.filter(
+          (zone) => zone !== zoneToRemove
+        ),
+      },
+    };
+    setSuggestions(newSuggestions);
+  };
+
+  const handleAddFlexibility = (option: string) => {
+    if (
+      !suggestions ||
+      !option ||
+      suggestions.schedule.flexibility.includes(option)
+    )
+      return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        flexibility: [...suggestions.schedule.flexibility, option],
+      },
+    };
+    setSuggestions(newSuggestions);
+  };
+
+  const handleRemoveFlexibility = (optionToRemove: string) => {
+    if (!suggestions) return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        flexibility: suggestions.schedule.flexibility.filter(
+          (option) => option !== optionToRemove
+        ),
+      },
+    };
+    setSuggestions(newSuggestions);
+  };
+
   const handleConfirm = () => {
+    if (suggestions) {
+      onConfirm(suggestions);
+    }
+  };
+
+  const addItem = (section: string, item: string) => {
     if (!suggestions) return;
 
-    // Transform commission data from suggestions format to CommissionSection format
-    const commissionData = {
-      options: [{
-        base: suggestions.commission?.options?.[0]?.base || "Fixed Salary",
-        baseAmount: suggestions.commission?.options?.[0]?.baseAmount || "2",
-        bonus: suggestions.commission?.options?.[0]?.bonus,
-        bonusAmount: suggestions.commission?.options?.[0]?.bonusAmount,
-        currency: suggestions.commission?.options?.[0]?.currency || "USD",
-        minimumVolume: {
-          amount: suggestions.commission?.options?.[0]?.minimumVolume?.amount || "4",
-          period: suggestions.commission?.options?.[0]?.minimumVolume?.period || "Monthly",
-          unit: suggestions.commission?.options?.[0]?.minimumVolume?.unit || "Projects"
-        },
-        transactionCommission: {
-          type: suggestions.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount",
-          amount: suggestions.commission?.options?.[0]?.transactionCommission?.amount || "3"
-        }
-      }]
-    };
+    const newSuggestions = { ...suggestions };
 
-    const transformedSuggestions: GigSuggestion = {
-      title: suggestions.title || "",
-      description: suggestions.description || "",
-      category: suggestions.category || "",
-      highlights: suggestions.highlights || [],
-      jobTitles: suggestions.jobTitles || [],
-      deliverables: suggestions.deliverables || [],
-      sectors: suggestions.sectors || [],
-      destinationZones: suggestions.destinationZones || [],
-      availability:{
-        schedule: suggestions.schedule?.schedules || [{
-          day: "",
-          hours: {
-            start: "",
-            end: ""
-          }
-        }],
-        timeZones: suggestions.schedule?.timeZones || [],
-        flexibility: suggestions.schedule?.flexibility || [],
-        minimumHours: {
-          daily: suggestions.schedule?.minimumHours?.daily || 8,
-          weekly: suggestions.schedule?.minimumHours?.weekly || 40,
-          monthly: suggestions.schedule?.minimumHours?.monthly || 160
-        }
-      },
-      schedule: {
-        schedules: suggestions.schedule?.schedules || [{
-          day: "Monday",
-          hours: {
-            start: "09:00",
-            end: "18:00"
-          }
-        }],
-        timeZones: suggestions.schedule?.timeZones || ["CET"],
-        flexibility: suggestions.schedule?.flexibility || [],
-        minimumHours: {
-          daily: suggestions.schedule?.minimumHours?.daily || 8,
-          weekly: suggestions.schedule?.minimumHours?.weekly || 40,
-          monthly: suggestions.schedule?.minimumHours?.monthly || 160
-        }
-      },
-      requirements: {
-        essential: suggestions.requirements?.essential || [],
-        preferred: suggestions.requirements?.preferred || []
-      },
-      benefits: suggestions.benefits || [],
-      skills: {
-        languages: Array.isArray(suggestions.skills?.languages) 
-          ? suggestions.skills.languages.map(lang => ({ 
-              language: lang.language,
-              proficiency: lang.proficiency,
-              iso639_1: lang.iso639_1 || lang.language?.toLowerCase().substring(0, 2) || 'en'
-            })) 
-          : [],
-        soft: Array.isArray(suggestions.skills?.soft) 
-          ? suggestions.skills.soft.map(skill => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              return {
-                skill: skillName,
-                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
-              };
-            })
-          : [],
-        professional: Array.isArray(suggestions.skills?.professional)
-          ? suggestions.skills.professional.map(skill => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              return {
-                skill: skillName,
-                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
-              };
-            })
-          : [],
-        technical: Array.isArray(suggestions.skills?.technical)
-          ? suggestions.skills.technical.map(skill => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              return {
-                skill: skillName,
-                level: typeof skill === 'string' ? 1 : (typeof skill.level === 'number' ? skill.level : 1)
-              };
-            })
-          : [],
-        certifications: suggestions.skills?.certifications || []
-      },
-      seniority: suggestions?.seniority ? {
-        level: suggestions.seniority.level || '',
-        yearsExperience: Number(suggestions.seniority.yearsExperience) || 0,
-      } : {
-        level: '',
-        yearsExperience: 0,
-      },
-      commission: commissionData,
-      activity: suggestions.activity || {
-        options: []
-      },
-      team: suggestions.team || { size: 1, structure: [{ roleId: "default", count: 1, seniority: { level: "Senior", yearsExperience: "5+" } }], territories: ["Global"] },
-      leads: suggestions.leads || { types: [], sources: [] },
-      documentation: suggestions.documentation || { 
-        templates: null,
-        reference: null,
-        product: [],
-        process: [],
-        training: []
-      }
-    };
-
-    if (onConfirm) {
-      onConfirm(transformedSuggestions);
+    switch (section) {
+      case "highlights":
+        newSuggestions.highlights = [
+          ...(newSuggestions.highlights || []),
+          item,
+        ];
+        break;
+      case "jobTitles":
+        newSuggestions.jobTitles = [...(newSuggestions.jobTitles || []), item];
+        break;
+      case "deliverables":
+        newSuggestions.deliverables = [
+          ...(newSuggestions.deliverables || []),
+          item,
+        ];
+        break;
+      case "sectors":
+        newSuggestions.sectors = [...(newSuggestions.sectors || []), item];
+        break;
+      case "destinationZones":
+        newSuggestions.destinationZones = [
+          ...(newSuggestions.destinationZones || []),
+          item,
+        ];
+        break;
+      case "requirements.essential":
+        newSuggestions.requirements.essential = [
+          ...(newSuggestions.requirements.essential || []),
+          item,
+        ];
+        break;
+      case "requirements.preferred":
+        newSuggestions.requirements.preferred = [
+          ...(newSuggestions.requirements.preferred || []),
+          item,
+        ];
+        break;
+      case "skills.technical":
+        newSuggestions.skills.technical = [
+          ...(newSuggestions.skills.technical || []),
+          { skill: item, level: 1 },
+        ];
+        break;
+      case "skills.soft":
+        newSuggestions.skills.soft = [
+          ...(newSuggestions.skills.soft || []),
+          { skill: item, level: 1 },
+        ];
+        break;
+      case "skills.languages":
+        newSuggestions.skills.languages = [
+          ...(newSuggestions.skills.languages || []),
+          { language: item, proficiency: "Intermediate", iso639_1: "en" },
+        ];
+        break;
     }
+
+    setSuggestions(newSuggestions);
   };
 
-  const generateJobDescription = async (title: string) => {
-    if (!openai) {
-      const fallbackDescriptions: Record<string, JobDescription> = {
-        "Sales Representative": {
-          title: "Sales Representative",
-          description:
-            "A Sales Representative is responsible for actively seeking out and engaging with potential customers to generate leads and close sales deals.",
-          responsibilities: [
-            "Identify and contact potential customers",
-            "Present products and services effectively",
-            "Maintain relationships with existing clients",
-            "Meet or exceed sales targets",
-            "Track and report sales activities",
-          ],
-          qualifications: [
-            "2+ years of sales experience",
-            "Strong communication and negotiation skills",
-            "Proven track record of meeting sales goals",
-            "CRM software proficiency",
-            "Bachelor's degree in business or related field preferred",
-          ],
-          languages: {
-            required: ["English (Fluent)"],
-            preferred: ["Spanish (Conversational)", "Mandarin (Basic)"],
-          },
-        },
-      };
+  const updateItem = (section: string, index: number, newValue: string) => {
+    if (!suggestions) return;
 
-      setJobDescription(
-        fallbackDescriptions[title] || {
-          title,
-          description: "Position details currently unavailable.",
-          responsibilities: [],
-          qualifications: [],
-          languages: {
-            required: [],
-            preferred: [],
-          },
-        }
-      );
-      return;
+    const newSuggestions = { ...suggestions };
+
+    switch (section) {
+      case "highlights":
+        newSuggestions.highlights[index] = newValue;
+        break;
+      case "jobTitles":
+        newSuggestions.jobTitles[index] = newValue;
+        break;
+      case "deliverables":
+        newSuggestions.deliverables[index] = newValue;
+        break;
+      case "sectors":
+        newSuggestions.sectors[index] = newValue;
+        break;
+      case "destinationZones":
+        newSuggestions.destinationZones[index] = newValue;
+        break;
+      case "requirements.essential":
+        newSuggestions.requirements.essential[index] = newValue;
+        break;
+      case "requirements.preferred":
+        newSuggestions.requirements.preferred[index] = newValue;
+        break;
+      case "skills.technical":
+        newSuggestions.skills.technical[index] = {
+          skill: newValue,
+          level: newSuggestions.skills.technical[index].level,
+        };
+        break;
+      case "skills.soft":
+        newSuggestions.skills.soft[index] = {
+          skill: newValue,
+          level: newSuggestions.skills.soft[index].level,
+        };
+        break;
+      case "skills.languages":
+        const currentLang = newSuggestions.skills.languages[index];
+        newSuggestions.skills.languages[index] = {
+          language: newValue,
+          proficiency: currentLang.proficiency,
+          iso639_1: currentLang.iso639_1 || "en",
+        };
+        break;
     }
 
-    try {
-      setIsJobDescriptionLoading(true);
-
-      const prompt = `Create a detailed job description for a "${title}" position in JSON format with the following structure:
-      {
-        "title": "${title}",
-        "description": "A concise overview of the role",
-        "responsibilities": ["List of 5 key responsibilities"],
-        "qualifications": ["List of 5 key qualifications"],
-        "languages": {
-          "required": ["List of required languages with proficiency levels"],
-          "preferred": ["List of preferred languages with proficiency levels"]
-        }
-      }
-      Make it specific and professional, including relevant language requirements for the role.`;
-
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-      });
-
-      const response = completion.choices[0]?.message?.content;
-      if (response) {
-        const jobData = JSON.parse(response);
-        setJobDescription(jobData);
-      }
-    } catch (error) {
-      console.error("Error generating job description:", error);
-      setJobDescription({
-        title,
-        description: "Failed to load job description. Please try again later.",
-        responsibilities: [],
-        qualifications: [],
-        languages: {
-          required: [],
-          preferred: [],
-        },
-      });
-    } finally {
-      setIsJobDescriptionLoading(false);
-    }
+    setSuggestions(newSuggestions);
   };
 
-  const handleJobTitleClick = (title: string) => {
-    if (selectedJobTitle === title) {
-      setSelectedJobTitle(null);
-      setJobDescription(null);
-    } else {
-      setSelectedJobTitle(title);
-      generateJobDescription(title);
+  const deleteItem = (section: string, index: number) => {
+    if (!suggestions) return;
+
+    const newSuggestions = { ...suggestions };
+
+    switch (section) {
+      case "highlights":
+        newSuggestions.highlights = newSuggestions.highlights.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "jobTitles":
+        newSuggestions.jobTitles = newSuggestions.jobTitles.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "deliverables":
+        newSuggestions.deliverables = newSuggestions.deliverables.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "sectors":
+        newSuggestions.sectors = newSuggestions.sectors.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "destinationZones":
+        newSuggestions.destinationZones =
+          newSuggestions.destinationZones.filter((_, i) => i !== index);
+        break;
+      case "requirements.essential":
+        newSuggestions.requirements.essential =
+          newSuggestions.requirements.essential.filter((_, i) => i !== index);
+        break;
+      case "requirements.preferred":
+        newSuggestions.requirements.preferred =
+          newSuggestions.requirements.preferred.filter((_, i) => i !== index);
+        break;
+      case "skills.technical":
+        newSuggestions.skills.technical =
+          newSuggestions.skills.technical.filter((_, i) => i !== index);
+        break;
+      case "skills.soft":
+        newSuggestions.skills.soft = newSuggestions.skills.soft.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "skills.languages":
+        newSuggestions.skills.languages =
+          newSuggestions.skills.languages.filter((_, i) => i !== index);
+        break;
     }
+
+    setSuggestions(newSuggestions);
   };
 
-  const startEditing = (section: StringArraySection, index: number, value: string) => {
+  const startEditing = (section: string, index: number, currentValue: any) => {
     setEditingSection(section);
     setEditingIndex(index);
-    setEditValue(value);
-  };
-
-  const saveEdit = () => {
-    if (editingSection && editingIndex !== null && editableSuggestions) {
-      const newSuggestions = { ...editableSuggestions };
-      const items = getNestedProperty(newSuggestions, editingSection);
-      if (isStringArray(items)) {
-        items[editingIndex] = editValue;
-        setEditableSuggestions({
-          ...newSuggestions,
-          commission: newSuggestions.commission || { options: [] },
-          activity: newSuggestions.activity || { options: [] }
-        });
-        setSuggestions({
-          ...newSuggestions,
-          commission: newSuggestions.commission || { options: [] },
-          activity: newSuggestions.activity || { options: [] }
-        });
-      }
-      setEditingSection(null);
-      setEditingIndex(null);
+    if (typeof currentValue === "string") {
+      setEditValue(currentValue);
+    } else if (currentValue && typeof currentValue === "object") {
+      setEditValue(currentValue.skill || currentValue.language || "");
+    } else {
       setEditValue("");
     }
   };
 
-  const cancelEdit = () => {
+  const cancelEditing = () => {
     setEditingSection(null);
     setEditingIndex(null);
     setEditValue("");
   };
 
-  const addNewItem = (section: StringArraySection) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (section === 'commission') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          base: '',
-          baseAmount: '',
-          currency: 'EUR',
-          minimumVolume: { amount: '', period: '', unit: '' },
-          transactionCommission: { type: '', amount: '' }
-        }]
-      };
-    } else if (section === 'activity') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          type: '',
-          description: '',
-          requirements: []
-        }]
-      };
-    } else if (isStringArray(items)) {
-      setNestedProperty(newSuggestions, section, [...items, ""]);
-    }
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const removeItem = (section: StringArraySection, index: number) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (isStringArray(items)) {
-      const filteredItems = items.filter((_, i) => i !== index);
-      setNestedProperty(newSuggestions, section, filteredItems);
-      setEditableSuggestions({
-        ...newSuggestions,
-        commission: newSuggestions.commission || { options: [] },
-        activity: newSuggestions.activity || { options: [] }
-      });
-      setSuggestions({
-        ...newSuggestions,
-        commission: newSuggestions.commission || { options: [] },
-        activity: newSuggestions.activity || { options: [] }
-      });
-    }
-  };
-
-  const startEditingMetadata = (field: string, value: string) => {
-    setEditingMetadataField(field);
-    setEditValue(value);
-  };
-
-  const startEditingSchedule = (
-    scheduleIndex: number,
-    field: string,
-    value: string
-  ) => {
-    setEditingScheduleIndex(scheduleIndex);
-    setEditingMetadataField(field);
-    setEditValue(value);
-  };
-
-  const startEditingHour = (scheduleIndex: number, hourIndex: number) => {
-    setEditingScheduleIndex(scheduleIndex);
-    setEditingHourIndex(hourIndex);
-  };
-
-  const saveMetadataEdit = () => {
-    if (!editableMetadata || !editingMetadataField) return;
-
-    const updatedMetadata = { ...editableMetadata };
-
-    if (editingScheduleIndex !== null) {
-      if (editingHourIndex !== null) {
-        // Editing schedule hours
-        const [day, time] = editValue.split(",");
-        const [start, end] = time.split("-").map((t) => t.trim());
-        
-        // Validate the day
-        if (!validateDay(day.trim())) {
-          alert('Invalid day. Please use a single day from: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday');
-          return;
-        }
-
-        updatedMetadata.schedules[editingScheduleIndex].hours[
-          editingHourIndex
-        ] = {
-          day: day.trim(),
-          start,
-          end,
-        };
-      } else {
-        // Editing schedule name or description
-        updatedMetadata.schedules[editingScheduleIndex] = {
-          ...updatedMetadata.schedules[editingScheduleIndex],
-          [editingMetadataField]: editValue,
-        };
-      }
-    } else if (
-      Array.isArray(updatedMetadata[editingMetadataField as keyof GigMetadata])
-    ) {
-      // Editing arrays (suggestedNames or industries)
-      const arrayField = editingMetadataField as keyof Pick<
-        GigMetadata,
-        "suggestedNames" | "industries"
-      >;
-      updatedMetadata[arrayField] = editValue
-        .split(",")
-        .map((item) => item.trim());
-    }
-
-    setEditableMetadata(updatedMetadata);
-    setMetadata(updatedMetadata);
-    cancelEdit();
-  };
-
-  const generateWeeklySchedule = () => {
-    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    return weekdays.map((day) => ({
-      day,
-      hours: {
-        start: "09:00",
-        end: "17:00"
-      }
-    }));
-  };
-
-  const validateDay = (day: string): boolean => {
-    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    return validDays.includes(day.trim());
-  };
-
-  const addNewSchedule = () => {
-    if (!editableSuggestions) return;
-
-    const newSchedule = {
-      schedules: generateWeeklySchedule(),
-      timeZones: [],
-      flexibility: [],
-      minimumHours: {
-        daily: 8,
-        weekly: 40,
-        monthly: 160
-      }
-    };
-
-    const updatedSuggestions = {
-      ...editableSuggestions,
-      schedule: newSchedule
-    };
-
-    setEditableSuggestions(updatedSuggestions);
-    setSuggestions(updatedSuggestions);
-  };
-
-  const removeSchedule = (index: number) => {
-    if (!editableSuggestions) return;
-
-    const updatedSuggestions = {
-      ...editableSuggestions,
-      schedule: {
-        ...editableSuggestions.schedule,
-        schedules: editableSuggestions.schedule.schedules.filter((_, i) => i !== index)
-      }
-    };
-
-    setEditableSuggestions(updatedSuggestions);
-    setSuggestions(updatedSuggestions);
-  };
-
-  const removeHour = (scheduleIndex: number, hourIndex: number) => {
-    if (!editableSuggestions) return;
-
-    const updatedSuggestions = {
-      ...editableSuggestions,
-      schedule: {
-        ...editableSuggestions.schedule,
-        schedules: editableSuggestions.schedule.schedules.map(schedule => ({
-          ...schedule,
-          hours: {
-            ...schedule.hours,
-            start: schedule.hours.start,
-            end: schedule.hours.end
-          }
-        }))
-      }
-    };
-
-    setEditableSuggestions(updatedSuggestions);
-    setSuggestions(updatedSuggestions);
-  };
-
-  const generateMetadata = async () => {
-    if (!openai) {
-      const fallbackMetadata: GigMetadata = {
-        suggestedNames: [
-          "Professional Sales Development Program",
-          "Enterprise Sales Excellence Initiative",
-          "Strategic Sales Growth Campaign",
-          "Sales Performance Optimization Project",
-        ],
-        industries: [
-          "Technology & Software",
-          "Financial Services",
-          "Healthcare & Medical",
-          "Professional Services",
-          "Manufacturing & Industrial",
-        ],
-        schedules: [
-          {
-            name: "Standard Business Hours",
-            description:
-              "Traditional work schedule aligned with most business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "17:00" },
-              { day: "Tuesday", start: "9:00", end: "17:00" },
-              { day: "Wednesday", start: "9:00", end: "17:00" },
-              { day: "Thursday", start: "9:00", end: "17:00" },
-              { day: "Friday", start: "9:00", end: "17:00" },
-            ],
-          },
-          {
-            name: "Extended Business Hours",
-            description: "Extended coverage for global business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "19:00" },
-              { day: "Tuesday", start: "9:00", end: "19:00" },
-              { day: "Wednesday", start: "9:00", end: "19:00" },
-              { day: "Thursday", start: "9:00", end: "19:00" },
-              { day: "Friday", start: "9:00", end: "19:00" },
-              { day: "Saturday", start: "10:00", end: "15:00" },
-            ],
-          },
-        ],
-      };
-      setMetadata(fallbackMetadata);
-      setEditableMetadata(fallbackMetadata);
-      return;
-    }
-
-    try {
-      setIsMetadataLoading(true);
-
-      const prompt = `Based on this gig description: "${input}"
-
-      Please provide suggestions in the following JSON format:
-      {
-        "suggestedNames": [4 professional and catchy names for the gig],
-        "industries": [5 relevant industries for this type of work],
-        "schedules": [
-          {
-            "name": "schedule name",
-            "description": "brief description of the schedule",
-            "hours": [
-              {
-                "day": "day of week",
-                "start": "start time (HH:MM)",
-                "end": "end time (HH:MM)"
-              }
-            ]
-          }
-        ]
-      }
-
-      Include at least 2 different schedule options with appropriate working hours.`;
-
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: "user", content: prompt }],
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-      });
-
-      const response = completion.choices[0]?.message?.content;
-      if (response) {
-        const metadataData = JSON.parse(response);
-        setMetadata(metadataData);
-        setEditableMetadata(metadataData);
-        console.log('Generated Metadata:', metadataData);
-      }
-    } catch (error) {
-      console.error("Error generating metadata:", error);
-      const fallbackMetadata: GigMetadata = {
-        suggestedNames: [
-          "Professional Sales Development Program",
-          "Enterprise Sales Excellence Initiative",
-          "Strategic Sales Growth Campaign",
-          "Sales Performance Optimization Project",
-        ],
-        industries: [
-          "Technology & Software",
-          "Financial Services",
-          "Healthcare & Medical",
-          "Professional Services",
-          "Manufacturing & Industrial",
-        ],
-        schedules: [
-          {
-            name: "Standard Business Hours",
-            description:
-              "Traditional work schedule aligned with most business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "17:00" },
-              { day: "Tuesday", start: "9:00", end: "17:00" },
-              { day: "Wednesday", start: "9:00", end: "17:00" },
-              { day: "Thursday", start: "9:00", end: "17:00" },
-              { day: "Friday", start: "9:00", end: "17:00" },
-            ],
-          },
-          {
-            name: "Extended Business Hours",
-            description: "Extended coverage for global business operations",
-            hours: [
-              { day: "Monday", start: "9:00", end: "19:00" },
-              { day: "Tuesday", start: "9:00", end: "19:00" },
-              { day: "Wednesday", start: "9:00", end: "19:00" },
-              { day: "Thursday", start: "9:00", end: "19:00" },
-              { day: "Friday", start: "9:00", end: "19:00" },
-              { day: "Saturday", start: "10:00", end: "15:00" },
-            ],
-          },
-        ],
-      };
-      setMetadata(fallbackMetadata);
-      setEditableMetadata(fallbackMetadata);
-    } finally {
-      setIsMetadataLoading(false);
-    }
-  };
-
-  const handleValidate = () => {
-    generateMetadata();
-    setShowMetadata(true);
-  };
-
-
-    const generateSuggestions = async () => {
-      if (!openai) {
-        setSuggestions(fallbackSuggestions);
-        setEditableSuggestions(fallbackSuggestions);
-        return;
-      }
-
-      try {
-        setIsSuggestionsLoading(true);
-        const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: `You are a gig creation assistant. Your task is to generate suggestions for a gig based on the input provided.
-              IMPORTANT: You must respond with ONLY a valid JSON object. Do not include any other text, explanations, or markdown formatting.
-              The response must be a single JSON object matching this exact structure:
-              {
-                jobTitles: string[],
-                deliverables: string[],
-                compensation: string[],
-                skills: {
-                  languages: { language: string, proficiency: string, iso639_1: string }[],
-                  soft: { skill: string, level: number }[],
-                  professional: { skill: string, level: number }[],
-                  technical: { skill: string, level: number }[],
-                  certifications: string[]
-                },
-                kpis: string[],
-                timeframes: string[],
-                requirements: string[],
-                seniority: {
-                  level: string,
-                  yearsExperience: number
-                },
-                availability: {
-                  schedule: {
-                    day: string,
-                    hours: {
-                      start: string,
-                      end: string
-                    }
-                  }[],
-                  timeZones: string[],
-                  flexibility: string[],
-                  minimumHours: {
-                    daily?: number,
-                    weekly?: number,
-                    monthly?: number
-                  }
-                },
-                schedule: {
-                  schedules: {
-                    day: string,
-                    hours: {
-                      start: string,
-                      end: string
-                    }
-                  }[],
-                  hours: string,
-                  timeZones: string[],
-                  flexibility: string[],
-                  minimumHours: {
-                    daily?: number,
-                    weekly?: number,
-                    monthly?: number
-                  }
-                },
-                commission: {
-                  options: Array<{
-                    base: string,
-                    baseAmount: string,
-                    bonus?: string,
-                    bonusAmount?: string,
-                    currency: string,
-                    minimumVolume: {
-                      amount: string,
-                      period: string,
-                      unit: string
-                    },
-                    transactionCommission: {
-                      type: string,
-                      amount: string
-                    }
-                  }>
-                },
-                sectors: string[],
-                activity: {
-                  options: Array<{
-                    type: string,
-                    description: string,
-                    requirements: string[]
-                  }>
-                },
-                destinationZones: string[],
-                team: {
-                  size: number,
-                  structure: Array<{
-                    roleId: string,
-                    count: number,
-                    seniority: {
-                      level: string,
-                      yearsExperience: number
-                    }
-                  }>,
-                  territories: string[]
-                }
-              }
-
-              Remember: Respond with ONLY the JSON object, no other text.`
-            },
-            {
-              role: "user",
-              content: input
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        });
-
-        const content = response.choices[0]?.message?.content;
-        if (!content) {
-          throw new Error('No content received from AI');
-        }
-
-        // Clean the content to ensure it's valid JSON
-        const cleanedContent = content.trim()
-          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
-          .replace(/\n/g, ' ') // Replace newlines with spaces
-          .replace(/\s+/g, ' '); // Normalize whitespace
-
-        console.log('Cleaned content:', cleanedContent);
-
-        try {
-          const parsedSuggestions = JSON.parse(cleanedContent);
-          
-          // Validate required fields
-          const requiredFields = [
-            'jobTitles', 'deliverables', 'skills', 'seniority', 
-            'availability', 'schedule', 'commission', 'sectors', 
-            'activity', 'destinationZones'
-          ];
-
-          for (const field of requiredFields) {
-            if (!parsedSuggestions[field]) {
-              throw new Error(`Missing required field: ${field}`);
-            }
-          }
-
-          // Ensure all required fields are present with default values if missing
-          const defaultSuggestions = {
-            seniority: {
-              level: "",
-              yearsExperience: 0
-            },
-            availability: {
-              schedule: [{
-                day: "",
-                hours: {
-                  start: "",
-                  end: ""
-                }
-              }],
-              timeZones: ["CET"],
-              flexibility: ["Remote work", "Flexible hours"],
-              minimumHours: {
-                daily: 8,
-                weekly: 40,
-                monthly: 160
-              }
-            },
-            schedule: {
-              schedules: [{
-                day: "",
-                hours: {
-                  start: "",
-                  end: ""
-                }
-              }],
-              timeZones: ["CET"],
-              flexibility: ["Remote work", "Flexible hours"],
-              minimumHours: {
-                daily: 8,
-                weekly: 40,
-                monthly: 160
-              }
-            },
-            commission: {
-              options: [{
-                base: "Fixed Salary",
-                baseAmount: "0",
-                bonus: "quarterly",
-                bonusAmount: "5000",
-                currency: "USD",
-                minimumVolume: {
-                  amount: "0",
-                  period: "Monthly",
-                  unit: "Projects"
-                },
-                transactionCommission: {
-                  type: "Fixed Amount",
-                  amount: "2"
-                }
-              }]
-            },
-            activity: {
-              options: [{
-                type: "Default Activity",
-                description: "Default activity description",
-                requirements: ["Default requirement"]
-              }]
-            },
-            team: {
-              size: 0,
-              structure: [{
-                roleId: "default",
-                count: 1,
-                seniority: {
-                  level: "Senior",
-                  yearsExperience: 2
-                }
-              }],
-              territories: ["Global"]
-            },
-            destinationZones: ["Europe", "North America", "Asia", "South America", "Africa", "Oceania", "Middle East"]
-          };
-
-          const finalSuggestions = {
-            ...defaultSuggestions,
-            ...parsedSuggestions,
-            team: {
-              ...defaultSuggestions.team,
-              ...parsedSuggestions.team,
-              structure: parsedSuggestions.team?.structure || defaultSuggestions.team.structure
-            }
-          };
-
-          setSuggestions(finalSuggestions);
-          setEditableSuggestions(finalSuggestions);
-          setGigData(finalSuggestions);
-          console.log('Generated Suggestions:', finalSuggestions);
-        } catch (parseError) {
-          console.error("Error parsing suggestions:", parseError);
-          setSuggestions(fallbackSuggestions);
-          setEditableSuggestions(fallbackSuggestions);
-        }
-      } catch (error) {
-        console.error("Error generating suggestions:", error);
-        setSuggestions(fallbackSuggestions);
-        setEditableSuggestions(fallbackSuggestions);
-      } finally {
-        setIsSuggestionsLoading(false);
-      }
-    };
-
-  const validateGigData = (gigData: any) => {
-    const emptyFields: string[] = [];
-    
-    // Check basic fields
-    if (!gigData.title) emptyFields.push('Title');
-    if (!gigData.description) emptyFields.push('Description');
-    if (!gigData.category) emptyFields.push('Category');
-    if (!gigData.seniority?.level) emptyFields.push('Seniority Level');
-    if (!gigData.seniority?.yearsExperience) emptyFields.push('Years of Experience');
-    
-    // Check schedule fields
-    if (!gigData.schedule?.schedules || gigData.schedule.schedules.length === 0) {
-      gigData.schedule = {
-        ...gigData.schedule,
-        schedules: [{
-          day: "Monday",
-          hours: {
-            start: "09:00",
-            end: "18:00"
-          }
-        }]
-      };
-    }
-    if (!gigData.schedule?.hours) {
-      gigData.schedule = {
-        ...gigData.schedule,
-        hours: "9:00 AM - 6:00 PM"
-      };
-    }
-    if (!gigData.schedule?.timeZones || gigData.schedule.timeZones.length === 0) {
-      gigData.schedule = {
-        ...gigData.schedule,
-        timeZones: ["UTC"]
-      };
-    }
-    if (!gigData.schedule?.minimumHours?.daily) {
-      gigData.schedule.minimumHours = {
-        ...gigData.schedule?.minimumHours,
-        daily: 8
-      };
-    }
-    if (!gigData.schedule?.minimumHours?.weekly) {
-      gigData.schedule.minimumHours = {
-        ...gigData.schedule?.minimumHours,
-        weekly: 40
-      };
-    }
-    if (!gigData.schedule?.minimumHours?.monthly) {
-      gigData.schedule.minimumHours = {
-        ...gigData.schedule?.minimumHours,
-        monthly: 160
-      };
-    }
-    
-    // Check commission fields
-    if (!gigData.commission?.base) {
-      gigData.commission = {
-        ...gigData.commission,
-        base: "percentage"
-      };
-    }
-    if (!gigData.commission?.baseAmount) {
-      gigData.commission = {
-        ...gigData.commission,
-        baseAmount: "15"
-      };
-    }
-    if (!gigData.commission?.currency) {
-      gigData.commission = {
-        ...gigData.commission,
-        currency: "USD"
-      };
-    }
-    if (!gigData.commission?.minimumVolume?.amount) {
-      gigData.commission.minimumVolume = {
-        ...gigData.commission?.minimumVolume,
-        amount: "50000"
-      };
-    }
-    if (!gigData.commission?.minimumVolume?.period) {
-      gigData.commission.minimumVolume = {
-        ...gigData.commission?.minimumVolume,
-        period: "monthly"
-      };
-    }
-    if (!gigData.commission?.minimumVolume?.unit) {
-      gigData.commission.minimumVolume = {
-        ...gigData.commission?.minimumVolume,
-        unit: "USD"
-      };
-    }
-    if (!gigData.commission?.transactionCommission?.type) {
-      gigData.commission.transactionCommission = {
-        ...gigData.commission?.transactionCommission,
-        type: "percentage"
-      };
-    }
-    if (!gigData.commission?.transactionCommission?.amount) {
-      gigData.commission.transactionCommission = {
-        ...gigData.commission?.transactionCommission,
-        amount: "5"
-      };
-    }
-    
-    return emptyFields;
-  };
-
-  // Ajouter les styles globaux pour SweetAlert2
-
-  const handleSaveAndOnBack = async (documentation?: any) => {
-    try {
-      const initialGigData = {
-        title: selectedJobTitle || suggestions?.jobTitles?.[0] || "Untitled Gig",
-        description: jobDescription?.description || suggestions?.activity?.options?.[0]?.description || "No description provided",
-        type: suggestions?.activity?.options?.[0]?.type || "General",
-        category: suggestions?.sectors?.[0] || "General",
-        quantity: 1,
-        timeline: suggestions?.timeframes?.[0] || "Flexible",
-        skills: {
-          languages: suggestions?.skills?.languages.map(lang => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })) || [],
-          soft: suggestions?.skills?.soft.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
-          professional: suggestions?.skills?.professional.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
-          technical: suggestions?.skills?.technical.map(skill => ({ skill: skill.skill, level: skill.level })) || [],
-          certifications: suggestions?.skills?.certifications || []
-        },
-        requirements: suggestions?.requirements || { essential: [], preferred: [] },
-        status: "draft",
-        seniority: {
-          level: suggestions?.seniority?.level || "Mid Level",
-          yearsExperience: suggestions?.seniority?.yearsExperience || 3
-        },
-        availability: {
-          schedule: suggestions?.schedule?.schedules || [{
-            day: "Monday",
-            hours: {
-              start: "09:00",
-              end: "18:00"
-            }
-          }],
-          timeZones: suggestions?.schedule?.timeZones || ["CET"],
-          flexibility: suggestions?.schedule?.flexibility || [],
-          minimumHours: {
-            daily: suggestions?.schedule?.minimumHours?.daily || 8,
-            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
-            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
-          },
-        },
-        schedule: {
-          schedules: suggestions?.schedule?.schedules || [{
-            day: "Monday",
-            hours: {
-              start: "09:00",
-              end: "18:00"
-            }
-          }],
-          timeZones: suggestions?.schedule?.timeZones || ["CET"],
-          flexibility: suggestions?.schedule?.flexibility || [],
-          minimumHours: {
-            daily: suggestions?.schedule?.minimumHours?.daily || 8,
-            weekly: suggestions?.schedule?.minimumHours?.weekly || 40,
-            monthly: suggestions?.schedule?.minimumHours?.monthly || 160
-          },
-
-        },
-        commission: {
-          base: suggestions?.commission?.options?.[0]?.base || "Fixed Salary",
-          baseAmount: suggestions?.commission?.options?.[0]?.baseAmount || "2",
-          bonus: suggestions?.commission?.options?.[0]?.bonus,
-          bonusAmount: suggestions?.commission?.options?.[0]?.bonusAmount,
-          currency: suggestions?.commission?.options?.[0]?.currency || "USD",
-          minimumVolume: {
-            amount: suggestions?.commission?.options?.[0]?.minimumVolume?.amount || "4",
-            period: suggestions?.commission?.options?.[0]?.minimumVolume?.period || "Monthly",
-            unit: suggestions?.commission?.options?.[0]?.minimumVolume?.unit || "Projects"
-          },
-          transactionCommission: {
-            type: suggestions?.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount",
-            amount: suggestions?.commission?.options?.[0]?.transactionCommission?.amount || "3"
-          },
-          kpis: []
-        },
-        leads: {
-          types: [
-            { type: 'hot', percentage: 0, description: "", conversionRate: 0 },
-            { type: 'warm', percentage: 0, description: "", conversionRate: 0 },
-            { type: 'cold', percentage: 0, description: "", conversionRate: 0 }
-          ],
-          sources: []
-        },
-        team: {
-          size: gigData.team?.size || 0,
-          structure: gigData.team?.structure || [],
-          territories: gigData.team?.territories || []
-        },
-        documentation: {
-          templates: null,
-          reference: null,
-          product: [],
-          process: [],
-          training: []
-        }
-      };
-
-      // Ajouter les données de documentation si elles existent
-      if (documentation) {
-        initialGigData.documentation = {
-          templates: documentation.templates,
-          reference: documentation.reference,
-          product: documentation.product.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url })),
-          process: documentation.process.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url })),
-          training: documentation.training.map((doc: { name: string; url: string }) => ({ name: doc.name, url: doc.url }))
-        };
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(initialGigData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error: ${response.statusText}`);
-      }
-
-      const savedData = await response.json();
-
-      await Swal.fire({
-        title: "Success",
-        text: "Gig data saved successfully!",
-        icon: "success",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          htmlContainer: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      }).then(() => {
-        onBack();
-      });
-    } catch (error) {
-      console.error("Error saving gig data:", error);
-      await Swal.fire({
-        title: "Error",
-        text: error instanceof Error ? error.message : "Failed to save gig data. Please try again.",
-        icon: "error",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          htmlContainer: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      });
-    }
-  };
-
-  const handleLeadsSave = (data: any) => {
-    setLeadsData(data);
-    setIsLeadsModalOpen(false);
-  };
-
-  const handleLeadsSkip = () => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      leads: {
-        types: [
-          { type: 'hot', percentage: 0, description: "", conversionRate: 0 },
-          { type: 'warm', percentage: 0, description: "", conversionRate: 0 },
-          { type: 'cold', percentage: 0, description: "", conversionRate: 0 }
-        ],
-        sources: []
-      }
-    }));
-    setIsLeadsModalOpen(false);
-    setIsTeamModalOpen(true);
-  };
-
-  const handleTeamSave = (teamData: any) => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      team: teamData
-    }));
-    setIsTeamModalOpen(false);
-    setIsDocModalOpen(true);
-  };
-
-  const handleTeamSkip = () => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      team: {
-        size: 0,
-        structure: [],
-        territories: [],
-        reporting: {
-          to: '',
-          frequency: ''
-        },
-        collaboration: []
-      }
-    }));
-    setIsTeamModalOpen(false);
-    setIsDocModalOpen(true);
-  };
-
-  const handleDocumentationSave = (documentationData: any) => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      documentation: documentationData
-    }));
-    setIsDocModalOpen(false);
-    handleSaveAndOnBack();
-  };
-
-  const handleDocumentationSkip = () => {
-    setGigData((prev: GigData) => ({
-      ...prev,
-      documentation: {
-        templates: null,
-        reference: null,
-        product: [],
-        process: [],
-        training: []
-      }
-    }));
-    setIsDocModalOpen(false);
-    handleSaveAndOnBack();
-  };
-
-  const saveToDatabase = async () => {
-    try {
-      // Préparer les données pour l'API
-      const apiData = {
-        title: gigData.title,
-        description: gigData.description,
-        type: gigData.type,
-        quantity: gigData.quantity,
-        price: gigData.price,
-        duration: gigData.duration,
-        location: gigData.location,
-        skills: {
-          languages: gigData.skills.languages.map((lang: { language: string; proficiency: string; iso639_1: string }) => ({ language: lang.language, proficiency: lang.proficiency, iso639_1: lang.iso639_1 })),
-          soft: gigData.skills.soft.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
-          professional: gigData.skills.professional.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
-          technical: gigData.skills.technical.map((skill: { skill: string; level: number }) => ({ skill: skill.skill, level: skill.level })),
-          certifications: gigData.skills.certifications
-        },
-        requirements: gigData.requirements,
-        benefits: gigData.benefits,
-        status: gigData.status,
-        leads: {
-          types: [
-            { type: 'hot', ...gigData.leads.hot },
-            { type: 'warm', ...gigData.leads.warm },
-            { type: 'cold', ...gigData.leads.cold }
-          ],
-          sources: gigData.leads.sources
-        },
-        team: {
-          size: gigData.team.size,
-          structure: gigData.team.structure,
-          territories: gigData.team.territories
-        },
-        documentation: {
-          templates: gigData.documentation.templates,
-          reference: gigData.documentation.reference,
-          product: gigData.documentation.product,
-          process: gigData.documentation.process,
-          training: gigData.documentation.training
-        }
-      };
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(apiData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API Error Response:', errorData);
-        throw new Error(errorData.message || `Error: ${response.statusText}`);
-      }
-
-      const savedData = await response.json();
-
-      Swal.fire({
-        title: "Success",
-        text: "Gig data saved successfully!",
-          icon: "success",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          content: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      }).then(() => {
-        onBack();
-      });
-      console.log('Saving to database:', gigData);
-    } catch (error) {
-      console.error("Error saving gig data:", error);
-      Swal.fire({
-        title: "Error",
-        text: error instanceof Error ? error.message : "Failed to save gig data. Please try again.",
-        icon: "error",
-        customClass: {
-          popup: "rounded-lg shadow-lg",
-          title: "text-xl font-semibold text-gray-800",
-          content: "text-gray-600",
-          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        }
-      });
-    }
-  };
-
-  const addItem = (section: StringArraySection) => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    const items = getNestedProperty(newSuggestions, section);
-    if (section === 'commission') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          base: '',
-          baseAmount: '',
-          currency: 'EUR',
-          minimumVolume: { amount: '', period: '', unit: '' },
-          transactionCommission: { type: '', amount: '' }
-        }]
-      };
-    } else if (section === 'activity') {
-      newSuggestions[section] = {
-        options: [...(items as any).options, {
-          type: '',
-          description: '',
-          requirements: []
-        }]
-      };
-    } else if (isStringArray(items)) {
-      setNestedProperty(newSuggestions, section, [...items, ""]);
-    }
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const renderEditableList = (
-    section: StringArraySection,
-    title: string,
-    icon: React.ReactNode
-  ) => {
-    if (!editableSuggestions) return null;
-    
-    const items = getNestedProperty(editableSuggestions, section);
-    if (!isStringArray(items)) return null;
+  const renderEditableList = (section: string, items: any[], title: string) => {
+    const currentItems = items || [];
 
     return (
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            {icon}
-            {title}
-          </h3>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-blue-900">{title}</h4>
           <button
-            onClick={() => addItem(section)}
-            className="text-blue-600 hover:text-blue-700 text-sm flex items-center"
+            onClick={() => {
+              setEditingSection(section);
+              setEditingIndex(-1);
+              setEditValue("");
+            }}
+            className="flex items-center space-x-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
           >
-            <Edit2 className="w-4 h-4 mr-1" />
-            Add New
+            <Plus className="w-4 h-4" />
+            <span>Add</span>
           </button>
         </div>
-        <ul className="space-y-2">
-          {items.map((item, index) => (
-            <li key={index} className="flex items-center justify-between group">
-              {editingSection === section && editingIndex === index ? (
-                <div className="flex-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-2 py-1 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-between text-gray-700 group">
-                  <span>{item}</span>
-                  <div className="hidden group-hover:flex items-center space-x-2">
+
+        {currentItems.length > 0 && (
+          <div className="space-y-3">
+            {currentItems.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+              >
+                {editingSection === section && editingIndex === index ? (
+                  <div className="flex items-center space-x-2 flex-1">
+                    {section === "destinationZones" ? (
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        autoFocus
+                      >
+                        <option value="">Select a destination zone...</option>
+                        {DESTINATION_ZONES.map((zone) => (
+                          <option key={zone} value={zone}>
+                            {zone}
+                          </option>
+                        ))}
+                      </select>
+                    ) : section === "sectors" ? (
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        autoFocus
+                      >
+                        <option value="">Select a sector...</option>
+                        {SECTORS.map((sector) => (
+                          <option key={sector} value={sector}>
+                            {sector}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        autoFocus
+                      />
+                    )}
                     <button
-                      onClick={() => startEditing(section, index, item)}
-                      className="text-blue-600 hover:text-blue-700"
+                      onClick={() => updateItem(section, index, editValue)}
+                      className="text-green-700 hover:text-green-800 p-1"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Check className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => removeItem(section, index)}
-                      className="text-red-600 hover:text-red-700"
+                      onClick={cancelEditing}
+                      className="text-gray-500 hover:text-gray-700 p-1"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
-
-
-
-  const renderCommissionSection = () => {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <DollarSign className="w-6 h-6 text-green-600 mr-2" />
-            <h2 className="text-2xl font-semibold">Base Commission</h2>
-          </div>
-          <button
-            onClick={() => startEditingMetadata('commission', '')}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            <Edit2 className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Base</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.base || "Not set"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Base Amount</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.baseAmount || "0"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Bonus</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.bonus || "Not set"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Bonus Amount</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.bonusAmount || "0"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Currency</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.currency || "USD"}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Structure</label>
-              <p className="mt-1 text-lg font-medium text-gray-900">
-                {editableSuggestions?.commission?.options?.[0]?.structure || "Not set"}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-3">Minimum Volume</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Amount</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.minimumVolume?.amount || "0"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Period</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.minimumVolume?.period || "Not set"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Unit</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.minimumVolume?.unit || "Not set"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-3">Transaction Commission</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Type</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount"}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Amount</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">
-                  {editableSuggestions?.commission?.options?.[0]?.transactionCommission?.amount || "0"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderSectorsSection = () => {
-    if (!editableSuggestions?.sectors) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
-            Target Sectors
-          </h3>
-          <button
-            onClick={() => addNewItem('sectors')}
-            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-1" />
-            Add Sector
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {editableSuggestions.sectors.map((sector, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded group">
-              {editingSection === 'sectors' && editingIndex === index ? (
-                <div className="flex-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-gray-700">{sector}</span>
-                  <div className="hidden group-hover:flex items-center space-x-2">
-                    <button
-                      onClick={() => startEditing('sectors', index, sector)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => removeItem('sectors', index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderActivitySection = () => {
-    if (!editableSuggestions?.activity) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Target className="w-5 h-5 mr-2 text-purple-600" />
-            Activity Details
-          </h3>
-          <button
-            onClick={() => addNewActivityOption()}
-            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-1" />
-            Add Option
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {editableSuggestions.activity.options?.map((option, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg group">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{option.type}</h4>
-                <div className="hidden group-hover:flex items-center space-x-2">
-                  <button
-                    onClick={() => editActivityOption(index)}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => removeActivityOption(index)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <p className="text-gray-600 mb-3">{option.description}</p>
-              <div className="space-y-2">
-                {option.requirements.map((req, reqIndex) => (
-                  <div key={reqIndex} className="flex items-center justify-between p-2 bg-white rounded group">
-                    <span className="text-gray-700">{req}</span>
-                    <div className="hidden group-hover:flex items-center space-x-2">
+                ) : (
+                  <>
+                    <span className="text-gray-700 flex-1 font-medium">
+                      {typeof item === "string"
+                        ? item
+                        : item?.skill || item?.language || ""}
+                    </span>
+                    <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => editActivityRequirement(index, reqIndex)}
-                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => startEditing(section, index, item)}
+                        className="text-blue-900 hover:text-blue-700 p-1"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => removeActivityRequirement(index, reqIndex)}
-                        className="text-red-600 hover:text-red-700"
+                        onClick={() => deleteItem(section, index)}
+                        className="text-red-600 hover:text-red-700 p-1"
                       >
-                        <X className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                  </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {editingSection === section && editingIndex === -1 && (
+          <div className="flex items-center space-x-3 mt-4">
+            {section === "destinationZones" ? (
+              <select
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                autoFocus
+              >
+                <option value="">Select a destination zone...</option>
+                {DESTINATION_ZONES.filter(
+                  (zone) => !currentItems.includes(zone)
+                ).map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
                 ))}
-                <button
-                  onClick={() => addActivityRequirement(index)}
-                  className="w-full text-blue-600 hover:text-blue-700 text-sm flex items-center justify-center py-2"
-                >
-                  <PlusCircle className="w-4 h-4 mr-1" />
-                  Add Requirement
-                </button>
+              </select>
+            ) : section === "sectors" ? (
+              <select
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                autoFocus
+              >
+                <option value="">Select a sector...</option>
+                {SECTORS.filter((sector) => !currentItems.includes(sector)).map(
+                  (sector) => (
+                    <option key={sector} value={sector}>
+                      {sector}
+                    </option>
+                  )
+                )}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                placeholder={`Add a new ${title.toLowerCase()}`}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                autoFocus
+              />
+            )}
+            <button
+              onClick={() => {
+                if (editValue.trim()) {
+                  addItem(section, editValue.trim());
+                  setEditValue("");
+                  setEditingSection(null);
+                  setEditingIndex(null);
+                }
+              }}
+              className="text-green-700 hover:text-green-800 p-2"
+            >
+              <Check className="w-5 h-5" />
+            </button>
+            <button
+              onClick={cancelEditing}
+              className="text-gray-500 hover:text-gray-700 p-2"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const formatTo12Hour = (time: string) => {
+    if (!time || !time.includes(":")) return time;
+    let [hoursStr, minutesStr] = time.split(":");
+    let hours = parseInt(hoursStr, 10);
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${hours}:${minutesStr} ${ampm}`;
+  };
+
+  const renderEditableSchedules = () => {
+    if (!suggestions?.schedule) return null;
+
+    const groupedSchedules = (suggestions.schedule.schedules || []).reduce(
+      (groups, schedule) => {
+        const key = `${schedule.hours.start}-${schedule.hours.end}`;
+        if (!groups[key]) {
+          groups[key] = { hours: schedule.hours, days: [] };
+        }
+        groups[key].days.push(schedule.day);
+        return groups;
+      },
+      {} as Record<string, GroupedSchedule>
+    );
+
+    const allWeekDays = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+
+    const handleDayToggle = (
+      dayToToggle: string,
+      groupHours: { start: string; end: string }
+    ) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s.day === dayToToggle
+      );
+
+      if (scheduleIndex > -1) {
+        const currentHours =
+          newSuggestions.schedule.schedules[scheduleIndex].hours;
+        if (
+          currentHours.start === groupHours.start &&
+          currentHours.end === groupHours.end
+        ) {
+          newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
+        } else {
+          newSuggestions.schedule.schedules[scheduleIndex].hours = groupHours;
+        }
+      } else {
+        newSuggestions.schedule.schedules.push({
+          day: dayToToggle,
+          hours: groupHours,
+          _id: {
+            $oid: `generated_${Date.now()}_${Math.random()
+              .toString(36)
+              .substr(2, 9)}`,
+          },
+        });
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const handleHoursChange = (
+      group: GroupedSchedule,
+      field: "start" | "end",
+      value: string
+    ) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      group.days.forEach((day: string) => {
+        const schedule = newSuggestions.schedule.schedules.find(
+          (s: ScheduleEntry) => s.day === day
+        );
+        if (schedule) {
+          schedule.hours[field] = value;
+        }
+      });
+      setSuggestions(newSuggestions);
+    };
+
+    const handlePresetClick = (group: GroupedSchedule, preset: string) => {
+      let newHours;
+      switch (preset) {
+        case "9-5":
+          newHours = { start: "09:00", end: "17:00" };
+          break;
+        case "Early":
+          newHours = { start: "07:00", end: "15:00" };
+          break;
+        case "Late":
+          newHours = { start: "11:00", end: "19:00" };
+          break;
+        case "Evening":
+          newHours = { start: "14:00", end: "22:00" };
+          break;
+        default:
+          newHours = group.hours;
+      }
+
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      group.days.forEach((day: string) => {
+        const schedule = newSuggestions.schedule.schedules.find(
+          (s: ScheduleEntry) => s.day === day
+        );
+        if (schedule) {
+          schedule.hours = newHours;
+        }
+      });
+      setSuggestions(newSuggestions);
+    };
+
+    const addNewScheduleGroup = () => {
+      if (!suggestions) return;
+      const scheduledDays = suggestions.schedule.schedules.map((s) => s.day);
+      const firstUnscheduledDay = allWeekDays.find(
+        (d) => !scheduledDays.includes(d)
+      );
+
+      if (firstUnscheduledDay) {
+        const newSchedule: ScheduleEntry = {
+          day: firstUnscheduledDay,
+          hours: { start: "09:00", end: "17:00" },
+          _id: {
+            $oid: `generated_${Date.now()}_${Math.random()
+              .toString(36)
+              .substr(2, 9)}`,
+          },
+        };
+        const newSuggestions = {
+          ...suggestions,
+          schedule: {
+            ...suggestions.schedule,
+            schedules: [...suggestions.schedule.schedules, newSchedule],
+          },
+        };
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {Object.keys(groupedSchedules).length > 0 ? (
+          Object.entries(groupedSchedules).map(([key, group], index) => (
+            <div
+              key={key}
+              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+            >
+              <h5 className="text-md font-semibold text-gray-800 mb-4">
+                Working Days
+              </h5>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {allWeekDays.map((day) => {
+                  const isSelected = group.days.includes(day);
+                  const isInOtherGroup =
+                    !isSelected &&
+                    suggestions.schedule.schedules.some((s) => s.day === day);
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => handleDayToggle(day, group.hours)}
+                      disabled={isInOtherGroup}
+                      className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                        isSelected
+                          ? "bg-blue-600 text-white shadow-md"
+                          : isInOtherGroup
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
+                <h5 className="text-md font-semibold text-gray-700 mb-4 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                  Working Hours
+                </h5>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunrise className="w-4 h-4 mr-1.5 text-orange-400" />
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={group.hours.start}
+                      onChange={(e) =>
+                        handleHoursChange(group, "start", e.target.value)
+                      }
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunset className="w-4 h-4 mr-1.5 text-indigo-400" />
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={group.hours.end}
+                      onChange={(e) =>
+                        handleHoursChange(group, "end", e.target.value)
+                      }
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center bg-white border border-gray-200 rounded-lg p-3 mb-6">
+                  <span className="font-semibold text-gray-700 text-lg">
+                    {formatTo12Hour(group.hours.start)} -{" "}
+                    {formatTo12Hour(group.hours.end)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <button
+                    onClick={() => handlePresetClick(group, "9-5")}
+                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  >
+                    <Sun className="w-5 h-5 text-yellow-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">
+                      9-5
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handlePresetClick(group, "Early")}
+                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  >
+                    <Sunrise className="w-5 h-5 text-orange-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Early
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handlePresetClick(group, "Late")}
+                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  >
+                    <Clock className="w-5 h-5 text-indigo-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Late
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handlePresetClick(group, "Evening")}
+                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  >
+                    <Moon className="w-5 h-5 text-purple-500 mb-1" />
+                    <span className="text-sm font-medium text-gray-600">
+                      Evening
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
+          ))
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-gray-500 mb-4">No schedule defined.</p>
+          </div>
+        )}
+
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={addNewScheduleGroup}
+            className="flex items-center space-x-2 px-5 py-2 border-2 border-dashed border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Schedule Group</span>
+          </button>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-gray-200 space-y-8">
+          {/* Minimum Hours */}
+          <div>
+            <h5 className="text-md font-semibold text-gray-800 mb-4">
+              Minimum Hours Requirements
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600 mb-1 block">
+                  Daily
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 8"
+                  value={suggestions.schedule.minimumHours?.daily ?? ""}
+                  onChange={(e) =>
+                    handleMinimumHoursChange("daily", e.target.value)
+                  }
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600 mb-1 block">
+                  Weekly
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 40"
+                  value={suggestions.schedule.minimumHours?.weekly ?? ""}
+                  onChange={(e) =>
+                    handleMinimumHoursChange("weekly", e.target.value)
+                  }
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600 mb-1 block">
+                  Monthly
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 160"
+                  value={suggestions.schedule.minimumHours?.monthly ?? ""}
+                  onChange={(e) =>
+                    handleMinimumHoursChange("monthly", e.target.value)
+                  }
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Time Zones */}
+          <div>
+            <h5 className="text-md font-semibold text-gray-800 mb-4">
+              Time Zones
+            </h5>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {suggestions.schedule.timeZones.map((zone) => (
+                <div
+                  key={zone}
+                  className="flex items-center bg-blue-100 text-blue-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
+                >
+                  {zone}
+                  <button
+                    onClick={() => handleRemoveTimeZone(zone)}
+                    className="ml-2 text-blue-600 hover:text-blue-800 rounded-full focus:outline-none focus:bg-blue-200"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <select
+              onChange={(e) => {
+                if (e.target.value) handleAddTimeZone(e.target.value);
+                e.target.value = ""; // Reset select
+              }}
+              className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Add a time zone...
+              </option>
+              {TIMEZONE_OPTIONS.filter(
+                (opt) => !suggestions.schedule.timeZones.includes(opt)
+              ).map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Schedule Flexibility */}
+          <div>
+            <h5 className="text-md font-semibold text-gray-800 mb-4">
+              Schedule Flexibility
+            </h5>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {suggestions.schedule.flexibility.map((opt) => (
+                <div
+                  key={opt}
+                  className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
+                >
+                  {opt}
+                  <button
+                    onClick={() => handleRemoveFlexibility(opt)}
+                    className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <select
+              onChange={(e) => {
+                if (e.target.value) handleAddFlexibility(e.target.value);
+                e.target.value = ""; // Reset select
+              }}
+              className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Add a flexibility option...
+              </option>
+              {FLEXIBILITY_OPTIONS.filter(
+                (opt) => !suggestions.schedule.flexibility.includes(opt)
+              ).map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     );
   };
 
   const renderSenioritySection = () => {
-    if (!editableSuggestions?.seniority) return null;
+    if (!suggestions) return null;
 
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Award className="w-5 h-5 mr-2 text-yellow-600" />
-            Seniority Requirements
-          </h3>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            {isEditing ? "Done" : "Edit"}
-          </button>
-        </div>
+    const handleSeniorityLevelChange = (level: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.seniority = {
+        ...newSuggestions.seniority,
+        level: level,
+      };
+      setSuggestions(newSuggestions);
+    };
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Seniority Level *</label>
-            {isEditing ? (
-              <select
-                value={editableSuggestions.seniority.level}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.seniority.level = e.target.value;
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Select seniority level</option>
-                {predefinedOptions.basic.seniorityLevels.map((level) => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.level}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Years of Experience *</label>
-            {isEditing ? (
-              <input
-                type="number"
-                min={0}
-                value={editableSuggestions.seniority.yearsExperience}
-                onChange={e => handleSeniorityChange('yearsExperience', Number(e.target.value))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.seniority.yearsExperience} years</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderScheduleSection = () => {
-    if (!editableSuggestions?.schedule) return null;
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-blue-600" />
-            Schedule
-          </h3>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="text-blue-600 hover:text-blue-700"
-          >
-            {isEditing ? "Done" : "Edit"}
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Working Hours *</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editableSuggestions.schedule.hours}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  newSuggestions.schedule.hours = e.target.value;
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 08h00 - 17h00 CET"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.hours}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Working Days</label>
-            <div className="mt-2 space-x-2">
-              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                <label key={day} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={editableSuggestions.schedule.days.includes(day)}
-                    onChange={(e) => {
-                      const newSuggestions = { ...editableSuggestions };
-                      if (e.target.checked) {
-                        newSuggestions.schedule.days = [...newSuggestions.schedule.days, day];
-                      } else {
-                        newSuggestions.schedule.days = newSuggestions.schedule.days.filter(d => d !== day);
-                      }
-                      setEditableSuggestions(newSuggestions);
-                    }}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                  <span className="ml-2">{day}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Time Zones</label>
-            <div className="mt-2 space-y-2">
-              {editableSuggestions.schedule.timeZones.map((timezone, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-gray-700">{timezone}</span>
-                  {isEditing && (
-                    <button
-                      onClick={() => {
-                        const newSuggestions = { ...editableSuggestions };
-                        newSuggestions.schedule.timeZones = newSuggestions.schedule.timeZones.filter((_, i) => i !== index);
-                        setEditableSuggestions(newSuggestions);
-                      }}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              {isEditing && (
-                <div className="flex flex-col space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <select
-                      className="flex-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          const newSuggestions = { ...editableSuggestions };
-                          newSuggestions.schedule.timeZones = [...newSuggestions.schedule.timeZones, e.target.value];
-                          setEditableSuggestions(newSuggestions);
-                          e.target.value = "";
-                        }
-                      }}
-                      value=""
-                    >
-                      <option value="">Select a timezone...</option>
-                      {COMMON_TIMEZONES.map((tz) => (
-                        <option key={tz} value={tz}>
-                          {tz}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Start Time *</label>
-            {isEditing ? (
-              <input
-                type="time"
-                value={editableSuggestions.schedule.schedules[0]?.hours?.start || ""}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  if (newSuggestions.schedule.schedules[0]) {
-                    newSuggestions.schedule.schedules[0].hours.start = e.target.value;
-                  }
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 09:00"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours?.start}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">End Time *</label>
-            {isEditing ? (
-              <input
-                type="time"
-                value={editableSuggestions.schedule.schedules[0]?.hours.end || ""}
-                onChange={(e) => {
-                  const newSuggestions = { ...editableSuggestions };
-                  if (newSuggestions.schedule.schedules[0]) {
-                    newSuggestions.schedule.schedules[0].hours.end = e.target.value;
-                  }
-                  setEditableSuggestions(newSuggestions);
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                placeholder="e.g. 18:00"
-              />
-            ) : (
-              <p className="text-lg font-medium text-gray-900">{editableSuggestions.schedule.schedules[0]?.hours.end}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const addNewActivityOption = () => {
-    if (!editableSuggestions) return;
-    const newSuggestions = { ...editableSuggestions };
-    if (!newSuggestions.activity) {
-      newSuggestions.activity = { options: [] };
-    }
-    newSuggestions.activity.options.push({
-      type: "New Activity",
-      description: "Description for new activity",
-      requirements: []
-    });
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const editActivityOption = (index: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const option = editableSuggestions.activity.options[index];
-    setEditingSection('activity');
-    setEditingIndex(index);
-    setEditValue(JSON.stringify(option));
-  };
-
-  const removeActivityOption = (index: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    newSuggestions.activity.options = newSuggestions.activity.options.filter((_, i) => i !== index);
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const editActivityRequirement = (optionIndex: number, reqIndex: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const option = editableSuggestions.activity.options[optionIndex];
-    if (!option.requirements) return;
-    const requirement = option.requirements[reqIndex];
-    setEditingSection('activity-requirement');
-    setEditingIndex(reqIndex);
-    setEditValue(requirement);
-  };
-
-  const removeActivityRequirement = (optionIndex: number, reqIndex: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    const option = newSuggestions.activity.options[optionIndex];
-    if (option.requirements) {
-      option.requirements = option.requirements.filter((_, i) => i !== reqIndex);
-    }
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const addActivityRequirement = (optionIndex: number) => {
-    if (!editableSuggestions?.activity?.options) return;
-    const newSuggestions = { ...editableSuggestions };
-    const option = newSuggestions.activity.options[optionIndex];
-    if (!option.requirements) {
-      option.requirements = [];
-    }
-    option.requirements.push("New requirement");
-    setEditableSuggestions(newSuggestions);
-  };
-
-  const renderDestinationZonesSection = () => {
-    
-    if (!editableSuggestions?.destinationZones) {
-      return null;
-    }
-
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
-            <Globe2 className="w-5 h-5 mr-2 text-blue-600" />
-            Destination Zones
-          </h3>
-          <button
-            onClick={() => addNewItem('destinationZones')}
-            className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-1" />
-            Add Zone
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {editableSuggestions.destinationZones.map((zone, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded group">
-              {editingSection === 'destinationZones' && editingIndex === index ? (
-                <div className="flex-1 flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={saveEdit}
-                    className="text-green-600 hover:text-green-700"
-                  >
-                    <Save className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-gray-700">{zone}</span>
-                  <div className="hidden group-hover:flex items-center space-x-2">
-                    <button
-                      onClick={() => startEditing('destinationZones', index, zone)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => removeItem('destinationZones', index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  useEffect(() => {
-    if (suggestions?.destinationZones && suggestions.destinationZones.length > 0 && 
-        (!suggestions.destinationZones || suggestions.destinationZones.length === 0)) {
-      const firstCountry = suggestions.destinationZones[0];
-      const countryCode = Object.entries(i18n.getNames('en'))
-        .find(([_, name]) => name === firstCountry)?.[0];
-      if (countryCode) {
-        setSelectedCountry(countryCode);
+    const handleYearsExperienceChange = (years: string) => {
+      const newSuggestions = { ...suggestions };
+      const numericValue = parseInt(years, 10);
+      if (!isNaN(numericValue)) {
+        newSuggestions.seniority = {
+          ...newSuggestions.seniority,
+          yearsExperience: numericValue,
+        };
+        setSuggestions(newSuggestions);
       }
-    }
-  }, [suggestions?.destinationZones]);
+    };
 
-  const handleSeniorityChange = (field: 'level' | 'yearsExperience', value: string | number) => {
-    if (!editableSuggestions) return;
-    setEditableSuggestions({
-      ...editableSuggestions,
-      seniority: {
-        ...editableSuggestions.seniority,
-        [field]: value
-      }
-    });
-  };
-
-  if (showMetadata) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
-        <div className="max-w-4xl mx-auto pt-16 px-4">
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() => setShowMetadata(false)}
-              className="flex items-center text-gray-600 hover:text-gray-900"
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-blue-900">
+            Seniority Level
+          </h4>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-gray-600 mb-1 block">
+              Level
+            </label>
+            <select
+              value={suggestions.seniority?.level || ""}
+              onChange={(e) => handleSeniorityLevelChange(e.target.value)}
+              className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Suggestions
+              <option value="">Select level...</option>
+              {predefinedOptions.basic.seniorityLevels.map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-600 mb-1 block">
+              Years of Experience
+            </label>
+            <input
+              type="number"
+              value={suggestions.seniority?.yearsExperience || ""}
+              onChange={(e) => handleYearsExperienceChange(e.target.value)}
+              placeholder="e.g. 5"
+              className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCommissionSection = () => {
+    if (!suggestions) return null;
+
+    const addCommissionOption = () => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.commission) {
+        newSuggestions.commission = { options: [] };
+      }
+
+      const newOption = {
+        base: "Base + Commission",
+        baseAmount: 0,
+        bonus: "Performance Bonus",
+        bonusAmount: 0,
+        structure: "Fixed",
+        currency: "EUR",
+        minimumVolume: {
+          amount: 0,
+          period: "Monthly",
+          unit: "Sales",
+        },
+        transactionCommission: {
+          type: "Fixed Amount",
+          amount: 0,
+        },
+      };
+
+      newSuggestions.commission.options.push(newOption);
+      setSuggestions(newSuggestions);
+    };
+
+    const updateCommissionOption = (
+      index: number,
+      field: string,
+      value: string | number
+    ) => {
+      const newSuggestions = { ...suggestions };
+      if (
+        newSuggestions.commission &&
+        newSuggestions.commission.options[index]
+      ) {
+        if (field.includes(".")) {
+          const [parent, child] = field.split(".");
+          if (
+            typeof value === "string" &&
+            (child === "amount" ||
+              child === "baseAmount" ||
+              child === "bonusAmount")
+          ) {
+            // Convert string to number for amount fields
+            const numericValue = parseFloat(value) || 0;
+            (newSuggestions.commission.options[index] as any)[parent][child] =
+              numericValue;
+          } else {
+            (newSuggestions.commission.options[index] as any)[parent][child] =
+              value;
+          }
+        } else {
+          if (
+            typeof value === "string" &&
+            (field === "baseAmount" || field === "bonusAmount")
+          ) {
+            // Convert string to number for amount fields
+            const numericValue = parseFloat(value) || 0;
+            (newSuggestions.commission.options[index] as any)[field] =
+              numericValue;
+          } else {
+            (newSuggestions.commission.options[index] as any)[field] = value;
+          }
+        }
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    const deleteCommissionOption = (index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.commission) {
+        newSuggestions.commission.options.splice(index, 1);
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    return (
+      <div className="mb-8">
+        {/* Enhanced Header */}
+        <div className="flex items-center justify-between mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+              <DollarSign className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
+              <p className="text-sm text-gray-600">
+                Configure compensation structure and performance incentives
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={addCommissionOption}
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold transform hover:scale-105"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Option</span>
+          </button>
+        </div>
+
+        {suggestions.commission?.options &&
+        suggestions.commission.options.length > 0 ? (
+          <div className="space-y-8">
+            {suggestions.commission.options.map((option, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                {/* Enhanced Header with delete button */}
+                <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                    <h4 className="text-lg font-bold text-gray-800">Commission Option #{index + 1}</h4>
+                  </div>
+                  <button
+                    onClick={() => deleteCommissionOption(index)}
+                    className="p-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group"
+                    title="Delete option"
+                  >
+                    <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Base Configuration */}
+                <div className="mb-8">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                      <Briefcase className="w-5 h-5 text-blue-600" />
+                    </div>
+                    Base Configuration
+                  </h6>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                        Base Type
+                      </label>
+                      <select
+                        value={option.base || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(index, "base", e.target.value)
+                        }
+                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-gray-300"
+                      >
+                        <option value="">Select base type...</option>
+                        <option value="Fixed Salary">Fixed Salary</option>
+                        <option value="Base + Commission">
+                          Base + Commission
+                        </option>
+                      </select>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700 flex items-center">
+                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        Base Amount
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.baseAmount === "number"
+                              ? option.baseAmount
+                              : option.baseAmount
+                              ? parseFloat(option.baseAmount)
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              index,
+                              "baseAmount",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. 2500"
+                          className="w-full p-4 pr-16 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                          {option.currency || "EUR"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Minimum Volume */}
+                <div className="mb-8 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border-2 border-orange-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-orange-100 rounded-lg mr-3">
+                      <Gauge className="w-5 h-5 text-orange-600" />
+                    </div>
+                    Minimum Volume Requirements
+                  </h6>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Target Amount
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={
+                          typeof option.minimumVolume?.amount === "number"
+                            ? option.minimumVolume.amount
+                            : parseFloat(option.minimumVolume?.amount) || ""
+                        }
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            index,
+                            "minimumVolume.amount",
+                            e.target.value
+                          )
+                        }
+                        placeholder="e.g. 100"
+                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Unit Type
+                      </label>
+                      <select
+                        value={option.minimumVolume?.unit || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            index,
+                            "minimumVolume.unit",
+                            e.target.value
+                          )
+                        }
+                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
+                      >
+                        <option value="">Select unit...</option>
+                        <option value="Calls">Calls</option>
+                        <option value="Sales">Sales</option>
+                      </select>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Period
+                      </label>
+                      <select
+                        value={option.minimumVolume?.period || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            index,
+                            "minimumVolume.period",
+                            e.target.value
+                          )
+                        }
+                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
+                      >
+                        <option value="">Select period...</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bonus Configuration */}
+                <div className="mb-8 p-6 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl border-2 border-yellow-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-yellow-100 rounded-lg mr-3">
+                      <Award className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    Bonus & Incentives
+                  </h6>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Bonus Type
+                      </label>
+                      <select
+                        value={option.bonus || "Performance Bonus"}
+                        onChange={(e) =>
+                          updateCommissionOption(index, "bonus", e.target.value)
+                        }
+                        className="w-full p-4 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white transition-all duration-200 hover:border-yellow-300"
+                      >
+                        {BONUS_TYPES.map((bonusType) => (
+                          <option key={bonusType} value={bonusType}>
+                            {bonusType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Bonus Amount
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.bonusAmount === "number"
+                              ? option.bonusAmount
+                              : option.bonusAmount
+                              ? parseFloat(option.bonusAmount)
+                              : ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              index,
+                              "bonusAmount",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. 500"
+                          className="w-full p-4 pr-16 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 hover:border-yellow-300"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                          {option.currency || "EUR"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Currency */}
+                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                      <Globe2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    Currency Settings
+                  </h6>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Currency
+                      </label>
+                      <select
+                        value={option.currency || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            index,
+                            "currency",
+                            e.target.value
+                          )
+                        }
+                        className="w-full p-4 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-blue-300"
+                      >
+                        <option value="EUR">EUR (€)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="CAD">CAD (C$)</option>
+                        <option value="AUD">AUD (A$)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transaction Commission */}
+                <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl border-2 border-purple-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                      <DollarSign className="w-5 h-5 text-purple-600" />
+                    </div>
+                    Transaction Commission
+                  </h6>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Commission Type
+                      </label>
+                      <select
+                        value={
+                          option.transactionCommission?.type || "Fixed Amount"
+                        }
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            index,
+                            "transactionCommission.type",
+                            e.target.value
+                          )
+                        }
+                        className="w-full p-4 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200 hover:border-purple-300"
+                      >
+                        {TRANSACTION_TYPES.map((transactionType) => (
+                          <option key={transactionType} value={transactionType}>
+                            {transactionType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Commission Amount
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.transactionCommission?.amount ===
+                            "number"
+                              ? option.transactionCommission.amount
+                              : parseFloat(
+                                  option.transactionCommission?.amount
+                                ) || ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              index,
+                              "transactionCommission.amount",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. 25.50"
+                          className="w-full p-4 pr-16 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-purple-300"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                          {option.currency || "EUR"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 shadow-lg">
+            <div className="p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <DollarSign className="w-10 h-10 text-green-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">
+              No Commission Options
+            </h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg leading-relaxed">
+              Create commission options to define how your team will be
+              compensated for their performance and achievements.
+            </p>
+            <button
+              onClick={addCommissionOption}
+              className="flex items-center space-x-3 mx-auto px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-lg transform hover:scale-105"
+            >
+              <Plus className="w-6 h-6" />
+              <span>Add Commission Option</span>
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Gig Details & Scheduling
-            </h1>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderSkillsSection = () => {
+    if (!suggestions) return null;
+
+    const addSkill = (skillType: string, skill: string, level: number = 1) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) {
+        newSuggestions.skills = {
+          languages: [],
+          soft: [],
+          professional: [],
+          technical: [],
+          certifications: [],
+        };
+      }
+
+      switch (skillType) {
+        case "languages":
+          newSuggestions.skills.languages.push({
+            language: skill,
+            proficiency: LANGUAGE_LEVELS[level - 1] || "B1 - Intermediate",
+            iso639_1: "en",
+          });
+          break;
+        case "soft":
+          newSuggestions.skills.soft.push({ skill, level });
+          break;
+        case "professional":
+          newSuggestions.skills.professional.push({ skill, level });
+          break;
+        case "technical":
+          newSuggestions.skills.technical.push({ skill, level });
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const updateSkill = (skillType: string, index: number, field: string, value: string | number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) return;
+
+      switch (skillType) {
+        case "languages":
+          if (field === "language") {
+            newSuggestions.skills.languages[index].language = value as string;
+          } else if (field === "proficiency") {
+            newSuggestions.skills.languages[index].proficiency = value as string;
+          }
+          break;
+        case "soft":
+        case "professional":
+        case "technical":
+          if (field === "skill") {
+            (newSuggestions.skills as any)[skillType][index].skill = value as string;
+          } else if (field === "level") {
+            (newSuggestions.skills as any)[skillType][index].level = value as number;
+          }
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteSkill = (skillType: string, index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) return;
+
+      switch (skillType) {
+        case "languages":
+          newSuggestions.skills.languages.splice(index, 1);
+          break;
+        case "soft":
+          newSuggestions.skills.soft.splice(index, 1);
+          break;
+        case "professional":
+          newSuggestions.skills.professional.splice(index, 1);
+          break;
+        case "technical":
+          newSuggestions.skills.technical.splice(index, 1);
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const renderSkillCard = (skillType: string, items: any[], title: string, icon: React.ReactNode) => {
+      const currentItems = items || [];
+
+      const getSkillOptions = (skillType: string) => {
+        switch (skillType) {
+          case "languages":
+            return LANGUAGES.filter(lang => !currentItems.some(item => item.language === lang));
+          case "professional":
+            return PROFESSIONAL_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+          case "technical":
+            return TECHNICAL_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+          case "soft":
+            return SOFT_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+          default:
+            return [];
+        }
+      };
+
+      const skillOptions = getSkillOptions(skillType);
+
+      return (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                {icon}
+              </div>
+              <h4 className="text-lg font-bold text-gray-800">{title}</h4>
+            </div>
+            <button
+              onClick={() => {
+                setEditingSection(skillType);
+                setEditingIndex(-1);
+                setEditValue("");
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
+            </button>
           </div>
 
-          {isMetadataLoading ? (
-            <div className="bg-white rounded-xl shadow-xl p-6 mb-8">
-              <div className="flex items-center justify-center py-8">
-                <Brain className="w-6 h-6 text-blue-600 animate-pulse mr-2" />
-                <span className="text-gray-600">Generating suggestions...</span>
-              </div>
-            </div>
-          ) : (
-            metadata && (
-              <div className="space-y-8">
-                {renderSenioritySection()}
-                {renderScheduleSection()}
-                {renderDestinationZonesSection()}
-                {/* Suggested Names Section */}
-                <div className="bg-white rounded-xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Suggested Names
-                    </h2>
-                    <button
-                      onClick={() =>
-                        startEditingMetadata(
-                          "suggestedNames",
-                          metadata.suggestedNames.join(", ")
-                        )
-                      }
-                      className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit Names
-                    </button>
-                  </div>
-                  {editingMetadataField === "suggestedNames" ? (
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
+          {currentItems.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {currentItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  {editingSection === skillType && editingIndex === index ? (
+                    <div className="space-y-3">
+                      <select
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter names separated by commas"
-                      />
-                      <button
-                        onClick={saveMetadataEdit}
-                        className="text-green-600 hover:text-green-700"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        autoFocus
                       >
-                        <Save className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4">
-                      {metadata.suggestedNames.map((name, index) => (
-                        <div key={index} className="p-4 bg-blue-50 rounded-lg">
-                          <p className="text-blue-900 font-medium">{name}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Industries Section */}
-                <div className="bg-white rounded-xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Relevant Industries
-                    </h2>
-                    <button
-                      onClick={() =>
-                        startEditingMetadata(
-                          "industries",
-                          metadata.industries.join(", ")
-                        )
-                      }
-                      className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Edit Industries
-                    </button>
-                  </div>
-                  {editingMetadataField === "industries" ? (
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter industries separated by commas"
-                      />
-                      <button
-                        onClick={saveMetadataEdit}
-                        className="text-green-600 hover:text-green-700"
-                      >
-                        <Save className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-3">
-                      {metadata.industries.map((industry, index) => (
-                        <span
-                          key={index}
-                          className="px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium"
+                        <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
+                        {skillType === "languages" 
+                          ? LANGUAGES.map((lang) => (
+                              <option key={lang} value={lang}>
+                                {lang}
+                              </option>
+                            ))
+                          : skillType === "professional"
+                          ? PROFESSIONAL_SKILLS.map((skill) => (
+                              <option key={skill} value={skill}>
+                                {skill}
+                              </option>
+                            ))
+                          : skillType === "technical"
+                          ? TECHNICAL_SKILLS.map((skill) => (
+                              <option key={skill} value={skill}>
+                                {skill}
+                              </option>
+                            ))
+                          : SOFT_SKILLS.map((skill) => (
+                              <option key={skill} value={skill}>
+                                {skill}
+                              </option>
+                            ))
+                        }
+                      </select>
+                      {skillType === "languages" ? (
+                        <select
+                          value={item.proficiency || "B1 - Intermediate"}
+                          onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                          {industry}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Schedules Section */}
-                <div className="bg-white rounded-xl shadow-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Recommended Schedules
-                    </h2>
-                    <button
-                      onClick={addNewSchedule}
-                      className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      Add Schedule
-                    </button>
-                  </div>
-                  <div className="space-y-6">
-                    {metadata.schedules.map((schedule, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          {editingScheduleIndex === index &&
-                          editingMetadataField === "name" ? (
-                            <div className="flex items-center space-x-2 flex-1">
-                              <input
-                                type="text"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <button
-                                onClick={saveMetadataEdit}
-                                className="text-green-600 hover:text-green-700"
-                              >
-                                <Save className="w-5 h-5" />
-                              </button>
-                              <button
-                                onClick={cancelEdit}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                              {schedule.name}
-                              <button
-                                onClick={() =>
-                                  startEditingSchedule(
-                                    index,
-                                    "name",
-                                    schedule.name
-                                  )
-                                }
-                                className="ml-2 text-blue-600 hover:text-blue-700"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                            </h3>
-                          )}
-                          <button
-                            onClick={() => removeSchedule(index)}
-                            className="text-red-600 hover:text-red-700 ml-2"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        {editingScheduleIndex === index &&
-                        editingMetadataField === "description" ? (
-                          <div className="flex items-center space-x-2 mb-4">
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <button
-                              onClick={saveMetadataEdit}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <Save className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center mb-4">
-                            <p className="text-gray-600 flex-1">
-                              {schedule.description}
-                            </p>
-                            <button
-                              onClick={() =>
-                                startEditingSchedule(
-                                  index,
-                                  "description",
-                                  schedule.description
-                                )
-                              }
-                              className="text-blue-600 hover:text-blue-700 ml-2"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-
-                        <div className="space-y-2">
-                          {schedule.hours.map((hour, hourIndex) => (
-                            <div
-                              key={hourIndex}
-                              className="flex items-center justify-between bg-gray-50 p-3 rounded group"
-                            >
-                              {editingScheduleIndex === index &&
-                              editingHourIndex === hourIndex ? (
-                                <div className="flex-1 flex items-center space-x-2">
-                                  <input
-                                    type="text"
-                                    value={`${hour.day}, ${hour.start}-${hour.end}`}
-                                    onChange={(e) =>
-                                      setEditValue(e.target.value)
-                                    }
-                                    className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Day, HH:MM-HH:MM"
-                                  />
-                                  <button
-                                    onClick={saveMetadataEdit}
-                                    className="text-green-600 hover:text-green-700"
-                                  >
-                                    <Save className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={cancelEdit}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <span className="font-medium text-gray-700">
-                                    {hour.day}
-                                  </span>
-                                  <div className="flex items-center space-x-4">
-                                    <span className="text-gray-600">
-                                      {hour.start.replace(':', 'h')} - {hour.end.replace(':', 'h')}
-                                    </span>
-                                    <div className="hidden group-hover:flex items-center space-x-2">
-                                      <button
-                                        onClick={() =>
-                                          startEditingHour(index, hourIndex)
-                                        }
-                                        className="text-blue-600 hover:text-blue-700"
-                                      >
-                                        <Edit2 className="w-4 h-4" />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          removeHour(index, hourIndex)
-                                        }
-                                        className="text-red-600 hover:text-red-700"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
+                          {LANGUAGE_LEVELS.map((level) => (
+                            <option key={level} value={level}>
+                              {level}
+                            </option>
                           ))}
+                        </select>
+                      ) : (
+                        <select
+                          value={item.level || 1}
+                          onChange={(e) => updateSkill(skillType, index, "level", parseInt(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {SKILL_LEVELS.map((level) => (
+                            <option key={level.value} value={level.value}>
+                              {level.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            if (editValue.trim()) {
+                              updateSkill(skillType, index, skillType === "languages" ? "language" : "skill", editValue.trim());
+                              setEditingSection(null);
+                              setEditingIndex(null);
+                              setEditValue("");
+                            }
+                          }}
+                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-semibold text-gray-800">
+                          {skillType === "languages" ? item.language : item.skill}
+                        </h5>
+                        <div className="flex space-x-1">
                           <button
-                            onClick={() => addNewHour(index)}
-                            className="w-full text-blue-600 hover:text-blue-700 text-sm flex items-center justify-center py-2 border border-dashed border-blue-300 rounded-lg mt-2"
+                            onClick={() => {
+                              setEditingSection(skillType);
+                              setEditingIndex(index);
+                              setEditValue(skillType === "languages" ? item.language : item.skill);
+                            }}
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                           >
-                            <Edit2 className="w-4 h-4 mr-1" />
-                            Add Working Hours
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteSkill(skillType, index)}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">Level:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          skillType === "languages" 
+                            ? item.proficiency?.includes("C") 
+                              ? "bg-green-100 text-green-800"
+                              : item.proficiency?.includes("B") 
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                            : item.level >= 4 
+                            ? "bg-purple-100 text-purple-800"
+                            : item.level >= 3 
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}>
+                          {skillType === "languages" 
+                            ? item.proficiency || "B1 - Intermediate"
+                            : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
+              ))}
+            </div>
+          )}
 
-                <div className="fixed bottom-8 right-8">
+          {editingSection === skillType && editingIndex === -1 && (
+            <div className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
+              <div className="space-y-4">
+                <select
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                >
+                  <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
+                  {skillOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {skillType === "languages" ? (
+                  <select
+                    defaultValue="B1 - Intermediate"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {LANGUAGE_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    defaultValue={1}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {SKILL_LEVELS.map((level) => (
+                      <option key={level.value} value={level.value}>
+                        {level.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <div className="flex space-x-3">
                   <button
                     onClick={() => {
-                      Swal.fire({
-                        title: "Complete Gig Creation",
-                        text: "Would you like to add additional information?",
-                        icon: "question",
-                        showDenyButton: true,
-                        showCancelButton: true,
-                        confirmButtonText: "Yes, add details",
-                        denyButtonText: "No, save and return",
-                        cancelButtonText: "Cancel",
-                        customClass: {
-                          popup: "rounded-lg shadow-lg",
-                          title: "text-xl font-semibold text-gray-800",
-                          htmlContainer: "text-gray-600",
-                          confirmButton: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700",
-                          denyButton: "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700",
-                          cancelButton: "px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                        }
-                      }).then((result) => {
-                        if (result.isConfirmed) {
-                          // Ouvrir le modal des leads
-                          setIsLeadsModalOpen(true);
-                        } else if (result.isDenied) {
-                          // Sauvegarder directement
-                          handleSaveAndOnBack();
-                        }
-                      });
+                      if (editValue.trim()) {
+                        const level = skillType === "languages" ? 3 : 1; // Default to B1 for languages, Basic for skills
+                        addSkill(skillType, editValue.trim(), level);
+                        setEditValue("");
+                        setEditingSection(null);
+                        setEditingIndex(null);
+                      }
                     }}
-                    className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                   >
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Complete & Return to Gig Creation
+                    Add {skillType === "languages" ? "Language" : "Skill"}
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
-            )
+            </div>
           )}
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-8">
+        {renderSkillCard(
+          "languages",
+          suggestions.skills?.languages || [],
+          "Languages",
+          <Globe2 className="w-5 h-5 text-blue-600" />
+        )}
+        {renderSkillCard(
+          "professional",
+          suggestions.skills?.professional || [],
+          "Professional Skills",
+          <Briefcase className="w-5 h-5 text-green-600" />
+        )}
+        {renderSkillCard(
+          "technical",
+          suggestions.skills?.technical || [],
+          "Technical Skills",
+          <Target className="w-5 h-5 text-purple-600" />
+        )}
+        {renderSkillCard(
+          "soft",
+          suggestions.skills?.soft || [],
+          "Soft Skills",
+          <Users className="w-5 h-5 text-orange-600" />
+        )}
+      </div>
+    );
+  };
+
+  const renderTeamSection = () => {
+    if (!suggestions) return null;
+
+    const addTeamRole = () => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) {
+        newSuggestions.team = {
+          size: 1,
+          structure: [],
+          territories: ["Global"],
+          reporting: {
+            to: "Project Manager",
+            frequency: "Weekly",
+          },
+          collaboration: ["Daily standups", "Weekly reviews"],
+        };
+      }
+
+      const newRole = {
+        roleId: "Agent",
+        count: 1,
+        seniority: {
+          level: "Mid-Level",
+          yearsExperience: 3,
+        },
+      };
+
+      newSuggestions.team.structure.push(newRole);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const updateTeamRole = (index: number, field: string, value: string | number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) return;
+
+      // Ensure the role exists and has proper structure
+      if (!newSuggestions.team.structure[index]) {
+        newSuggestions.team.structure[index] = {
+          roleId: "Agent",
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
+        };
+      } else {
+        // Check if role is a string and convert it to proper object structure
+        const currentRole = newSuggestions.team.structure[index];
+        if (typeof currentRole === 'string') {
+          newSuggestions.team.structure[index] = {
+            roleId: currentRole,
+            count: 1,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+        } else if (typeof currentRole === 'object' && currentRole !== null) {
+          // Ensure role has required properties
+          if (!currentRole.roleId) {
+            newSuggestions.team.structure[index] = {
+              ...currentRole,
+              roleId: "Agent",
+              count: currentRole.count || 1,
+              seniority: currentRole.seniority || {
+                level: "Mid-Level",
+                yearsExperience: 3,
+              },
+            };
+          } else if (!currentRole.seniority) {
+            newSuggestions.team.structure[index] = {
+              ...currentRole,
+              seniority: {
+                level: "Mid-Level",
+                yearsExperience: 3,
+              },
+            };
+          }
+        } else {
+          // If role is null, undefined, or invalid, replace with default structure
+          newSuggestions.team.structure[index] = {
+            roleId: "Agent",
+            count: 1,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+        }
+      }
+
+      if (field.includes(".")) {
+        const [parent, child] = field.split(".");
+        if (child === "yearsExperience") {
+          (newSuggestions.team.structure[index] as any)[parent][child] = parseInt(value as string) || 0;
+        } else {
+          (newSuggestions.team.structure[index] as any)[parent][child] = value;
+        }
+      } else {
+        if (field === "count") {
+          newSuggestions.team.structure[index].count = parseInt(value as string) || 1;
+        } else {
+          newSuggestions.team.structure[index].roleId = value as string;
+        }
+      }
+
+      // Recalculate total team size
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteTeamRole = (index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) return;
+
+      newSuggestions.team.structure.splice(index, 1);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const addTerritory = (territory: string) => {
+      if (!suggestions || !territory) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) {
+        newSuggestions.team = {
+          size: 1,
+          structure: [],
+          territories: [],
+          reporting: {
+            to: "Project Manager",
+            frequency: "Weekly",
+          },
+          collaboration: ["Daily standups", "Weekly reviews"],
+        };
+      }
+      
+      // Ensure territories array exists
+      if (!newSuggestions.team.territories) {
+        newSuggestions.team.territories = [];
+      }
+      
+      // Only add if not already present
+      if (!newSuggestions.team.territories.includes(territory)) {
+        newSuggestions.team.territories.push(territory);
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    const removeTerritory = (territoryToRemove: string) => {
+      if (!suggestions) return;
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.team && newSuggestions.team.territories) {
+        newSuggestions.team.territories = newSuggestions.team.territories.filter(
+          (territory) => territory !== territoryToRemove
+        );
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Team Size Summary */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-800">Team Size</h4>
+                <p className="text-sm text-gray-600">
+                  Total members: {suggestions.team?.size || 0}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center space-x-3">
+                <div className="text-center">
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Total Size</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={suggestions.team?.size || 0}
+                    onChange={(e) => {
+                      const newSize = parseInt(e.target.value) || 0;
+                      const newSuggestions = { ...suggestions };
+                      if (!newSuggestions.team) {
+                        newSuggestions.team = {
+                          size: newSize,
+                          structure: [],
+                          territories: ["Global"],
+                          reporting: {
+                            to: "Project Manager",
+                            frequency: "Weekly",
+                          },
+                          collaboration: ["Daily standups", "Weekly reviews"],
+                        };
+                      } else {
+                        newSuggestions.team.size = newSize;
+                        // Adjust the first role's count to match the new total size
+                        if (newSuggestions.team.structure.length > 0) {
+                          newSuggestions.team.structure[0].count = newSize;
+                        } else {
+                          // If no roles exist, create a default role
+                          newSuggestions.team.structure.push({
+                            roleId: "Agent",
+                            count: newSize,
+                            seniority: {
+                              level: "Mid-Level",
+                              yearsExperience: 3,
+                            },
+                          });
+                        }
+                      }
+                      setSuggestions(newSuggestions);
+                    }}
+                    className="w-20 text-center text-2xl font-bold text-blue-600 bg-white border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="text-sm text-gray-500">Members</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Team Size Breakdown */}
+          {suggestions.team?.structure && suggestions.team.structure.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <h5 className="text-sm font-semibold text-gray-700 mb-3">Team Breakdown:</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {suggestions.team.structure.map((role, index) => {
+                  // Handle case where role might be a string
+                  const roleId = typeof role === 'string' ? role : (role?.roleId || 'Unknown');
+                  const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                  const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Not specified') : 'Not specified';
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {roleId}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">
+                          {roleCount} {roleCount === 1 ? 'member' : 'members'}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                          {seniorityLevel}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Team Size Statistics */}
+          <div className="mt-4 pt-4 border-t border-blue-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">
+                  {suggestions.team?.structure?.length || 0}
+                </div>
+                <div className="text-xs text-gray-500">Different Roles</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">
+                  {suggestions.team?.structure?.filter(role => {
+                    if (typeof role === 'string') return false;
+                    if (typeof role !== 'object' || role === null) return false;
+                    return role.seniority?.level?.includes('Senior') || role.seniority?.level?.includes('Lead') || role.seniority?.level?.includes('Manager');
+                  }).reduce((sum, role) => {
+                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                    return sum + roleCount;
+                  }, 0) || 0}
+                </div>
+                <div className="text-xs text-gray-500">Senior Members</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600">
+                  {suggestions.team?.structure?.filter(role => {
+                    if (typeof role === 'string') return false;
+                    if (typeof role !== 'object' || role === null) return false;
+                    return role.seniority?.level?.includes('Junior') || role.seniority?.level?.includes('Entry') || role.seniority?.level?.includes('Trainee');
+                  }).reduce((sum, role) => {
+                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                    return sum + roleCount;
+                  }, 0) || 0}
+                </div>
+                <div className="text-xs text-gray-500">Junior Members</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-purple-600">
+                  {suggestions.team?.territories?.length || 0}
+                </div>
+                <div className="text-xs text-gray-500">Territories</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Team Roles */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Briefcase className="w-5 h-5 text-green-600" />
+              </div>
+              <h4 className="text-lg font-bold text-gray-800">Team Roles</h4>
+            </div>
+            <button
+              onClick={addTeamRole}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Role</span>
+            </button>
+          </div>
+
+          {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {suggestions.team.structure.map((role, index) => {
+                // Handle case where role might be a string
+                const roleId = typeof role === 'string' ? role : (role?.roleId || 'Agent');
+                const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Mid-Level') : 'Mid-Level';
+                const yearsExperience = typeof role === 'object' && role !== null ? (role.seniority?.yearsExperience || 3) : 3;
+                
+                return (
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="font-semibold text-gray-800">Role #{index + 1}</h5>
+                      <button
+                        onClick={() => deleteTeamRole(index)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Role Type
+                        </label>
+                        <select
+                          value={roleId}
+                          onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          {TEAM_ROLES.map((teamRole) => (
+                            <option key={teamRole} value={teamRole}>
+                              {teamRole}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Number of Members
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={roleCount}
+                          onChange={(e) => updateTeamRole(index, "count", e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">
+                            Seniority Level
+                          </label>
+                          <select
+                            value={seniorityLevel}
+                            onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          >
+                            {predefinedOptions.basic.seniorityLevels.map((level) => (
+                              <option key={level} value={level}>
+                                {level}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">
+                            Years Experience
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={yearsExperience}
+                            onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+              <div className="p-4 bg-white rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-sm">
+                <Users className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                No Team Roles Defined
+              </h3>
+              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                Add team roles to define the structure and responsibilities of your team members.
+              </p>
+              <button
+                onClick={addTeamRole}
+                className="flex items-center space-x-2 mx-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add Team Role</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Territories */}
+        <div>
+          <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg mr-3">
+              <Globe2 className="w-5 h-5 text-purple-600" />
+            </div>
+            Territories
+          </h4>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {suggestions.team?.territories?.map((territory) => (
+              <div
+                key={territory}
+                className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
+              >
+                {territory}
+                <button
+                  onClick={() => removeTerritory(territory)}
+                  className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                addTerritory(e.target.value);
+                e.target.value = ""; // Reset select
+              }
+            }}
+            className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Add a territory...
+            </option>
+            {TEAM_TERRITORIES.filter(
+              (territory) => !suggestions.team?.territories?.includes(territory)
+            ).map((territory) => (
+              <option key={territory} value={territory}>
+                {territory}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center max-w-md">
+          <div className="inline-block mb-8">
+            <div className="flex items-center justify-center space-x-1 mb-6">
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
+                style={{ animationDelay: '0s' }}
+              >
+                H
+              </span>
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 animate-fade-in-scale"
+                style={{ animationDelay: '0.1s' }}
+              >
+                A
+              </span>
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 animate-fade-in-scale"
+                style={{ animationDelay: '0.2s' }}
+              >
+                R
+              </span>
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
+                style={{ animationDelay: '0.3s' }}
+              >
+                X
+              </span>
+            </div>
+            
+            {/* Professional loading bar */}
+            <div className="relative h-1 w-48 mx-auto bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-professional-loading"></div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
+              Processing Your Request
+            </h2>
+            <p className="text-gray-600 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              Our AI is analyzing your requirements and generating personalized suggestions...
+            </p>
+            
+            {/* Professional loading dots */}
+            <div className="flex justify-center space-x-2 mt-6">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-professional-dots"></div>
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-professional-dots"></div>
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-professional-dots"></div>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <button
+              onClick={onBack}
+              className="flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <X className="w-4 h-4" />
+              <span>Cancel</span>
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-red-50 text-red-800 p-8">
+        <AlertCircle className="w-16 h-16 mb-4 text-red-600" />
+        <h2 className="text-2xl font-bold mb-2">
+          Error Generating Suggestions
+        </h2>
+        <p className="text-center mb-6">{error}</p>
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (!suggestions) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 text-gray-700 p-8">
+        <Brain className="w-16 h-16 mb-4 text-gray-400" />
+        <h2 className="text-2xl font-bold mb-2">No Suggestions Available</h2>
+        <p className="text-center mb-6">
+          We couldn't generate suggestions based on your input. Please try
+          again.
+        </p>
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pb-16">
-      {showBasicSection ? (
-        <BasicSection
-          data={{
-            userId: Cookies.get('userId') || "",
-            companyId: Cookies.get('companyId') || "",
-            title: suggestions?.jobTitles[0] || '',
-            description: suggestions?.deliverables.join('\n') || '',
-            category: suggestions?.sectors[0] || '',
-            seniority: {
-              level: suggestions?.seniority?.level || '',
-              yearsExperience: suggestions?.seniority?.yearsExperience || 2,
-            },
-            destination_zone: suggestions?.destinationZones?.[0] || "France",
-            callTypes: [],
-          }}
-          onChange={(data) => {
-            // Handle changes in basic section
-            console.log('Basic section data changed:', data);
-          }}
-          errors={{}}
-        />
-      ) : (
-        <div className="max-w-4xl mx-auto pt-16 px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              {!isSuggestionsLoading && suggestions && !isSuggestionsConfirmed && (
-                <button
-                  onClick={() => setIsSuggestionsConfirmed(true)}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Confirm Suggestions
-                </button>
-              )}
-              {isSuggestionsConfirmed && (
-                <button
-                  onClick={handleConfirm}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  disabled={!suggestions || isConfirming}
-                >
-                  <ArrowRight className="w-5 h-5 mr-2" />
-                  Next: Review Details
-                </button>
-              )}
-            </div>
-          </div>
-
-          {apiKeyMissing && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-              <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-yellow-400 mr-2" />
-                <p className="text-sm text-yellow-700">
-                  OpenAI API key is missing. AI-powered suggestions are currently
-                  using fallback data. Please add your API key to enable real AI
-                  suggestions.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {(suggestions || isSuggestionsLoading) && (
-            <div className="bg-white rounded-xl shadow-xl p-6 mb-8">
-              {isSuggestionsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Brain className="w-6 h-6 text-blue-600 animate-pulse mr-2" />
-                  <span className="text-gray-600">Generating suggestions...</span>
-                </div>
-              ) : (
-                suggestions && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                      {renderSenioritySection()}
-                      {renderEditableList("jobTitles", "Job Titles", <Briefcase className="w-5 h-5 mr-2 text-blue-600" />)}
-                      {renderEditableList("deliverables", "Deliverables", <Target className="w-5 h-5 mr-2 text-purple-600" />)}
-                      {renderEditableList("kpis", "KPIs", <Gauge className="w-5 h-5 mr-2 text-green-600" />)}
-                    </div>
-
-                    <div className="space-y-6">
-                      {renderEditableList("timeframes", "Timeframes", <Clock className="w-5 h-5 mr-2 text-gray-600" />)}
-                      {renderEditableList("requirements", "Requirements", <Target className="w-5 h-5 mr-2 text-purple-600" />)}
-                      {renderEditableList("compensation", "Compensation", <DollarSign className="w-5 h-5 mr-2 text-green-600" />)}
-                      {renderEditableList("languages", "Languages", <Globe2 className="w-5 h-5 mr-2 text-blue-600" />)}
-                    </div>
-
-                    <div className="lg:col-span-2 space-y-6">
-                      {renderEditableList("skills", "Skills", <Brain className="w-5 h-5 mr-2 text-blue-600" />)}
-                      {renderCommissionSection()}
-                      {renderSectorsSection()}
-                      {renderActivitySection()}
-                      {renderDestinationZonesSection()}
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-
-          {isSuggestionsConfirmed && (
-            <div className="fixed bottom-8 right-8 flex items-center space-x-2 bg-green-50 text-green-700 px-4 py-2 rounded-lg shadow-lg">
-              <CheckCircle className="w-5 h-5" />
-              <span>Suggestions confirmed! Click "Next" to continue</span>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-4 mt-8">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
             <button
               onClick={onBack}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
-              Cancel
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back</span>
+            </button>
+            <h1 className="text-3xl font-bold text-gray-800">
+              Review & Refine Suggestions
+            </h1>
+            <button
+              onClick={handleConfirm}
+              className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              <span>Confirm & Continue</span>
+              <ArrowRight className="w-5 h-5" />
             </button>
           </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
+            {/* Basic Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Briefcase className="w-7 h-7 mr-3 text-blue-700" />
+                Basic Information
+              </h3>
+              {renderEditableList(
+                "highlights",
+                suggestions.highlights,
+                "Highlights"
+              )}
+              {renderEditableList(
+                "jobTitles",
+                suggestions.jobTitles,
+                "Job Titles"
+              )}
+              {renderEditableList(
+                "deliverables",
+                suggestions.deliverables,
+                "Deliverables"
+              )}
+              {renderEditableList("sectors", suggestions.sectors, "Sectors")}
+              {renderEditableList(
+                "destinationZones",
+                suggestions.destinationZones,
+                "Destination Zones"
+              )}
+              {renderSenioritySection()}
+            </div>
+
+            {/* Schedule Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Clock className="w-7 h-7 mr-3 text-blue-700" />
+                Schedule
+              </h3>
+              {renderEditableSchedules()}
+            </div>
+
+            {/* Commission Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
+                Commission
+              </h3>
+              {renderCommissionSection()}
+            </div>
+
+            {/* Skills Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Award className="w-7 h-7 mr-3 text-blue-700" />
+                Skills
+              </h3>
+              {renderSkillsSection()}
+            </div>
+
+            {/* Team Section */}
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Users className="w-7 h-7 mr-3 text-blue-700" />
+                Team Structure
+              </h3>
+              {renderTeamSection()}
+            </div>
+          </div>
         </div>
-      )}
-      
-      <Modal
-        isOpen={isLeadsModalOpen}
-        onClose={() => setIsLeadsModalOpen(false)}
-        title="Leads Information"
-        onSave={() => setIsLeadsModalOpen(false)}
-        onSkip={handleLeadsSkip}
-      >
-        <LeadsForm
-          onSave={(data) => {
-            setGigData((prev: GigData) => ({
-              ...prev,
-              leads: data
-            }));
-            setIsLeadsModalOpen(false);
-            setIsTeamModalOpen(true);
-          }}
-          predefinedSources={predefinedOptions.leads.sources}
-        />
-      </Modal>
-
-      <Modal
-        isOpen={isTeamModalOpen}
-        onClose={() => setIsTeamModalOpen(false)}
-        title="Team Structure"
-        
-        onSave={() => setIsTeamModalOpen(false)}
-        onSkip={handleTeamSkip}
-      >
-        <TeamForm
-          onSave={handleTeamSave}
-          predefinedRoles={predefinedOptions.team.roles}
-          predefinedTerritories={predefinedOptions.team.territories}
-        />
-      </Modal>
-
-      <Modal
-        isOpen={isDocModalOpen}
-        onClose={() => setIsDocModalOpen(false)}
-        title="Documentation Requirements"
-        onSave={() => setIsDocModalOpen(false)}
-        onSkip={handleDocumentationSkip}
-      >
-        <DocumentationForm
-          onSave={handleDocumentationSave}
-          cloudinaryUrl="https://api.cloudinary.com/v1_1/dyqg8x26j/raw/upload"
-        />
-      </Modal>
+      </div>
     </div>
   );
-}
+};
 
-function parseYearsExperience(val) {
-  if (typeof val === 'number') return val;
-  if (typeof val === 'string') {
+function parseYearsExperience(val: any) {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
     // Prend le premier nombre trouvé dans la string
-    const match = val.match(/\\d+/);
+    const match = val.match(/\d+/);
     return match ? parseInt(match[0], 10) : 0;
   }
   return 0;

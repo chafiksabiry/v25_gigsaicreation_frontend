@@ -42,7 +42,7 @@ if (!window.__POWERED_BY_QIANKUN__) {
   
   // Set user ID and company ID cookies in standalone mode
   const userId = Cookies.get('userId') || "680a27ffefa3d29d628d0016";
-  const companyId = Cookies.get('companyId') || "684ace43641398dc582f1acc";
+  const companyId = Cookies.get('companyId') || "684ace43641398dc582f1acc"; // Default company ID from GigForm.tsx
 
   if (userId) {
     console.log('[App] Setting user ID cookie:', userId);

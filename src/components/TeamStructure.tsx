@@ -57,16 +57,34 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
     }
   };
 
+  // Helper function to map role names to IDs
+  const mapRoleNameToId = (roleName: string): string => {
+    const role = teamRoles.find(r => r.name === roleName);
+    return role ? role.id : roleName;
+  };
+
+  // Helper function to map role IDs to names
+  const mapRoleIdToName = (roleId: string): string => {
+    const role = teamRoles.find(r => r.id === roleId);
+    return role ? role.name : roleId;
+  };
+
+  // Normalize structure to use role IDs
+  const normalizedStructure = initializedTeam.team.structure.map(role => ({
+    ...role,
+    roleId: mapRoleNameToId(role.roleId)
+  }));
+
   const handleAddRole = () => {
     const availableRole = teamRoles.find(
-      role => !initializedTeam.team.structure.some(s => s.roleId === role.id)
+      role => !normalizedStructure.some(s => s.roleId === role.id)
     );
     if (availableRole) {
       onChange({
         ...data,
         team: {
           ...initializedTeam.team,
-          structure: [...initializedTeam.team.structure, { 
+          structure: [...normalizedStructure, { 
             roleId: availableRole.id, 
             count: 1,
             seniority: {
@@ -84,13 +102,13 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
       ...data,
       team: {
         ...initializedTeam.team,
-        structure: initializedTeam.team.structure.filter((_, i) => i !== index)
+        structure: normalizedStructure.filter((_, i) => i !== index)
       }
     });
   };
 
   const handleRoleChange = (index: number, roleId: string) => {
-    const newStructure = [...initializedTeam.team.structure];
+    const newStructure = [...normalizedStructure];
     newStructure[index] = { 
       ...newStructure[index], 
       roleId,
@@ -109,7 +127,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   };
 
   const handleCountChange = (index: number, count: number) => {
-    const newStructure = [...initializedTeam.team.structure];
+    const newStructure = [...normalizedStructure];
     newStructure[index] = { ...newStructure[index], count: Math.max(1, count) };
     onChange({
       ...data,
@@ -121,7 +139,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   };
 
   const handleSeniorityChange = (index: number, field: 'level' | 'yearsExperience', value: string) => {
-    const newStructure = [...initializedTeam.team.structure];
+    const newStructure = [...normalizedStructure];
     newStructure[index] = {
       ...newStructure[index],
       seniority: {
@@ -185,7 +203,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
     });
   };
 
-  const totalTeamSize = initializedTeam.team.structure.reduce((sum, role) => sum + role.count, 0);
+  const totalTeamSize = normalizedStructure.reduce((sum, role) => sum + role.count, 0);
 
   return (
     <div className="space-y-8">
@@ -207,7 +225,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
               type="number"
               min="0"
               value={initializedTeam.team.size || 0}
-              onChange={(e) => handleTeamSizeChange(e.target.value)}
+              onChange={(e) => handleTeamSizeChange(parseInt(e.target.value) || 0)}
               placeholder="e.g., 5"
               className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
                 errors?.team?.size ? 'border-red-300' : 'border-gray-300'
@@ -237,7 +255,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
         </div>
 
         <div className="space-y-4">
-          {initializedTeam.team.structure.map((role, index) => (
+          {normalizedStructure.map((role, index) => (
             <div key={index} className="bg-white rounded-xl border border-purple-100 overflow-hidden">
               <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50">
                 <div className="flex items-center justify-between">
@@ -252,7 +270,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                         <option 
                           key={r.id} 
                           value={r.id}
-                          disabled={initializedTeam.team.structure.some((s, i) => i !== index && s.roleId === r.id)}
+                          disabled={normalizedStructure.some((s, i) => i !== index && s.roleId === r.id)}
                         >
                           {r.name}
                         </option>
@@ -334,7 +352,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
           <button
             onClick={handleAddRole}
-            disabled={false}
+            disabled={normalizedStructure.length >= teamRoles.length}
             className="w-full flex items-center justify-center gap-2 p-3 text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />

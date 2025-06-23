@@ -279,24 +279,14 @@ const PrompAI: React.FC = () => {
 
           {/* Section Content */}
           <div className="bg-white rounded-xl shadow-xl p-6">
-            {currentSection === "basic" ? (
-              <BasicSection
-                data={gigData}
-                onChange={handleGigDataChange}
-                errors={{}}
-                onSectionChange={handleSectionChange}
-                currentSection={currentSection}
-              />
-            ) : (
-              <SectionContent
-                section={currentSection}
-                data={gigData}
-                onChange={handleGigDataChange}
-                errors={{}}
-                constants={predefinedOptions}
-                onSectionChange={handleSectionChange}
-              />
-            )}
+            <SectionContent
+              section={currentSection}
+              data={gigData}
+              onChange={handleGigDataChange}
+              errors={{}}
+              constants={predefinedOptions}
+              onSectionChange={handleSectionChange}
+            />
           </div>
         </div>
       </div>

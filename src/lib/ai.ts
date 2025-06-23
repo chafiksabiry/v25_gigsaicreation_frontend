@@ -271,73 +271,73 @@ export interface TimezoneInfo {
   };
 }
 
-export type TimezoneCode = 'America/New_York' | 'Europe/London' | 'Asia/Singapore' | 'Asia/Tokyo' | 'Europe/Paris' | 'America/Chicago' | 'America/Denver' | 'America/Los_Angeles' | 'Europe/Dubai' | 'Australia/Sydney';
+export type TimezoneCode = 'New York (EST/EDT)' | 'Chicago (CST/CDT)' | 'Denver (MST/MDT)' | 'Los Angeles (PST/PDT)' | 'London (GMT/BST)' | 'Paris (CET/CEST)' | 'Dubai (GST)' | 'Singapore (SGT)' | 'Tokyo (JST)' | 'Sydney (AEST/AEDT)';
 
 export const MAJOR_TIMEZONES: Record<TimezoneCode, TimezoneInfo> = {
-  'America/New_York': {
+  'New York (EST/EDT)': {
     name: 'New York (EST/EDT)',
     description: 'Eastern United States, major financial hub',
     offset: -5,
     abbreviation: 'EST/EDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'America/Chicago': {
+  'Chicago (CST/CDT)': {
     name: 'Chicago (CST/CDT)',
     description: 'Central United States, major business hub',
     offset: -6,
     abbreviation: 'CST/CDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'America/Denver': {
+  'Denver (MST/MDT)': {
     name: 'Denver (MST/MDT)',
     description: 'Mountain United States, growing tech hub',
     offset: -7,
     abbreviation: 'MST/MDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'America/Los_Angeles': {
+  'Los Angeles (PST/PDT)': {
     name: 'Los Angeles (PST/PDT)',
     description: 'Western United States, major tech and entertainment hub',
     offset: -8,
     abbreviation: 'PST/PDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Europe/London': {
+  'London (GMT/BST)': {
     name: 'London (GMT/BST)',
     description: 'United Kingdom, major European financial center',
     offset: 0,
     abbreviation: 'GMT/BST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Europe/Paris': {
+  'Paris (CET/CEST)': {
     name: 'Paris (CET/CEST)',
     description: 'Central European business hub',
     offset: 1,
     abbreviation: 'CET/CEST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Europe/Dubai': {
+  'Dubai (GST)': {
     name: 'Dubai (GST)',
     description: 'Middle Eastern business hub',
     offset: 4,
     abbreviation: 'GST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Asia/Singapore': {
+  'Singapore (SGT)': {
     name: 'Singapore (SGT)',
     description: 'Southeast Asian business hub',
     offset: 8,
     abbreviation: 'SGT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Asia/Tokyo': {
+  'Tokyo (JST)': {
     name: 'Tokyo (JST)',
     description: 'Japan, major Asian financial center',
     offset: 9,
     abbreviation: 'JST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Australia/Sydney': {
+  'Sydney (AEST/AEDT)': {
     name: 'Sydney (AEST/AEDT)',
     description: 'Australia, major Asia-Pacific business hub',
     offset: 10,
@@ -347,9 +347,9 @@ export const MAJOR_TIMEZONES: Record<TimezoneCode, TimezoneInfo> = {
 };
 
 export const TIMEZONE_GROUPS = {
-  americas: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'] as TimezoneCode[],
-  europe: ['Europe/London', 'Europe/Paris', 'Europe/Dubai'] as TimezoneCode[],
-  asiaPacific: ['Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney'] as TimezoneCode[]
+  americas: ['New York (EST/EDT)', 'Chicago (CST/CDT)', 'Denver (MST/MDT)', 'Los Angeles (PST/PDT)'] as TimezoneCode[],
+  europe: ['London (GMT/BST)', 'Paris (CET/CEST)', 'Dubai (GST)'] as TimezoneCode[],
+  asiaPacific: ['Singapore (SGT)', 'Tokyo (JST)', 'Sydney (AEST/AEDT)'] as TimezoneCode[]
 };
 
 interface TimeRange {
@@ -503,18 +503,18 @@ export async function generateCommissionAndActivity(title: string, description: 
   commission: {
     options: Array<{
       base: string;
-      baseAmount: string;
+      baseAmount: number;
       bonus?: string;
-      bonusAmount?: string;
+      bonusAmount?: number;
       currency: string;
       minimumVolume: {
-        amount: string;
+        amount: number;
         period: string;
         unit: string;
       };
       transactionCommission: {
         type: string;
-        amount: string;
+        amount: number;
       };
     }>;
   };
@@ -544,37 +544,21 @@ export async function generateCommissionAndActivity(title: string, description: 
 
 IMPORTANT: All responses MUST be in English only.
 
-CRITICAL: The commission base type MUST be EXACTLY one of these five options, no variations allowed:
-1. "Fixed Salary"
-2. "Base + Commission"
-3. "Pure Commission"
-4. "Tiered Commission"
-5. "Graduated Commission"
-
-CRITICAL: The transaction commission type MUST be EXACTLY one of these three options, no variations allowed:
-1. "Fixed Amount"
-2. "Percentage"
-3. "Conversion"
-
-CRITICAL RULES FOR NUMERICAL VALUES:
-1. baseAmount MUST be a plain number without currency symbol (e.g., 5000 not $5000)
-2. bonusAmount MUST be a plain number without currency symbol (e.g., 200 not $200)
-3. transactionCommission.amount MUST be a plain number without currency symbol or percentage sign (e.g., 5 not $5 or 5%)
-4. minimumVolume.amount MUST be a plain number without currency symbol (e.g., 100000 not $100000)
-5. minimumVolume.period MUST be EXACTLY one of: "Daily", "Weekly", "Monthly" (no variations allowed)
-
-CRITICAL RULES FOR DAYS OF THE WEEK:
-1. ALWAYS use English day names regardless of input language:
-   - Monday (not Lundi, Montag, etc.)
-   - Tuesday (not Mardi, Dienstag, etc.)
-   - Wednesday (not Mercredi, Mittwoch, etc.)
-   - Thursday (not Jeudi, Donnerstag, etc.)
-   - Friday (not Vendredi, Freitag, etc.)
-   - Saturday (not Samedi, Samstag, etc.)
-   - Sunday (not Dimanche, Sonntag, etc.)
-2. Days MUST be in the exact format shown above
-3. Days MUST be in an array format
-4. Days MUST be capitalized
+CRITICAL COMMISSION STRUCTURE RULES:
+1. The commission base type MUST be EXACTLY one of these TWO options only: "Fixed Salary" or "Base + Commission"
+2. The bonus type MUST ALWAYS be "Performance Bonus" (no other options allowed)
+3. The transaction commission type MUST ALWAYS be "Fixed Amount" (no other options allowed)
+4. The minimumVolume.unit MUST be EXACTLY one of these TWO options only: "Calls" or "Sales"
+5. The minimumVolume.period MUST be EXACTLY one of these THREE options only: "Daily", "Weekly", or "Monthly"
+6. ALL numerical values MUST be realistic and appropriate for the job type:
+   - For sales positions: baseAmount 0-5000, bonusAmount 50-500, transactionCommission.amount 10-100
+   - For service positions: baseAmount 2000-8000, bonusAmount 100-1000, transactionCommission.amount 5-50
+   - minimumVolume.amount should be realistic targets (e.g., 10-100 for daily, 50-500 for weekly, 200-2000 for monthly)
+   - For "Base + Commission" positions: baseAmount should be 0, bonusAmount should be 100-300
+   - For "Fixed Salary" positions: baseAmount should be 2000-8000, bonusAmount should be 50-200
+7. NEVER return empty strings or null values for numerical fields
+8. ALWAYS provide specific, realistic numbers based on the job description
+9. For sales roles, bonusAmount should typically be 100-300 for performance bonuses
 
 CRITICAL RULES FOR CURRENCY SELECTION:
 1. ALWAYS use standard ISO 4217 currency codes (3 letters):
@@ -612,67 +596,43 @@ Examples of CORRECT format:
   "commission": {
     "options": [
       {
-        "base": "Fixed Salary",
-        "baseAmount": "5000",
+        "base": "Base + Commission",
+        "baseAmount": 0,
         "bonus": "Performance Bonus",
-        "bonusAmount": "10",
-        "currency": "EUR",  // Correct: ISO code
+        "bonusAmount": 150,
+        "currency": "EUR",
         "minimumVolume": {
-          "amount": "100000",
+          "amount": 50,
           "period": "Monthly",
           "unit": "Calls"
         },
         "transactionCommission": {
-          "type": "Percentage",
-          "amount": "5"
+          "type": "Fixed Amount",
+          "amount": 25
         }
       }
     ]
   }
 }
 
-Examples of INCORRECT format (DO NOT USE):
-{
-  "commission": {
-    "options": [
-      {
-        "currency": "Euro",     // Wrong: full name
-        "currency": "€",        // Wrong: symbol
-        "currency": "euro",     // Wrong: lowercase
-        "currency": "EURO",     // Wrong: not ISO code
-        "currency": "EUR.",     // Wrong: extra character
-      }
-    ]
-  }
-}
-
-Available bonus types:
-${predefinedOptions.commission.bonusTypes.map(type => `- ${type}`).join('\n')}
-
-Available currencies:
-${predefinedOptions.commission.currencies.map(currency => `- ${currency.name} (${currency.code})`).join('\n')}
-
-Available lead sources:
-${predefinedOptions.leads.sources.map(source => `- ${source}`).join('\n')}
-
 Return ONLY a valid JSON object with the following structure:
 {
   "commission": {
     "options": [
       {
-        "base": string (MUST be EXACTLY one of: "Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", "Graduated Commission"),
-        "baseAmount": string (MUST be a plain number without currency symbol),
-        "bonus": string (optional, MUST be one of the available bonus types),
-        "bonusAmount": string (optional, MUST be a plain number without currency symbol),
+        "base": string (MUST be EXACTLY one of: "Fixed Salary", "Base + Commission"),
+        "baseAmount": number (MUST be a plain number without currency symbol),
+        "bonus": string (MUST ALWAYS be "Performance Bonus"),
+        "bonusAmount": number (MUST be a plain number without currency symbol),
         "currency": string (MUST be one of the available currency codes),
         "minimumVolume": {
-          "amount": string (MUST be a plain number without currency symbol),
+          "amount": number (MUST be a plain number without currency symbol),
           "period": string (MUST be EXACTLY one of: "Daily", "Weekly", "Monthly"),
-          "unit": string (MUST match the currency)
+          "unit": string (MUST be EXACTLY one of: "Calls", "Sales")
         },
         "transactionCommission": {
-          "type": string (MUST be EXACTLY one of: "Fixed Amount", "Percentage", "Conversion"),
-          "amount": string (MUST be a plain number without currency symbol or percentage sign)
+          "type": string (MUST ALWAYS be "Fixed Amount"),
+          "amount": number (MUST be a plain number without currency symbol or percentage sign)
         }
       }
     ]
@@ -701,7 +661,7 @@ Consider the following factors when determining commission and activity:
           content: `Title: ${title}
 Description: ${description}
 
-Based on this job title and description, suggest appropriate commission structures and activity types. The commission base type MUST be EXACTLY one of: "Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", or "Graduated Commission". No variations or other types are allowed.`
+Based on this job title and description, suggest appropriate commission structures and activity types. The commission base type MUST be EXACTLY one of: "Fixed Salary" or "Base + Commission". The bonus type MUST ALWAYS be "Performance Bonus". The transaction commission type MUST ALWAYS be "Fixed Amount". The unit MUST be either "Calls" or "Sales". The period MUST be one of "Daily", "Weekly", or "Monthly".`
         }
       ],
       temperature: 0.7,
@@ -715,52 +675,100 @@ Based on this job title and description, suggest appropriate commission structur
 
     const result = JSON.parse(content);
     
-    // Validate commission options
-    const validBaseTypes = ["Fixed Salary", "Base + Commission", "Pure Commission", "Tiered Commission", "Graduated Commission"];
-    result.commission.options.forEach((option: any) => {
-      if (!validBaseTypes.includes(option.base)) {
-        throw new Error(`Invalid commission base type: ${option.base}. Must be one of: ${validBaseTypes.join(', ')}`);
-      }
-      if (option.bonus && !predefinedOptions.commission.bonusTypes.includes(option.bonus)) {
-        // Add new bonus type to predefined options if it's not already there
-        if (!predefinedOptions.commission.bonusTypes.includes(option.bonus)) {
-          predefinedOptions.commission.bonusTypes.push(option.bonus);
-          console.log(`Added new bonus type: ${option.bonus}`);
+    // Validate and fix commission structure
+    if (result.commission?.options) {
+      result.commission.options.forEach((option: any) => {
+        // Ensure all numerical values are numbers
+        if (typeof option.baseAmount === 'string') {
+          option.baseAmount = parseFloat(option.baseAmount) || 0;
         }
-      }
-      if (!predefinedOptions.commission.currencies.some(currency => currency.code === option.currency)) {
-        throw new Error('Invalid currency');
-      }
-
-      // Validate numerical values are plain numbers without currency symbols or percentage signs
-      const validateNumber = (value: string, fieldName: string) => {
-        if (value.includes('$') || value.includes('%') || value.includes('€') || value.includes('£')) {
-          throw new Error(`${fieldName} must be a plain number without currency symbol or percentage sign`);
+        if (typeof option.bonusAmount === 'string') {
+          option.bonusAmount = parseFloat(option.bonusAmount) || 0;
         }
-        if (isNaN(Number(value))) {
-          throw new Error(`${fieldName} must be a valid number`);
+        if (option.minimumVolume && typeof option.minimumVolume.amount === 'string') {
+          option.minimumVolume.amount = parseFloat(option.minimumVolume.amount) || 0;
         }
-      };
-
-      validateNumber(option.baseAmount, 'baseAmount');
-      if (option.bonusAmount) validateNumber(option.bonusAmount, 'bonusAmount');
-      validateNumber(option.minimumVolume.amount, 'minimumVolume.amount');
-      validateNumber(option.transactionCommission.amount, 'transactionCommission.amount');
-
-      // Validate period is exactly one of the allowed values
-      const validPeriods = ["Daily", "Weekly", "Monthly"];
-      if (!validPeriods.includes(option.minimumVolume.period)) {
-        throw new Error(`minimumVolume.period must be exactly one of: ${validPeriods.join(', ')}`);
-      }
-    });
-
-    // Update predefinedOptions with any new base types
-    result.commission.options.forEach((option: any) => {
-      if (!predefinedOptions.commission.baseTypes.includes(option.base)) {
-        predefinedOptions.commission.baseTypes.push(option.base);
-        console.log(`Added new base type: ${option.base}`);
-      }
-    });
+        if (option.transactionCommission && typeof option.transactionCommission.amount === 'string') {
+          option.transactionCommission.amount = parseFloat(option.transactionCommission.amount) || 0;
+        }
+        
+        // Ensure bonus type is always "Performance Bonus"
+        option.bonus = "Performance Bonus";
+        
+        // Ensure transaction commission type is always "Fixed Amount"
+        if (option.transactionCommission) {
+          option.transactionCommission.type = "Fixed Amount";
+        }
+        
+        // Validate unit and period
+        if (option.minimumVolume) {
+          const validUnits = ["Calls", "Sales"];
+          if (!validUnits.includes(option.minimumVolume.unit)) {
+            option.minimumVolume.unit = "Calls";
+          }
+          
+          const validPeriods = ["Daily", "Weekly", "Monthly"];
+          if (!validPeriods.includes(option.minimumVolume.period)) {
+            option.minimumVolume.period = "Monthly";
+          }
+        }
+        
+        // Fix common commission value inversions
+        // If minimumVolume.amount is very low (1-5) and transactionCommission.amount is also low (20-50),
+        // it might be an inversion. Check if the description contains specific amounts.
+        if (option.minimumVolume && option.transactionCommission) {
+          const minVol = option.minimumVolume.amount;
+          const transComm = option.transactionCommission.amount;
+          
+          // If both values are suspiciously low, they might be inverted
+          if (minVol <= 5 && transComm <= 50) {
+            // Look for specific amounts in the description that might indicate the correct values
+            const description = result.description || '';
+            
+            // Check for appointment amounts (should be minimumVolume.amount)
+            const appointmentMatch = description.match(/(\d+)\s*[€€]\s*per\s*(appointment|rendez-vous|meeting)/i);
+            if (appointmentMatch) {
+              option.minimumVolume.amount = parseInt(appointmentMatch[1]);
+            }
+            
+            // Check for contract amounts (should be transactionCommission.amount)
+            const contractMatch = description.match(/(\d+)\s*[€€]\s*per\s*(contract|contrat|sale|vente)/i);
+            if (contractMatch) {
+              option.transactionCommission.amount = parseInt(contractMatch[1]);
+            }
+          }
+          
+          // Additional check: if transactionCommission.amount is 0 but there are sale amounts mentioned
+          if (transComm === 0) {
+            const description = result.description || '';
+            
+            // Look for "X € per sale" patterns
+            const saleMatch = description.match(/(\d+)\s*[€€]\s*per\s*sale/i);
+            if (saleMatch) {
+              option.transactionCommission.amount = parseInt(saleMatch[1]);
+            }
+            
+            // Look for "up to X €" patterns (common in sales descriptions)
+            const upToMatch = description.match(/up\s*to\s*(\d+)\s*[€€]/i);
+            if (upToMatch) {
+              option.transactionCommission.amount = parseInt(upToMatch[1]);
+            }
+            
+            // Look for "X € / vente" patterns (French)
+            const venteMatch = description.match(/(\d+)\s*[€€]\s*\/\s*vente/i);
+            if (venteMatch) {
+              option.transactionCommission.amount = parseInt(venteMatch[1]);
+            }
+            
+            // Look for "X € par vente" patterns (French)
+            const parVenteMatch = description.match(/(\d+)\s*[€€]\s*par\s*vente/i);
+            if (parVenteMatch) {
+              option.transactionCommission.amount = parseInt(parVenteMatch[1]);
+            }
+          }
+        }
+      });
+    }
 
     return result;
   } catch (error) {
@@ -776,6 +784,11 @@ export function getAvailableCommissionOptions() {
     bonusTypes: predefinedOptions.commission.bonusTypes,
     currencies: predefinedOptions.commission.currencies
   };
+}
+
+// Add a function to get available sectors
+export function getAvailableSectors() {
+  return predefinedOptions.sectors;
 }
 
 export async function generateTeamAndTerritories(title: string, description: string): Promise<{
@@ -1170,8 +1183,13 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
 
   // Generate schedule based on input or default to weekdays
   let scheduleDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  if (generatedData.schedule?.schedules?.[0]?.day) {
-    scheduleDays = expandDayRange(generatedData.schedule.schedules[0].day);
+  if (generatedData.schedule?.schedules?.[0]) {
+    const firstSchedule = generatedData.schedule.schedules[0];
+    if ('days' in firstSchedule && Array.isArray(firstSchedule.days)) {
+      scheduleDays = firstSchedule.days;
+    } else if ('day' in firstSchedule && firstSchedule.day) {
+      scheduleDays = [firstSchedule.day];
+    }
   }
 
   // Generate schedule for each day
@@ -1197,18 +1215,35 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const finalEndTime = endMinutes > startMinutes ? endTime : '17:00';
 
   const validBaseTypes = predefinedOptions.commission.baseTypes;
-  // Force base type to always be "Base + Commission"
-  const base = "Base + Commission";
+  // Allow both "Fixed Salary" and "Base + Commission" as valid base types
+  const validRestrictedBaseTypes = ["Fixed Salary", "Base + Commission"];
+  const base = generatedData.commission?.options?.[0]?.base && validRestrictedBaseTypes.includes(generatedData.commission.options[0].base) 
+    ? generatedData.commission.options[0].base 
+    : "Base + Commission"; // Default to "Base + Commission" if not specified or invalid
 
   const validTransactionTypes = predefinedOptions.commission.transactionCommissionTypes;
   // Force commission type to always be "Fixed Amount"
-  const finalTransactionType = "Fixed Amount";
-  const transactionAmountRaw = generatedData.commission?.options?.[0]?.transactionCommission?.amount;
-  const cleanedTransactionAmount = transactionAmountRaw
-    ? transactionAmountRaw.replace(/[^0-9.]/g, '')
-    : '1';
+  const finalTransactionType = generatedData.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount";
+  
+  // Helper function to extract numeric value from string
+  const extractNumericValue = (value: string | number): number => {
+    if (typeof value === 'number') {
+      return isNaN(value) ? 0 : value;
+    }
+    if (typeof value === 'string') {
+      // Handle empty strings
+      if (value.trim() === '') {
+        return 0;
+      }
+      // Extract first number from string (e.g., "25 € per qualified appointment" -> 25)
+      const match = value.match(/(\d+(?:\.\d+)?)/);
+      return match ? parseFloat(match[1]) : 0;
+    }
+    return 0;
+  };
 
-  const finalTransactionAmount = cleanedTransactionAmount || '1';
+  const transactionAmountRaw = generatedData.commission?.options?.[0]?.transactionCommission?.amount;
+  const finalTransactionAmount = extractNumericValue(transactionAmountRaw || '1');
 
   // Validate language levels
   const validLanguageLevels = predefinedOptions.skills.skillLevels;
@@ -1299,24 +1334,86 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const allSchedules = generatedData.schedule?.schedules?.map((schedule, index) => {
     const scheduleStartTime = convertTo24HourFormat(schedule.hours?.start || startTime);
     const scheduleEndTime = convertTo24HourFormat(schedule.hours?.end || endTime);
-    const currentScheduleDays = schedule.day ? expandDayRange(schedule.day) : scheduleDays;
-
-    return currentScheduleDays.map((day: string, dayIndex: number) => ({
-      day,
-      hours: {
-        start: scheduleStartTime,
-        end: scheduleEndTime
-      },
-      _id: {
-        $oid: `684fdd69e512be3d11a9edc${index * 100 + dayIndex + 6}`
-      }
-    }));
+    
+    // Check if the schedule has a 'day' property (individual day) or 'days' array
+    if ('day' in schedule && schedule.day) {
+      // This is an individual day schedule
+      return {
+        day: schedule.day,
+        hours: {
+          start: scheduleStartTime,
+          end: scheduleEndTime
+        },
+        _id: {
+          $oid: `684fdd69e512be3d11a9edc${index + 6}`
+        }
+      };
+    } else if ('days' in schedule && Array.isArray(schedule.days)) {
+      // This is a grouped schedule with multiple days
+      return schedule.days.map((day: string, dayIndex: number) => ({
+        day,
+        hours: {
+          start: scheduleStartTime,
+          end: scheduleEndTime
+        },
+        _id: {
+          $oid: `684fdd69e512be3d11a9edc${index * 100 + dayIndex + 6}`
+        }
+      }));
+    } else {
+      // Fallback to default schedule
+      return defaultSchedule;
+    }
   }).flat() || defaultSchedule;
 
+  // Validate sectors
+  const validSectors = predefinedOptions.sectors;
+  const validatedSectors = (generatedData.sectors || []).filter(sector => 
+    validSectors.includes(sector)
+  );
+
+  // Validate team roles - ensure only predefined roles are used
+  const validTeamRoles = predefinedOptions.team.roles.map(role => role.id);
+  const validatedTeamStructure = (generatedData.team?.structure || []).map((role: any) => {
+    // Check if the roleId exists in predefined roles
+    if (!validTeamRoles.includes(role.roleId)) {
+      // If not valid, try to find a similar role or default to 'agent'
+      const similarRole = predefinedOptions.team.roles.find(validRole => 
+        validRole.name.toLowerCase().includes('agent') || 
+        validRole.name.toLowerCase().includes('representative') ||
+        validRole.name.toLowerCase().includes('sales')
+      );
+      
+      return {
+        roleId: similarRole?.id || 'agent',
+        count: role.count || 1,
+        seniority: {
+          level: role.seniority?.level || '',
+          yearsExperience: role.seniority?.yearsExperience || 0
+        }
+      };
+    }
+    
+    return {
+      roleId: role.roleId,
+      count: role.count || 1,
+      seniority: {
+        level: role.seniority?.level || '',
+        yearsExperience: role.seniority?.yearsExperience || 0
+      }
+    };
+  });
+
+  // Validate team territories - ensure only predefined territories are used
+  const validTeamTerritories = predefinedOptions.team.territories;
+  const validatedTeamTerritories = (generatedData.team?.territories || []).filter(territory => 
+    validTeamTerritories.includes(territory)
+  );
+
   return {
-    title: generatedData.jobTitles?.[0] || '',
-    description: generatedData.deliverables?.join('\n') || '',
-    category: generatedData.sectors?.[0] || '',
+    title: generatedData.jobTitles?.[0] || generatedData.title || '',
+    description: generatedData.description || '',
+    category: validatedSectors[0] || '',
     highlights: generatedData.highlights || [],
     destinationZones: (generatedData.destinationZones || []).map(zone => {
       // Convert continent names to appropriate country/region
@@ -1370,31 +1467,37 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     commission: {
       base,
-      baseAmount: (
-        generatedData.commission?.options?.[0]?.baseAmount
-          ? generatedData.commission.options[0].baseAmount.replace(/[^0-9.]/g, '')
-          : '3'
+      baseAmount: extractNumericValue(
+        generatedData.commission?.options?.[0]?.baseAmount || '0'
       ),
       bonus: "Performance Bonus",
-      bonusAmount: (
-        generatedData.commission?.options?.[0]?.bonusAmount
-          ? generatedData.commission.options[0].bonusAmount.replace(/[^0-9.]/g, '')
-          : '2'
+      bonusAmount: extractNumericValue(
+        generatedData.commission?.options?.[0]?.bonusAmount || (base === "Base + Commission" ? '150' : '100')
       ),
       structure: generatedData.commission?.options?.[0]?.structure || '',
-      currency: generatedData.commission?.options?.[0]?.currency || 'USD',
+      currency: generatedData.commission?.options?.[0]?.currency || 'EUR',
       minimumVolume: {
-        amount: (
-          generatedData.commission?.options?.[0]?.minimumVolume?.amount
-            ? generatedData.commission.options[0].minimumVolume.amount.replace(/[^0-9.]/g, '')
-            : '3'
+        amount: extractNumericValue(
+          generatedData.commission?.options?.[0]?.minimumVolume?.amount || '10'
         ),
-        period: generatedData.commission?.options?.[0]?.minimumVolume?.period
-          ? generatedData.commission.options[0].minimumVolume.period.charAt(0).toUpperCase() + generatedData.commission.options[0].minimumVolume.period.slice(1)
-          : 'Monthly',
-        unit: generatedData.commission?.options?.[0]?.minimumVolume?.unit
-          ? (generatedData.commission.options[0].minimumVolume.unit.toLowerCase() === 'sales' ? 'Sales' : 'Calls')
-          : 'Calls'
+        period: (() => {
+          const period = generatedData.commission?.options?.[0]?.minimumVolume?.period;
+          const validPeriods = ["Daily", "Weekly", "Monthly"];
+          if (period && validPeriods.includes(period)) {
+            return period;
+          }
+          // Default to "Monthly" if period is not specified or invalid
+          return "Monthly";
+        })(),
+        unit: (() => {
+          const unit = generatedData.commission?.options?.[0]?.minimumVolume?.unit;
+          const validUnits = ["Calls", "Sales"];
+          if (unit && validUnits.includes(unit)) {
+            return unit;
+          }
+          // Default to "Calls" if unit is not specified or invalid
+          return "Calls";
+        })()
       },
       transactionCommission: {
         type: finalTransactionType,
@@ -1424,8 +1527,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     team: {
       size: generatedData.team?.size || 0,
-      structure: generatedData.team?.structure || [],
-      territories: generatedData.team?.territories || [],
+      structure: validatedTeamStructure,
+      territories: validatedTeamTerritories,
       reporting: {
         to: generatedData.team?.reporting?.to || "Manager",
         frequency: generatedData.team?.reporting?.frequency || "Weekly"
@@ -1485,13 +1588,13 @@ export async function generateSkills(title: string, description: string): Promis
     const result = JSON.parse(content);
     
     // Validate languages
-    const validLanguages = predefinedOptions.skills.languages.map(lang => lang.name);
+    const validLanguages = predefinedOptions.skills.languages.map(lang => lang.language);
     const validLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
     
     result.languages.forEach((lang: any) => {
       // Ensure we're dealing with human languages, not programming languages
-      if (!validLanguages.includes(lang.name)) {
-        throw new Error(`Invalid human language: ${lang.name}`);
+      if (!validLanguages.includes(lang.language)) {
+        throw new Error(`Invalid human language: ${lang.language}`);
       }
       if (!validLevels.includes(lang.level)) {
         throw new Error(`Invalid language level: ${lang.level}`);
@@ -1502,5 +1605,334 @@ export async function generateSkills(title: string, description: string): Promis
   } catch (error) {
     console.error('Error generating skills:', error);
     throw error;
+  }
+}
+
+export async function generateGigSuggestions(description: string): Promise<GigSuggestion> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!description) {
+    throw new Error('Description is required');
+  }
+
+  try {
+    const result = await retryWithBackoff(async () => {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: `You are an AI assistant that helps create job listings. Analyze the user's description and generate a detailed gig suggestion.
+
+IMPORTANT: All responses MUST be in English only. Return ONLY a valid JSON object with the structure defined below.
+
+CRITICAL COMMISSION STRUCTURE RULES:
+1. The commission base type MUST be EXACTLY one of these TWO options only: "Fixed Salary" or "Base + Commission"
+2. The bonus type MUST ALWAYS be "Performance Bonus" (no other options allowed)
+3. The transaction commission type MUST ALWAYS be "Fixed Amount" (no other options allowed)
+4. The minimumVolume.unit MUST be EXACTLY one of these TWO options only: "Calls" or "Sales"
+5. The minimumVolume.period MUST be EXACTLY one of these THREE options only: "Daily", "Weekly", or "Monthly"
+6. ALL numerical values MUST be realistic and appropriate for the job type:
+   - For sales positions: baseAmount 0-5000, bonusAmount 50-500, transactionCommission.amount 10-100
+   - For service positions: baseAmount 2000-8000, bonusAmount 100-1000, transactionCommission.amount 5-50
+   - minimumVolume.amount should be realistic targets (e.g., 10-100 for daily, 50-500 for weekly, 200-2000 for monthly)
+   - For "Base + Commission" positions: baseAmount should be 0, bonusAmount should be 100-300
+   - For "Fixed Salary" positions: baseAmount should be 2000-8000, bonusAmount should be 50-200
+7. NEVER return empty strings or null values for numerical fields
+8. ALWAYS provide specific, realistic numbers based on the job description
+9. For sales roles, bonusAmount should typically be 100-300 for performance bonuses
+10. ALL numerical values MUST be returned as NUMBERS, not strings (e.g., 25 not "25")
+
+CRITICAL: When analyzing the job description, pay special attention to:
+- Specific monetary amounts mentioned (e.g., "25 € per appointment" → minimumVolume.amount: 25)
+- Commission amounts mentioned (e.g., "700 € per contract" → transactionCommission.amount: 700)
+- Performance targets mentioned (e.g., "daily targets" → period: "Daily")
+- Sales metrics mentioned (e.g., "per sale" → unit: "Sales")
+
+CRITICAL TEAM STRUCTURE RULES:
+1. The team structure MUST use ONLY the following available role IDs:
+${predefinedOptions.team.roles.map(role => `- ${role.id} (${role.name}): ${role.description}`).join('\n')}
+
+2. The territories MUST be from the following available options:
+${predefinedOptions.team.territories.join(', ')}
+
+3. Each role in the team structure MUST have:
+   - roleId: EXACTLY one of the available role IDs listed above
+   - count: number of positions for this role
+   - seniority: with level from predefinedOptions.basic.seniorityLevels and yearsExperience as number
+
+4. For sales positions, typically use: "agent", "senior_agent", "team_lead", or "representative"
+5. For management positions, typically use: "manager", "supervisor", or "team_lead"
+6. For support positions, typically use: "assistant", "coordinator", or "specialist"
+
+COMMISSION MAPPING RULES:
+- minimumVolume.amount = Amount per action/appointment (e.g., "25 € per appointment" → 25)
+- transactionCommission.amount = Amount per successful sale/contract (e.g., "900 € per contract" → 900)
+- bonusAmount = Performance bonus for exceeding targets (typically 100-300 for sales roles)
+
+${JSON.stringify(predefinedOptions, null, 2)}
+
+Return a JSON object with the following structure:
+{
+  "title": "string",
+  "description": "string (detailed job description)",
+  "category": "string (from predefinedOptions.basic.categories)",
+  "highlights": "string[]",
+  "jobTitles": "string[]",
+  "deliverables": "string[]",
+  "sectors": "string[] (MUST be from predefinedOptions.sectors)",
+  "destinationZones": "string[] (from predefinedOptions.basic.destinationZones)",
+  "timeframes": "string[]",
+  "schedule": {
+    "schedules": [
+      {
+        "days": "string[] (e.g., [\"Monday\", \"Tuesday\"])",
+        "hours": {
+          "start": "string (HH:mm)",
+          "end": "string (HH:mm)"
+        }
+      }
+    ],
+    "timeZones": "string[] (from predefinedOptions.basic.timeZones)",
+    "flexibility": "string[] (from predefinedOptions.schedule.flexibility)",
+    "minimumHours": {
+      "daily": "number",
+      "weekly": "number",
+      "monthly": "number"
+    }
+  },
+  "requirements": {
+    "essential": "string[]",
+    "preferred": "string[]"
+  },
+  "benefits": [
+    {
+      "type": "string",
+      "description": "string"
+    }
+  ],
+  "skills": {
+    "languages": [
+      {
+        "language": "string",
+        "proficiency": "string (e.g., 'B2')",
+        "iso639_1": "string (e.g., 'en')"
+      }
+    ],
+    "soft": [
+      {
+        "skill": "string",
+        "level": "number"
+      }
+    ],
+    "professional": [
+      {
+        "skill": "string",
+        "level": "number"
+      }
+    ],
+    "technical": [
+      {
+        "skill": "string",
+        "level": "number"
+      }
+    ],
+    "certifications": [
+      {
+        "name": "string",
+        "required": "boolean"
+      }
+    ]
+  },
+  "seniority": {
+    "level": "string (from predefinedOptions.basic.seniorityLevels)",
+    "yearsExperience": "number"
+  },
+  "team": {
+    "size": "number",
+    "structure": [
+      {
+        "roleId": "string (MUST be EXACTLY one of the available team role IDs)",
+        "count": "number",
+        "seniority": {
+          "level": "string (from predefinedOptions.basic.seniorityLevels)",
+          "yearsExperience": "number"
+        }
+      }
+    ],
+    "territories": "string[] (MUST be from predefinedOptions.team.territories)",
+    "reporting": {
+      "to": "string",
+      "frequency": "string"
+    },
+    "collaboration": "string[]"
+  },
+  "commission": {
+    "options": [
+      {
+        "base": "string (MUST be EXACTLY one of: \"Fixed Salary\", \"Base + Commission\")",
+        "baseAmount": "number (MUST be a number, not a string)",
+        "bonus": "string (MUST ALWAYS be \"Performance Bonus\")",
+        "bonusAmount": "number (MUST be a number, not a string)",
+        "structure": "string",
+        "currency": "string",
+        "minimumVolume": {
+          "amount": "number (MUST be a number, not a string)",
+          "period": "string (MUST be EXACTLY one of: \"Daily\", \"Weekly\", \"Monthly\")",
+          "unit": "string (MUST be EXACTLY one of: \"Calls\", \"Sales\")"
+        },
+        "transactionCommission": {
+          "type": "string (MUST ALWAYS be \"Fixed Amount\")",
+          "amount": "number (MUST be a number, not a string)"
+        }
+      }
+    ]
+  }
+}
+
+CRITICAL: All numerical values in the commission structure MUST be returned as numbers, not strings. For example:
+- "baseAmount": 0 (not "0")
+- "bonusAmount": 150 (not "150")
+- "minimumVolume.amount": 25 (not "25")
+- "transactionCommission.amount": 50 (not "50")
+
+IMPORTANT: When you see specific amounts in the job description like "25 € per appointment" or "700 € per contract", use those exact numbers in the commission structure.`
+          },
+          {
+            role: "user",
+            content: `Description: ${description}
+
+IMPORTANT: When generating the commission structure, ensure:
+1. Base type is either "Fixed Salary" or "Base + Commission"
+2. Bonus type is always "Performance Bonus"
+3. Transaction commission type is always "Fixed Amount"
+4. Unit is either "Calls" or "Sales"
+5. Period is one of "Daily", "Weekly", or "Monthly"
+6. ALL numerical values must be numbers, not strings
+7. Pay special attention to specific monetary amounts mentioned in the description and use them in the commission structure`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 4000
+      });
+
+      const content = completion.choices[0].message.content;
+      if (!content) {
+        throw new Error('Failed to generate suggestions');
+      }
+
+      try {
+        const parsedResult = JSON.parse(content);
+        
+        // Validate and fix commission structure
+        if (parsedResult.commission?.options) {
+          parsedResult.commission.options.forEach((option: any) => {
+            // Ensure all numerical values are numbers
+            if (typeof option.baseAmount === 'string') {
+              option.baseAmount = parseFloat(option.baseAmount) || 0;
+            }
+            if (typeof option.bonusAmount === 'string') {
+              option.bonusAmount = parseFloat(option.bonusAmount) || 0;
+            }
+            if (option.minimumVolume && typeof option.minimumVolume.amount === 'string') {
+              option.minimumVolume.amount = parseFloat(option.minimumVolume.amount) || 0;
+            }
+            if (option.transactionCommission && typeof option.transactionCommission.amount === 'string') {
+              option.transactionCommission.amount = parseFloat(option.transactionCommission.amount) || 0;
+            }
+            
+            // Ensure bonus type is always "Performance Bonus"
+            option.bonus = "Performance Bonus";
+            
+            // Ensure transaction commission type is always "Fixed Amount"
+            if (option.transactionCommission) {
+              option.transactionCommission.type = "Fixed Amount";
+            }
+            
+            // Validate unit and period
+            if (option.minimumVolume) {
+              const validUnits = ["Calls", "Sales"];
+              if (!validUnits.includes(option.minimumVolume.unit)) {
+                option.minimumVolume.unit = "Calls";
+              }
+              
+              const validPeriods = ["Daily", "Weekly", "Monthly"];
+              if (!validPeriods.includes(option.minimumVolume.period)) {
+                option.minimumVolume.period = "Monthly";
+              }
+            }
+            
+            // Fix common commission value inversions
+            // If minimumVolume.amount is very low (1-5) and transactionCommission.amount is also low (20-50),
+            // it might be an inversion. Check if the description contains specific amounts.
+            if (option.minimumVolume && option.transactionCommission) {
+              const minVol = option.minimumVolume.amount;
+              const transComm = option.transactionCommission.amount;
+              
+              // If both values are suspiciously low, they might be inverted
+              if (minVol <= 5 && transComm <= 50) {
+                // Look for specific amounts in the description that might indicate the correct values
+                const description = parsedResult.description || '';
+                
+                // Check for appointment amounts (should be minimumVolume.amount)
+                const appointmentMatch = description.match(/(\d+)\s*[€€]\s*per\s*(appointment|rendez-vous|meeting)/i);
+                if (appointmentMatch) {
+                  option.minimumVolume.amount = parseInt(appointmentMatch[1]);
+                }
+                
+                // Check for contract amounts (should be transactionCommission.amount)
+                const contractMatch = description.match(/(\d+)\s*[€€]\s*per\s*(contract|contrat|sale|vente)/i);
+                if (contractMatch) {
+                  option.transactionCommission.amount = parseInt(contractMatch[1]);
+                }
+              }
+              
+              // Additional check: if transactionCommission.amount is 0 but there are sale amounts mentioned
+              if (transComm === 0) {
+                const description = parsedResult.description || '';
+                
+                // Look for "X € per sale" patterns
+                const saleMatch = description.match(/(\d+)\s*[€€]\s*per\s*sale/i);
+                if (saleMatch) {
+                  option.transactionCommission.amount = parseInt(saleMatch[1]);
+                }
+                
+                // Look for "up to X €" patterns (common in sales descriptions)
+                const upToMatch = description.match(/up\s*to\s*(\d+)\s*[€€]/i);
+                if (upToMatch) {
+                  option.transactionCommission.amount = parseInt(upToMatch[1]);
+                }
+                
+                // Look for "X € / vente" patterns (French)
+                const venteMatch = description.match(/(\d+)\s*[€€]\s*\/\s*vente/i);
+                if (venteMatch) {
+                  option.transactionCommission.amount = parseInt(venteMatch[1]);
+                }
+                
+                // Look for "X € par vente" patterns (French)
+                const parVenteMatch = description.match(/(\d+)\s*[€€]\s*par\s*vente/i);
+                if (parVenteMatch) {
+                  option.transactionCommission.amount = parseInt(parVenteMatch[1]);
+                }
+              }
+            }
+          });
+        }
+        
+        return parsedResult;
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', content);
+        throw new Error('Failed to parse AI suggestions');
+      }
+    });
+
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`AI suggestion failed: ${error.message}`);
+    }
+    throw new Error('AI suggestion failed');
   }
 }
