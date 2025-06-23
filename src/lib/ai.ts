@@ -1223,7 +1223,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
 
   const validTransactionTypes = predefinedOptions.commission.transactionCommissionTypes;
   // Force commission type to always be "Fixed Amount"
-  const finalTransactionType = "Fixed Amount";
+  const finalTransactionType = generatedData.commission?.options?.[0]?.transactionCommission?.type || "Fixed Amount";
   
   // Helper function to extract numeric value from string
   const extractNumericValue = (value: string | number): number => {
@@ -1463,9 +1463,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       },
       transactionCommission: {
         type: finalTransactionType,
-        amount: extractNumericValue(
-          generatedData.commission?.options?.[0]?.transactionCommission?.amount || '25'
-        )
+        amount: finalTransactionAmount
       },
       kpis: []
     },
