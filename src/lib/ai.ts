@@ -1372,6 +1372,44 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     validSectors.includes(sector)
   );
 
+  // Validate team roles - ensure only predefined roles are used
+  const validTeamRoles = predefinedOptions.team.roles.map(role => role.id);
+  const validatedTeamStructure = (generatedData.team?.structure || []).map((role: any) => {
+    // Check if the roleId exists in predefined roles
+    if (!validTeamRoles.includes(role.roleId)) {
+      // If not valid, try to find a similar role or default to 'agent'
+      const similarRole = predefinedOptions.team.roles.find(validRole => 
+        validRole.name.toLowerCase().includes('agent') || 
+        validRole.name.toLowerCase().includes('representative') ||
+        validRole.name.toLowerCase().includes('sales')
+      );
+      
+      return {
+        roleId: similarRole?.id || 'agent',
+        count: role.count || 1,
+        seniority: {
+          level: role.seniority?.level || '',
+          yearsExperience: role.seniority?.yearsExperience || 0
+        }
+      };
+    }
+    
+    return {
+      roleId: role.roleId,
+      count: role.count || 1,
+      seniority: {
+        level: role.seniority?.level || '',
+        yearsExperience: role.seniority?.yearsExperience || 0
+      }
+    };
+  });
+
+  // Validate team territories - ensure only predefined territories are used
+  const validTeamTerritories = predefinedOptions.team.territories;
+  const validatedTeamTerritories = (generatedData.team?.territories || []).filter(territory => 
+    validTeamTerritories.includes(territory)
+  );
+
   return {
     title: generatedData.jobTitles?.[0] || generatedData.title || '',
     description: generatedData.description || '',
@@ -1489,8 +1527,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     team: {
       size: generatedData.team?.size || 0,
-      structure: generatedData.team?.structure || [],
-      territories: generatedData.team?.territories || [],
+      structure: validatedTeamStructure,
+      territories: validatedTeamTerritories,
       reporting: {
         to: generatedData.team?.reporting?.to || "Manager",
         frequency: generatedData.team?.reporting?.frequency || "Weekly"
@@ -1613,6 +1651,22 @@ CRITICAL: When analyzing the job description, pay special attention to:
 - Performance targets mentioned (e.g., "daily targets" → period: "Daily")
 - Sales metrics mentioned (e.g., "per sale" → unit: "Sales")
 
+CRITICAL TEAM STRUCTURE RULES:
+1. The team structure MUST use ONLY the following available role IDs:
+${predefinedOptions.team.roles.map(role => `- ${role.id} (${role.name}): ${role.description}`).join('\n')}
+
+2. The territories MUST be from the following available options:
+${predefinedOptions.team.territories.join(', ')}
+
+3. Each role in the team structure MUST have:
+   - roleId: EXACTLY one of the available role IDs listed above
+   - count: number of positions for this role
+   - seniority: with level from predefinedOptions.basic.seniorityLevels and yearsExperience as number
+
+4. For sales positions, typically use: "agent", "senior_agent", "team_lead", or "representative"
+5. For management positions, typically use: "manager", "supervisor", or "team_lead"
+6. For support positions, typically use: "assistant", "coordinator", or "specialist"
+
 COMMISSION MAPPING RULES:
 - minimumVolume.amount = Amount per action/appointment (e.g., "25 € per appointment" → 25)
 - transactionCommission.amount = Amount per successful sale/contract (e.g., "900 € per contract" → 900)
@@ -1698,8 +1752,17 @@ Return a JSON object with the following structure:
   },
   "team": {
     "size": "number",
-    "structure": "string[]",
-    "territories": "string[]",
+    "structure": [
+      {
+        "roleId": "string (MUST be EXACTLY one of the available team role IDs)",
+        "count": "number",
+        "seniority": {
+          "level": "string (from predefinedOptions.basic.seniorityLevels)",
+          "yearsExperience": "number"
+        }
+      }
+    ],
+    "territories": "string[] (MUST be from predefinedOptions.team.territories)",
     "reporting": {
       "to": "string",
       "frequency": "string"

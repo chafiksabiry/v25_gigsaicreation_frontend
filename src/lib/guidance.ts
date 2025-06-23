@@ -210,8 +210,100 @@ export const predefinedOptions = {
     skillLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
   },
   team: {
-    roles: [],
-    territories: []
+    roles: [
+      {
+        id: 'team_lead',
+        name: 'Team Lead',
+        description: 'Manages team performance and provides guidance'
+      },
+      {
+        id: 'senior_agent',
+        name: 'Senior Agent',
+        description: 'Experienced agent with advanced skills and mentoring capabilities'
+      },
+      {
+        id: 'agent',
+        name: 'Agent',
+        description: 'Handles customer interactions and core responsibilities'
+      },
+      {
+        id: 'junior_agent',
+        name: 'Junior Agent',
+        description: 'Entry-level agent with basic responsibilities and learning focus'
+      },
+      {
+        id: 'supervisor',
+        name: 'Supervisor',
+        description: 'Oversees operations and ensures quality standards'
+      },
+      {
+        id: 'manager',
+        name: 'Manager',
+        description: 'Strategic planning and team development'
+      },
+      {
+        id: 'coordinator',
+        name: 'Coordinator',
+        description: 'Coordinates activities and communication'
+      },
+      {
+        id: 'specialist',
+        name: 'Specialist',
+        description: 'Expert in specific areas or processes'
+      },
+      {
+        id: 'consultant',
+        name: 'Consultant',
+        description: 'Provides expert advice and strategic guidance'
+      },
+      {
+        id: 'representative',
+        name: 'Representative',
+        description: 'Represents the company in customer interactions'
+      },
+      {
+        id: 'associate',
+        name: 'Associate',
+        description: 'Supports team operations and projects'
+      },
+      {
+        id: 'assistant',
+        name: 'Assistant',
+        description: 'Provides support and administrative tasks'
+      },
+      {
+        id: 'trainee',
+        name: 'Trainee',
+        description: 'Learning role with structured training program'
+      },
+      {
+        id: 'intern',
+        name: 'Intern',
+        description: 'Student or recent graduate gaining practical experience'
+      }
+    ],
+    territories: [
+      'North America',
+      'Europe',
+      'Asia Pacific',
+      'Latin America',
+      'Middle East',
+      'Africa',
+      'United States',
+      'Canada',
+      'United Kingdom',
+      'France',
+      'Germany',
+      'Spain',
+      'Italy',
+      'Australia',
+      'Japan',
+      'China',
+      'India',
+      'Brazil',
+      'Mexico',
+      'South Africa'
+    ]
   },
   leads: {
     sources: []

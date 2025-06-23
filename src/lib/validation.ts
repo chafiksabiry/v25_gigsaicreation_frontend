@@ -31,11 +31,15 @@ export function validateGigData(data: GigData): ValidationResult {
   if (!data.schedule) {
     warnings.schedule = [...(warnings.schedule || []), 'Consider adding schedule information'];
   } else {
-    if (!data.schedule.days?.length) {
+    if (!data.schedule.schedules?.length) {
       warnings.schedule = [...(warnings.schedule || []), 'Consider specifying working days'];
     }
 
-    if (!data.schedule.hours?.trim()) {
+    // Check if there are any schedules with hours
+    const hasHours = data.schedule.schedules?.some(schedule => 
+      schedule.hours?.start && schedule.hours?.end
+    );
+    if (!hasHours) {
       warnings.schedule = [...(warnings.schedule || []), 'Consider specifying working hours'];
     }
 
@@ -98,16 +102,24 @@ export function validateGigData(data: GigData): ValidationResult {
   }
 
   // Skills
-  if (data.skills?.languages?.length === 0) {
+  if (!data.skills?.languages?.length) {
     warnings.skills = [...(warnings.skills || []), 'Consider specifying required languages'];
   }
 
-  if (data.skills?.professional?.length === 0) {
+  if (!data.skills?.professional?.length) {
     warnings.skills = [...(warnings.skills || []), 'Consider adding professional skills requirements'];
   }
 
   // Documentation
-  if (Object.values(data.documentation || {}).every(docs => !docs || docs.length === 0)) {
+  const hasDocumentation = data.documentation && (
+    (data.documentation.product && data.documentation.product.length > 0) ||
+    (data.documentation.process && data.documentation.process.length > 0) ||
+    (data.documentation.training && data.documentation.training.length > 0) ||
+    (data.documentation.templates && Object.keys(data.documentation.templates).length > 0) ||
+    (data.documentation.reference && Object.keys(data.documentation.reference).length > 0)
+  );
+  
+  if (!hasDocumentation) {
     warnings.documentation = [...(warnings.documentation || []), 'Consider adding relevant documentation'];
   }
 

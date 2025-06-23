@@ -74,6 +74,45 @@ interface Company {
 //   }
 // }
 
+// Fonction pour corriger automatiquement les données de schedule
+function fixScheduleData(data: GigData): GigData {
+  const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  
+  // Corriger availability.schedule
+  if (data.availability && data.availability.schedule) {
+    const fixedAvailabilitySchedule = data.availability.schedule.map((schedule, index) => {
+      if (!schedule.day) {
+        const dayIndex = index % workingDays.length;
+        return {
+          ...schedule,
+          day: workingDays[dayIndex]
+        };
+      }
+      return schedule;
+    });
+    
+    data.availability.schedule = fixedAvailabilitySchedule;
+  }
+  
+  // Corriger schedule.schedules
+  if (data.schedule && data.schedule.schedules) {
+    const fixedScheduleSchedules = data.schedule.schedules.map((schedule, index) => {
+      if (!schedule.day) {
+        const dayIndex = index % workingDays.length;
+        return {
+          ...schedule,
+          day: workingDays[dayIndex]
+        };
+      }
+      return schedule;
+    });
+    
+    data.schedule.schedules = fixedScheduleSchedules;
+  }
+  
+  return data;
+}
+
 export async function saveGigData(gigData: GigData): Promise<{ data: any; error?: Error }> {
   try {
     const userId = Cookies.get('userId') ?? "";
@@ -86,27 +125,30 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     const companyId = Cookies.get('companyId') ?? "";
     console.log('companyId', companyId);
     
+    // Corriger automatiquement les données de schedule
+    const fixedGigData = fixScheduleData(gigData);
+    
     // Format skills data to ensure proper structure
     const formattedSkills = {
-      ...gigData.skills,
-      languages: gigData.skills.languages.map(lang => ({
+      ...fixedGigData.skills,
+      languages: fixedGigData.skills.languages.map(lang => ({
         language: lang.language,
         proficiency: lang.proficiency,
         iso639_1: lang.iso639_1
       })),
-      soft: gigData.skills.soft.map(skill => ({
+      soft: fixedGigData.skills.soft.map(skill => ({
         skill: skill.skill,
         level: skill.level
       })),
-      professional: gigData.skills.professional.map(skill => ({
+      professional: fixedGigData.skills.professional.map(skill => ({
         skill: skill.skill,
         level: skill.level
       })),
-      technical: gigData.skills.technical.map(skill => ({
+      technical: fixedGigData.skills.technical.map(skill => ({
         skill: skill.skill,
         level: skill.level
       })),
-      certifications: gigData.skills.certifications.map(cert => ({
+      certifications: fixedGigData.skills.certifications.map(cert => ({
         name: cert.name,
         required: cert.required,
         provider: cert.provider
@@ -115,29 +157,29 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
 
     // Format schedule data to remove invalid ObjectId references
     const formattedSchedule = {
-      ...gigData.schedule,
-      schedules: gigData.schedule.schedules.map(schedule => ({
-        days: schedule.days,
+      ...fixedGigData.schedule,
+      schedules: fixedGigData.schedule.schedules.map(schedule => ({
+        day: schedule.day, // Use 'day' (singular) instead of 'days'
         hours: schedule.hours
       }))
     };
 
     // Format availability data
     const formattedAvailability = {
-      ...gigData.availability,
-      timeZone: gigData.availability.timeZones?.[0] || 'UTC', // Use first timezone as default
-      schedule: gigData.availability.schedule.map(schedule => ({
-        days: [schedule.day], // Convert single day to array for compatibility
+      ...fixedGigData.availability,
+      timeZone: fixedGigData.availability.timeZones?.[0] || 'UTC', // Use first timezone as default
+      schedule: fixedGigData.availability.schedule.map(schedule => ({
+        day: schedule.day, // Use 'day' (singular) instead of converting to array
         hours: schedule.hours
       }))
     };
 
     // Format destination zone to ensure it's a valid country code
-    const destinationZone = gigData.destination_zone?.split(',')?.[0]?.trim() || 'US';
+    const destinationZone = fixedGigData.destination_zone?.split(',')?.[0]?.trim() || 'US';
     const formattedDestinationZone = destinationZone.length === 2 ? destinationZone : 'US';
 
     const gigDataWithIds = {
-      ...gigData,
+      ...fixedGigData,
       userId,
       companyId,
       skills: formattedSkills,
