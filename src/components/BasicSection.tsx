@@ -188,17 +188,24 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
       console.log('Converted country codes:', countryCodes);
 
-      // Set destination_zone to the first country code if available
+      // Set destination_zone to the first country code if available and different from current
       if (countryCodes.length > 0 && countryCodes[0].code) {
-        console.log('Setting destination_zone to:', countryCodes[0].code);
-        onChange({ ...data, destination_zone: countryCodes[0].code });
+        const firstCountryCode = countryCodes[0].code;
+        console.log('Setting destination_zone to:', firstCountryCode);
+        
+        // Only update if the destination_zone is different to avoid infinite loop
+        if (data.destination_zone !== firstCountryCode) {
+          onChange({ ...data, destination_zone: firstCountryCode });
+        } else {
+          console.log('destination_zone already set to:', firstCountryCode);
+        }
       } else {
         console.log('No valid country code found to set as destination_zone');
       }
     } else {
       console.log('No destinationZones available');
     }
-  }, [data.destinationZones, data.destination_zone]);
+  }, [data.destinationZones]); // Removed data.destination_zone from dependencies
 
   /**
    * Filtre les zones en fonction du terme de recherche
@@ -403,19 +410,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <p className="text-sm text-gray-500">Select the target country</p>
             </div>
           </div>
-          {data.destinationZones && data.destinationZones.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-500" /> AI Suggestions</h4>
-              <div className="flex flex-wrap gap-2">
-                {data.destinationZones.map(country => {
-                  const countryCode = Object.entries(i18n.getNames('en')).find(([_, name]) => name === country)?.[0];
-                  if (!countryCode) return null;
-                  return <button key={countryCode} onClick={() => handleCountrySelect(countryCode)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${data.destination_zone === countryCode ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}`}>{country}</button>;
-                })}
-              </div>
-            </div>
-          )}
           <label className="block text-sm font-medium text-gray-700">Country</label>
           <select value={data.destination_zone || ''} onChange={(e) => handleCountrySelect(e.target.value)}
             className="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">

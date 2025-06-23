@@ -745,6 +745,39 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
 
+  // Ensure all team roles have valid seniority structure
+  const validateAndFixTeamStructure = () => {
+    if (!suggestions?.team?.structure) return;
+    
+    let needsUpdate = false;
+    const newSuggestions = { ...suggestions };
+    
+    newSuggestions.team.structure.forEach((role, index) => {
+      if (!role.seniority) {
+        newSuggestions.team.structure[index].seniority = {
+          level: "Mid-Level",
+          yearsExperience: 3,
+        };
+        needsUpdate = true;
+      } else if (!role.seniority.level || !role.seniority.yearsExperience) {
+        newSuggestions.team.structure[index].seniority = {
+          level: role.seniority.level || "Mid-Level",
+          yearsExperience: role.seniority.yearsExperience || 3,
+        };
+        needsUpdate = true;
+      }
+    });
+    
+    if (needsUpdate) {
+      setSuggestions(newSuggestions);
+    }
+  };
+
+  // Validate team structure when suggestions change
+  useEffect(() => {
+    validateAndFixTeamStructure();
+  }, [suggestions?.team?.structure]);
+
   useEffect(() => {
     const generateSuggestions = async () => {
       // Prevent multiple simultaneous API calls
@@ -1169,13 +1202,43 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               >
                 {editingSection === section && editingIndex === index ? (
                   <div className="flex items-center space-x-2 flex-1">
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                      autoFocus
-                    />
+                    {section === "destinationZones" ? (
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        autoFocus
+                      >
+                        <option value="">Select a destination zone...</option>
+                        {DESTINATION_ZONES.map((zone) => (
+                          <option key={zone} value={zone}>
+                            {zone}
+                          </option>
+                        ))}
+                      </select>
+                    ) : section === "sectors" ? (
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        autoFocus
+                      >
+                        <option value="">Select a sector...</option>
+                        {SECTORS.map((sector) => (
+                          <option key={sector} value={sector}>
+                            {sector}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        autoFocus
+                      />
+                    )}
                     <button
                       onClick={() => updateItem(section, index, editValue)}
                       className="text-green-700 hover:text-green-800 p-1"
@@ -2634,6 +2697,26 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.team) return;
 
+      // Ensure the role exists and has seniority object
+      if (!newSuggestions.team.structure[index]) {
+        newSuggestions.team.structure[index] = {
+          roleId: "Agent",
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
+        };
+      }
+
+      // Ensure seniority object exists
+      if (!newSuggestions.team.structure[index].seniority) {
+        newSuggestions.team.structure[index].seniority = {
+          level: "Mid-Level",
+          yearsExperience: 3,
+        };
+      }
+
       if (field.includes(".")) {
         const [parent, child] = field.split(".");
         if (child === "yearsExperience") {
@@ -2664,7 +2747,8 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     };
 
     const addTerritory = (territory: string) => {
-      if (!suggestions || !territory || suggestions.team?.territories.includes(territory)) return;
+      if (!suggestions || !territory) return;
+      
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.team) {
         newSuggestions.team = {
@@ -2678,14 +2762,23 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
           collaboration: ["Daily standups", "Weekly reviews"],
         };
       }
-      newSuggestions.team.territories.push(territory);
-      setSuggestions(newSuggestions);
+      
+      // Ensure territories array exists
+      if (!newSuggestions.team.territories) {
+        newSuggestions.team.territories = [];
+      }
+      
+      // Only add if not already present
+      if (!newSuggestions.team.territories.includes(territory)) {
+        newSuggestions.team.territories.push(territory);
+        setSuggestions(newSuggestions);
+      }
     };
 
     const removeTerritory = (territoryToRemove: string) => {
       if (!suggestions) return;
       const newSuggestions = { ...suggestions };
-      if (newSuggestions.team) {
+      if (newSuggestions.team && newSuggestions.team.territories) {
         newSuggestions.team.territories = newSuggestions.team.territories.filter(
           (territory) => territory !== territoryToRemove
         );
@@ -2776,7 +2869,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                         {role.count} {role.count === 1 ? 'member' : 'members'}
                       </span>
                       <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                        {role.seniority.level}
+                        {role.seniority?.level || 'Not specified'}
                       </span>
                     </div>
                   </div>
@@ -2796,13 +2889,13 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-green-600">
-                  {suggestions.team?.structure?.filter(role => role.seniority.level.includes('Senior') || role.seniority.level.includes('Lead') || role.seniority.level.includes('Manager')).reduce((sum, role) => sum + role.count, 0) || 0}
+                  {suggestions.team?.structure?.filter(role => role.seniority?.level?.includes('Senior') || role.seniority?.level?.includes('Lead') || role.seniority?.level?.includes('Manager')).reduce((sum, role) => sum + role.count, 0) || 0}
                 </div>
                 <div className="text-xs text-gray-500">Senior Members</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-orange-600">
-                  {suggestions.team?.structure?.filter(role => role.seniority.level.includes('Junior') || role.seniority.level.includes('Entry') || role.seniority.level.includes('Trainee')).reduce((sum, role) => sum + role.count, 0) || 0}
+                  {suggestions.team?.structure?.filter(role => role.seniority?.level?.includes('Junior') || role.seniority?.level?.includes('Entry') || role.seniority?.level?.includes('Trainee')).reduce((sum, role) => sum + role.count, 0) || 0}
                 </div>
                 <div className="text-xs text-gray-500">Junior Members</div>
               </div>
@@ -2888,7 +2981,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                           Seniority Level
                         </label>
                         <select
-                          value={role.seniority.level}
+                          value={role.seniority?.level || ''}
                           onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
@@ -2907,7 +3000,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                         <input
                           type="number"
                           min="0"
-                          value={role.seniority.yearsExperience}
+                          value={role.seniority?.yearsExperience || 0}
                           onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         />
@@ -2949,7 +3042,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
           </h4>
           
           <div className="flex flex-wrap gap-2 mb-4">
-            {suggestions.team?.territories.map((territory) => (
+            {suggestions.team?.territories?.map((territory) => (
               <div
                 key={territory}
                 className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
@@ -2979,7 +3072,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               Add a territory...
             </option>
             {TEAM_TERRITORIES.filter(
-              (territory) => !suggestions.team?.territories.includes(territory)
+              (territory) => !suggestions.team?.territories?.includes(territory)
             ).map((territory) => (
               <option key={territory} value={territory}>
                 {territory}
