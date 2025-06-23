@@ -34,6 +34,191 @@ interface SkillsSectionProps {
   onPrevious?: () => void;
 }
 
+// Language levels from Suggestions.tsx
+const LANGUAGE_LEVELS = [
+  "A1 - Beginner",
+  "A2 - Elementary",
+  "B1 - Intermediate",
+  "B2 - Upper Intermediate",
+  "C1 - Advanced",
+  "C2 - Mastery",
+];
+
+// Skill levels from Suggestions.tsx
+const SKILL_LEVELS = [
+  { value: 1, label: "Basic" },
+  { value: 2, label: "Intermediate" },
+  { value: 3, label: "Advanced" },
+  { value: 4, label: "Expert" },
+  { value: 5, label: "Master" },
+];
+
+// Languages from Suggestions.tsx
+const LANGUAGES = [
+  "English",
+  "French",
+  "Spanish",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Dutch",
+  "Russian",
+  "Chinese (Mandarin)",
+  "Japanese",
+  "Korean",
+  "Arabic",
+  "Hindi",
+  "Turkish",
+  "Polish",
+  "Swedish",
+  "Norwegian",
+  "Danish",
+  "Finnish",
+  "Greek",
+  "Hebrew",
+  "Thai",
+  "Vietnamese",
+  "Indonesian",
+  "Malay",
+  "Filipino",
+  "Urdu",
+  "Bengali",
+  "Persian",
+  "Czech",
+  "Hungarian",
+  "Romanian",
+  "Bulgarian",
+  "Croatian",
+  "Serbian",
+  "Slovak",
+  "Slovenian",
+  "Estonian",
+  "Latvian",
+  "Lithuanian",
+];
+
+// Professional skills from Suggestions.tsx
+const PROFESSIONAL_SKILLS = [
+  "Sales Management",
+  "Account Management",
+  "Customer Relationship Management",
+  "Lead Generation",
+  "Market Research",
+  "Business Development",
+  "Strategic Planning",
+  "Project Management",
+  "Team Leadership",
+  "Negotiation",
+  "Presentation Skills",
+  "Client Communication",
+  "Contract Management",
+  "Budget Management",
+  "Performance Analysis",
+  "Process Improvement",
+  "Quality Assurance",
+  "Compliance Management",
+  "Risk Assessment",
+  "Stakeholder Management",
+  "Vendor Management",
+  "Supply Chain Management",
+  "Inventory Management",
+  "Logistics Coordination",
+  "Event Planning",
+  "Public Relations",
+  "Brand Management",
+  "Digital Marketing",
+  "Content Strategy",
+  "Social Media Management",
+];
+
+// Technical skills from Suggestions.tsx
+const TECHNICAL_SKILLS = [
+  "CRM Systems (Salesforce, HubSpot)",
+  "Microsoft Office Suite",
+  "Google Workspace",
+  "Data Analysis",
+  "Excel Advanced Functions",
+  "Power BI",
+  "Tableau",
+  "SQL",
+  "Python",
+  "JavaScript",
+  "HTML/CSS",
+  "WordPress",
+  "Shopify",
+  "Zendesk",
+  "Intercom",
+  "LiveChat",
+  "Freshdesk",
+  "Help Scout",
+  "Zapier",
+  "Integromat",
+  "API Integration",
+  "Web Scraping",
+  "SEO Tools",
+  "Google Analytics",
+  "Google Ads",
+  "Facebook Ads",
+  "LinkedIn Ads",
+  "Email Marketing Platforms",
+  "Video Editing",
+  "Graphic Design",
+  "Adobe Creative Suite",
+  "Canva",
+  "Figma",
+  "Sketch",
+  "Video Conferencing Tools",
+  "Project Management Tools",
+  "Accounting Software",
+  "E-commerce Platforms",
+  "Payment Processing",
+  "Cybersecurity",
+];
+
+// Soft skills from Suggestions.tsx
+const SOFT_SKILLS = [
+  "Communication",
+  "Active Listening",
+  "Empathy",
+  "Problem Solving",
+  "Critical Thinking",
+  "Creativity",
+  "Adaptability",
+  "Flexibility",
+  "Time Management",
+  "Organization",
+  "Attention to Detail",
+  "Multitasking",
+  "Stress Management",
+  "Conflict Resolution",
+  "Teamwork",
+  "Collaboration",
+  "Leadership",
+  "Mentoring",
+  "Coaching",
+  "Motivation",
+  "Initiative",
+  "Self-motivation",
+  "Reliability",
+  "Dependability",
+  "Professionalism",
+  "Customer Service",
+  "Patience",
+  "Tolerance",
+  "Cultural Awareness",
+  "Interpersonal Skills",
+  "Networking",
+  "Public Speaking",
+  "Presentation Skills",
+  "Persuasion",
+  "Influence",
+  "Decision Making",
+  "Judgment",
+  "Analytical Thinking",
+  "Strategic Thinking",
+  "Innovation",
+];
+
 export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: SkillsSectionProps) {
   // Ensure data is never undefined and all properties are initialized
   const safeData = {
@@ -46,26 +231,65 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   // State for editing
   const [editingIndex, setEditingIndex] = useState<{ type: string; index: number } | null>(null);
-  const [newSkill, setNewSkill] = useState({ language: '', proficiency: '', iso639_1: '' });
+  const [newSkill, setNewSkill] = useState({ language: '', proficiency: '', iso639_1: '', level: 1 });
   const [addMode, setAddMode] = useState<{ type: string; active: boolean }>({ type: '', active: false });
 
-  // Example options
-  const languageOptions = [
-    { language: 'English', iso639_1: 'en' },
-    { language: 'French', iso639_1: 'fr' },
-    { language: 'Spanish', iso639_1: 'es' },
-    { language: 'German', iso639_1: 'de' },
-    { language: 'Italian', iso639_1: 'it' },
-    { language: 'Arabic', iso639_1: 'ar' },
-    { language: 'Chinese', iso639_1: 'zh' },
-    { language: 'Russian', iso639_1: 'ru' },
-    { language: 'Portuguese', iso639_1: 'pt' },
-    { language: 'Dutch', iso639_1: 'nl' }
-  ];
-  const levelOptions = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  const professionalOptions = predefinedOptions.skills.professional;
-  const technicalOptions = predefinedOptions.skills.technical;
-  const softOptions = predefinedOptions.skills.soft;
+  // Language options with ISO codes
+  const languageOptions = LANGUAGES.map(lang => {
+    // Map common languages to ISO codes
+    const isoMap: { [key: string]: string } = {
+      'English': 'en',
+      'French': 'fr',
+      'Spanish': 'es',
+      'German': 'de',
+      'Italian': 'it',
+      'Portuguese': 'pt',
+      'Dutch': 'nl',
+      'Russian': 'ru',
+      'Chinese (Mandarin)': 'zh',
+      'Japanese': 'ja',
+      'Korean': 'ko',
+      'Arabic': 'ar',
+      'Hindi': 'hi',
+      'Turkish': 'tr',
+      'Polish': 'pl',
+      'Swedish': 'sv',
+      'Norwegian': 'no',
+      'Danish': 'da',
+      'Finnish': 'fi',
+      'Greek': 'el',
+      'Hebrew': 'he',
+      'Thai': 'th',
+      'Vietnamese': 'vi',
+      'Indonesian': 'id',
+      'Malay': 'ms',
+      'Filipino': 'fil',
+      'Urdu': 'ur',
+      'Bengali': 'bn',
+      'Persian': 'fa',
+      'Czech': 'cs',
+      'Hungarian': 'hu',
+      'Romanian': 'ro',
+      'Bulgarian': 'bg',
+      'Croatian': 'hr',
+      'Serbian': 'sr',
+      'Slovak': 'sk',
+      'Slovenian': 'sl',
+      'Estonian': 'et',
+      'Latvian': 'lv',
+      'Lithuanian': 'lt'
+    };
+    return {
+      language: lang,
+      iso639_1: isoMap[lang] || 'en'
+    };
+  });
+
+  // Function to get level label
+  const getLevelLabel = (level: number) => {
+    const option = SKILL_LEVELS.find(opt => opt.value === level);
+    return option ? option.label : 'Unknown';
+  };
 
   // Prevent duplicate skills
   const isDuplicate = (name: string, type: string, excludeIndex?: number) => {
@@ -89,14 +313,22 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       setNewSkill({
         language: languageSkill.language,
         proficiency: languageSkill.proficiency,
-        iso639_1: languageSkill.iso639_1
+        iso639_1: languageSkill.iso639_1,
+        level: 1
       });
     } else {
-      setNewSkill({ language: typeof skill === 'string' ? skill : '', proficiency: '', iso639_1: '' });
+      // Handle non-language skills with proper typing
+      const skillObj = typeof skill === 'string' ? { skill: skill, level: 1 } : skill as { skill: string; level: number };
+      setNewSkill({ 
+        language: skillObj.skill || '', 
+        proficiency: '', 
+        iso639_1: '',
+        level: skillObj.level || 1
+      });
     }
   };
 
-  const handleEditChange = (field: 'language' | 'proficiency' | 'iso639_1', value: string) => {
+  const handleEditChange = (field: 'language' | 'proficiency' | 'iso639_1' | 'level', value: string | number) => {
     setNewSkill({ ...newSkill, [field]: value });
   };
 
@@ -113,7 +345,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     } else {
       updated[editingIndex.index] = {
         skill: newSkill.language,
-        level: 1
+        level: newSkill.level
       };
     }
     
@@ -143,10 +375,13 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         iso639_1: newSkill.iso639_1
       }];
     } else {
-      updated = [...safeData[addMode.type as keyof typeof safeData], newSkill.language];
+      updated = [...safeData[addMode.type as keyof typeof safeData], {
+        skill: newSkill.language,
+        level: newSkill.level
+      }];
     }
     onChange({ ...safeData, [addMode.type]: updated });
-    setNewSkill({ language: '', proficiency: '', iso639_1: '' });
+    setNewSkill({ language: '', proficiency: '', iso639_1: '', level: 1 });
     setAddMode({ type: '', active: false });
   };
 
@@ -213,8 +448,19 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                       onChange={e => handleEditChange('proficiency', e.target.value)}
                     >
                       <option value="">Select level</option>
-                      {levelOptions.map(opt => (
+                      {LANGUAGE_LEVELS.map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
+                  {!isLanguage && (
+                    <select
+                      className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                      value={newSkill.level}
+                      onChange={e => handleEditChange('level', parseInt(e.target.value))}
+                    >
+                      {SKILL_LEVELS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   )}
@@ -252,7 +498,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     {!isLanguage && typeof skill === 'object' && skill.level && (
                       <>
                         <span className="mx-2 text-gray-400">-</span>
-                        <span className="text-blue-600 font-medium">Level {skill.level}</span>
+                        <span className="text-blue-600 font-medium">{getLevelLabel(skill.level)}</span>
                       </>
                     )}
                   </p>
@@ -284,20 +530,35 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
               value={newSkill.language}
               onChange={e => {
-                const selected = languageOptions.find(opt => opt.language === e.target.value);
-                setNewSkill({ 
-                  ...newSkill, 
-                  language: e.target.value,
-                  iso639_1: selected?.iso639_1 || ''
-                });
+                if (isLanguage) {
+                  const selected = languageOptions.find(opt => opt.language === e.target.value);
+                  setNewSkill({ 
+                    ...newSkill, 
+                    language: e.target.value,
+                    iso639_1: selected?.iso639_1 || ''
+                  });
+                } else {
+                  setNewSkill({ 
+                    ...newSkill, 
+                    language: e.target.value
+                  });
+                }
               }}
             >
-              <option value="">Select language</option>
-              {languageOptions.map(opt => (
-                <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type)}>
-                  {opt.language}
-                </option>
-              ))}
+              <option value="">{isLanguage ? 'Select language' : 'Select skill'}</option>
+              {isLanguage ? (
+                languageOptions.map(opt => (
+                  <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type)}>
+                    {opt.language}
+                  </option>
+                ))
+              ) : (
+                options.map(opt => (
+                  <option key={opt} value={opt} disabled={isDuplicate(opt, type)}>
+                    {opt}
+                  </option>
+                ))
+              )}
             </select>
             {isLanguage && (
               <select
@@ -306,8 +567,19 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 onChange={e => setNewSkill({ ...newSkill, proficiency: e.target.value })}
               >
                 <option value="">Select level</option>
-                {levelOptions.map(opt => (
+                {LANGUAGE_LEVELS.map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            )}
+            {!isLanguage && (
+              <select
+                className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                value={newSkill.level}
+                onChange={e => setNewSkill({ ...newSkill, level: parseInt(e.target.value) })}
+              >
+                {SKILL_LEVELS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             )}
@@ -319,7 +591,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
             </button>
             <button
               className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow"
-              onClick={() => { setAddMode({ type: '', active: false }); setNewSkill({ language: '', proficiency: '', iso639_1: '' }); }}
+              onClick={() => { setAddMode({ type: '', active: false }); setNewSkill({ language: '', proficiency: '', iso639_1: '', level: 1 }); }}
             >
               Cancel
             </button>
@@ -327,7 +599,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         ) : (
           <button 
             className={`text-${iconColor}-600 hover:text-${iconColor}-700 flex items-center gap-1.5 font-medium transition-colors duration-200 hover:underline`} 
-            onClick={() => { setAddMode({ type, active: true }); setEditingIndex(null); setNewSkill({ language: '', proficiency: '', iso639_1: '' }); }}
+            onClick={() => { setAddMode({ type, active: true }); setEditingIndex(null); setNewSkill({ language: '', proficiency: '', iso639_1: '', level: 1 }); }}
           >
             + Add {type} skill
           </button>
@@ -365,7 +637,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           'Professional Skills',
           'Add required professional and industry-specific skills',
           <BookOpen className="w-5 h-5 text-purple-600" />,
-          professionalOptions,
+          PROFESSIONAL_SKILLS,
           'purple',
           'purple'
         )}
@@ -376,7 +648,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           'Technical Skills',
           'Specify required technical tools and software proficiency',
           <Laptop className="w-5 h-5 text-emerald-600" />,
-          technicalOptions,
+          TECHNICAL_SKILLS,
           'emerald',
           'emerald'
         )}
@@ -387,7 +659,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           'Soft Skills',
           'Add interpersonal and communication skills',
           <Users className="w-5 h-5 text-orange-600" />,
-          softOptions,
+          SOFT_SKILLS,
           'orange',
           'orange'
         )}
