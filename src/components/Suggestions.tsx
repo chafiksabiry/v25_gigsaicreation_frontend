@@ -753,16 +753,58 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     const newSuggestions = { ...suggestions };
     
     newSuggestions.team.structure.forEach((role, index) => {
-      if (!role.seniority) {
-        newSuggestions.team.structure[index].seniority = {
-          level: "Mid-Level",
-          yearsExperience: 3,
+      // Check if role is a string and convert it to proper object structure
+      if (typeof role === 'string') {
+        newSuggestions.team.structure[index] = {
+          roleId: role,
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
         };
         needsUpdate = true;
-      } else if (!role.seniority.level || !role.seniority.yearsExperience) {
-        newSuggestions.team.structure[index].seniority = {
-          level: role.seniority.level || "Mid-Level",
-          yearsExperience: role.seniority.yearsExperience || 3,
+      } else if (typeof role === 'object' && role !== null) {
+        // Ensure role has required properties
+        if (!role.roleId) {
+          newSuggestions.team.structure[index] = {
+            ...role,
+            roleId: "Agent",
+            count: role.count || 1,
+            seniority: role.seniority || {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+          needsUpdate = true;
+        } else if (!role.seniority) {
+          newSuggestions.team.structure[index] = {
+            ...role,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+          needsUpdate = true;
+        } else if (!role.seniority.level || !role.seniority.yearsExperience) {
+          newSuggestions.team.structure[index] = {
+            ...role,
+            seniority: {
+              level: role.seniority.level || "Mid-Level",
+              yearsExperience: role.seniority.yearsExperience || 3,
+            },
+          };
+          needsUpdate = true;
+        }
+      } else {
+        // If role is null, undefined, or invalid, replace with default structure
+        newSuggestions.team.structure[index] = {
+          roleId: "Agent",
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
         };
         needsUpdate = true;
       }
@@ -2689,7 +2731,10 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       };
 
       newSuggestions.team.structure.push(newRole);
-      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => sum + role.count, 0);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
       setSuggestions(newSuggestions);
     };
 
@@ -2697,7 +2742,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.team) return;
 
-      // Ensure the role exists and has seniority object
+      // Ensure the role exists and has proper structure
       if (!newSuggestions.team.structure[index]) {
         newSuggestions.team.structure[index] = {
           roleId: "Agent",
@@ -2707,14 +2752,50 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             yearsExperience: 3,
           },
         };
-      }
-
-      // Ensure seniority object exists
-      if (!newSuggestions.team.structure[index].seniority) {
-        newSuggestions.team.structure[index].seniority = {
-          level: "Mid-Level",
-          yearsExperience: 3,
-        };
+      } else {
+        // Check if role is a string and convert it to proper object structure
+        const currentRole = newSuggestions.team.structure[index];
+        if (typeof currentRole === 'string') {
+          newSuggestions.team.structure[index] = {
+            roleId: currentRole,
+            count: 1,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+        } else if (typeof currentRole === 'object' && currentRole !== null) {
+          // Ensure role has required properties
+          if (!currentRole.roleId) {
+            newSuggestions.team.structure[index] = {
+              ...currentRole,
+              roleId: "Agent",
+              count: currentRole.count || 1,
+              seniority: currentRole.seniority || {
+                level: "Mid-Level",
+                yearsExperience: 3,
+              },
+            };
+          } else if (!currentRole.seniority) {
+            newSuggestions.team.structure[index] = {
+              ...currentRole,
+              seniority: {
+                level: "Mid-Level",
+                yearsExperience: 3,
+              },
+            };
+          }
+        } else {
+          // If role is null, undefined, or invalid, replace with default structure
+          newSuggestions.team.structure[index] = {
+            roleId: "Agent",
+            count: 1,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+        }
       }
 
       if (field.includes(".")) {
@@ -2733,7 +2814,10 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       }
 
       // Recalculate total team size
-      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => sum + role.count, 0);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
       setSuggestions(newSuggestions);
     };
 
@@ -2742,7 +2826,10 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       if (!newSuggestions.team) return;
 
       newSuggestions.team.structure.splice(index, 1);
-      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => sum + role.count, 0);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
       setSuggestions(newSuggestions);
     };
 
@@ -2856,24 +2943,31 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             <div className="mt-4 pt-4 border-t border-blue-200">
               <h5 className="text-sm font-semibold text-gray-700 mb-3">Team Breakdown:</h5>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {suggestions.team.structure.map((role, index) => (
-                  <div key={index} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-gray-700">
-                        {role.roleId}
-                      </span>
+                {suggestions.team.structure.map((role, index) => {
+                  // Handle case where role might be a string
+                  const roleId = typeof role === 'string' ? role : (role?.roleId || 'Unknown');
+                  const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                  const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Not specified') : 'Not specified';
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {roleId}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">
+                          {roleCount} {roleCount === 1 ? 'member' : 'members'}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                          {seniorityLevel}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">
-                        {role.count} {role.count === 1 ? 'member' : 'members'}
-                      </span>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                        {role.seniority?.level || 'Not specified'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -2889,13 +2983,27 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-green-600">
-                  {suggestions.team?.structure?.filter(role => role.seniority?.level?.includes('Senior') || role.seniority?.level?.includes('Lead') || role.seniority?.level?.includes('Manager')).reduce((sum, role) => sum + role.count, 0) || 0}
+                  {suggestions.team?.structure?.filter(role => {
+                    if (typeof role === 'string') return false;
+                    if (typeof role !== 'object' || role === null) return false;
+                    return role.seniority?.level?.includes('Senior') || role.seniority?.level?.includes('Lead') || role.seniority?.level?.includes('Manager');
+                  }).reduce((sum, role) => {
+                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                    return sum + roleCount;
+                  }, 0) || 0}
                 </div>
                 <div className="text-xs text-gray-500">Senior Members</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-orange-600">
-                  {suggestions.team?.structure?.filter(role => role.seniority?.level?.includes('Junior') || role.seniority?.level?.includes('Entry') || role.seniority?.level?.includes('Trainee')).reduce((sum, role) => sum + role.count, 0) || 0}
+                  {suggestions.team?.structure?.filter(role => {
+                    if (typeof role === 'string') return false;
+                    if (typeof role !== 'object' || role === null) return false;
+                    return role.seniority?.level?.includes('Junior') || role.seniority?.level?.includes('Entry') || role.seniority?.level?.includes('Trainee');
+                  }).reduce((sum, role) => {
+                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                    return sum + roleCount;
+                  }, 0) || 0}
                 </div>
                 <div className="text-xs text-gray-500">Junior Members</div>
               </div>
@@ -2929,65 +3037,41 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
           {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {suggestions.team.structure.map((role, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h5 className="font-semibold text-gray-800">Role #{index + 1}</h5>
-                    <button
-                      onClick={() => deleteTeamRole(index)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
-                        Role Type
-                      </label>
-                      <select
-                        value={role.roleId}
-                        onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              {suggestions.team.structure.map((role, index) => {
+                // Handle case where role might be a string
+                const roleId = typeof role === 'string' ? role : (role?.roleId || 'Agent');
+                const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Mid-Level') : 'Mid-Level';
+                const yearsExperience = typeof role === 'object' && role !== null ? (role.seniority?.yearsExperience || 3) : 3;
+                
+                return (
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="font-semibold text-gray-800">Role #{index + 1}</h5>
+                      <button
+                        onClick={() => deleteTeamRole(index)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                       >
-                        {TEAM_ROLES.map((teamRole) => (
-                          <option key={teamRole} value={teamRole}>
-                            {teamRole}
-                          </option>
-                        ))}
-                      </select>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-2 block">
-                        Number of Members
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={role.count}
-                        onChange={(e) => updateTeamRole(index, "count", e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-gray-700 mb-2 block">
-                          Seniority Level
+                          Role Type
                         </label>
                         <select
-                          value={role.seniority?.level || ''}
-                          onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
+                          value={roleId}
+                          onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
-                          {predefinedOptions.basic.seniorityLevels.map((level) => (
-                            <option key={level} value={level}>
-                              {level}
+                          {TEAM_ROLES.map((teamRole) => (
+                            <option key={teamRole} value={teamRole}>
+                              {teamRole}
                             </option>
                           ))}
                         </select>
@@ -2995,20 +3079,52 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
                       <div>
                         <label className="text-sm font-medium text-gray-700 mb-2 block">
-                          Years Experience
+                          Number of Members
                         </label>
                         <input
                           type="number"
-                          min="0"
-                          value={role.seniority?.yearsExperience || 0}
-                          onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                          min="1"
+                          value={roleCount}
+                          onChange={(e) => updateTeamRole(index, "count", e.target.value)}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         />
                       </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">
+                            Seniority Level
+                          </label>
+                          <select
+                            value={seniorityLevel}
+                            onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          >
+                            {predefinedOptions.basic.seniorityLevels.map((level) => (
+                              <option key={level} value={level}>
+                                {level}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">
+                            Years Experience
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={yearsExperience}
+                            onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">

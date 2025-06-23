@@ -284,6 +284,10 @@ const PrompAI: React.FC = () => {
                 data={gigData}
                 onChange={handleGigDataChange}
                 errors={{}}
+                onPrevious={() => {}}
+                onNext={() => handleSectionChange('schedule')}
+                onSave={() => {}}
+                onAIAssist={() => {}}
                 onSectionChange={handleSectionChange}
                 currentSection={currentSection}
               />

@@ -11,7 +11,7 @@ import { DocumentationSection } from "./DocumentationSection";
 import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
 import { TimezoneCode } from "../lib/ai";
-import { DaySchedule } from "lib/types";
+import { DaySchedule } from "../lib/scheduleUtils";
 
 interface SectionContentProps {
   section: string;
@@ -61,10 +61,17 @@ export function SectionContent({
   // Ensure seniority object is properly initialized
   const initializedData = React.useMemo(() => ({
     ...data,
-    schedule: data.schedule ? {
-      ...data.schedule,
-      schedules: cleanSchedules(data.schedule.schedules || []),
-    } : undefined,
+    schedule: {
+      schedules: cleanSchedules(data.schedule?.schedules || []),
+      timeZones: data.schedule?.timeZones || [],
+      flexibility: data.schedule?.flexibility || [],
+      minimumHours: data.schedule?.minimumHours || {
+        daily: undefined,
+        weekly: undefined,
+        monthly: undefined,
+      },
+      shifts: data.schedule?.shifts || []
+    },
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
@@ -151,9 +158,6 @@ export function SectionContent({
             errors={errors}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
-            currentSection={section}
           />
         );
 

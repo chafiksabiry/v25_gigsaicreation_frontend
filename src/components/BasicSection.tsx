@@ -40,8 +40,8 @@ interface BasicSectionProps {
   data: GigData;
   onChange: (data: GigData) => void;
   errors: { [key: string]: string[] };
-  onPrevious?: () => void;
   onNext?: () => void;
+  onPrevious?: () => void;
   onSave?: () => void;
   onAIAssist?: () => void;
   onSectionChange?: (sectionId: string) => void;
@@ -449,6 +449,16 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="e.g., 2" />
             </div>
           </div>
+          {data.seniority?.level && (data.seniority?.yearsExperience || 0) > 0 && (
+            <div className="mt-4 flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+              <Brain className="h-5 w-5 text-emerald-600" />
+              <p className="text-sm font-medium text-gray-700">
+                {data.seniority.level}
+                <span className="mx-2 font-light text-gray-400">•</span>
+                {data.seniority.yearsExperience} years of experience
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
