@@ -191,7 +191,7 @@ export const predefinedOptions = {
     languages: [
       {
         language: "French",
-        proficiency: "Natif",
+        proficiency: "C2",
         iso639_1: "fr",
       }
     ],
