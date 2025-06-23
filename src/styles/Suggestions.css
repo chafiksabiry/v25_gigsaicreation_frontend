@@ -46,7 +46,8 @@
 
 .suggestions-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;
@@ -54,6 +55,7 @@
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 1rem;
 }
 
 .back-button,

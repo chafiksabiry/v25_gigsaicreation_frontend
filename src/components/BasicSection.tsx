@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { InfoText } from './InfoText';
+import { SectionGuidance } from './SectionGuidance';
 import { predefinedOptions } from '../lib/guidance';
 import {
   AlertCircle,
@@ -282,39 +283,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   // Le rendu du composant
   return (
     <div className="w-full bg-white p-6 sm:p-8">
-      {/* Guidance Section */}
-      <div className="mb-8">
-        <h2 className="flex items-center gap-2 text-lg font-medium text-gray-900 mb-4">
-          <AlertCircle className="w-5 h-5 text-blue-600" />
-          Guidance for Basic Information
-        </h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-900">Steps:</span>
-            </div>
-            <ol className="list-decimal list-inside space-y-2 text-gray-600">
-              <li>Enter a clear and descriptive title for the role</li>
-              <li>Select the appropriate category</li>
-              <li>Choose the seniority level</li>
-              <li>Specify required years of experience</li>
-            </ol>
-          </div>
-          <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
-            <div className="flex items-center gap-2 mb-4">
-              <Brain className="w-5 h-5 text-blue-600" />
-              <span className="font-medium text-gray-900">Tips:</span>
-            </div>
-            <ul className="list-disc list-inside space-y-2 text-gray-600">
-              <li>Use industry-standard job titles for better visibility</li>
-              <li>Be specific about the role category to attract the right candidates</li>
-              <li>Match seniority level with experience requirements</li>
-              <li>Consider both minimum and preferred experience levels</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+
 
       {/* Form Content */}
       <div className="space-y-8">

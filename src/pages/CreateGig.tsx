@@ -84,7 +84,6 @@ export function CreateGig() {
                       minimumHours: scheduleData.minimumHours,
                     },
                   })}
-                  errors={errors}
                   onPrevious={onPrevious}
                   onNext={onNext}
                 />

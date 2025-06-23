@@ -3202,8 +3202,68 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 text-blue-700 animate-spin" />
+      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center max-w-md">
+          <div className="inline-block mb-8">
+            <div className="flex items-center justify-center space-x-1 mb-6">
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
+                style={{ animationDelay: '0s' }}
+              >
+                H
+              </span>
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 animate-fade-in-scale"
+                style={{ animationDelay: '0.1s' }}
+              >
+                A
+              </span>
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 animate-fade-in-scale"
+                style={{ animationDelay: '0.2s' }}
+              >
+                R
+              </span>
+              <span
+                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
+                style={{ animationDelay: '0.3s' }}
+              >
+                X
+              </span>
+            </div>
+            
+            {/* Professional loading bar */}
+            <div className="relative h-1 w-48 mx-auto bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-professional-loading"></div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
+              Processing Your Request
+            </h2>
+            <p className="text-gray-600 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              Our AI is analyzing your requirements and generating personalized suggestions...
+            </p>
+            
+            {/* Professional loading dots */}
+            <div className="flex justify-center space-x-2 mt-6">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-professional-dots"></div>
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-professional-dots"></div>
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-professional-dots"></div>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <button
+              onClick={onBack}
+              className="flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+            >
+              <X className="w-4 h-4" />
+              <span>Cancel</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

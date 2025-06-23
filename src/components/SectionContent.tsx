@@ -155,7 +155,6 @@ export function SectionContent({
                 minimumHours: scheduleData.minimumHours,
               },
             })}
-            errors={errors}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
           />
@@ -337,6 +336,8 @@ export function SectionContent({
     }
   };
 
+  console.log('SectionContent - About to render SectionGuidance for section:', section);
+  
   return (
     <div className="space-y-6">
       <SectionGuidance section={section} />
