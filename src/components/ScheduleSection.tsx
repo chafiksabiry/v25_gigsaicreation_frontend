@@ -378,7 +378,7 @@ export function ScheduleSection({
                       <input type="checkbox"
                         checked={isSelected}
                         onChange={() => handleTimezoneChange(code as TimezoneCode)}
-                        className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 focus:ring-2"
+                        className="h-4 w-4 rounded border-gray-300 accent-green-600 focus:ring-green-500 focus:ring-2"
                       />
                       <span className={`text-sm font-medium ${
                         isSelected ? 'text-green-800' : 'text-gray-700'
@@ -411,7 +411,7 @@ export function ScheduleSection({
                       <input type="checkbox"
                         checked={isSelected}
                         onChange={() => handleFlexibilityChange(option)}
-                        className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-2"
+                        className="h-4 w-4 rounded border-gray-300 accent-purple-600 focus:ring-purple-500 focus:ring-2"
                       />
                       <span className={`text-sm font-medium ${
                         isSelected ? 'text-purple-800' : 'text-gray-700'

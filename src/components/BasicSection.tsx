@@ -282,27 +282,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   // Le rendu du composant
   return (
     <div className="w-full bg-white p-6 sm:p-8">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Gig</h1>
-        <div className="flex gap-3">
-          <button 
-            onClick={onSave}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <Save className="w-5 h-5" />
-            Save Progress
-          </button>
-          <button 
-            onClick={onAIAssist}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
-          >
-            <Brain className="w-5 h-5" />
-            AI assist
-          </button>
-        </div>
-      </div>
-
       {/* Guidance Section */}
       <div className="mb-8">
         <h2 className="flex items-center gap-2 text-lg font-medium text-gray-900 mb-4">
