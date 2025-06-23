@@ -1374,7 +1374,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
 
   return {
     title: generatedData.jobTitles?.[0] || generatedData.title || '',
-    description: generatedData.deliverables?.join('\n') || '',
+    description: generatedData.description || '',
     category: validatedSectors[0] || '',
     highlights: generatedData.highlights || [],
     destinationZones: (generatedData.destinationZones || []).map(zone => {

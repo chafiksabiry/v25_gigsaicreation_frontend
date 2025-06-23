@@ -496,6 +496,185 @@ const FLEXIBILITY_OPTIONS = [
   "Shift Swapping Allowed",
 ];
 
+const LANGUAGE_LEVELS = [
+  "A1 - Beginner",
+  "A2 - Elementary",
+  "B1 - Intermediate",
+  "B2 - Upper Intermediate",
+  "C1 - Advanced",
+  "C2 - Mastery",
+];
+
+const SKILL_LEVELS = [
+  { value: 1, label: "Basic" },
+  { value: 2, label: "Intermediate" },
+  { value: 3, label: "Advanced" },
+  { value: 4, label: "Expert" },
+  { value: 5, label: "Master" },
+];
+
+const LANGUAGES = [
+  "English",
+  "French",
+  "Spanish",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Dutch",
+  "Russian",
+  "Chinese (Mandarin)",
+  "Japanese",
+  "Korean",
+  "Arabic",
+  "Hindi",
+  "Turkish",
+  "Polish",
+  "Swedish",
+  "Norwegian",
+  "Danish",
+  "Finnish",
+  "Greek",
+  "Hebrew",
+  "Thai",
+  "Vietnamese",
+  "Indonesian",
+  "Malay",
+  "Filipino",
+  "Urdu",
+  "Bengali",
+  "Persian",
+  "Czech",
+  "Hungarian",
+  "Romanian",
+  "Bulgarian",
+  "Croatian",
+  "Serbian",
+  "Slovak",
+  "Slovenian",
+  "Estonian",
+  "Latvian",
+  "Lithuanian",
+];
+
+const PROFESSIONAL_SKILLS = [
+  "Sales Management",
+  "Account Management",
+  "Customer Relationship Management",
+  "Lead Generation",
+  "Market Research",
+  "Business Development",
+  "Strategic Planning",
+  "Project Management",
+  "Team Leadership",
+  "Negotiation",
+  "Presentation Skills",
+  "Client Communication",
+  "Contract Management",
+  "Budget Management",
+  "Performance Analysis",
+  "Process Improvement",
+  "Quality Assurance",
+  "Compliance Management",
+  "Risk Assessment",
+  "Stakeholder Management",
+  "Vendor Management",
+  "Supply Chain Management",
+  "Inventory Management",
+  "Logistics Coordination",
+  "Event Planning",
+  "Public Relations",
+  "Brand Management",
+  "Digital Marketing",
+  "Content Strategy",
+  "Social Media Management",
+];
+
+const TECHNICAL_SKILLS = [
+  "CRM Systems (Salesforce, HubSpot)",
+  "Microsoft Office Suite",
+  "Google Workspace",
+  "Data Analysis",
+  "Excel Advanced Functions",
+  "Power BI",
+  "Tableau",
+  "SQL",
+  "Python",
+  "JavaScript",
+  "HTML/CSS",
+  "WordPress",
+  "Shopify",
+  "Zendesk",
+  "Intercom",
+  "LiveChat",
+  "Freshdesk",
+  "Help Scout",
+  "Zapier",
+  "Integromat",
+  "API Integration",
+  "Web Scraping",
+  "SEO Tools",
+  "Google Analytics",
+  "Google Ads",
+  "Facebook Ads",
+  "LinkedIn Ads",
+  "Email Marketing Platforms",
+  "Video Editing",
+  "Graphic Design",
+  "Adobe Creative Suite",
+  "Canva",
+  "Figma",
+  "Sketch",
+  "Video Conferencing Tools",
+  "Project Management Tools",
+  "Accounting Software",
+  "E-commerce Platforms",
+  "Payment Processing",
+  "Cybersecurity",
+];
+
+const SOFT_SKILLS = [
+  "Communication",
+  "Active Listening",
+  "Empathy",
+  "Problem Solving",
+  "Critical Thinking",
+  "Creativity",
+  "Adaptability",
+  "Flexibility",
+  "Time Management",
+  "Organization",
+  "Attention to Detail",
+  "Multitasking",
+  "Stress Management",
+  "Conflict Resolution",
+  "Teamwork",
+  "Collaboration",
+  "Leadership",
+  "Mentoring",
+  "Coaching",
+  "Motivation",
+  "Initiative",
+  "Self-motivation",
+  "Reliability",
+  "Dependability",
+  "Professionalism",
+  "Customer Service",
+  "Patience",
+  "Tolerance",
+  "Cultural Awareness",
+  "Interpersonal Skills",
+  "Networking",
+  "Public Speaking",
+  "Presentation Skills",
+  "Persuasion",
+  "Influence",
+  "Decision Making",
+  "Judgment",
+  "Analytical Thinking",
+  "Strategic Thinking",
+  "Innovation",
+];
+
 const BONUS_TYPES = ["Performance Bonus", "Team Bonus"];
 
 const TRANSACTION_TYPES = [
@@ -504,6 +683,52 @@ const TRANSACTION_TYPES = [
   "Tiered Amount",
   "Volume Based",
   "Performance Based",
+];
+
+const TEAM_ROLES = [
+  "Team Lead",
+  "Senior Agent",
+  "Agent",
+  "Junior Agent",
+  "Supervisor",
+  "Manager",
+  "Coordinator",
+  "Specialist",
+  "Consultant",
+  "Representative",
+  "Associate",
+  "Assistant",
+  "Trainee",
+  "Intern",
+];
+
+const TEAM_TERRITORIES = [
+  "North America",
+  "Europe",
+  "Asia Pacific",
+  "Latin America",
+  "Middle East & Africa",
+  "Global",
+  "United States",
+  "Canada",
+  "United Kingdom",
+  "France",
+  "Germany",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Belgium",
+  "Switzerland",
+  "Austria",
+  "Scandinavia",
+  "Eastern Europe",
+  "Australia",
+  "New Zealand",
+  "Japan",
+  "South Korea",
+  "China",
+  "India",
+  "Southeast Asia",
 ];
 
 export const Suggestions: React.FC<SuggestionsProps> = ({
@@ -839,9 +1064,6 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     }
 
     setSuggestions(newSuggestions);
-    setEditingSection(null);
-    setEditingIndex(null);
-    setEditValue("");
   };
 
   const deleteItem = (section: string, index: number) => {
@@ -2013,6 +2235,762 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     );
   };
 
+  const renderSkillsSection = () => {
+    if (!suggestions) return null;
+
+    const addSkill = (skillType: string, skill: string, level: number = 1) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) {
+        newSuggestions.skills = {
+          languages: [],
+          soft: [],
+          professional: [],
+          technical: [],
+          certifications: [],
+        };
+      }
+
+      switch (skillType) {
+        case "languages":
+          newSuggestions.skills.languages.push({
+            language: skill,
+            proficiency: LANGUAGE_LEVELS[level - 1] || "B1 - Intermediate",
+            iso639_1: "en",
+          });
+          break;
+        case "soft":
+          newSuggestions.skills.soft.push({ skill, level });
+          break;
+        case "professional":
+          newSuggestions.skills.professional.push({ skill, level });
+          break;
+        case "technical":
+          newSuggestions.skills.technical.push({ skill, level });
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const updateSkill = (skillType: string, index: number, field: string, value: string | number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) return;
+
+      switch (skillType) {
+        case "languages":
+          if (field === "language") {
+            newSuggestions.skills.languages[index].language = value as string;
+          } else if (field === "proficiency") {
+            newSuggestions.skills.languages[index].proficiency = value as string;
+          }
+          break;
+        case "soft":
+        case "professional":
+        case "technical":
+          if (field === "skill") {
+            (newSuggestions.skills as any)[skillType][index].skill = value as string;
+          } else if (field === "level") {
+            (newSuggestions.skills as any)[skillType][index].level = value as number;
+          }
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteSkill = (skillType: string, index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) return;
+
+      switch (skillType) {
+        case "languages":
+          newSuggestions.skills.languages.splice(index, 1);
+          break;
+        case "soft":
+          newSuggestions.skills.soft.splice(index, 1);
+          break;
+        case "professional":
+          newSuggestions.skills.professional.splice(index, 1);
+          break;
+        case "technical":
+          newSuggestions.skills.technical.splice(index, 1);
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const renderSkillCard = (skillType: string, items: any[], title: string, icon: React.ReactNode) => {
+      const currentItems = items || [];
+
+      const getSkillOptions = (skillType: string) => {
+        switch (skillType) {
+          case "languages":
+            return LANGUAGES.filter(lang => !currentItems.some(item => item.language === lang));
+          case "professional":
+            return PROFESSIONAL_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+          case "technical":
+            return TECHNICAL_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+          case "soft":
+            return SOFT_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+          default:
+            return [];
+        }
+      };
+
+      const skillOptions = getSkillOptions(skillType);
+
+      return (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                {icon}
+              </div>
+              <h4 className="text-lg font-bold text-gray-800">{title}</h4>
+            </div>
+            <button
+              onClick={() => {
+                setEditingSection(skillType);
+                setEditingIndex(-1);
+                setEditValue("");
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
+            </button>
+          </div>
+
+          {currentItems.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {currentItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  {editingSection === skillType && editingIndex === index ? (
+                    <div className="space-y-3">
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        autoFocus
+                      >
+                        <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
+                        {skillType === "languages" 
+                          ? LANGUAGES.map((lang) => (
+                              <option key={lang} value={lang}>
+                                {lang}
+                              </option>
+                            ))
+                          : skillType === "professional"
+                          ? PROFESSIONAL_SKILLS.map((skill) => (
+                              <option key={skill} value={skill}>
+                                {skill}
+                              </option>
+                            ))
+                          : skillType === "technical"
+                          ? TECHNICAL_SKILLS.map((skill) => (
+                              <option key={skill} value={skill}>
+                                {skill}
+                              </option>
+                            ))
+                          : SOFT_SKILLS.map((skill) => (
+                              <option key={skill} value={skill}>
+                                {skill}
+                              </option>
+                            ))
+                        }
+                      </select>
+                      {skillType === "languages" ? (
+                        <select
+                          value={item.proficiency || "B1 - Intermediate"}
+                          onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {LANGUAGE_LEVELS.map((level) => (
+                            <option key={level} value={level}>
+                              {level}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          value={item.level || 1}
+                          onChange={(e) => updateSkill(skillType, index, "level", parseInt(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {SKILL_LEVELS.map((level) => (
+                            <option key={level.value} value={level.value}>
+                              {level.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            if (editValue.trim()) {
+                              updateSkill(skillType, index, skillType === "languages" ? "language" : "skill", editValue.trim());
+                              setEditingSection(null);
+                              setEditingIndex(null);
+                              setEditValue("");
+                            }
+                          }}
+                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-semibold text-gray-800">
+                          {skillType === "languages" ? item.language : item.skill}
+                        </h5>
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => {
+                              setEditingSection(skillType);
+                              setEditingIndex(index);
+                              setEditValue(skillType === "languages" ? item.language : item.skill);
+                            }}
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteSkill(skillType, index)}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">Level:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          skillType === "languages" 
+                            ? item.proficiency?.includes("C") 
+                              ? "bg-green-100 text-green-800"
+                              : item.proficiency?.includes("B") 
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-yellow-100 text-yellow-800"
+                            : item.level >= 4 
+                            ? "bg-purple-100 text-purple-800"
+                            : item.level >= 3 
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}>
+                          {skillType === "languages" 
+                            ? item.proficiency || "B1 - Intermediate"
+                            : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {editingSection === skillType && editingIndex === -1 && (
+            <div className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
+              <div className="space-y-4">
+                <select
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                >
+                  <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
+                  {skillOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {skillType === "languages" ? (
+                  <select
+                    defaultValue="B1 - Intermediate"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {LANGUAGE_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    defaultValue={1}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {SKILL_LEVELS.map((level) => (
+                      <option key={level.value} value={level.value}>
+                        {level.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      if (editValue.trim()) {
+                        const level = skillType === "languages" ? 3 : 1; // Default to B1 for languages, Basic for skills
+                        addSkill(skillType, editValue.trim(), level);
+                        setEditValue("");
+                        setEditingSection(null);
+                        setEditingIndex(null);
+                      }
+                    }}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Add {skillType === "languages" ? "Language" : "Skill"}
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-8">
+        {renderSkillCard(
+          "languages",
+          suggestions.skills?.languages || [],
+          "Languages",
+          <Globe2 className="w-5 h-5 text-blue-600" />
+        )}
+        {renderSkillCard(
+          "professional",
+          suggestions.skills?.professional || [],
+          "Professional Skills",
+          <Briefcase className="w-5 h-5 text-green-600" />
+        )}
+        {renderSkillCard(
+          "technical",
+          suggestions.skills?.technical || [],
+          "Technical Skills",
+          <Target className="w-5 h-5 text-purple-600" />
+        )}
+        {renderSkillCard(
+          "soft",
+          suggestions.skills?.soft || [],
+          "Soft Skills",
+          <Users className="w-5 h-5 text-orange-600" />
+        )}
+      </div>
+    );
+  };
+
+  const renderTeamSection = () => {
+    if (!suggestions) return null;
+
+    const addTeamRole = () => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) {
+        newSuggestions.team = {
+          size: 1,
+          structure: [],
+          territories: ["Global"],
+          reporting: {
+            to: "Project Manager",
+            frequency: "Weekly",
+          },
+          collaboration: ["Daily standups", "Weekly reviews"],
+        };
+      }
+
+      const newRole = {
+        roleId: "Agent",
+        count: 1,
+        seniority: {
+          level: "Mid-Level",
+          yearsExperience: 3,
+        },
+      };
+
+      newSuggestions.team.structure.push(newRole);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => sum + role.count, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const updateTeamRole = (index: number, field: string, value: string | number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) return;
+
+      if (field.includes(".")) {
+        const [parent, child] = field.split(".");
+        if (child === "yearsExperience") {
+          (newSuggestions.team.structure[index] as any)[parent][child] = parseInt(value as string) || 0;
+        } else {
+          (newSuggestions.team.structure[index] as any)[parent][child] = value;
+        }
+      } else {
+        if (field === "count") {
+          newSuggestions.team.structure[index].count = parseInt(value as string) || 1;
+        } else {
+          newSuggestions.team.structure[index].roleId = value as string;
+        }
+      }
+
+      // Recalculate total team size
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => sum + role.count, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteTeamRole = (index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) return;
+
+      newSuggestions.team.structure.splice(index, 1);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => sum + role.count, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const addTerritory = (territory: string) => {
+      if (!suggestions || !territory || suggestions.team?.territories.includes(territory)) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) {
+        newSuggestions.team = {
+          size: 1,
+          structure: [],
+          territories: [],
+          reporting: {
+            to: "Project Manager",
+            frequency: "Weekly",
+          },
+          collaboration: ["Daily standups", "Weekly reviews"],
+        };
+      }
+      newSuggestions.team.territories.push(territory);
+      setSuggestions(newSuggestions);
+    };
+
+    const removeTerritory = (territoryToRemove: string) => {
+      if (!suggestions) return;
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.team) {
+        newSuggestions.team.territories = newSuggestions.team.territories.filter(
+          (territory) => territory !== territoryToRemove
+        );
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Team Size Summary */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-800">Team Size</h4>
+                <p className="text-sm text-gray-600">
+                  Total members: {suggestions.team?.size || 0}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center space-x-3">
+                <div className="text-center">
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Total Size</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={suggestions.team?.size || 0}
+                    onChange={(e) => {
+                      const newSize = parseInt(e.target.value) || 0;
+                      const newSuggestions = { ...suggestions };
+                      if (!newSuggestions.team) {
+                        newSuggestions.team = {
+                          size: newSize,
+                          structure: [],
+                          territories: ["Global"],
+                          reporting: {
+                            to: "Project Manager",
+                            frequency: "Weekly",
+                          },
+                          collaboration: ["Daily standups", "Weekly reviews"],
+                        };
+                      } else {
+                        newSuggestions.team.size = newSize;
+                        // Adjust the first role's count to match the new total size
+                        if (newSuggestions.team.structure.length > 0) {
+                          newSuggestions.team.structure[0].count = newSize;
+                        } else {
+                          // If no roles exist, create a default role
+                          newSuggestions.team.structure.push({
+                            roleId: "Agent",
+                            count: newSize,
+                            seniority: {
+                              level: "Mid-Level",
+                              yearsExperience: 3,
+                            },
+                          });
+                        }
+                      }
+                      setSuggestions(newSuggestions);
+                    }}
+                    className="w-20 text-center text-2xl font-bold text-blue-600 bg-white border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="text-sm text-gray-500">Members</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Team Size Breakdown */}
+          {suggestions.team?.structure && suggestions.team.structure.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <h5 className="text-sm font-semibold text-gray-700 mb-3">Team Breakdown:</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {suggestions.team.structure.map((role, index) => (
+                  <div key={index} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {role.roleId}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">
+                        {role.count} {role.count === 1 ? 'member' : 'members'}
+                      </span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                        {role.seniority.level}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Team Size Statistics */}
+          <div className="mt-4 pt-4 border-t border-blue-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">
+                  {suggestions.team?.structure?.length || 0}
+                </div>
+                <div className="text-xs text-gray-500">Different Roles</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">
+                  {suggestions.team?.structure?.filter(role => role.seniority.level.includes('Senior') || role.seniority.level.includes('Lead') || role.seniority.level.includes('Manager')).reduce((sum, role) => sum + role.count, 0) || 0}
+                </div>
+                <div className="text-xs text-gray-500">Senior Members</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600">
+                  {suggestions.team?.structure?.filter(role => role.seniority.level.includes('Junior') || role.seniority.level.includes('Entry') || role.seniority.level.includes('Trainee')).reduce((sum, role) => sum + role.count, 0) || 0}
+                </div>
+                <div className="text-xs text-gray-500">Junior Members</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-purple-600">
+                  {suggestions.team?.territories?.length || 0}
+                </div>
+                <div className="text-xs text-gray-500">Territories</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Team Roles */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Briefcase className="w-5 h-5 text-green-600" />
+              </div>
+              <h4 className="text-lg font-bold text-gray-800">Team Roles</h4>
+            </div>
+            <button
+              onClick={addTeamRole}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Role</span>
+            </button>
+          </div>
+
+          {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {suggestions.team.structure.map((role, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="font-semibold text-gray-800">Role #{index + 1}</h5>
+                    <button
+                      onClick={() => deleteTeamRole(index)}
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Role Type
+                      </label>
+                      <select
+                        value={role.roleId}
+                        onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      >
+                        {TEAM_ROLES.map((teamRole) => (
+                          <option key={teamRole} value={teamRole}>
+                            {teamRole}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Number of Members
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={role.count}
+                        onChange={(e) => updateTeamRole(index, "count", e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Seniority Level
+                        </label>
+                        <select
+                          value={role.seniority.level}
+                          onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          {predefinedOptions.basic.seniorityLevels.map((level) => (
+                            <option key={level} value={level}>
+                              {level}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          Years Experience
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={role.seniority.yearsExperience}
+                          onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+              <div className="p-4 bg-white rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-sm">
+                <Users className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                No Team Roles Defined
+              </h3>
+              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                Add team roles to define the structure and responsibilities of your team members.
+              </p>
+              <button
+                onClick={addTeamRole}
+                className="flex items-center space-x-2 mx-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add Team Role</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Territories */}
+        <div>
+          <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg mr-3">
+              <Globe2 className="w-5 h-5 text-purple-600" />
+            </div>
+            Territories
+          </h4>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {suggestions.team?.territories.map((territory) => (
+              <div
+                key={territory}
+                className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
+              >
+                {territory}
+                <button
+                  onClick={() => removeTerritory(territory)}
+                  className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                addTerritory(e.target.value);
+                e.target.value = ""; // Reset select
+              }
+            }}
+            className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Add a territory...
+            </option>
+            {TEAM_TERRITORIES.filter(
+              (territory) => !suggestions.team?.territories.includes(territory)
+            ).map((territory) => (
+              <option key={territory} value={territory}>
+                {territory}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -2137,33 +3115,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             <div className="p-6 rounded-lg border border-gray-200">
               <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                 <Award className="w-7 h-7 mr-3 text-blue-700" />
-                Skills & Requirements
+                Skills
               </h3>
-              {renderEditableList(
-                "requirements.essential",
-                suggestions.requirements?.essential,
-                "Essential Requirements"
-              )}
-              {renderEditableList(
-                "requirements.preferred",
-                suggestions.requirements?.preferred,
-                "Preferred Requirements"
-              )}
-              {renderEditableList(
-                "skills.technical",
-                suggestions.skills?.technical,
-                "Technical Skills"
-              )}
-              {renderEditableList(
-                "skills.soft",
-                suggestions.skills?.soft,
-                "Soft Skills"
-              )}
-              {renderEditableList(
-                "skills.languages",
-                suggestions.skills?.languages,
-                "Languages"
-              )}
+              {renderSkillsSection()}
             </div>
 
             {/* Team Section */}
@@ -2172,7 +3126,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 <Users className="w-7 h-7 mr-3 text-blue-700" />
                 Team Structure
               </h3>
-              {/* Team content goes here */}
+              {renderTeamSection()}
             </div>
           </div>
         </div>

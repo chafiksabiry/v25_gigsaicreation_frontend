@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import {
@@ -12,7 +12,8 @@ import {
   ArrowRight,
   ArrowLeft,
   GraduationCap,
-  Search
+  CheckCircle,
+  Sparkles,
 } from "lucide-react";
 import { GigData } from '../types';
 import i18n from 'i18n-iso-countries';
@@ -59,7 +60,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onNext,
   onSave,
   onAIAssist,
-  onSectionChange
 }) => {
   // États locaux pour la saisie de ville
   const [searchTerm, setSearchTerm] = useState('');
@@ -227,18 +227,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * Récupère toutes les catégories disponibles
    * Inclut les catégories prédéfinies et les nouvelles catégories
    */
-  const allCategories = React.useMemo(() => {
+  const allCategories = useMemo(() => {
     const categories = new Set(predefinedOptions.basic.categories);
     if (data.category && !categories.has(data.category)) {
       categories.add(data.category);
     }
     return Array.from(categories);
   }, [data.category]);
-
-  /**
-   * Récupère tous les niveaux de séniorité disponibles
-   * Inclut les niveaux prédéfinis et les nouveaux niveaux
-   */
 
   /**
    * Gère les changements dans la section séniorité
@@ -279,23 +274,23 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
   // Le rendu du composant
   return (
-    <div className="w-full bg-white p-6">
-      {/* Header Navigation */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Create New Gig</h1>
+    <div className="w-full bg-white p-6 sm:p-8">
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Gig</h1>
         <div className="flex gap-3">
           <button 
             onClick={onSave}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center gap-2 text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
           >
             <Save className="w-5 h-5" />
             Save Progress
           </button>
           <button 
             onClick={onAIAssist}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center gap-2 text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
           >
-            <Brain className="w-5 h-5 text-blue-600" />
+            <Brain className="w-5 h-5" />
             AI assist
           </button>
         </div>
@@ -307,8 +302,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           <AlertCircle className="w-5 h-5 text-blue-600" />
           Guidance for Basic Information
         </h2>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="bg-blue-50 rounded-lg p-6">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="w-5 h-5 text-blue-600" />
               <span className="font-medium text-gray-900">Steps:</span>
@@ -320,7 +315,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <li>Specify required years of experience</li>
             </ol>
           </div>
-          <div className="bg-blue-50 rounded-lg p-6">
+          <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
             <div className="flex items-center gap-2 mb-4">
               <Brain className="w-5 h-5 text-blue-600" />
               <span className="font-medium text-gray-900">Tips:</span>
@@ -342,264 +337,136 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           about the position's requirements and responsibilities.
         </InfoText>
 
-        {/* Title and Description */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
+        {/* --- Position Details --- */}
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Briefcase className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Position Details</h3>
-              <p className="text-sm text-gray-600">Define the role title and main responsibilities</p>
+              <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
             </div>
           </div>
-
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                value={data.title || ''}
-                onChange={(e) => {
-                  const newTitle = e.target.value;
-                  onChange({ ...data, title: newTitle });
-                }}
-                className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.title ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="e.g., Senior Customer Service Representative"
-              />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title.join(', ')}</p>
-              )}
+              <input type="text" value={data.title || ''} onChange={(e) => onChange({ ...data, title: e.target.value })}
+                className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.title ? 'border-red-300' : 'border-gray-300'}`}
+                placeholder="e.g., Senior Customer Service Representative" />
+              {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.join(', ')}</p>}
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea
-                value={data.description || ''}
-                onChange={(e) => {
-                  onChange({ ...data, description: e.target.value });
-                }}
-                rows={4}
-                className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.description ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Describe the role, key responsibilities, and what success looks like in this position..."
-              />
-              {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description.join(', ')}</p>
-              )}
+              <textarea value={data.description || ''} onChange={(e) => onChange({ ...data, description: e.target.value })} rows={4}
+                className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
+                placeholder="Describe the role, key responsibilities, and what success looks like in this position..." />
+              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.join(', ')}</p>}
             </div>
           </div>
         </div>
 
-        {/* Category */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+        {/* --- Role Category --- */}
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-purple-100 rounded-lg">
               <Target className="w-5 h-5 text-purple-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Role Category</h3>
-              <p className="text-sm text-gray-600">Select the primary focus area</p>
+              <p className="text-sm text-gray-500">Select the primary focus area</p>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {allCategories.map((category) => (
-              <button
-                key={category}
-                onClick={() => onChange({ ...data, category })}
-                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200 ${
-                  data.category === category
-                    ? 'bg-purple-100 text-purple-700 border-2 border-purple-500 shadow-md scale-105'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-purple-200'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  data.category === category
-                    ? 'bg-purple-600'
-                    : 'border-2 border-gray-300'
-                }`}>
-                  {data.category === category && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                  )}
+              <button key={category} onClick={() => onChange({ ...data, category })}
+                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200 border-2 ${data.category === category ? 'bg-purple-50 border-purple-500' : 'bg-white hover:bg-gray-50 border-gray-200'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center border-2 ${data.category === category ? 'border-purple-600 bg-purple-600' : 'border-gray-300'}`}>
+                  {data.category === category && <CheckCircle className="w-3 h-3 text-white" />}
                 </div>
-                <span className="flex-1 font-medium">{category}</span>
-                {!predefinedOptions.basic.categories.includes(category) && (
-                  <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                    New
-                  </span>
-                )}
+                <span className="flex-1 font-medium text-gray-800">{category}</span>
+                {!predefinedOptions.basic.categories.includes(category) && <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">New</span>}
               </button>
             ))}
           </div>
-          {errors.category && (
-            <p className="mt-2 text-sm text-red-600">{errors.category.join(', ')}</p>
-          )}
+          {errors.category && <p className="mt-2 text-sm text-red-600">{errors.category.join(', ')}</p>}
         </div>
 
-        {/* Destination Zone Section */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6">
+        {/* --- Destination Zone --- */}
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-amber-100 rounded-lg">
               <Globe2 className="w-5 h-5 text-amber-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Destination Zone</h3>
-              <p className="text-sm text-gray-600">Select the target country</p>
+              <p className="text-sm text-gray-500">Select the target country</p>
             </div>
           </div>
-
-          {/* Selected Country */}
-          {data.destination_zone && (
-            <div className="mb-6 p-4 bg-white rounded-lg border border-amber-200 shadow-sm">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Selected Country:</h4>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 text-amber-700 text-sm font-medium">
-                  {i18n.getName(data.destination_zone, 'en')}
-                  <button
-                    onClick={() => handleCountrySelect('')}
-                    className="ml-1 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-full p-1"
-                  >
-                    ×
-                  </button>
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Countries */}
           {data.destinationZones && data.destinationZones.length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Suggested Countries:</h4>
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-500" /> AI Suggestions</h4>
               <div className="flex flex-wrap gap-2">
-                {data.destinationZones.map((country) => {
-                  const countryCode = Object.entries(i18n.getNames('en'))
-                    .find(([_, name]) => name === country)?.[0];
-                  
+                {data.destinationZones.map(country => {
+                  const countryCode = Object.entries(i18n.getNames('en')).find(([_, name]) => name === country)?.[0];
                   if (!countryCode) return null;
-
-                  return (
-                    <button
-                      key={countryCode}
-                      onClick={() => handleCountrySelect(countryCode)}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        data.destination_zone === countryCode
-                          ? 'bg-amber-100 text-amber-700 border-2 border-amber-500 shadow-sm'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-amber-200'
-                      }`}
-                    >
-                      {country}
-                    </button>
-                  );
+                  return <button key={countryCode} onClick={() => handleCountrySelect(countryCode)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${data.destination_zone === countryCode ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'}`}>{country}</button>;
                 })}
               </div>
             </div>
           )}
-
-          {/* Countries Select */}
-          <div className="space-y-4">
-            <select
-              value={data.destination_zone || ''}
-              onChange={(e) => handleCountrySelect(e.target.value)}
-              className="block w-full py-2.5 px-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-            >
-              <option value="">Select a country</option>
-              {['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].map((zone) => {
-                const countries = getCountriesByZone(zone);
-                if (countries.length === 0) return null;
-
-                return (
-                  <optgroup key={zone} label={zone}>
-                    {countries.map(({ code, name }) => (
-                      <option key={code} value={code}>
-                        {name}
-                      </option>
-                    ))}
-                  </optgroup>
-                );
-              })}
-            </select>
-          </div>
-
-          {errors.destination_zone && (
-            <p className="mt-4 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>
-          )}
+          <label className="block text-sm font-medium text-gray-700">Country</label>
+          <select value={data.destination_zone || ''} onChange={(e) => handleCountrySelect(e.target.value)}
+            className="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+            <option value="">Select a country</option>
+            {['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].map((zone) => {
+              const countries = getCountriesByZone(zone);
+              if (countries.length === 0) return null;
+              return <optgroup key={zone} label={zone}>{countries.map(({ code, name }) => <option key={code} value={code}>{name}</option>)}</optgroup>;
+            })}
+          </select>
+          {errors.destination_zone && <p className="mt-2 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>}
         </div>
 
-        {/* Experience Level Section */}
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6">
+        {/* --- Experience Level --- */}
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <GraduationCap className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Experience Level</h3>
-              <p className="text-sm text-gray-600">Define seniority and experience requirements</p>
+              <p className="text-sm text-gray-500">Define seniority and experience requirements</p>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">Seniority Level</label>
-              <select
-                value={data.seniority?.level || ''}
-                onChange={(e) => handleSeniorityChange('level', e.target.value)}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-              >
+              <select value={data.seniority?.level || ''} onChange={(e) => handleSeniorityChange('level', e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500">
                 <option value="">Select seniority level</option>
-                {predefinedOptions.basic.seniorityLevels.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
+                {predefinedOptions.basic.seniorityLevels.map(level => <option key={level} value={level}>{level}</option>)}
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700">Years of Experience</label>
-              <input
-                type="text"
-                value={data.seniority?.yearsExperience || ''}
-                onChange={(e) => handleSeniorityChange('years', e.target.value)}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="e.g., 2"
-              />
+              <input type="number" value={data.seniority?.yearsExperience || ''} onChange={(e) => handleSeniorityChange('years', e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="e.g., 2" />
             </div>
           </div>
-
-          {data.seniority?.level && data.seniority?.yearsExperience && (
-            <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-300 flex items-center gap-3 transition-all duration-200">
-              <GraduationCap className="w-6 h-6 text-emerald-600" />
-              <span className="font-semibold text-emerald-800">{data.seniority.level}</span>
-              <span className="text-emerald-700">•</span>
-              <span className="text-emerald-700">{data.seniority.yearsExperience} years of experience</span>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-        <button
-          onClick={onPrevious}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-        >
+        <button onClick={onPrevious} disabled={!onPrevious}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
           <ArrowLeft className="w-5 h-5" />
           Previous
         </button>
-        <button
-          onClick={() => {
-            if (onSectionChange) {
-              onSectionChange('schedule');
-            } else if (onNext) {
-              onNext();
-            }
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-        >
+        <button onClick={onNext}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
           Next
           <ArrowRight className="w-5 h-5" />
         </button>
