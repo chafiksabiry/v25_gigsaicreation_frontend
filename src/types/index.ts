@@ -56,19 +56,19 @@ export interface GigData {
   };
   commission: {
     base: string;
-    baseAmount: string;
+    baseAmount: number;
     bonus: string;
-    bonusAmount: string;
+    bonusAmount: number;
     structure: string;
     currency: string;
     minimumVolume: {
-      amount: string;
+      amount: number;
       period: string;
       unit: string;
     };
     transactionCommission: {
       type: string;
-      amount: string;
+      amount: number;
     };
     kpis: {
       metric: string;
@@ -300,19 +300,19 @@ export interface GigSuggestion {
   commission: {
     options: Array<{
       base: string;
-      baseAmount: string;
+      baseAmount: number;
       bonus?: string;
-      bonusAmount?: string;
+      bonusAmount?: number;
       structure?: string;
       currency: string;
       minimumVolume: {
-        amount: string;
+        amount: number;
         period: string;
         unit: string;
       };
       transactionCommission: {
         type: string;
-        amount: string;
+        amount: number;
       };
     }>;
   };

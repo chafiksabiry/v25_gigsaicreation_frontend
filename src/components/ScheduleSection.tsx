@@ -377,41 +377,51 @@ export function ScheduleSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t">
-        <div>
-          <label className="block text-lg font-medium text-gray-900 mb-4">
-            Flexibility
-          </label>
-          <SelectionList
-            options={[
-                { value: 'full-remote', label: 'Full Remote' },
-                { value: 'hybrid', label: 'Hybrid' },
-                { value: 'on-site', label: 'On-site' },
-                { value: 'flexible-hours', label: 'Flexible Hours' },
-            ]}
-            selected={data.flexibility}
-            onChange={(selected) => onChange({ ...data, flexibility: selected })}
-          />
-        </div>
-        <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Minimum Hours</h3>
-            <div className="grid grid-cols-3 gap-3">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Daily</label>
-                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours?.daily || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, daily: +e.target.value}})} />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Weekly</label>
-                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours?.weekly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, weekly: +e.target.value}})} />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly</label>
-                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours?.monthly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, monthly: +e.target.value}})} />
-                </div>
+      <div className="pt-8 border-t">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Minimum Hours</h3>
+        <div className="grid grid-cols-3 gap-3">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Daily</label>
+                <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours?.daily || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, daily: +e.target.value}})} />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Weekly</label>
+                <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours?.weekly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, weekly: +e.target.value}})} />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Monthly</label>
+                <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md" value={data.minimumHours?.monthly || ''} onChange={e => onChange({...data, minimumHours: {...data.minimumHours, monthly: +e.target.value}})} />
             </div>
         </div>
       </div>
-      
+
+      <div className="pt-8 border-t">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule Flexibility</h3>
+        <SelectionList
+          options={[
+              { value: 'Remote Work Available', label: 'Remote Work Available' },
+              { value: 'Flexible Hours', label: 'Flexible Hours' },
+              { value: 'weekend-rotation', label: 'Weekend Rotation' },
+              { value: 'Night Shift Available', label: 'Night Shift Available' },
+              { value: 'Split Shifts', label: 'Split Shifts' },
+              { value: 'Part-Time Options', label: 'Part-Time Options' },
+              { value: 'Compressed Work Week', label: 'Compressed Work Week' },
+              { value: 'Shift Swapping Allowed', label: 'Shift Swapping Allowed' },
+          ]}
+          selected={data.flexibility}
+          onChange={(selected) => onChange({ ...data, flexibility: selected })}
+          multiple={true}
+          layout="flow"
+          size="sm"
+        />
+        <p className="mt-2 text-sm text-gray-500">
+          Select all applicable flexibility options.
+        </p>
+        {errors.flexibility && (
+          <p className="mt-1 text-sm text-red-600">{errors.flexibility.join(', ')}</p>
+        )}
+      </div>
+
       <div className="pt-8 border-t">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Time Zones</h3>
         <SelectionList

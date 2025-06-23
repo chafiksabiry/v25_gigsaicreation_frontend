@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   Brain,
@@ -110,35 +110,6 @@ interface ActivityOption {
   requirements: string[];
 }
 
-type EditableGigSuggestion = Omit<GigSuggestion, 'commission' | 'activity'> & {
-  commission?: {
-    options: Array<{
-      base: string;
-      baseAmount: string;
-      bonus?: string;
-      bonusAmount?: string;
-      structure?: string;
-      currency: string;
-      minimumVolume: {
-        amount: string;
-        period: string;
-        unit: string;
-      };
-      transactionCommission: {
-        type: string;
-        amount: string;
-      };
-    }>;
-  };
-  activity?: {
-    options: Array<{
-      type: string;
-      description: string;
-      requirements: string[];
-    }>;
-  };
-};
-
 interface SuggestionsProps {
   input: string;
   onBack: () => void;
@@ -170,6 +141,82 @@ const COMMON_TIMEZONES = [
   "JST (Japan Standard Time)",
   "AEDT (Australian Eastern Daylight Time)",
   "NZDT (New Zealand Daylight Time)"
+];
+
+const DESTINATION_ZONES = [
+  "France",
+  "United States",
+  "United Kingdom",
+  "Germany",
+  "Canada",
+  "Australia",
+  "Japan",
+  "India",
+  "Brazil",
+  "Mexico",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Sweden",
+  "Norway",
+  "Denmark",
+  "Finland",
+  "Switzerland",
+  "Austria",
+  "Belgium",
+  "Portugal",
+  "Ireland",
+  "New Zealand",
+  "Singapore",
+  "South Korea",
+  "China",
+  "Russia",
+  "South Africa",
+  "Argentina",
+  "Chile",
+  "Colombia",
+  "Peru",
+  "Venezuela",
+  "Uruguay",
+  "Paraguay",
+  "Bolivia",
+  "Ecuador",
+  "Guyana",
+  "Suriname",
+  "French Guiana"
+];
+
+const SECTORS = [
+  "Technology",
+  "Healthcare",
+  "Finance",
+  "Education",
+  "Retail",
+  "Manufacturing",
+  "Real Estate",
+  "Transportation",
+  "Energy",
+  "Media",
+  "Entertainment",
+  "Sports",
+  "Food & Beverage",
+  "Fashion",
+  "Automotive",
+  "Aerospace",
+  "Pharmaceuticals",
+  "Biotechnology",
+  "Telecommunications",
+  "Consulting",
+  "Legal",
+  "Accounting",
+  "Marketing",
+  "Sales",
+  "Customer Service",
+  "Human Resources",
+  "Operations",
+  "Research & Development",
+  "Quality Assurance",
+  "Project Management"
 ];
 
 interface LeadType {
@@ -412,6 +459,19 @@ const FLEXIBILITY_OPTIONS = [
   "Shift Swapping Allowed"
 ];
 
+const BONUS_TYPES = [
+  "Performance Bonus",
+  "Team Bonus"
+];
+
+const TRANSACTION_TYPES = [
+  "Fixed Amount",
+  "Percentage",
+  "Tiered Amount",
+  "Volume Based",
+  "Performance Based"
+];
+
 export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfirm }) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -419,10 +479,24 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>('');
+  const isGeneratingRef = useRef(false);
+  const lastProcessedInputRef = useRef<string>('');
 
   useEffect(() => {
     const generateSuggestions = async () => {
+      // Prevent multiple simultaneous API calls
+      if (isGeneratingRef.current) {
+        return;
+      }
+
+      // Don't regenerate if we already processed this exact input
+      if (lastProcessedInputRef.current === input.trim()) {
+        return;
+      }
+
       try {
+        isGeneratingRef.current = true;
+        lastProcessedInputRef.current = input.trim();
         setLoading(true);
         setError(null);
         const result = await generateGigSuggestions(input);
@@ -473,20 +547,20 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
           // Convert old structure to new options structure
           const oldCommission = result.commission as any;
           const commissionOption = {
-            base: oldCommission.base || "Base",
-            baseAmount: oldCommission.baseAmount || "0",
-            bonus: oldCommission.bonus,
-            bonusAmount: oldCommission.bonusAmount,
+            base: oldCommission.base || "Base + Commission",
+            baseAmount: typeof oldCommission.baseAmount === 'string' ? parseFloat(oldCommission.baseAmount) || 0 : (oldCommission.baseAmount || 0),
+            bonus: "Performance Bonus",
+            bonusAmount: typeof oldCommission.bonusAmount === 'string' ? parseFloat(oldCommission.bonusAmount) || 0 : (oldCommission.bonusAmount || 0),
             structure: oldCommission.structure,
             currency: oldCommission.currency || "EUR",
             minimumVolume: oldCommission.minimumVolume || {
-              amount: "0",
+              amount: 0,
               period: "Monthly",
-              unit: "Units"
+              unit: "Sales"
             },
             transactionCommission: oldCommission.transactionCommission || {
-              type: "Fixed",
-              amount: "0"
+              type: "Fixed Amount",
+              amount: 0
             }
           };
           
@@ -500,12 +574,18 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
         setError(err instanceof Error ? err.message : 'Failed to generate suggestions');
       } finally {
         setLoading(false);
+        isGeneratingRef.current = false;
       }
     };
 
     if (input.trim()) {
       generateSuggestions();
     }
+
+    // Cleanup function to reset the generating flag
+    return () => {
+      isGeneratingRef.current = false;
+    };
   }, [input]);
 
   const handleMinimumHoursChange = (period: 'daily' | 'weekly' | 'monthly', value: string) => {
@@ -731,7 +811,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
   };
 
   const renderEditableList = (section: string, items: any[], title: string) => {
-    if (!items || items.length === 0) return null;
+    const currentItems = items || [];
 
     return (
       <div className="mb-6">
@@ -750,66 +830,94 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
           </button>
         </div>
         
-        <div className="space-y-3">
-          {items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-              {editingSection === section && editingIndex === index ? (
-                <div className="flex items-center space-x-2 flex-1">
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => updateItem(section, index, editValue)}
-                    className="text-green-700 hover:text-green-800 p-1"
-                  >
-                    <Check className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={cancelEditing}
-                    className="text-gray-500 hover:text-gray-700 p-1"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-gray-700 flex-1 font-medium">
-                    {typeof item === 'string' ? item : (item?.skill || item?.language || '')}
-                  </span>
-                  <div className="flex items-center space-x-2">
+        {currentItems.length > 0 && (
+          <div className="space-y-3">
+            {currentItems.map((item, index) => (
+              <div key={index} className="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                {editingSection === section && editingIndex === index ? (
+                  <div className="flex items-center space-x-2 flex-1">
+                    <input
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                      autoFocus
+                    />
                     <button
-                      onClick={() => startEditing(section, index, item)}
-                      className="text-blue-900 hover:text-blue-700 p-1"
+                      onClick={() => updateItem(section, index, editValue)}
+                      className="text-green-700 hover:text-green-800 p-1"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Check className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => deleteItem(section, index)}
-                      className="text-red-600 hover:text-red-700 p-1"
+                      onClick={cancelEditing}
+                      className="text-gray-500 hover:text-gray-700 p-1"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+                ) : (
+                  <>
+                    <span className="text-gray-700 flex-1 font-medium">
+                      {typeof item === 'string' ? item : (item?.skill || item?.language || '')}
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => startEditing(section, index, item)}
+                        className="text-blue-900 hover:text-blue-700 p-1"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteItem(section, index)}
+                        className="text-red-600 hover:text-red-700 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {editingSection === section && editingIndex === -1 && (
           <div className="flex items-center space-x-3 mt-4">
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              placeholder={`Add a new ${title.toLowerCase()}`}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
-              autoFocus
-            />
+            {section === 'destinationZones' ? (
+              <select
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                autoFocus
+              >
+                <option value="">Select a destination zone...</option>
+                {DESTINATION_ZONES.filter(zone => !currentItems.includes(zone)).map(zone => (
+                  <option key={zone} value={zone}>{zone}</option>
+                ))}
+              </select>
+            ) : section === 'sectors' ? (
+              <select
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                autoFocus
+              >
+                <option value="">Select a sector...</option>
+                {SECTORS.filter(sector => !currentItems.includes(sector)).map(sector => (
+                  <option key={sector} value={sector}>{sector}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                placeholder={`Add a new ${title.toLowerCase()}`}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                autoFocus
+              />
+            )}
             <button
               onClick={() => {
                 if (editValue.trim()) {
@@ -1137,6 +1245,337 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
     );
   };
 
+  const renderSenioritySection = () => {
+    if (!suggestions) return null;
+
+    const handleSeniorityLevelChange = (level: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.seniority = {
+        ...newSuggestions.seniority,
+        level: level
+      };
+      setSuggestions(newSuggestions);
+    };
+
+    const handleYearsExperienceChange = (years: string) => {
+      const newSuggestions = { ...suggestions };
+      const numericValue = parseInt(years, 10);
+      if (!isNaN(numericValue)) {
+        newSuggestions.seniority = {
+          ...newSuggestions.seniority,
+          yearsExperience: numericValue
+        };
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-blue-900">Seniority Level</h4>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-gray-600 mb-1 block">Level</label>
+            <select
+              value={suggestions.seniority?.level || ''}
+              onChange={(e) => handleSeniorityLevelChange(e.target.value)}
+              className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select level...</option>
+              {predefinedOptions.basic.seniorityLevels.map(level => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-600 mb-1 block">Years of Experience</label>
+            <input
+              type="number"
+              value={suggestions.seniority?.yearsExperience || ''}
+              onChange={(e) => handleYearsExperienceChange(e.target.value)}
+              placeholder="e.g. 5"
+              className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCommissionSection = () => {
+    if (!suggestions) return null;
+
+    const addCommissionOption = () => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.commission) {
+        newSuggestions.commission = { options: [] };
+      }
+      
+      const newOption = {
+        base: "Base + Commission",
+        baseAmount: 0,
+        bonus: "Performance Bonus",
+        bonusAmount: 0,
+        structure: "Fixed",
+        currency: "EUR",
+        minimumVolume: {
+          amount: 0,
+          period: "Monthly",
+          unit: "Sales"
+        },
+        transactionCommission: {
+          type: "Fixed Amount",
+          amount: 0
+        }
+      };
+      
+      newSuggestions.commission.options.push(newOption);
+      setSuggestions(newSuggestions);
+    };
+
+    const updateCommissionOption = (index: number, field: string, value: string | number) => {
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.commission && newSuggestions.commission.options[index]) {
+        if (field.includes('.')) {
+          const [parent, child] = field.split('.');
+          if (typeof value === 'string' && (child === 'amount' || child === 'baseAmount' || child === 'bonusAmount')) {
+            // Convert string to number for amount fields
+            const numericValue = parseFloat(value) || 0;
+            (newSuggestions.commission.options[index] as any)[parent][child] = numericValue;
+          } else {
+            (newSuggestions.commission.options[index] as any)[parent][child] = value;
+          }
+        } else {
+          if (typeof value === 'string' && (field === 'baseAmount' || field === 'bonusAmount')) {
+            // Convert string to number for amount fields
+            const numericValue = parseFloat(value) || 0;
+            (newSuggestions.commission.options[index] as any)[field] = numericValue;
+          } else {
+            (newSuggestions.commission.options[index] as any)[field] = value;
+          }
+        }
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    const deleteCommissionOption = (index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.commission) {
+        newSuggestions.commission.options.splice(index, 1);
+        setSuggestions(newSuggestions);
+      }
+    };
+
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-blue-900">Commission Options</h4>
+          <button
+            onClick={addCommissionOption}
+            className="flex items-center space-x-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Option</span>
+          </button>
+        </div>
+        
+        {suggestions.commission?.options && suggestions.commission.options.length > 0 ? (
+          <div className="space-y-4">
+            {suggestions.commission.options.map((option, index) => (
+              <div key={index} className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h5 className="text-md font-semibold text-gray-800">Option {index + 1}</h5>
+                  <button
+                    onClick={() => deleteCommissionOption(index)}
+                    className="text-red-600 hover:text-red-700 p-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600 mb-1 block">Base</label>
+                    <select
+                      value={option.base || ''}
+                      onChange={(e) => updateCommissionOption(index, 'base', e.target.value)}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select base type...</option>
+                      <option value="Fixed Salary">Fixed Salary</option>
+                      <option value="Base + Commission">Base + Commission</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600 mb-1 block">Base Amount</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={typeof option.baseAmount === 'number' ? option.baseAmount : (option.baseAmount ? parseFloat(option.baseAmount) : '')}
+                      onChange={(e) => updateCommissionOption(index, 'baseAmount', e.target.value)}
+                      placeholder="e.g. 25"
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h6 className="text-sm font-semibold text-gray-700 mb-3">Minimum Volume</h6>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Amount</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={typeof option.minimumVolume?.amount === 'number' ? option.minimumVolume.amount : parseFloat(option.minimumVolume?.amount) || ''}
+                        onChange={(e) => updateCommissionOption(index, 'minimumVolume.amount', e.target.value)}
+                        placeholder="e.g. 10"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Period</label>
+                      <select
+                        value={option.minimumVolume?.period || ''}
+                        onChange={(e) => updateCommissionOption(index, 'minimumVolume.period', e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select period...</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Unit</label>
+                      <select
+                        value={option.minimumVolume?.unit || ''}
+                        onChange={(e) => updateCommissionOption(index, 'minimumVolume.unit', e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select unit...</option>
+                        <option value="Calls">Calls</option>
+                        <option value="Sales">Sales</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Bonus</label>
+                      <select
+                        value={option.bonus || 'Performance Bonus'}
+                        onChange={(e) => updateCommissionOption(index, 'bonus', e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {BONUS_TYPES.map(bonusType => (
+                          <option key={bonusType} value={bonusType}>{bonusType}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Bonus Amount</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={typeof option.bonusAmount === 'number' ? option.bonusAmount : (option.bonusAmount ? parseFloat(option.bonusAmount) : '')}
+                        onChange={(e) => updateCommissionOption(index, 'bonusAmount', e.target.value)}
+                        placeholder="e.g. 150"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h6 className="text-sm font-semibold text-gray-700 mb-3">Structure & Currency</h6>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Structure</label>
+                      <select
+                        value={option.structure || ''}
+                        onChange={(e) => updateCommissionOption(index, 'structure', e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select structure...</option>
+                        <option value="Fixed">Fixed</option>
+                        <option value="Percentage">Percentage</option>
+                        <option value="Tiered Commission">Tiered Commission</option>
+                        <option value="Performance Based">Performance Based</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Currency</label>
+                      <select
+                        value={option.currency || ''}
+                        onChange={(e) => updateCommissionOption(index, 'currency', e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="EUR">EUR</option>
+                        <option value="USD">USD</option>
+                        <option value="GBP">GBP</option>
+                        <option value="CAD">CAD</option>
+                        <option value="AUD">AUD</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h6 className="text-sm font-semibold text-gray-700 mb-3">Transaction Commission</h6>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Type</label>
+                      <select
+                        value={option.transactionCommission?.type || 'Fixed Amount'}
+                        onChange={(e) => updateCommissionOption(index, 'transactionCommission.type', e.target.value)}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {TRANSACTION_TYPES.map(transactionType => (
+                          <option key={transactionType} value={transactionType}>{transactionType}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 mb-1 block">Amount</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={typeof option.transactionCommission?.amount === 'number' ? option.transactionCommission.amount : parseFloat(option.transactionCommission?.amount) || ''}
+                        onChange={(e) => updateCommissionOption(index, 'transactionCommission.amount', e.target.value)}
+                        placeholder="e.g. 10.5"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <p className="text-gray-500 mb-4">No commission options defined.</p>
+            <button
+              onClick={addCommissionOption}
+              className="flex items-center space-x-2 mx-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Commission Option</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -1214,6 +1653,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
               {renderEditableList('deliverables', suggestions.deliverables, 'Deliverables')}
               {renderEditableList('sectors', suggestions.sectors, 'Sectors')}
               {renderEditableList('destinationZones', suggestions.destinationZones, 'Destination Zones')}
+              {renderSenioritySection()}
             </div>
 
             {/* Schedule Section */}
@@ -1231,7 +1671,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
                 <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
                 Commission
               </h3>
-              {/* Commission content goes here */}
+              {renderCommissionSection()}
             </div>
 
             {/* Skills Section */}

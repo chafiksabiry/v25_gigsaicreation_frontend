@@ -73,18 +73,18 @@ export interface ParsedGig {
   };
   commission?: {
     base: string;
-    baseAmount: string;
+    baseAmount: number;
     bonus?: string;
-    bonusAmount?: string;
+    bonusAmount?: number;
     currency: string;
     minimumVolume: {
-      amount: string;
+      amount: number;
       period: string;
       unit: string;
     };
     transactionCommission: {
       type: string;
-      amount: string;
+      amount: number;
     };
   };
   leads?: {
@@ -230,19 +230,19 @@ export interface GigData {
   };
   commission: {
     base: string;
-    baseAmount: string;
+    baseAmount: number;
     bonus: string;
-    bonusAmount: string;
+    bonusAmount: number;
     structure: string;
     currency: string;
     minimumVolume: {
-      amount: string;
+      amount: number;
       period: string;
       unit: string;
     };
     transactionCommission: {
       type: string;
-      amount: string;
+      amount: number;
     };
     kpis: any[];
   };
@@ -386,18 +386,18 @@ export interface GigSuggestion {
   commission: {
     options: Array<{
       base: string;
-      baseAmount: string;
+      baseAmount: number;
       bonus?: string;
-      bonusAmount?: string;
+      bonusAmount?: number;
       currency: string;
       minimumVolume: {
-        amount: string;
+        amount: number;
         period: string;
         unit: string;
       };
       transactionCommission: {
         type: string;
-        amount: string;
+        amount: number;
       };
     }>;
   };
