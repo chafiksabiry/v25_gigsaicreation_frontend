@@ -388,6 +388,30 @@ const fallbackSuggestions: GigSuggestion = {
   }
 };
 
+const TIMEZONE_OPTIONS = [
+  "New York (EST/EDT)",
+  "Chicago (CST/CDT)",
+  "Denver (MST/MDT)",
+  "Los Angeles (PST/PDT)",
+  "London (GMT/BST)",
+  "Paris (CET/CEST)",
+  "Dubai (GST)",
+  "Singapore (SGT)",
+  "Tokyo (JST)",
+  "Sydney (AEST/AEDT)"
+];
+
+const FLEXIBILITY_OPTIONS = [
+  "Remote Work Available",
+  "Flexible Hours",
+  "Weekend Rotation",
+  "Night Shift Available",
+  "Split Shifts",
+  "Part-Time Options",
+  "Compressed Work Week",
+  "Shift Swapping Allowed"
+];
+
 export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfirm }) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -483,6 +507,73 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
       generateSuggestions();
     }
   }, [input]);
+
+  const handleMinimumHoursChange = (period: 'daily' | 'weekly' | 'monthly', value: string) => {
+    if (!suggestions) return;
+    const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+    const numericValue = parseInt(value, 10);
+    if (!isNaN(numericValue)) {
+      if (!newSuggestions.schedule.minimumHours) {
+          newSuggestions.schedule.minimumHours = {};
+      }
+      newSuggestions.schedule.minimumHours[period] = numericValue;
+      setSuggestions(newSuggestions);
+    } else if (value === '') {
+        if (!newSuggestions.schedule.minimumHours) {
+            newSuggestions.schedule.minimumHours = {};
+        }
+        delete newSuggestions.schedule.minimumHours[period];
+        setSuggestions(newSuggestions);
+    }
+  };
+
+  const handleAddTimeZone = (zone: string) => {
+    if (!suggestions || !zone || suggestions.schedule.timeZones.includes(zone)) return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        timeZones: [...suggestions.schedule.timeZones, zone]
+      }
+    };
+    setSuggestions(newSuggestions);
+  };
+
+  const handleRemoveTimeZone = (zoneToRemove: string) => {
+    if (!suggestions) return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        timeZones: suggestions.schedule.timeZones.filter(zone => zone !== zoneToRemove)
+      }
+    };
+    setSuggestions(newSuggestions);
+  };
+
+  const handleAddFlexibility = (option: string) => {
+    if (!suggestions || !option || suggestions.schedule.flexibility.includes(option)) return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        flexibility: [...suggestions.schedule.flexibility, option]
+      }
+    };
+    setSuggestions(newSuggestions);
+  };
+
+  const handleRemoveFlexibility = (optionToRemove: string) => {
+    if (!suggestions) return;
+    const newSuggestions = {
+      ...suggestions,
+      schedule: {
+        ...suggestions.schedule,
+        flexibility: suggestions.schedule.flexibility.filter(option => option !== optionToRemove)
+      }
+    };
+    setSuggestions(newSuggestions);
+  };
 
   const handleConfirm = () => {
     if (suggestions) {
@@ -946,6 +1037,101 @@ export const Suggestions: React.FC<SuggestionsProps> = ({ input, onBack, onConfi
             <Plus className="w-5 h-5" />
             <span>Add Schedule Group</span>
           </button>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-gray-200 space-y-8">
+            {/* Minimum Hours */}
+            <div>
+                <h5 className="text-md font-semibold text-gray-800 mb-4">Minimum Hours Requirements</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className="text-sm font-medium text-gray-600 mb-1 block">Daily</label>
+                        <input
+                            type="number"
+                            placeholder="e.g. 8"
+                            value={suggestions.schedule.minimumHours?.daily ?? ''}
+                            onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
+                            className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-gray-600 mb-1 block">Weekly</label>
+                        <input
+                            type="number"
+                            placeholder="e.g. 40"
+                            value={suggestions.schedule.minimumHours?.weekly ?? ''}
+                            onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
+                            className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-gray-600 mb-1 block">Monthly</label>
+                        <input
+                            type="number"
+                            placeholder="e.g. 160"
+                            value={suggestions.schedule.minimumHours?.monthly ?? ''}
+                            onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
+                            className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Time Zones */}
+            <div>
+                <h5 className="text-md font-semibold text-gray-800 mb-4">Time Zones</h5>
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {suggestions.schedule.timeZones.map(zone => (
+                        <div key={zone} className="flex items-center bg-blue-100 text-blue-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+                            {zone}
+                            <button onClick={() => handleRemoveTimeZone(zone)} className="ml-2 text-blue-600 hover:text-blue-800 rounded-full focus:outline-none focus:bg-blue-200">
+                                <XCircle className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+                <select
+                    onChange={(e) => {
+                        if (e.target.value) handleAddTimeZone(e.target.value);
+                        e.target.value = ""; // Reset select
+                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    defaultValue=""
+                >
+                    <option value="" disabled>Add a time zone...</option>
+                    {TIMEZONE_OPTIONS.filter(opt => !suggestions.schedule.timeZones.includes(opt)).map(zone => (
+                        <option key={zone} value={zone}>{zone}</option>
+                    ))}
+                </select>
+            </div>
+            
+            {/* Schedule Flexibility */}
+            <div>
+                <h5 className="text-md font-semibold text-gray-800 mb-4">Schedule Flexibility</h5>
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {suggestions.schedule.flexibility.map(opt => (
+                        <div key={opt} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+                            {opt}
+                            <button onClick={() => handleRemoveFlexibility(opt)} className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200">
+                                <XCircle className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+                 <select
+                    onChange={(e) => {
+                        if (e.target.value) handleAddFlexibility(e.target.value);
+                        e.target.value = ""; // Reset select
+                    }}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    defaultValue=""
+                >
+                    <option value="" disabled>Add a flexibility option...</option>
+                    {FLEXIBILITY_OPTIONS.filter(opt => !suggestions.schedule.flexibility.includes(opt)).map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                </select>
+            </div>
         </div>
       </div>
     );

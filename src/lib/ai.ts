@@ -271,73 +271,73 @@ export interface TimezoneInfo {
   };
 }
 
-export type TimezoneCode = 'America/New_York' | 'Europe/London' | 'Asia/Singapore' | 'Asia/Tokyo' | 'Europe/Paris' | 'America/Chicago' | 'America/Denver' | 'America/Los_Angeles' | 'Europe/Dubai' | 'Australia/Sydney';
+export type TimezoneCode = 'New York (EST/EDT)' | 'Chicago (CST/CDT)' | 'Denver (MST/MDT)' | 'Los Angeles (PST/PDT)' | 'London (GMT/BST)' | 'Paris (CET/CEST)' | 'Dubai (GST)' | 'Singapore (SGT)' | 'Tokyo (JST)' | 'Sydney (AEST/AEDT)';
 
 export const MAJOR_TIMEZONES: Record<TimezoneCode, TimezoneInfo> = {
-  'America/New_York': {
+  'New York (EST/EDT)': {
     name: 'New York (EST/EDT)',
     description: 'Eastern United States, major financial hub',
     offset: -5,
     abbreviation: 'EST/EDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'America/Chicago': {
+  'Chicago (CST/CDT)': {
     name: 'Chicago (CST/CDT)',
     description: 'Central United States, major business hub',
     offset: -6,
     abbreviation: 'CST/CDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'America/Denver': {
+  'Denver (MST/MDT)': {
     name: 'Denver (MST/MDT)',
     description: 'Mountain United States, growing tech hub',
     offset: -7,
     abbreviation: 'MST/MDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'America/Los_Angeles': {
+  'Los Angeles (PST/PDT)': {
     name: 'Los Angeles (PST/PDT)',
     description: 'Western United States, major tech and entertainment hub',
     offset: -8,
     abbreviation: 'PST/PDT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Europe/London': {
+  'London (GMT/BST)': {
     name: 'London (GMT/BST)',
     description: 'United Kingdom, major European financial center',
     offset: 0,
     abbreviation: 'GMT/BST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Europe/Paris': {
+  'Paris (CET/CEST)': {
     name: 'Paris (CET/CEST)',
     description: 'Central European business hub',
     offset: 1,
     abbreviation: 'CET/CEST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Europe/Dubai': {
+  'Dubai (GST)': {
     name: 'Dubai (GST)',
     description: 'Middle Eastern business hub',
     offset: 4,
     abbreviation: 'GST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Asia/Singapore': {
+  'Singapore (SGT)': {
     name: 'Singapore (SGT)',
     description: 'Southeast Asian business hub',
     offset: 8,
     abbreviation: 'SGT',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Asia/Tokyo': {
+  'Tokyo (JST)': {
     name: 'Tokyo (JST)',
     description: 'Japan, major Asian financial center',
     offset: 9,
     abbreviation: 'JST',
     businessHours: { start: "09:00", end: "17:00" }
   },
-  'Australia/Sydney': {
+  'Sydney (AEST/AEDT)': {
     name: 'Sydney (AEST/AEDT)',
     description: 'Australia, major Asia-Pacific business hub',
     offset: 10,
@@ -347,9 +347,9 @@ export const MAJOR_TIMEZONES: Record<TimezoneCode, TimezoneInfo> = {
 };
 
 export const TIMEZONE_GROUPS = {
-  americas: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'] as TimezoneCode[],
-  europe: ['Europe/London', 'Europe/Paris', 'Europe/Dubai'] as TimezoneCode[],
-  asiaPacific: ['Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney'] as TimezoneCode[]
+  americas: ['New York (EST/EDT)', 'Chicago (CST/CDT)', 'Denver (MST/MDT)', 'Los Angeles (PST/PDT)'] as TimezoneCode[],
+  europe: ['London (GMT/BST)', 'Paris (CET/CEST)', 'Dubai (GST)'] as TimezoneCode[],
+  asiaPacific: ['Singapore (SGT)', 'Tokyo (JST)', 'Sydney (AEST/AEDT)'] as TimezoneCode[]
 };
 
 interface TimeRange {
@@ -778,6 +778,11 @@ export function getAvailableCommissionOptions() {
   };
 }
 
+// Add a function to get available sectors
+export function getAvailableSectors() {
+  return predefinedOptions.sectors;
+}
+
 export async function generateTeamAndTerritories(title: string, description: string): Promise<{
   team: {
     roles: Array<{
@@ -1170,8 +1175,13 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
 
   // Generate schedule based on input or default to weekdays
   let scheduleDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  if (generatedData.schedule?.schedules?.[0]?.days) {
-    scheduleDays = generatedData.schedule.schedules[0].days;
+  if (generatedData.schedule?.schedules?.[0]) {
+    const firstSchedule = generatedData.schedule.schedules[0];
+    if ('days' in firstSchedule && Array.isArray(firstSchedule.days)) {
+      scheduleDays = firstSchedule.days;
+    } else if ('day' in firstSchedule && firstSchedule.day) {
+      scheduleDays = [firstSchedule.day];
+    }
   }
 
   // Generate schedule for each day
@@ -1331,10 +1341,16 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     }
   }).flat() || defaultSchedule;
 
+  // Validate sectors
+  const validSectors = predefinedOptions.sectors;
+  const validatedSectors = (generatedData.sectors || []).filter(sector => 
+    validSectors.includes(sector)
+  );
+
   return {
-    title: generatedData.jobTitles?.[0] || '',
+    title: generatedData.jobTitles?.[0] || generatedData.title || '',
     description: generatedData.deliverables?.join('\n') || '',
-    category: generatedData.sectors?.[0] || '',
+    category: validatedSectors[0] || '',
     highlights: generatedData.highlights || [],
     destinationZones: (generatedData.destinationZones || []).map(zone => {
       // Convert continent names to appropriate country/region
@@ -1553,7 +1569,7 @@ Return a JSON object with the following structure:
   "highlights": "string[]",
   "jobTitles": "string[]",
   "deliverables": "string[]",
-  "sectors": "string[]",
+  "sectors": "string[] (MUST be from predefinedOptions.sectors)",
   "destinationZones": "string[] (from predefinedOptions.basic.destinationZones)",
   "timeframes": "string[]",
   "schedule": {

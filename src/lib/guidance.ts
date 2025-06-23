@@ -32,16 +32,31 @@ export const aiPrompts = {
 export const predefinedOptions = {
   basic: {
     categories: [
-      'Sales',
-      'Customer Support',
-      'Marketing',
-      'Engineering',
-      'Finance',
-      'Human Resources',
-      'Operations',
-      'IT',
-      'Legal',
-      'Administration'
+      'Inbound Sales',
+      'Outbound Sales',
+      'Customer Service',
+      'Technical Support',
+      'Account Management',
+      'Lead Generation',
+      'Market Research',
+      'Appointment Setting',
+      'Order Processing',
+      'Customer Retention',
+      'Billing Support',
+      'Product Support',
+      'Help Desk',
+      'Chat Support',
+      'Email Support',
+      'Social Media Support',
+      'Survey Calls',
+      'Welcome Calls',
+      'Follow-up Calls',
+      'Complaint Resolution',
+      'Warranty Support',
+      'Collections',
+      'Dispatch Services',
+      'Emergency Support',
+      'Multilingual Support'
     ],
     seniorityLevels: [
       'Entry Level',
@@ -54,16 +69,16 @@ export const predefinedOptions = {
       'Director'
     ],
     timeZones: [
-      'America/New_York',
-      'America/Chicago',
-      'America/Denver',
-      'America/Los_Angeles',
-      'Europe/London',
-      'Europe/Paris',
-      'Europe/Dubai',
-      'Asia/Singapore',
-      'Asia/Tokyo',
-      'Australia/Sydney'
+      'New York (EST/EDT)',
+      'Chicago (CST/CDT)',
+      'Denver (MST/MDT)',
+      'Los Angeles (PST/PDT)',
+      'London (GMT/BST)',
+      'Paris (CET/CEST)',
+      'Dubai (GST)',
+      'Singapore (SGT)',
+      'Tokyo (JST)',
+      'Sydney (AEST/AEDT)'
     ],
     destinationZones: [
       'France',
@@ -78,6 +93,33 @@ export const predefinedOptions = {
       'Turkey'
     ]
   },
+  sectors: [
+    'Inbound Sales',
+    'Outbound Sales',
+    'Customer Service',
+    'Technical Support',
+    'Account Management',
+    'Lead Generation',
+    'Market Research',
+    'Appointment Setting',
+    'Order Processing',
+    'Customer Retention',
+    'Billing Support',
+    'Product Support',
+    'Help Desk',
+    'Chat Support',
+    'Email Support',
+    'Social Media Support',
+    'Survey Calls',
+    'Welcome Calls',
+    'Follow-up Calls',
+    'Complaint Resolution',
+    'Warranty Support',
+    'Collections',
+    'Dispatch Services',
+    'Emergency Support',
+    'Multilingual Support'
+  ],
   availability: {
     schedule: [
       'Monday',
@@ -89,18 +131,16 @@ export const predefinedOptions = {
       'Sunday'
     ],
     timeZones: [
-      'America/New_York',
-      'America/Chicago',
-      'America/Denver',
-      'America/Los_Angeles',
-      'Europe/London',
-      'Europe/Paris',
-      'Weekend Rotation',
-      'Night Shift Available',
-      'Split Shifts',
-      'Part-Time Options',
-      'Compressed Work Week',
-      'Shift Swapping Allowed'
+      'New York (EST/EDT)',
+      'Chicago (CST/CDT)',
+      'Denver (MST/MDT)',
+      'Los Angeles (PST/PDT)',
+      'London (GMT/BST)',
+      'Paris (CET/CEST)',
+      'Dubai (GST)',
+      'Singapore (SGT)',
+      'Tokyo (JST)',
+      'Sydney (AEST/AEDT)'
     ]
   },
   commission: {
