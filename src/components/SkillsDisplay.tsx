@@ -51,12 +51,21 @@ const SKILL_LEVELS = [
 ];
 
 const LANGUAGE_LEVEL_COLORS = {
-  'A1 - Beginner': 'bg-gray-100 text-gray-700',
-  'A2 - Elementary': 'bg-blue-100 text-blue-700',
-  'B1 - Intermediate': 'bg-yellow-100 text-yellow-700',
-  'B2 - Upper Intermediate': 'bg-orange-100 text-orange-700',
-  'C1 - Advanced': 'bg-purple-100 text-purple-700',
-  'C2 - Mastery': 'bg-green-100 text-green-700'
+  'A1': 'bg-gray-100 text-gray-700',
+  'A2': 'bg-blue-100 text-blue-700',
+  'B1': 'bg-yellow-100 text-yellow-700',
+  'B2': 'bg-orange-100 text-orange-700',
+  'C1': 'bg-purple-100 text-purple-700',
+  'C2': 'bg-green-100 text-green-700'
+};
+
+const LANGUAGE_LEVEL_LABELS = {
+  'A1': 'A1 - Beginner',
+  'A2': 'A2 - Elementary',
+  'B1': 'B1 - Intermediate',
+  'B2': 'B2 - Upper Intermediate',
+  'C1': 'C1 - Advanced',
+  'C2': 'C2 - Mastery'
 };
 
 export function SkillsDisplay({ 
@@ -88,6 +97,7 @@ export function SkillsDisplay({
 
   const renderLanguageBadge = (language: { language: string; proficiency: string; iso639_1: string }) => {
     const levelColor = LANGUAGE_LEVEL_COLORS[language.proficiency as keyof typeof LANGUAGE_LEVEL_COLORS] || 'bg-gray-100 text-gray-700';
+    const levelLabel = LANGUAGE_LEVEL_LABELS[language.proficiency as keyof typeof LANGUAGE_LEVEL_LABELS] || language.proficiency;
     
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 group">
@@ -96,7 +106,7 @@ export function SkillsDisplay({
           {showLevels && (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${levelColor} flex items-center gap-1`}>
               <Globe2 className="w-3 h-3" />
-              {language.proficiency}
+              {levelLabel}
             </span>
           )}
         </div>
@@ -163,11 +173,14 @@ export function SkillsDisplay({
       <div className={`space-y-4 ${className}`}>
         {skills.languages.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {skills.languages.map((lang, index) => (
-              <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                {lang.language} ({lang.proficiency})
-              </span>
-            ))}
+            {skills.languages.map((lang, index) => {
+              const levelLabel = LANGUAGE_LEVEL_LABELS[lang.proficiency as keyof typeof LANGUAGE_LEVEL_LABELS] || lang.proficiency;
+              return (
+                <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                  {lang.language} ({levelLabel})
+                </span>
+              );
+            })}
           </div>
         )}
         
