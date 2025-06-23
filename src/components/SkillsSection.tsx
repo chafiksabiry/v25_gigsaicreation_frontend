@@ -416,30 +416,42 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
             <div
               key={idx}
               className={`flex items-center justify-between p-3.5 mb-2 border transition-all duration-200 ${
-                editingIndex?.index === idx 
+                editingIndex?.type === type && editingIndex?.index === idx && !addMode.active
                   ? `bg-${bgColor}-50/70 border-${bgColor}-300 shadow-sm ring-2 ring-${bgColor}-200` 
                   : 'bg-white border-blue-100 hover:border-blue-200 hover:shadow-sm'
               } rounded-lg group`}
             >
-              {editingIndex?.index === idx ? (
+              {editingIndex?.type === type && editingIndex?.index === idx && !addMode.active ? (
                 <div className="flex gap-3 items-center w-full">
                   <select
                     className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
                     value={newSkill.language}
                     onChange={e => {
-                      const selected = languageOptions.find(opt => opt.language === e.target.value);
-                      handleEditChange('language', e.target.value);
-                      if (selected) {
-                        handleEditChange('iso639_1', selected.iso639_1);
+                      if (isLanguage) {
+                        const selected = languageOptions.find(opt => opt.language === e.target.value);
+                        handleEditChange('language', e.target.value);
+                        if (selected) {
+                          handleEditChange('iso639_1', selected.iso639_1);
+                        }
+                      } else {
+                        handleEditChange('language', e.target.value);
                       }
                     }}
                   >
-                    <option value="">Select language</option>
-                    {languageOptions.map(opt => (
-                      <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
-                        {opt.language}
-                      </option>
-                    ))}
+                    <option value="">{isLanguage ? 'Select language' : 'Select skill'}</option>
+                    {isLanguage ? (
+                      languageOptions.map(opt => (
+                        <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
+                          {opt.language}
+                        </option>
+                      ))
+                    ) : (
+                      options.map(opt => (
+                        <option key={opt} value={opt} disabled={isDuplicate(opt, type, editingIndex.index)}>
+                          {opt}
+                        </option>
+                      ))
+                    )}
                   </select>
                   {isLanguage && (
                     <select
