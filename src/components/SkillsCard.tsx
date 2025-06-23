@@ -58,12 +58,21 @@ const SKILL_LEVELS = [
 ];
 
 const LANGUAGE_LEVEL_COLORS = {
-  'A1 - Beginner': 'bg-gray-100 text-gray-700',
-  'A2 - Elementary': 'bg-blue-100 text-blue-700',
-  'B1 - Intermediate': 'bg-yellow-100 text-yellow-700',
-  'B2 - Upper Intermediate': 'bg-orange-100 text-orange-700',
-  'C1 - Advanced': 'bg-purple-100 text-purple-700',
-  'C2 - Mastery': 'bg-green-100 text-green-700'
+  'A1': 'bg-gray-100 text-gray-700',
+  'A2': 'bg-blue-100 text-blue-700',
+  'B1': 'bg-yellow-100 text-yellow-700',
+  'B2': 'bg-orange-100 text-orange-700',
+  'C1': 'bg-purple-100 text-purple-700',
+  'C2': 'bg-green-100 text-green-700'
+};
+
+const LANGUAGE_LEVEL_LABELS = {
+  'A1': 'A1 - Beginner',
+  'A2': 'A2 - Elementary',
+  'B1': 'B1 - Intermediate',
+  'B2': 'B2 - Upper Intermediate',
+  'C1': 'C1 - Advanced',
+  'C2': 'C2 - Mastery'
 };
 
 export function SkillsCard({ 
@@ -98,13 +107,14 @@ export function SkillsCard({
   const renderSkillItem = (skill: any, type: string, index: number) => {
     if (type === 'languages') {
       const levelColor = LANGUAGE_LEVEL_COLORS[skill.proficiency as keyof typeof LANGUAGE_LEVEL_COLORS] || 'bg-gray-100 text-gray-700';
+      const levelLabel = LANGUAGE_LEVEL_LABELS[skill.proficiency as keyof typeof LANGUAGE_LEVEL_LABELS] || skill.proficiency;
       return (
         <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-center gap-3">
             <Globe2 className="w-4 h-4 text-blue-500" />
             <span className="font-medium text-gray-800">{skill.language}</span>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${levelColor}`}>
-              {skill.proficiency}
+              {levelLabel}
             </span>
           </div>
           <CheckCircle className="w-4 h-4 text-green-500" />

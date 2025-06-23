@@ -497,12 +497,12 @@ const FLEXIBILITY_OPTIONS = [
 ];
 
 const LANGUAGE_LEVELS = [
-  "A1 - Beginner",
-  "A2 - Elementary",
-  "B1 - Intermediate",
-  "B2 - Upper Intermediate",
-  "C1 - Advanced",
-  "C2 - Mastery",
+  { value: "A1", label: "A1 - Beginner" },
+  { value: "A2", label: "A2 - Elementary" },
+  { value: "B1", label: "B1 - Intermediate" },
+  { value: "B2", label: "B2 - Upper Intermediate" },
+  { value: "C1", label: "C1 - Advanced" },
+  { value: "C2", label: "C2 - Mastery" },
 ];
 
 const SKILL_LEVELS = [
@@ -2359,7 +2359,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         case "languages":
           newSuggestions.skills.languages.push({
             language: skill,
-            proficiency: LANGUAGE_LEVELS[level - 1] || "B1 - Intermediate",
+            proficiency: LANGUAGE_LEVELS[level - 1]?.value || "B1",
             iso639_1: "en",
           });
           break;
@@ -2507,13 +2507,13 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                       </select>
                       {skillType === "languages" ? (
                         <select
-                          value={item.proficiency || "B1 - Intermediate"}
+                          value={item.proficiency || "B1"}
                           onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                           {LANGUAGE_LEVELS.map((level) => (
-                            <option key={level} value={level}>
-                              {level}
+                            <option key={level.value} value={level.value}>
+                              {level.label}
                             </option>
                           ))}
                         </select>
@@ -2593,7 +2593,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                             : "bg-gray-100 text-gray-800"
                         }`}>
                           {skillType === "languages" 
-                            ? item.proficiency || "B1 - Intermediate"
+                            ? LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"
                             : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
                           }
                         </span>
@@ -2623,12 +2623,12 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 </select>
                 {skillType === "languages" ? (
                   <select
-                    defaultValue="B1 - Intermediate"
+                    defaultValue="B1"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     {LANGUAGE_LEVELS.map((level) => (
-                      <option key={level} value={level}>
-                        {level}
+                      <option key={level.value} value={level.value}>
+                        {level.label}
                       </option>
                     ))}
                   </select>
@@ -2648,7 +2648,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                   <button
                     onClick={() => {
                       if (editValue.trim()) {
-                        const level = skillType === "languages" ? 3 : 1; // Default to B1 for languages, Basic for skills
+                        const level = skillType === "languages" ? 2 : 1; // Default to B1 for languages (index 2), Basic for skills
                         addSkill(skillType, editValue.trim(), level);
                         setEditValue("");
                         setEditingSection(null);

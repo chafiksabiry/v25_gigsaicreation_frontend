@@ -36,12 +36,12 @@ interface SkillsSectionProps {
 
 // Language levels from Suggestions.tsx
 const LANGUAGE_LEVELS = [
-  "A1 - Beginner",
-  "A2 - Elementary",
-  "B1 - Intermediate",
-  "B2 - Upper Intermediate",
-  "C1 - Advanced",
-  "C2 - Mastery",
+  { value: "A1", label: "A1 - Beginner" },
+  { value: "A2", label: "A2 - Elementary" },
+  { value: "B1", label: "B1 - Intermediate" },
+  { value: "B2", label: "B2 - Upper Intermediate" },
+  { value: "C1", label: "C1 - Advanced" },
+  { value: "C2", label: "C2 - Mastery" },
 ];
 
 // Skill levels from Suggestions.tsx
@@ -291,6 +291,11 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     return option ? option.label : 'Unknown';
   };
 
+  const getLanguageLevelLabel = (proficiency: string) => {
+    const option = LANGUAGE_LEVELS.find(opt => opt.value === proficiency);
+    return option ? option.label : proficiency;
+  };
+
   // Prevent duplicate skills
   const isDuplicate = (name: string, type: string, excludeIndex?: number) => {
     if (type === 'languages') {
@@ -333,7 +338,15 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
   };
 
   const handleEditSave = () => {
-    if (!editingIndex || !newSkill.language || isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
+    if (!editingIndex || !newSkill.language) return;
+    
+    // Check for duplicates only if the language/skill name has changed
+    const currentSkill = safeData[editingIndex.type as keyof typeof safeData][editingIndex.index];
+    const nameChanged = editingIndex.type === 'languages' 
+      ? currentSkill.language !== newSkill.language
+      : currentSkill.skill !== newSkill.language;
+    
+    if (nameChanged && isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
     
     const updated = [...safeData[editingIndex.type as keyof typeof safeData]];
     if (editingIndex.type === 'languages') {
@@ -461,7 +474,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     >
                       <option value="">Select level</option>
                       {LANGUAGE_LEVELS.map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   )}
@@ -504,7 +517,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     {isLanguage && (
                       <>
                         <span className="mx-2 text-gray-400">-</span>
-                        <span className="text-blue-600 font-medium">{skill.proficiency}</span>
+                        <span className="text-blue-600 font-medium">{getLanguageLevelLabel(skill.proficiency)}</span>
                       </>
                     )}
                     {!isLanguage && typeof skill === 'object' && skill.level && (
@@ -580,7 +593,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               >
                 <option value="">Select level</option>
                 {LANGUAGE_LEVELS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             )}

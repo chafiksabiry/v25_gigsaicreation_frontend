@@ -77,6 +77,19 @@ export function GigReview({
       : "€";
   };
 
+  const getLanguageLevelLabel = (proficiency: string) => {
+    const languageLevels = [
+      { value: "A1", label: "A1 - Beginner" },
+      { value: "A2", label: "A2 - Elementary" },
+      { value: "B1", label: "B1 - Intermediate" },
+      { value: "B2", label: "B2 - Upper Intermediate" },
+      { value: "C1", label: "C1 - Advanced" },
+      { value: "C2", label: "C2 - Mastery" },
+    ];
+    const option = languageLevels.find(opt => opt.value === proficiency);
+    return option ? option.label : proficiency;
+  };
+
   const handlePublish = async () => {
     try {
       await saveGigData(data);
@@ -584,7 +597,7 @@ export function GigReview({
                           key={`${lang.language}-${index}`}
                           className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
                         >
-                          {lang.language} ({lang.proficiency})
+                          {lang.language} ({getLanguageLevelLabel(lang.proficiency)})
                         </span>
                       ))}
                     </div>
