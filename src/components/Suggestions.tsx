@@ -1282,7 +1282,12 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                       />
                     )}
                     <button
-                      onClick={() => updateItem(section, index, editValue)}
+                      onClick={() => {
+                        updateItem(section, index, editValue);
+                        setEditingSection(null);
+                        setEditingIndex(null);
+                        setEditValue("");
+                      }}
                       className="text-green-700 hover:text-green-800 p-1"
                     >
                       <Check className="w-5 h-5" />
@@ -1516,9 +1521,21 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       );
 
       if (firstUnscheduledDay) {
+        // Cherche un horaire non utilisé
+        const defaultHoursList = [
+          { start: "09:00", end: "17:00" },
+          { start: "07:00", end: "15:00" },
+          { start: "11:00", end: "19:00" },
+          { start: "14:00", end: "22:00" },
+        ];
+        const usedHours = suggestions.schedule.schedules.map(s => `${s.hours.start}-${s.hours.end}`);
+        const availableHours = defaultHoursList.find(
+          h => !usedHours.includes(`${h.start}-${h.end}`)
+        ) || { start: "09:00", end: "17:00" };
+
         const newSchedule: ScheduleEntry = {
           day: firstUnscheduledDay,
-          hours: { start: "09:00", end: "17:00" },
+          hours: availableHours,
           _id: {
             $oid: `generated_${Date.now()}_${Math.random()
               .toString(36)

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { InfoText } from './InfoText';
 import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
-import { predefinedOptions } from '../lib/guidance';
 
 interface SkillsSectionProps {
   data: {
@@ -335,6 +334,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   const handleEditChange = (field: 'language' | 'proficiency' | 'iso639_1' | 'level', value: string | number) => {
     setNewSkill({ ...newSkill, [field]: value });
+    console.log('newSkill after change:', { ...newSkill, [field]: value });
   };
 
   const handleEditSave = () => {
@@ -342,9 +342,15 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     
     // Check for duplicates only if the language/skill name has changed
     const currentSkill = safeData[editingIndex.type as keyof typeof safeData][editingIndex.index];
-    const nameChanged = editingIndex.type === 'languages' 
-      ? currentSkill.language !== newSkill.language
-      : currentSkill.skill !== newSkill.language;
+    let nameChanged = false;
+    
+    if (editingIndex.type === 'languages') {
+      const languageSkill = currentSkill as { language: string; proficiency: string; iso639_1: string };
+      nameChanged = languageSkill.language !== newSkill.language;
+    } else {
+      const skillObj = currentSkill as { skill: string; level: number };
+      nameChanged = skillObj.skill !== newSkill.language;
+    }
     
     if (nameChanged && isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
     
@@ -362,6 +368,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       };
     }
     
+    console.log('updated before onChange:', updated);
     onChange({ ...safeData, [editingIndex.type]: updated });
     setEditingIndex(null);
   };
@@ -442,9 +449,19 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     onChange={e => {
                       if (isLanguage) {
                         const selected = languageOptions.find(opt => opt.language === e.target.value);
-                        handleEditChange('language', e.target.value);
                         if (selected) {
-                          handleEditChange('iso639_1', selected.iso639_1);
+                          setNewSkill({
+                            ...newSkill,
+                            language: selected.language,
+                            iso639_1: selected.iso639_1
+                          });
+                          console.log('newSkill after change:', {
+                            ...newSkill,
+                            language: selected.language,
+                            iso639_1: selected.iso639_1
+                          });
+                        } else {
+                          handleEditChange('language', e.target.value);
                         }
                       } else {
                         handleEditChange('language', e.target.value);
@@ -459,11 +476,19 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                         </option>
                       ))
                     ) : (
-                      options.map(opt => (
-                        <option key={opt} value={opt} disabled={isDuplicate(opt, type, editingIndex.index)}>
-                          {opt}
-                        </option>
-                      ))
+                      options.map(opt => {
+                        // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
+                        const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt);
+                        return (
+                          <option
+                            key={opt}
+                            value={opt}
+                            disabled={isDuplicate(opt, type, editingIndex?.index) && !isCurrent}
+                          >
+                            {opt}
+                          </option>
+                        );
+                      })
                     )}
                   </select>
                   {isLanguage && (
@@ -557,16 +582,22 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               onChange={e => {
                 if (isLanguage) {
                   const selected = languageOptions.find(opt => opt.language === e.target.value);
-                  setNewSkill({ 
-                    ...newSkill, 
-                    language: e.target.value,
-                    iso639_1: selected?.iso639_1 || ''
-                  });
+                  if (selected) {
+                    setNewSkill({
+                      ...newSkill,
+                      language: selected.language,
+                      iso639_1: selected.iso639_1
+                    });
+                    console.log('newSkill after change:', {
+                      ...newSkill,
+                      language: selected.language,
+                      iso639_1: selected.iso639_1
+                    });
+                  } else {
+                    handleEditChange('language', e.target.value);
+                  }
                 } else {
-                  setNewSkill({ 
-                    ...newSkill, 
-                    language: e.target.value
-                  });
+                  handleEditChange('language', e.target.value);
                 }
               }}
             >
@@ -578,11 +609,19 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   </option>
                 ))
               ) : (
-                options.map(opt => (
-                  <option key={opt} value={opt} disabled={isDuplicate(opt, type)}>
-                    {opt}
-                  </option>
-                ))
+                options.map(opt => {
+                  // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
+                  const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt);
+                  return (
+                    <option
+                      key={opt}
+                      value={opt}
+                      disabled={isDuplicate(opt, type, editingIndex?.index) && !isCurrent}
+                    >
+                      {opt}
+                    </option>
+                  );
+                })
               )}
             </select>
             {isLanguage && (
