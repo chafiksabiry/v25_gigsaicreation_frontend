@@ -225,8 +225,6 @@ const PrompAI: React.FC = () => {
   };
 
   const handleGigDataChange = (newData: GigData) => {
-    console.log('handleGigDataChange - Previous data:', gigData);
-    console.log('handleGigDataChange - New data:', newData);
     
     // If we have confirmed suggestions, merge them with the new data
     if (confirmedSuggestions) {
@@ -238,7 +236,6 @@ const PrompAI: React.FC = () => {
         destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : '')
       };
       
-      console.log('handleGigDataChange - Updated data with suggestions:', updatedData);
       setGigData(updatedData);
     } else {
       setGigData(newData);

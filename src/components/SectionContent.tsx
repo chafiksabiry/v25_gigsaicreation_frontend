@@ -29,7 +29,14 @@ export function SectionContent({
   errors,
   onSectionChange,
 }: SectionContentProps) {
-  console.log('SectionContent - Initial data:', data);
+
+  // Log section data when component renders
+  React.useEffect(() => {
+    console.log(`=== SECTION: ${section.toUpperCase()} ===`);
+    console.log('Section Data:', data);
+    console.log('Section Errors:', errors);
+    console.log('========================');
+  }, [section, data, errors]);
 
   const cleanSchedules = (schedules: DaySchedule[]): DaySchedule[] => {
     if (!schedules || schedules.length === 0) {
@@ -98,9 +105,6 @@ export function SectionContent({
       certifications: data.skills?.certifications || []
     }
   }), [data]);
-
-  console.log('SectionContent - Initialized data:', initializedData);
-
 
   const renderContent = () => {
     switch (section) {
@@ -282,7 +286,6 @@ export function SectionContent({
         );
 
       case "docs":
-        console.log('SectionContent - Rendering DocumentationSection');
         return (
           <DocumentationSection
             data={initializedData.documentation}
@@ -297,7 +300,6 @@ export function SectionContent({
             onPrevious={() => onSectionChange?.('team')}
             onNext={() => {}}
             onReview={() => {
-              console.log('SectionContent - Calling onReview');
               onSectionChange?.('review');
             }}
             isLastSection={true}
@@ -315,16 +317,10 @@ export function SectionContent({
               }
             }}
             onEdit={(section) => {
-              console.log('SectionContent - onEdit - Setting section to:', section);
               onSectionChange?.(section);
-            }}
-            onSubmit={async () => {
-              console.log('SectionContent - onSubmit - Submitting gig');
-              // Handle submission here
             }}
             isSubmitting={false}
             onBack={() => {
-              console.log('SectionContent - onBack - Going back to docs section');
               onSectionChange?.('docs');
             }}
             skipValidation={false}
@@ -335,9 +331,6 @@ export function SectionContent({
         return null;
     }
   };
-
-  console.log('SectionContent - About to render SectionGuidance for section:', section);
-  
   return (
     <div className="space-y-6">
       <SectionGuidance section={section} />

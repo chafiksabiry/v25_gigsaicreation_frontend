@@ -233,9 +233,6 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     return (
       <GigDetails 
         data={selectedGig}
-        onApply={() => {
-          console.log('Applying for gig:', selectedGigId);
-        }}
       />
     );
   }

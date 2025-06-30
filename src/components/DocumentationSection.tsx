@@ -66,6 +66,17 @@ export function DocumentationSection({
     training: data?.training || [],
   };
 
+  // Log Documentation Section data
+  React.useEffect(() => {
+    console.log('=== DOCUMENTATION SECTION DATA ===');
+    console.log('Documentation Data:', {
+      product: data.product,
+      process: data.process,
+      training: data.training
+    });
+    console.log('========================');
+  }, [data]);
+
   const handleFileUpload = async (type: keyof typeof safeData, file: File) => {
     setUploadError(null);
 

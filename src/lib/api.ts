@@ -123,8 +123,6 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
 
     // Get companyId based on userId
     const companyId = Cookies.get('companyId') ?? "";
-    console.log('companyId', companyId);
-    
     // Corriger automatiquement les données de schedule
     const fixedGigData = fixScheduleData(gigData);
     
@@ -210,7 +208,6 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     
     try {
       const data = JSON.parse(responseText);
-      console.log('Parsed response data:', data);
       return { data, error: undefined };
     } catch (parseError) {
       console.error('Error parsing success response:', parseError);

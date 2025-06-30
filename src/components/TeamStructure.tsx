@@ -57,6 +57,17 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
     }
   };
 
+  // Log Team Section data
+  React.useEffect(() => {
+    console.log('=== TEAM SECTION DATA ===');
+    console.log('Team Data:', {
+      team: initializedTeam.team,
+      seniority: data.seniority
+    });
+    console.log('Team Errors:', errors);
+    console.log('========================');
+  }, [initializedTeam.team, data.seniority, errors]);
+
   // Helper function to map role names to IDs
   const mapRoleNameToId = (roleName: string): string => {
     const role = teamRoles.find(r => r.name === roleName);

@@ -198,20 +198,11 @@ export function GigCreator({ children }: GigCreatorProps) {
   }>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  console.log('GigCreator - Initial state:', {
-    currentSection,
-    gigData,
-    validationErrors
-  });
-
   const handleGigDataChange = (newData: GigData) => {
-    console.log('handleGigDataChange - Previous data:', gigData);
-    console.log('handleGigDataChange - New data:', newData);
     const updatedData = {
       ...newData,
       destinationZones: newData.destinationZones || []
     };
-    console.log('handleGigDataChange - Updated data:', updatedData);
     setGigData(updatedData);
     const validation = validateGigData(updatedData);
     setValidationErrors(validation.errors);
@@ -263,7 +254,6 @@ export function GigCreator({ children }: GigCreatorProps) {
             certifications: skills.certifications || prev.skills.certifications,
           },
         };
-        console.log("Applied AI suggestions:", newGigData);
         return newGigData;
       });
       setShowAIDialog(false);

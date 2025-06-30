@@ -23,6 +23,18 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
       : '$';
   };
 
+  // Log Commission Section data
+  useEffect(() => {
+    console.log('=== COMMISSION SECTION DATA ===');
+    console.log('Commission Data:', {
+      commission: data.commission,
+      seniority: data.seniority
+    });
+    console.log('Commission Errors:', errors);
+    console.log('Commission Warnings:', warnings);
+    console.log('========================');
+  }, [data.commission, data.seniority, errors, warnings]);
+
   const handleBaseChange = (field: string, value: string | number) => {
     onChange({
       ...data,
@@ -69,24 +81,11 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
     });
   };
 
-  // Log commission data
-  console.log('Commission Data:', {
-    base: data?.commission?.base,
-    baseAmount: data?.commission?.baseAmount,
-    bonus: data?.commission?.bonus,
-    bonusAmount: data?.commission?.bonusAmount,
-    structure: data?.commission?.structure,
-    currency: data?.commission?.currency,
-    minimumVolume: data?.commission?.minimumVolume,
-    transactionCommission: data?.commission?.transactionCommission,
-    kpis: data?.commission?.kpis
-  });
 
   // Add new base type if it doesn't exist
   useEffect(() => {
     if (data?.commission?.base && !predefinedOptions.commission.baseTypes.includes(data.commission.base)) {
       predefinedOptions.commission.baseTypes.push(data.commission.base);
-      console.log(`Added new base type: ${data.commission.base}`);
     }
   }, [data?.commission?.base]);
 
@@ -94,7 +93,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   useEffect(() => {
     if (data?.commission?.bonus && !predefinedOptions.commission.bonusTypes.includes(data.commission.bonus)) {
       predefinedOptions.commission.bonusTypes.push(data.commission.bonus);
-      console.log(`Added new bonus type: ${data.commission.bonus}`);
     }
   }, [data?.commission?.bonus]);
 
@@ -102,7 +100,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   useEffect(() => {
     if (data?.commission?.minimumVolume?.unit && !predefinedOptions.commission.minimumVolumeUnits.includes(data.commission.minimumVolume.unit)) {
       predefinedOptions.commission.minimumVolumeUnits.push(data.commission.minimumVolume.unit);
-      console.log(`Added new unit type: ${data.commission.minimumVolume.unit}`);
     }
   }, [data?.commission?.minimumVolume?.unit]);
 
@@ -113,7 +110,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         predefinedOptions.commission.minimumVolumePeriods = [];
       }
       predefinedOptions.commission.minimumVolumePeriods.push(data.commission.minimumVolume.period);
-      console.log(`Added new period type: ${data.commission.minimumVolume.period}`);
     }
   }, [data?.commission?.minimumVolume?.period]);
 
@@ -124,7 +120,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         predefinedOptions.commission.transactionCommissionTypes = [];
       }
       predefinedOptions.commission.transactionCommissionTypes.push(data.commission.transactionCommission.type);
-      console.log(`Added new transaction commission type: ${data.commission.transactionCommission.type}`);
     }
   }, [data?.commission?.transactionCommission?.type]);
 

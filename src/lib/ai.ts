@@ -1562,17 +1562,66 @@ export async function generateSkills(title: string, description: string): Promis
         {
           role: "system",
           content: `You are a job description expert. Generate skills for a "${title}" position.
-          For languages, use CEFR levels (A1, A2, B1, B2, C1, C2).
-          A1: Basic user
-          A2: Elementary user
-          B1: Intermediate user
-          B2: Upper intermediate user
-          C1: Advanced user
-          C2: Mastery user`
+          
+IMPORTANT: All responses MUST be in English only.
+
+For languages, use CEFR levels (A1, A2, B1, B2, C1, C2):
+- A1: Basic user
+- A2: Elementary user  
+- B1: Intermediate user
+- B2: Upper intermediate user
+- C1: Advanced user
+- C2: Mastery user
+
+Available soft skills (choose 5-8 most relevant):
+${predefinedOptions.skills.soft.map(skill => `- ${skill.skill}`).join('\n')}
+
+Available professional skills (choose 8-12 most relevant):
+${predefinedOptions.skills.professional.map(skill => `- ${skill.skill}`).join('\n')}
+
+Available technical skills (choose 6-10 most relevant):
+${predefinedOptions.skills.technical.map(skill => `- ${skill.skill}`).join('\n')}
+
+Available languages:
+${predefinedOptions.skills.languages.map(lang => `- ${lang.language}`).join('\n')}
+
+Return ONLY a valid JSON object with the following structure:
+{
+  "languages": [
+    {
+      "language": "string (from available languages)",
+      "proficiency": "string (A1, A2, B1, B2, C1, or C2)",
+      "iso639_1": "string (2-letter language code)"
+    }
+  ],
+  "soft": [
+    "string (from available soft skills list)"
+  ],
+  "professional": [
+    "string (from available professional skills list)"
+  ],
+  "technical": [
+    "string (from available technical skills list)"
+  ]
+}
+
+CRITICAL RULES:
+1. Only select skills from the provided lists - do not create new skills
+2. Choose skills that are most relevant to the specific job title and description
+3. For customer service roles, prioritize communication and empathy skills
+4. For technical support roles, prioritize troubleshooting and technical skills
+5. For sales roles, prioritize persuasion and relationship-building skills
+6. Select appropriate number of skills: 5-8 soft, 8-12 professional, 6-10 technical
+7. For languages, consider the target market and customer base
+8. All skill names must match exactly from the provided lists`
         },
         {
           role: "user",
-          content: `Generate skills for this position: ${description}`
+          content: `Generate skills for this position:
+Title: ${title}
+Description: ${description}
+
+Select the most relevant skills from the provided lists based on the job requirements and responsibilities.`
         }
       ],
       model: "gpt-3.5-turbo",
@@ -1596,8 +1645,32 @@ export async function generateSkills(title: string, description: string): Promis
       if (!validLanguages.includes(lang.language)) {
         throw new Error(`Invalid human language: ${lang.language}`);
       }
-      if (!validLevels.includes(lang.level)) {
-        throw new Error(`Invalid language level: ${lang.level}`);
+      if (!validLevels.includes(lang.proficiency)) {
+        throw new Error(`Invalid language level: ${lang.proficiency}`);
+      }
+    });
+
+    // Validate soft skills
+    const validSoftSkills = predefinedOptions.skills.soft.map(skill => skill.skill);
+    result.soft.forEach((skill: string) => {
+      if (!validSoftSkills.includes(skill)) {
+        throw new Error(`Invalid soft skill: ${skill}`);
+      }
+    });
+
+    // Validate professional skills
+    const validProfessionalSkills = predefinedOptions.skills.professional.map(skill => skill.skill);
+    result.professional.forEach((skill: string) => {
+      if (!validProfessionalSkills.includes(skill)) {
+        throw new Error(`Invalid professional skill: ${skill}`);
+      }
+    });
+
+    // Validate technical skills
+    const validTechnicalSkills = predefinedOptions.skills.technical.map(skill => skill.skill);
+    result.technical.forEach((skill: string) => {
+      if (!validTechnicalSkills.includes(skill)) {
+        throw new Error(`Invalid technical skill: ${skill}`);
       }
     });
 
@@ -1667,6 +1740,23 @@ ${predefinedOptions.team.territories.join(', ')}
 5. For management positions, typically use: "manager", "supervisor", or "team_lead"
 6. For support positions, typically use: "assistant", "coordinator", or "specialist"
 
+CRITICAL SKILLS RULES:
+1. For soft skills, choose 5-8 most relevant from this list:
+${predefinedOptions.skills.soft.map(skill => `- ${skill.skill}`).join('\n')}
+
+2. For professional skills, choose 8-12 most relevant from this list:
+${predefinedOptions.skills.professional.map(skill => `- ${skill.skill}`).join('\n')}
+
+3. For technical skills, choose 6-10 most relevant from this list:
+${predefinedOptions.skills.technical.map(skill => `- ${skill.skill}`).join('\n')}
+
+4. For languages, use CEFR levels (A1, A2, B1, B2, C1, C2) and consider the target market
+5. All skill names must match exactly from the provided lists - do not create new skills
+6. Choose skills that are most relevant to the specific job title and description
+7. For customer service roles, prioritize communication and empathy skills
+8. For technical support roles, prioritize troubleshooting and technical skills
+9. For sales roles, prioritize persuasion and relationship-building skills
+
 COMMISSION MAPPING RULES:
 - minimumVolume.amount = Amount per action/appointment (e.g., "25 € per appointment" → 25)
 - transactionCommission.amount = Amount per successful sale/contract (e.g., "900 € per contract" → 900)
@@ -1716,26 +1806,26 @@ Return a JSON object with the following structure:
   "skills": {
     "languages": [
       {
-        "language": "string",
-        "proficiency": "string (e.g., 'B2')",
-        "iso639_1": "string (e.g., 'en')"
+        "language": "string (from available languages)",
+        "proficiency": "string (A1, A2, B1, B2, C1, or C2)",
+        "iso639_1": "string (2-letter language code)"
       }
     ],
     "soft": [
       {
-        "skill": "string",
+        "skill": "string (MUST be from the predefined soft skills list)",
         "level": "number"
       }
     ],
     "professional": [
       {
-        "skill": "string",
+        "skill": "string (MUST be from the predefined professional skills list)",
         "level": "number"
       }
     ],
     "technical": [
       {
-        "skill": "string",
+        "skill": "string (MUST be from the predefined technical skills list)",
         "level": "number"
       }
     ],
@@ -1919,6 +2009,36 @@ IMPORTANT: When generating the commission structure, ensure:
               }
             }
           });
+        }
+        
+        // Validate skills
+        if (parsedResult.skills) {
+          // Validate soft skills
+          if (parsedResult.skills.soft) {
+            const validSoftSkills = predefinedOptions.skills.soft.map(skill => skill.skill);
+            parsedResult.skills.soft = parsedResult.skills.soft.filter((skill: any) => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return validSoftSkills.includes(skillName);
+            });
+          }
+
+          // Validate professional skills
+          if (parsedResult.skills.professional) {
+            const validProfessionalSkills = predefinedOptions.skills.professional.map(skill => skill.skill);
+            parsedResult.skills.professional = parsedResult.skills.professional.filter((skill: any) => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return validProfessionalSkills.includes(skillName);
+            });
+          }
+
+          // Validate technical skills
+          if (parsedResult.skills.technical) {
+            const validTechnicalSkills = predefinedOptions.skills.technical.map(skill => skill.skill);
+            parsedResult.skills.technical = parsedResult.skills.technical.filter((skill: any) => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              return validTechnicalSkills.includes(skillName);
+            });
+          }
         }
         
         return parsedResult;

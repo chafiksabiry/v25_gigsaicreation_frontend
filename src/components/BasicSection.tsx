@@ -65,13 +65,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   // États locaux pour la saisie de ville
   const [searchTerm, setSearchTerm] = useState('');
 
-  console.log('BasicSection - Initial data:', data);
-  console.log('BasicSection - Current destination_zone:', data.destination_zone);
-
   useEffect(() => {
-    console.log('BasicSection - Initializing data');
     if (!data.destinationZones) {
-      console.log('BasicSection - No destinationZones, initializing');
       onChange({
         ...data,
         destinationZones: []
@@ -80,9 +75,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   }, []);
 
   useEffect(() => {
-    console.log('BasicSection - Data changed:', data);
-    console.log('BasicSection - Current destination_zone:', data.destination_zone);
-    console.log('BasicSection - Current destinationZones:', data.destinationZones);
   }, [data]);
 
   /**
@@ -90,8 +82,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} countryCode - Le code du pays sélectionné
    */
   const handleCountrySelect = (countryCode: string) => {
-    console.log('handleCountrySelect called with code:', countryCode);
-    console.log('Current data:', data);
     
     if (!countryCode) {
       // Si aucun pays n'est sélectionné, on met à jour uniquement destination_zone
@@ -103,7 +93,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     }
 
     const countryName = i18n.getName(countryCode, 'en');
-    console.log('Country name:', countryName);
     
     if (!countryName) {
       console.error('Invalid country code:', countryCode);
@@ -147,10 +136,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * Utile pour le débogage
    */
   useEffect(() => {
-    console.log('Debug destinationZones:', {
-      destinationZones: data.destinationZones,
-      currentDestinationZone: data.destination_zone
-    });
 
     if (data.destinationZones && data.destinationZones.length > 0) {
       // Convert country names to codes with special cases
@@ -169,54 +154,28 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
         // Check if the country is a special case
         if (specialCases[country]) {
-          console.log('Found special case for country:', country, '->', specialCases[country]);
           return { country, code: specialCases[country] };
         }
 
         // Normal case: look up the country code
         const code = Object.entries(i18n.getNames('en'))
           .find(([_, name]) => name === country)?.[0];
-        
-        console.log('Looking up country code for:', country, '->', code);
-        
         if (!code) {
-          console.log('No code found for country:', country);
           return { country, code: undefined };
         }
         
         return { country, code };
       });
-
-      console.log('Converted country codes:', countryCodes);
-
       // Set destination_zone to the first country code if available and different from current
       if (countryCodes.length > 0 && countryCodes[0].code) {
         const firstCountryCode = countryCodes[0].code;
-        console.log('Setting destination_zone to:', firstCountryCode);
-        
         // Only update if the destination_zone is different to avoid infinite loop
         if (data.destination_zone !== firstCountryCode) {
           onChange({ ...data, destination_zone: firstCountryCode });
-        } else {
-          console.log('destination_zone already set to:', firstCountryCode);
         }
-      } else {
-        console.log('No valid country code found to set as destination_zone');
       }
-    } else {
-      console.log('No destinationZones available');
     }
   }, [data.destinationZones]); // Removed data.destination_zone from dependencies
-
-  /**
-   * Filtre les zones en fonction du terme de recherche
-   */
-  const filteredZones = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter((zone) => {
-    const countries = getCountriesByZone(zone);
-    return countries.some(country => 
-      country.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
 
   /**
    * Effet pour ajouter les icônes Material Icons
@@ -273,12 +232,23 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     onChange(newData);
   };
 
-  /**
-   * Effet pour logger les changements de données
-   */
+  // Log Basic Section data
   useEffect(() => {
-    console.log('Data from OpenAI:', data);
-  }, [data]);
+    console.log('=== BASIC SECTION DATA ===');
+    console.log('Basic Data:', {
+      title: data.title,
+      category: data.category,
+      highlights: data.highlights,
+      destinationZones: data.destinationZones,
+      destination_zone: data.destination_zone,
+      seniority: data.seniority,
+      requirements: data.requirements,
+      benefits: data.benefits,
+      callTypes: data.callTypes
+    });
+    console.log('Basic Errors:', errors);
+    console.log('========================');
+  }, [data, errors]);
 
   // Le rendu du composant
   return (

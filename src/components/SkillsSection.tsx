@@ -98,124 +98,90 @@ const LANGUAGES = [
 
 // Professional skills from Suggestions.tsx
 const PROFESSIONAL_SKILLS = [
-  "Sales Management",
-  "Account Management",
-  "Customer Relationship Management",
-  "Lead Generation",
-  "Market Research",
-  "Business Development",
-  "Strategic Planning",
-  "Project Management",
-  "Team Leadership",
-  "Negotiation",
-  "Presentation Skills",
-  "Client Communication",
-  "Contract Management",
-  "Budget Management",
-  "Performance Analysis",
-  "Process Improvement",
-  "Quality Assurance",
-  "Compliance Management",
-  "Risk Assessment",
-  "Stakeholder Management",
-  "Vendor Management",
-  "Supply Chain Management",
-  "Inventory Management",
-  "Logistics Coordination",
-  "Event Planning",
-  "Public Relations",
-  "Brand Management",
-  "Digital Marketing",
-  "Content Strategy",
-  "Social Media Management",
+  "In-depth understanding of products/services",
+  "Knowledge of company policies, terms, SLAs, and escalation paths",
+  "Familiarity with standard operating procedures (SOPs) for different issue types",
+  "Voice Support: call handling techniques, hold/transfer/escalation protocol",
+  "Email Support: structured writing, canned responses, professional formatting",
+  "Live Chat/Messenger: real-time typing, handling multiple chats, shortcut commands",
+  "Social Media Messaging: brand-safe communication, crisis handling, sentiment detection",
+  "Proficiency in tools like Salesforce, HubSpot, Zoho, etc.",
+  "Ability to log, tag, update, and close tickets accurately",
+  "Understanding of ticket priority levels and SLA timelines",
+  "Usage of dialers, softphones, VoIP systems (e.g. Twilio)",
+  "Call dispositioning and tagging",
+  "Knowledge of call recording and QA monitoring systems",
+  "Fast and accurate typing (ideally 40–60 WPM for chat agents)",
+  "Proficient in copy-paste discipline, keyboard shortcuts, and multitab workflows",
+  "Real-time data entry during live interactions",
+  "Familiarity with basic troubleshooting steps (especially for tech/product support roles)",
+  "Comfort with remote support tools, screen sharing, or device guides",
+  "Use of knowledge bases, macros, and FAQs to guide responses",
+  "Adherence to quality assurance (QA) frameworks",
+  "Awareness of data protection regulations (GDPR, CCPA, PCI DSS, etc.)",
+  "Following compliance scripts and avoiding unauthorized statements",
+  "Understanding of: AHT (Average Handle Time), CSAT (Customer Satisfaction), FCR (First Call Resolution), QA Scores, NPS, etc.",
+  "Ability to self-monitor performance and meet targets",
+  "Multilingual abilities depending on geography",
+  "Familiarity with regional expressions and cultural tone",
+  "Correct use of formal/informal register depending on the context",
+  "Ability to flag product issues, bugs, or patterns",
+  "Use of tools like Excel, Google Sheets, or internal dashboards for reporting",
+  "Writing internal case notes and handover summaries clearly and concisely",
 ];
 
 // Technical skills from Suggestions.tsx
 const TECHNICAL_SKILLS = [
-  "CRM Systems (Salesforce, HubSpot)",
-  "Microsoft Office Suite",
-  "Google Workspace",
-  "Data Analysis",
-  "Excel Advanced Functions",
-  "Power BI",
-  "Tableau",
-  "SQL",
-  "Python",
-  "JavaScript",
-  "HTML/CSS",
-  "WordPress",
-  "Shopify",
-  "Zendesk",
-  "Intercom",
-  "LiveChat",
-  "Freshdesk",
-  "Help Scout",
-  "Zapier",
-  "Integromat",
-  "API Integration",
-  "Web Scraping",
-  "SEO Tools",
-  "Google Analytics",
-  "Google Ads",
-  "Facebook Ads",
-  "LinkedIn Ads",
-  "Email Marketing Platforms",
-  "Video Editing",
-  "Graphic Design",
-  "Adobe Creative Suite",
-  "Canva",
-  "Figma",
-  "Sketch",
-  "Video Conferencing Tools",
-  "Project Management Tools",
-  "Accounting Software",
-  "E-commerce Platforms",
-  "Payment Processing",
-  "Cybersecurity",
+  "Proficiency in using cloud-based contact center software (e.g. Genesys, Five9, Talkdesk, NICE, Twilio, Aircall)",
+  "Understanding of VoIP systems, automatic call distributors (ACD), and interactive voice response (IVR)",
+  "Handling call transfers, holds, recordings, conferencing, and dispositions",
+  "Daily use of CRM systems: Salesforce, Zoho CRM, HubSpot, etc.",
+  "Familiarity with ticketing platforms: Zendesk, Freshdesk, Jira, Help Scout, etc.",
+  "Tagging, prioritizing, escalating, and resolving tickets efficiently",
+  "Managing multiple concurrent chats using tools like Intercom, LivePerson, Drift, Crisp, Tawk.to",
+  "Use of shortcuts, canned responses, and chat routing rules",
+  "Basic understanding of chatbot integrations and human handoffs",
+  "Efficient use of shared inboxes (e.g., Outlook 365 Shared Mailboxes, Gmail for Business)",
+  "Familiarity with email automation, filters, and categorization",
+  "Adherence to email templates and formatting standards",
+  "Navigating internal knowledge bases (e.g., Confluence, Guru, Notion)",
+  "Using search functions and contributing to documentation updates",
+  "Retrieving correct information quickly to answer queries",
+  "Proficiency in Windows/macOS, including multitasking between tools",
+  "Using MS Office or Google Workspace for basic reporting (Excel/Sheets), documentation (Word/Docs), and presentations (PowerPoint/Slides)",
+  "Working with cloud platforms: Google Drive, Dropbox, OneDrive for internal document sharing",
+  "Using collaboration tools like Slack, Microsoft Teams, or Zoom for internal communication",
+  "Typing at 40–60 words per minute (WPM) with low error rate",
+  "Using keyboard shortcuts and productivity tools (clipboard managers, text expanders)",
+  "Navigating call listening, screen recording, and coaching feedback systems",
+  "Diagnosing common user issues (e.g., login problems, app bugs, basic config)",
+  "Using remote desktop tools (e.g., TeamViewer, AnyDesk, Zoom screen sharing)",
+  "Logging reproducible bugs for product/engineering",
 ];
 
 // Soft skills from Suggestions.tsx
 const SOFT_SKILLS = [
-  "Communication",
   "Active Listening",
+  "Clear Articulation",
+  "Proper Tone & Language",
+  "Spelling & Grammar Accuracy",
   "Empathy",
-  "Problem Solving",
-  "Critical Thinking",
-  "Creativity",
-  "Adaptability",
-  "Flexibility",
-  "Time Management",
-  "Organization",
-  "Attention to Detail",
-  "Multitasking",
-  "Stress Management",
-  "Conflict Resolution",
-  "Teamwork",
-  "Collaboration",
-  "Leadership",
-  "Mentoring",
-  "Coaching",
-  "Motivation",
-  "Initiative",
-  "Self-motivation",
-  "Reliability",
-  "Dependability",
-  "Professionalism",
-  "Customer Service",
   "Patience",
-  "Tolerance",
-  "Cultural Awareness",
-  "Interpersonal Skills",
-  "Networking",
-  "Public Speaking",
-  "Presentation Skills",
-  "Persuasion",
-  "Influence",
-  "Decision Making",
-  "Judgment",
+  "Self-Regulation",
   "Analytical Thinking",
-  "Strategic Thinking",
-  "Innovation",
+  "Creativity",
+  "Decision-Making",
+  "Service Orientation",
+  "Ownership",
+  "Adaptability",
+  "Team Collaboration",
+  "Conflict Resolution",
+  "Cultural Sensitivity",
+  "Multitasking",
+  "Efficiency",
+  "Resilience",
+  "Receptiveness to Feedback",
+  "Willingness to Learn",
 ];
 
 export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: SkillsSectionProps) {
@@ -227,6 +193,20 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     technical: (data?.technical || []),
     certifications: (data?.certifications || [])
   };
+
+  // Log Skills Section data
+  React.useEffect(() => {
+    console.log('=== SKILLS SECTION DATA ===');
+    console.log('Skills Data:', {
+      languages: safeData.languages,
+      soft: safeData.soft,
+      professional: safeData.professional,
+      technical: safeData.technical,
+      certifications: safeData.certifications
+    });
+    console.log('Skills Errors:', errors);
+    console.log('========================');
+  }, [safeData, errors]);
 
   // State for editing
   const [editingIndex, setEditingIndex] = useState<{ type: string; index: number } | null>(null);
@@ -334,7 +314,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   const handleEditChange = (field: 'language' | 'proficiency' | 'iso639_1' | 'level', value: string | number) => {
     setNewSkill({ ...newSkill, [field]: value });
-    console.log('newSkill after change:', { ...newSkill, [field]: value });
   };
 
   const handleEditSave = () => {
@@ -368,7 +347,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       };
     }
     
-    console.log('updated before onChange:', updated);
     onChange({ ...safeData, [editingIndex.type]: updated });
     setEditingIndex(null);
   };
@@ -451,11 +429,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                         const selected = languageOptions.find(opt => opt.language === e.target.value);
                         if (selected) {
                           setNewSkill({
-                            ...newSkill,
-                            language: selected.language,
-                            iso639_1: selected.iso639_1
-                          });
-                          console.log('newSkill after change:', {
                             ...newSkill,
                             language: selected.language,
                             iso639_1: selected.iso639_1
@@ -584,11 +557,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   const selected = languageOptions.find(opt => opt.language === e.target.value);
                   if (selected) {
                     setNewSkill({
-                      ...newSkill,
-                      language: selected.language,
-                      iso639_1: selected.iso639_1
-                    });
-                    console.log('newSkill after change:', {
                       ...newSkill,
                       language: selected.language,
                       iso639_1: selected.iso639_1

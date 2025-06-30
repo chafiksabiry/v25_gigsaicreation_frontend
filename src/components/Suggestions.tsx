@@ -557,122 +557,88 @@ const LANGUAGES = [
 ];
 
 const PROFESSIONAL_SKILLS = [
-  "Sales Management",
-  "Account Management",
-  "Customer Relationship Management",
-  "Lead Generation",
-  "Market Research",
-  "Business Development",
-  "Strategic Planning",
-  "Project Management",
-  "Team Leadership",
-  "Negotiation",
-  "Presentation Skills",
-  "Client Communication",
-  "Contract Management",
-  "Budget Management",
-  "Performance Analysis",
-  "Process Improvement",
-  "Quality Assurance",
-  "Compliance Management",
-  "Risk Assessment",
-  "Stakeholder Management",
-  "Vendor Management",
-  "Supply Chain Management",
-  "Inventory Management",
-  "Logistics Coordination",
-  "Event Planning",
-  "Public Relations",
-  "Brand Management",
-  "Digital Marketing",
-  "Content Strategy",
-  "Social Media Management",
+  "In-depth understanding of products/services",
+  "Knowledge of company policies, terms, SLAs, and escalation paths",
+  "Familiarity with standard operating procedures (SOPs) for different issue types",
+  "Voice Support: call handling techniques, hold/transfer/escalation protocol",
+  "Email Support: structured writing, canned responses, professional formatting",
+  "Live Chat/Messenger: real-time typing, handling multiple chats, shortcut commands",
+  "Social Media Messaging: brand-safe communication, crisis handling, sentiment detection",
+  "Proficiency in tools like Salesforce, HubSpot, Zoho, etc.",
+  "Ability to log, tag, update, and close tickets accurately",
+  "Understanding of ticket priority levels and SLA timelines",
+  "Usage of dialers, softphones, VoIP systems (e.g. Twilio)",
+  "Call dispositioning and tagging",
+  "Knowledge of call recording and QA monitoring systems",
+  "Fast and accurate typing (ideally 40–60 WPM for chat agents)",
+  "Proficient in copy-paste discipline, keyboard shortcuts, and multitab workflows",
+  "Real-time data entry during live interactions",
+  "Familiarity with basic troubleshooting steps (especially for tech/product support roles)",
+  "Comfort with remote support tools, screen sharing, or device guides",
+  "Use of knowledge bases, macros, and FAQs to guide responses",
+  "Adherence to quality assurance (QA) frameworks",
+  "Awareness of data protection regulations (GDPR, CCPA, PCI DSS, etc.)",
+  "Following compliance scripts and avoiding unauthorized statements",
+  "Understanding of: AHT (Average Handle Time), CSAT (Customer Satisfaction), FCR (First Call Resolution), QA Scores, NPS, etc.",
+  "Ability to self-monitor performance and meet targets",
+  "Multilingual abilities depending on geography",
+  "Familiarity with regional expressions and cultural tone",
+  "Correct use of formal/informal register depending on the context",
+  "Ability to flag product issues, bugs, or patterns",
+  "Use of tools like Excel, Google Sheets, or internal dashboards for reporting",
+  "Writing internal case notes and handover summaries clearly and concisely",
 ];
 
 const TECHNICAL_SKILLS = [
-  "CRM Systems (Salesforce, HubSpot)",
-  "Microsoft Office Suite",
-  "Google Workspace",
-  "Data Analysis",
-  "Excel Advanced Functions",
-  "Power BI",
-  "Tableau",
-  "SQL",
-  "Python",
-  "JavaScript",
-  "HTML/CSS",
-  "WordPress",
-  "Shopify",
-  "Zendesk",
-  "Intercom",
-  "LiveChat",
-  "Freshdesk",
-  "Help Scout",
-  "Zapier",
-  "Integromat",
-  "API Integration",
-  "Web Scraping",
-  "SEO Tools",
-  "Google Analytics",
-  "Google Ads",
-  "Facebook Ads",
-  "LinkedIn Ads",
-  "Email Marketing Platforms",
-  "Video Editing",
-  "Graphic Design",
-  "Adobe Creative Suite",
-  "Canva",
-  "Figma",
-  "Sketch",
-  "Video Conferencing Tools",
-  "Project Management Tools",
-  "Accounting Software",
-  "E-commerce Platforms",
-  "Payment Processing",
-  "Cybersecurity",
+  "Proficiency in using cloud-based contact center software (e.g. Genesys, Five9, Talkdesk, NICE, Twilio, Aircall)",
+  "Understanding of VoIP systems, automatic call distributors (ACD), and interactive voice response (IVR)",
+  "Handling call transfers, holds, recordings, conferencing, and dispositions",
+  "Daily use of CRM systems: Salesforce, Zoho CRM, HubSpot, etc.",
+  "Familiarity with ticketing platforms: Zendesk, Freshdesk, Jira, Help Scout, etc.",
+  "Tagging, prioritizing, escalating, and resolving tickets efficiently",
+  "Managing multiple concurrent chats using tools like Intercom, LivePerson, Drift, Crisp, Tawk.to",
+  "Use of shortcuts, canned responses, and chat routing rules",
+  "Basic understanding of chatbot integrations and human handoffs",
+  "Efficient use of shared inboxes (e.g., Outlook 365 Shared Mailboxes, Gmail for Business)",
+  "Familiarity with email automation, filters, and categorization",
+  "Adherence to email templates and formatting standards",
+  "Navigating internal knowledge bases (e.g., Confluence, Guru, Notion)",
+  "Using search functions and contributing to documentation updates",
+  "Retrieving correct information quickly to answer queries",
+  "Proficiency in Windows/macOS, including multitasking between tools",
+  "Using MS Office or Google Workspace for basic reporting (Excel/Sheets), documentation (Word/Docs), and presentations (PowerPoint/Slides)",
+  "Working with cloud platforms: Google Drive, Dropbox, OneDrive for internal document sharing",
+  "Using collaboration tools like Slack, Microsoft Teams, or Zoom for internal communication",
+  "Typing at 40–60 words per minute (WPM) with low error rate",
+  "Using keyboard shortcuts and productivity tools (clipboard managers, text expanders)",
+  "Navigating call listening, screen recording, and coaching feedback systems",
+  "Diagnosing common user issues (e.g., login problems, app bugs, basic config)",
+  "Using remote desktop tools (e.g., TeamViewer, AnyDesk, Zoom screen sharing)",
+  "Logging reproducible bugs for product/engineering",
 ];
 
 const SOFT_SKILLS = [
-  "Communication",
   "Active Listening",
+  "Clear Articulation",
+  "Proper Tone & Language",
+  "Spelling & Grammar Accuracy",
   "Empathy",
-  "Problem Solving",
-  "Critical Thinking",
-  "Creativity",
-  "Adaptability",
-  "Flexibility",
-  "Time Management",
-  "Organization",
-  "Attention to Detail",
-  "Multitasking",
-  "Stress Management",
-  "Conflict Resolution",
-  "Teamwork",
-  "Collaboration",
-  "Leadership",
-  "Mentoring",
-  "Coaching",
-  "Motivation",
-  "Initiative",
-  "Self-motivation",
-  "Reliability",
-  "Dependability",
-  "Professionalism",
-  "Customer Service",
   "Patience",
-  "Tolerance",
-  "Cultural Awareness",
-  "Interpersonal Skills",
-  "Networking",
-  "Public Speaking",
-  "Presentation Skills",
-  "Persuasion",
-  "Influence",
-  "Decision Making",
-  "Judgment",
+  "Self-Regulation",
   "Analytical Thinking",
-  "Strategic Thinking",
-  "Innovation",
+  "Creativity",
+  "Decision-Making",
+  "Service Orientation",
+  "Ownership",
+  "Adaptability",
+  "Team Collaboration",
+  "Conflict Resolution",
+  "Cultural Sensitivity",
+  "Multitasking",
+  "Efficiency",
+  "Resilience",
+  "Receptiveness to Feedback",
+  "Willingness to Learn",
 ];
 
 const BONUS_TYPES = ["Performance Bonus", "Team Bonus"];
@@ -838,8 +804,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         setLoading(true);
         setError(null);
         const result = await generateGigSuggestions(input);
-        console.log("Generated suggestions:", result);
-
+        
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
           const convertedSchedules: Array<ScheduleEntry> = [];
@@ -1411,6 +1376,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
     const groupedSchedules = (suggestions.schedule.schedules || []).reduce(
       (groups, schedule) => {
+        // Ignorer les schedules avec des jours vides
+        if (!schedule.day || schedule.day.trim() === "") return groups;
+        
         const key = `${schedule.hours.start}-${schedule.hours.end}`;
         if (!groups[key]) {
           groups[key] = { hours: schedule.hours, days: [] };
@@ -1430,6 +1398,54 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       "Saturday",
       "Sunday",
     ];
+
+    // Trouver les groupes vides (schedules avec des jours vides)
+    const emptySchedules = suggestions.schedule.schedules.filter(
+      schedule => !schedule.day || schedule.day.trim() === ""
+    );
+
+    // Vérifier si tous les jours sont déjà sélectionnés
+    const selectedDays = suggestions.schedule.schedules
+      .filter(schedule => schedule.day && schedule.day.trim() !== "")
+      .map(schedule => schedule.day);
+    
+    const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
+
+    const addNewScheduleGroup = () => {
+      if (!suggestions) return;
+      
+      // Cherche un horaire non utilisé
+      const defaultHoursList = [
+        { start: "09:00", end: "17:00" },
+        { start: "07:00", end: "15:00" },
+        { start: "11:00", end: "19:00" },
+        { start: "14:00", end: "22:00" },
+      ];
+      const usedHours = suggestions.schedule.schedules.map(s => `${s.hours.start}-${s.hours.end}`);
+      const availableHours = defaultHoursList.find(
+        h => !usedHours.includes(`${h.start}-${h.end}`)
+      ) || { start: "09:00", end: "17:00" };
+
+      // Créer un nouveau groupe avec des horaires mais sans jours sélectionnés
+      const newSchedule: ScheduleEntry = {
+        day: "", // Jour vide - aucun jour sélectionné par défaut
+        hours: availableHours,
+        _id: {
+          $oid: `generated_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`,
+        },
+      };
+      
+      const newSuggestions = {
+        ...suggestions,
+        schedule: {
+          ...suggestions.schedule,
+          schedules: [...suggestions.schedule.schedules, newSchedule],
+        },
+      };
+      setSuggestions(newSuggestions);
+    };
 
     const handleDayToggle = (
       dayToToggle: string,
@@ -1513,42 +1529,68 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       setSuggestions(newSuggestions);
     };
 
-    const addNewScheduleGroup = () => {
-      if (!suggestions) return;
-      const scheduledDays = suggestions.schedule.schedules.map((s) => s.day);
-      const firstUnscheduledDay = allWeekDays.find(
-        (d) => !scheduledDays.includes(d)
+    const handleEmptyScheduleDayToggle = (dayToToggle: string, emptySchedule: ScheduleEntry) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
       );
 
-      if (firstUnscheduledDay) {
-        // Cherche un horaire non utilisé
-        const defaultHoursList = [
-          { start: "09:00", end: "17:00" },
-          { start: "07:00", end: "15:00" },
-          { start: "11:00", end: "19:00" },
-          { start: "14:00", end: "22:00" },
-        ];
-        const usedHours = suggestions.schedule.schedules.map(s => `${s.hours.start}-${s.hours.end}`);
-        const availableHours = defaultHoursList.find(
-          h => !usedHours.includes(`${h.start}-${h.end}`)
-        ) || { start: "09:00", end: "17:00" };
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules[scheduleIndex].day = dayToToggle;
+      }
+      setSuggestions(newSuggestions);
+    };
 
-        const newSchedule: ScheduleEntry = {
-          day: firstUnscheduledDay,
-          hours: availableHours,
-          _id: {
-            $oid: `generated_${Date.now()}_${Math.random()
-              .toString(36)
-              .substr(2, 9)}`,
-          },
-        };
-        const newSuggestions = {
-          ...suggestions,
-          schedule: {
-            ...suggestions.schedule,
-            schedules: [...suggestions.schedule.schedules, newSchedule],
-          },
-        };
+    const handleEmptyScheduleHoursChange = (emptySchedule: ScheduleEntry, field: "start" | "end", value: string) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules[scheduleIndex].hours[field] = value;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEmptySchedulePresetClick = (emptySchedule: ScheduleEntry, preset: string) => {
+      let newHours;
+      switch (preset) {
+        case "9-5":
+          newHours = { start: "09:00", end: "17:00" };
+          break;
+        case "Early":
+          newHours = { start: "07:00", end: "15:00" };
+          break;
+        case "Late":
+          newHours = { start: "11:00", end: "19:00" };
+          break;
+        case "Evening":
+          newHours = { start: "14:00", end: "22:00" };
+          break;
+        default:
+          newHours = emptySchedule.hours;
+      }
+
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules[scheduleIndex].hours = newHours;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteEmptySchedule = (emptySchedule: ScheduleEntry) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
         setSuggestions(newSuggestions);
       }
     };
@@ -1675,158 +1717,166 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               </div>
             </div>
           ))
-        ) : (
+        ) : null}
+
+        {/* Afficher les groupes vides */}
+        {emptySchedules.map((emptySchedule, index) => (
+          <div
+            key={emptySchedule._id?.$oid || index}
+            className="bg-white rounded-xl p-6 border-2 border-dashed border-gray-300 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h5 className="text-md font-semibold text-gray-600">
+                New Schedule Group (No days selected)
+              </h5>
+              <button
+                onClick={() => deleteEmptySchedule(emptySchedule)}
+                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 mb-6">
+              {allWeekDays.map((day) => {
+                const isSelected = false; // Toujours false pour les groupes vides
+                const isInOtherGroup = suggestions.schedule.schedules.some((s) => s.day === day);
+
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleEmptyScheduleDayToggle(day, emptySchedule)}
+                    disabled={isInOtherGroup}
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                      isInOtherGroup
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
+              <h5 className="text-md font-semibold text-gray-700 mb-4 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                Working Hours
+              </h5>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                    <Sunrise className="w-4 h-4 mr-1.5 text-orange-400" />
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={emptySchedule.hours.start}
+                    onChange={(e) =>
+                      handleEmptyScheduleHoursChange(emptySchedule, "start", e.target.value)
+                    }
+                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
+                    <Sunset className="w-4 h-4 mr-1.5 text-indigo-400" />
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    value={emptySchedule.hours.end}
+                    onChange={(e) =>
+                      handleEmptyScheduleHoursChange(emptySchedule, "end", e.target.value)
+                    }
+                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="text-center bg-white border border-gray-200 rounded-lg p-3 mb-6">
+                <span className="font-semibold text-gray-700 text-lg">
+                  {formatTo12Hour(emptySchedule.hours.start)} -{" "}
+                  {formatTo12Hour(emptySchedule.hours.end)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "9-5")}
+                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                  <Sun className="w-5 h-5 text-yellow-500 mb-1" />
+                  <span className="text-sm font-medium text-gray-600">
+                    9-5
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Early")}
+                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                  <Sunrise className="w-5 h-5 text-orange-500 mb-1" />
+                  <span className="text-sm font-medium text-gray-600">
+                    Early
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Late")}
+                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                  <Clock className="w-5 h-5 text-indigo-500 mb-1" />
+                  <span className="text-sm font-medium text-gray-600">
+                    Late
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Evening")}
+                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                  <Moon className="w-5 h-5 text-purple-500 mb-1" />
+                  <span className="text-sm font-medium text-gray-600">
+                    Evening
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Message si aucun planning n'est défini */}
+        {Object.keys(groupedSchedules).length === 0 && emptySchedules.length === 0 && (
           <div className="text-center py-10">
             <p className="text-gray-500 mb-4">No schedule defined.</p>
           </div>
         )}
 
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={addNewScheduleGroup}
-            className="flex items-center space-x-2 px-5 py-2 border-2 border-dashed border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add Schedule Group</span>
-          </button>
-        </div>
-
-        <div className="mt-8 pt-8 border-t border-gray-200 space-y-8">
-          {/* Minimum Hours */}
-          <div>
-            <h5 className="text-md font-semibold text-gray-800 mb-4">
-              Minimum Hours Requirements
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1 block">
-                  Daily
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 8"
-                  value={suggestions.schedule.minimumHours?.daily ?? ""}
-                  onChange={(e) =>
-                    handleMinimumHoursChange("daily", e.target.value)
-                  }
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1 block">
-                  Weekly
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 40"
-                  value={suggestions.schedule.minimumHours?.weekly ?? ""}
-                  onChange={(e) =>
-                    handleMinimumHoursChange("weekly", e.target.value)
-                  }
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1 block">
-                  Monthly
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 160"
-                  value={suggestions.schedule.minimumHours?.monthly ?? ""}
-                  onChange={(e) =>
-                    handleMinimumHoursChange("monthly", e.target.value)
-                  }
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Time Zones */}
-          <div>
-            <h5 className="text-md font-semibold text-gray-800 mb-4">
-              Time Zones
-            </h5>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {suggestions.schedule.timeZones.map((zone) => (
-                <div
-                  key={zone}
-                  className="flex items-center bg-blue-100 text-blue-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
-                >
-                  {zone}
-                  <button
-                    onClick={() => handleRemoveTimeZone(zone)}
-                    className="ml-2 text-blue-600 hover:text-blue-800 rounded-full focus:outline-none focus:bg-blue-200"
-                  >
-                    <XCircle className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <select
-              onChange={(e) => {
-                if (e.target.value) handleAddTimeZone(e.target.value);
-                e.target.value = ""; // Reset select
-              }}
-              className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              defaultValue=""
+        {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés ET qu'il n'y a pas de groupes vides */}
+        {!allDaysSelected && emptySchedules.length === 0 && (
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={addNewScheduleGroup}
+              className="flex items-center space-x-2 px-5 py-2 border-2 border-dashed border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium"
             >
-              <option value="" disabled>
-                Add a time zone...
-              </option>
-              {TIMEZONE_OPTIONS.filter(
-                (opt) => !suggestions.schedule.timeZones.includes(opt)
-              ).map((zone) => (
-                <option key={zone} value={zone}>
-                  {zone}
-                </option>
-              ))}
-            </select>
+              <Plus className="w-5 h-5" />
+              <span>Add Schedule Group</span>
+            </button>
           </div>
+        )}
 
-          {/* Schedule Flexibility */}
-          <div>
-            <h5 className="text-md font-semibold text-gray-800 mb-4">
-              Schedule Flexibility
-            </h5>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {suggestions.schedule.flexibility.map((opt) => (
-                <div
-                  key={opt}
-                  className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
-                >
-                  {opt}
-                  <button
-                    onClick={() => handleRemoveFlexibility(opt)}
-                    className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
-                  >
-                    <XCircle className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
+        {/* Message quand tous les jours sont sélectionnés ET qu'il n'y a pas de groupes vides */}
+        {allDaysSelected && emptySchedules.length === 0 && (
+          <div className="text-center mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-center space-x-2 text-green-700">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">All week days are scheduled!</span>
             </div>
-            <select
-              onChange={(e) => {
-                if (e.target.value) handleAddFlexibility(e.target.value);
-                e.target.value = ""; // Reset select
-              }}
-              className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Add a flexibility option...
-              </option>
-              {FLEXIBILITY_OPTIONS.filter(
-                (opt) => !suggestions.schedule.flexibility.includes(opt)
-              ).map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+            <p className="text-sm text-green-600 mt-1">
+              You can still modify existing schedules or remove days to add new groups.
+            </p>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -1985,23 +2035,25 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         {/* Enhanced Header */}
         <div className="flex items-center justify-between mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
-              <DollarSign className="w-7 h-7 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+                <DollarSign className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
+                <p className="text-sm text-gray-600">
+                  Configure compensation structure and performance incentives
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
-              <p className="text-sm text-gray-600">
-                Configure compensation structure and performance incentives
-              </p>
-            </div>
+            <button
+              onClick={addCommissionOption}
+              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold transform hover:scale-105"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add Option</span>
+            </button>
           </div>
-          <button
-            onClick={addCommissionOption}
-            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold transform hover:scale-105"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add Option</span>
-          </button>
         </div>
 
         {suggestions.commission?.options &&

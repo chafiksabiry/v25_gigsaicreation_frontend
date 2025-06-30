@@ -35,13 +35,6 @@ export function SkillsExample() {
     ]
   };
 
-  const handleEdit = () => {
-    console.log('Edit skills clicked');
-  };
-
-  const handleAdd = () => {
-    console.log('Add skill clicked');
-  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">

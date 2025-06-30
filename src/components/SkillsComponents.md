@@ -109,8 +109,6 @@ import { SkillsCard } from './SkillsCard';
   title="Required Skills"
   subtitle="Skills and competencies for this position"
   editable={true}
-  onEdit={() => console.log('Edit clicked')}
-  onAdd={() => console.log('Add clicked')}
 />
 ```
 

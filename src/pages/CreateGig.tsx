@@ -21,7 +21,6 @@ interface GigCreatorProps {
 }
 
 export function CreateGig() {
-  console.log('CreateGig - Rendering');
   return (
     <div className="min-h-screen bg-gray-50">
       <GigCreator>
@@ -35,9 +34,6 @@ export function CreateGig() {
           onAIAssist,
           currentSection
         }: GigCreatorProps) => {
-          console.log('CreateGig - Current section:', currentSection);
-          console.log('CreateGig - Current data:', data);
-          
           switch (currentSection) {
             case 'basic':
               return (
@@ -161,10 +157,6 @@ export function CreateGig() {
                   })}
                   onPrevious={onPrevious}
                   onNext={onNext}
-                  onReview={() => {
-                    // This will trigger the review mode in GigCreator
-                    console.log('CreateGig - Review requested');
-                  }}
                   isLastSection={true}
                 />
               );
