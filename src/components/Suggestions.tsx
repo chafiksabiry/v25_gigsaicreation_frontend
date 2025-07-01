@@ -27,6 +27,7 @@ import {
   Sunrise,
   Sunset,
   Moon,
+  Calendar,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { JobDescription, GigMetadata } from "../lib/types";
@@ -1313,28 +1314,22 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               key={key}
               className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
             >
-              <h5 className="text-sm font-semibold text-gray-800 mb-3">
+              <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
                 Working Days
               </h5>
-              <div className="flex gap-1 mb-4">
+              <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
                 {allWeekDays.map((day) => {
                   const isSelected = group.days.includes(day);
-                  const isInOtherGroup =
-                    !isSelected &&
-                    suggestions.schedule.schedules.some((s) => s.day === day);
-
+                  const isInOtherGroup = !isSelected && suggestions.schedule.schedules.some((s) => s.day === day);
                   return (
                     <button
                       key={day}
                       onClick={() => handleDayToggle(day, group.hours)}
                       disabled={isInOtherGroup}
-                      className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                        isSelected
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : isInOtherGroup
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-gray-100 text-gray-700 hover:bg-blue-100"
-                      }`}
+                      className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
+                        ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                      `}
                     >
                       {day}
                     </button>

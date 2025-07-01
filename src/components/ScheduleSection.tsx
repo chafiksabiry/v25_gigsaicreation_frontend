@@ -9,6 +9,7 @@ import {
   Trash2,
   ArrowLeft,
   ArrowRight,
+  Calendar,
 } from "lucide-react";
 import { DaySchedule, GroupedSchedule, groupSchedules as groupSchedulesUtil } from "../lib/scheduleUtils";
 import { TimezoneCode, MAJOR_TIMEZONES } from "../lib/ai";
@@ -245,8 +246,11 @@ export function ScheduleSection({
             </button>
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Working Days</h4>
-                <div className="flex gap-1">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                  Working Days
+                </h4>
+                <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
                   {workingDays.map(day => {
                     const isSelected = group.days.includes(day);
                     const isInOtherGroup = !isSelected && schedules.some(s => s.day === day);
@@ -255,13 +259,9 @@ export function ScheduleSection({
                         key={day}
                         onClick={() => handleDayToggle(day, group.hours)}
                         disabled={isInOtherGroup}
-                        className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                          isSelected
-                            ? 'bg-blue-600 text-white shadow-sm'
-                            : isInOtherGroup
-                            ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
+                          ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                        `}
                         title={isInOtherGroup ? `${day} is already selected in another schedule group` : undefined}
                       >
                         {day}
