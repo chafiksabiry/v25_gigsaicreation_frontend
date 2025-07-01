@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'chunk-[name].js', // Fixed name for chunks
           assetFileNames: (assetInfo) => {
             // Ensure CSS files are consistently named
-            if (assetInfo.name.endsWith('.css')) {
+            if (assetInfo.name?.endsWith('.css')) {
               return 'index1.css';
             }
             return '[name].[ext]'; // Default for other asset types
