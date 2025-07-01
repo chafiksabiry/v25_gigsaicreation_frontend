@@ -1,6 +1,6 @@
 import React from 'react';
 import PrompAI from './components/PrompAI';
-import './index.css';
+import './index1.css';
 
 export default function App() {
   return (
