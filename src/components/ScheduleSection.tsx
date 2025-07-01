@@ -534,29 +534,29 @@ export function ScheduleSection({
               </div>
               Schedule Flexibility
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-3">
-                {flexibilityOptions.map((option) => {
-                  const isSelected = data.flexibility.includes(option);
-                  return (
-                    <label key={option} className={`flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-purple-100 border border-purple-300 shadow-sm' 
-                        : 'hover:bg-purple-50'
-                    }`}>
-                      <input type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleFlexibilityChange(option)}
-                        className="sr-only"
-                      />
-                      <span className={`text-sm font-medium ${
-                        isSelected ? 'text-purple-800' : 'text-gray-700'
-                      }`}>{option}</span>
-                    </label>
-                  );
-                })}
-              </div>
-              <p className="text-xs text-gray-500 mt-4 text-center italic">Select all applicable schedule flexibility options</p>
-            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {flexibilityOptions.map((option) => {
+                const isSelected = data.flexibility.includes(option);
+                return (
+                  <label
+                    key={option}
+                    className={`flex flex-col items-center justify-center border rounded-lg transition-all duration-200 cursor-pointer text-center text-xs font-medium
+                      ${isSelected ? 'bg-green-100 border-2 border-green-500 shadow' : 'bg-white border-green-200 hover:bg-green-50'}
+                      p-0 m-0 h-14 w-36`}
+                    style={{ minWidth: 0, minHeight: 0 }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleFlexibilityChange(option)}
+                      className="appearance-none"
+                    />
+                    <span className="leading-tight">{option}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-xs text-gray-500 mt-4 text-center italic">Select all applicable schedule flexibility options</p>
           </div>
 
         </div>
