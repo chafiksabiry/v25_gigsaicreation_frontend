@@ -621,16 +621,16 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             }
           });
 
-          // Format times to be compliant with <input type="time">
-          result.schedule.schedules.forEach((schedule) => {
-            const formatTime = (timeStr: string) => {
-              if (!timeStr || !timeStr.includes(":")) return "00:00";
-              const [h, m] = timeStr.split(":");
-              return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-            };
-            schedule.hours.start = formatTime(schedule.hours.start);
-            schedule.hours.end = formatTime(schedule.hours.end);
-          });
+                  // Format times to be compliant with <input type="time">
+        result.schedule.schedules.forEach((schedule) => {
+          const formatTimeForInput = (timeStr: string) => {
+            if (!timeStr || !timeStr.includes(":")) return "00:00";
+            const [h, m] = timeStr.split(":");
+            return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+          };
+          schedule.hours.start = formatTimeForInput(schedule.hours.start);
+          schedule.hours.end = formatTimeForInput(schedule.hours.end);
+        });
 
           result.schedule.schedules = convertedSchedules;
         }
