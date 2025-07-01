@@ -182,10 +182,7 @@ export function ScheduleSection({
     if (!time) return "Invalid Time";
     const [hour, minute] = time.split(":");
     if (isNaN(parseInt(hour)) || isNaN(parseInt(minute))) return "Invalid Time";
-    const h = parseInt(hour, 10);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const formattedHour = h % 12 || 12;
-    return `${String(formattedHour).padStart(2, '0')}:${minute} ${ampm}`;
+    return `${hour}h${minute}`;
   };
 
   // Add a new group with an unused day

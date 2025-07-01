@@ -1072,14 +1072,10 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     );
   };
 
-  const formatTo12Hour = (time: string) => {
+  const formatTime24 = (time: string) => {
     if (!time || !time.includes(":")) return time;
     let [hoursStr, minutesStr] = time.split(":");
-    let hours = parseInt(hoursStr, 10);
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    return `${hours}:${minutesStr} ${ampm}`;
+    return `${hoursStr}h${minutesStr}`;
   };
 
   const renderEditableSchedules = () => {
@@ -1376,8 +1372,8 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
                 <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
                   <span className="font-semibold text-gray-700 text-sm">
-                    {formatTo12Hour(group.hours.start)} -{" "}
-                    {formatTo12Hour(group.hours.end)}
+                    {formatTime24(group.hours.start)} -{" "}
+                    {formatTime24(group.hours.end)}
                   </span>
                 </div>
 
@@ -1501,8 +1497,8 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
               <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
                 <span className="font-semibold text-gray-700 text-sm">
-                  {formatTo12Hour(emptySchedule.hours.start)} -{" "}
-                  {formatTo12Hour(emptySchedule.hours.end)}
+                  {formatTime24(emptySchedule.hours.start)} -{" "}
+                  {formatTime24(emptySchedule.hours.end)}
                 </span>
               </div>
 
