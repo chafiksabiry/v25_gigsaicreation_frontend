@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
           assetFileNames: (assetInfo) => {
             // Ensure CSS files are consistently named
             if (assetInfo.name.endsWith('.css')) {
-              return 'index.css';
+              return 'index1.css';
             }
             return '[name].[ext]'; // Default for other asset types
           },
