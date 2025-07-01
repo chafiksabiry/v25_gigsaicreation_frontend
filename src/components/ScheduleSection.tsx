@@ -400,7 +400,7 @@ export function ScheduleSection({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-3">
                   <button onClick={() => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {start: "09:00", end: "17:00"}} : g))} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
                       <Sun className="w-5 h-5 text-orange-400"/>
                       <span className="text-xs font-medium">9-5</span>
@@ -535,7 +535,7 @@ export function ScheduleSection({
               Schedule Flexibility
             </h4>
             <div className="bg-white p-4 rounded-lg border border-purple-200 shadow-sm">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-3">
                 {flexibilityOptions.map((option) => {
                   const isSelected = data.flexibility.includes(option);
                   return (
