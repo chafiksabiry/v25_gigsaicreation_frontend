@@ -541,7 +541,7 @@ export function ScheduleSection({
                   <label
                     key={option}
                     className={`flex flex-col items-center justify-center border rounded-lg transition-all duration-200 cursor-pointer text-center text-xs font-medium
-                      ${isSelected ? 'bg-green-100 border-2 border-green-500 shadow' : 'bg-white border-green-200 hover:bg-green-50'}
+                      ${isSelected ? 'bg-purple-100 border-2 border-purple-500 shadow' : 'bg-white border-purple-200 hover:bg-purple-50'}
                       p-0 m-0 h-14 w-36`}
                     style={{ minWidth: 0, minHeight: 0 }}
                   >
