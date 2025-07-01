@@ -60,57 +60,10 @@ i18n.registerLocale(fr);
 i18n.registerLocale(en);
 
 // Helper function to check if a value is a string array
-const isStringArray = (value: unknown): value is string[] => {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === "string")
-  );
-};
 
-const getNestedProperty = (obj: any, path: string) => {
-  return path.split(".").reduce((acc, part) => acc && acc[part], obj);
-};
 
-const setNestedProperty = (obj: any, path: string, value: any) => {
-  const parts = path.split(".");
-  const lastPart = parts.pop()!;
-  const target = parts.reduce((acc, part) => {
-    if (!acc[part]) {
-      acc[part] = {};
-    }
-    return acc[part];
-  }, obj);
-  target[lastPart] = value;
-};
 
-type StringArraySection =
-  | "jobTitles"
-  | "deliverables"
-  | "sectors"
-  | "destinationZones"
-  | "highlights"
-  | "requirements.essential"
-  | "requirements.preferred"
-  | "skills.technical"
-  | "skills.soft"
-  | "skills.professional"
-  | "skills.languages"
-  | "skills.certifications"
-  | "commission.kpis"
-  | "commission"
-  | "activity"
-  | "kpis"
-  | "timeframes"
-  | "requirements"
-  | "compensation"
-  | "languages"
-  | "skills"
-  | "activity-requirement";
 
-interface ActivityOption {
-  type: string;
-  description: string;
-  requirements: string[];
-}
 
 interface SuggestionsProps {
   input: string;
@@ -130,20 +83,6 @@ try {
   console.error("Error initializing OpenAI client:", error);
 }
 
-const COMMON_TIMEZONES = [
-  "UTC",
-  "GMT",
-  "CET (Central European Time)",
-  "EET (Eastern European Time)",
-  "WET (Western European Time)",
-  "EST (Eastern Standard Time)",
-  "CST (Central Standard Time)",
-  "PST (Pacific Standard Time)",
-  "IST (India Standard Time)",
-  "JST (Japan Standard Time)",
-  "AEDT (Australian Eastern Daylight Time)",
-  "NZDT (New Zealand Daylight Time)",
-];
 
 const DESTINATION_ZONES = [
   "France",
@@ -251,10 +190,6 @@ interface LeadType {
   conversionRate?: number;
 }
 
-interface LeadsData {
-  types: LeadType[];
-  sources: string[];
-}
 
 interface TeamRole {
   roleId: string;
@@ -265,11 +200,6 @@ interface TeamRole {
   };
 }
 
-interface TeamData {
-  size: number;
-  structure: TeamRole[];
-  territories: string[];
-}
 
 interface PredefinedOptions {
   leads: {
@@ -347,154 +277,9 @@ const predefinedOptions: PredefinedOptions = {
   },
 };
 
-interface SuggestionState extends GigSuggestion {
-  // Additional fields specific to SuggestionState can be added here
-}
 
-const fallbackSuggestions: GigSuggestion = {
-  title: "",
-  description: "",
-  category: "",
-  highlights: [],
-  jobTitles: [],
-  deliverables: [],
-  sectors: [],
-  destinationZones: [],
-  timeframes: [],
-  availability: {
-    schedule: [
-      {
-        days: [""],
-        hours: {
-          start: "",
-          end: "",
-        },
-      },
-    ],
-    timeZones: [],
-    flexibility: [],
-    minimumHours: {
-      daily: 8,
-      weekly: 40,
-      monthly: 160,
-    },
-  },
-  schedule: {
-    schedules: [
-      {
-        day: "",
-        hours: {
-          start: "",
-          end: "",
-        },
-        _id: { $oid: "fallback" },
-      },
-    ],
-    timeZones: ["CET"],
-    flexibility: ["Part-Time Options"],
-    minimumHours: {
-      daily: 8,
-      weekly: 40,
-      monthly: 160,
-    },
-  },
-  requirements: {
-    essential: [],
-    preferred: [],
-  },
-  benefits: [],
-  skills: {
-    languages: [],
-    soft: [
-      {
-        skill: "Communication",
-        level: 1,
-      },
-    ],
-    professional: [
-      {
-        skill: "Brand Identity Design",
-        level: 1,
-      },
-    ],
-    technical: [
-      {
-        skill: "Adobe Illustrator",
-        level: 1,
-      },
-    ],
-    certifications: [],
-  },
-  seniority: {
-    level: "",
-    yearsExperience: 0,
-  },
-  commission: {
-    options: [],
-  },
-  activity: {
-    options: [],
-  },
-  team: {
-    size: 1,
-    structure: [
-      {
-        roleId: "default",
-        count: 1,
-        seniority: {
-          level: "Senior",
-          yearsExperience: 5,
-        },
-      },
-    ],
-    territories: ["Global"],
-    reporting: {
-      to: "Project Manager",
-      frequency: "Weekly",
-    },
-    collaboration: ["Daily standups", "Weekly reviews"],
-  },
-  leads: {
-    types: [],
-    sources: [],
-    distribution: {
-      method: "",
-      rules: [],
-    },
-    qualificationCriteria: [],
-  },
-  documentation: {
-    templates: null,
-    reference: null,
-    product: [],
-    process: [],
-    training: [],
-  },
-};
 
-const TIMEZONE_OPTIONS = [
-  "New York (EST/EDT)",
-  "Chicago (CST/CDT)",
-  "Denver (MST/MDT)",
-  "Los Angeles (PST/PDT)",
-  "London (GMT/BST)",
-  "Paris (CET/CEST)",
-  "Dubai (GST)",
-  "Singapore (SGT)",
-  "Tokyo (JST)",
-  "Sydney (AEST/AEDT)",
-];
 
-const FLEXIBILITY_OPTIONS = [
-  "Remote Work Available",
-  "Flexible Hours",
-  "Weekend Rotation",
-  "Night Shift Available",
-  "Split Shifts",
-  "Part-Time Options",
-  "Compressed Work Week",
-  "Shift Swapping Allowed",
-];
 
 const LANGUAGE_LEVELS = [
   { value: "A1", label: "A1 - Beginner" },
@@ -808,7 +593,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
           const convertedSchedules: Array<ScheduleEntry> = [];
-          result.schedule.schedules.forEach((schedule: any, index: number) => {
+          result.schedule.schedules.forEach((schedule: any) => {
             if (schedule.days && Array.isArray(schedule.days)) {
               // Convert from days array to individual day objects
               schedule.days.forEach((day: string) => {
@@ -903,85 +688,10 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     };
   }, [input]);
 
-  const handleMinimumHoursChange = (
-    period: "daily" | "weekly" | "monthly",
-    value: string
-  ) => {
-    if (!suggestions) return;
-    const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-    const numericValue = parseInt(value, 10);
-    if (!isNaN(numericValue)) {
-      if (!newSuggestions.schedule.minimumHours) {
-        newSuggestions.schedule.minimumHours = {};
-      }
-      newSuggestions.schedule.minimumHours[period] = numericValue;
-      setSuggestions(newSuggestions);
-    } else if (value === "") {
-      if (!newSuggestions.schedule.minimumHours) {
-        newSuggestions.schedule.minimumHours = {};
-      }
-      delete newSuggestions.schedule.minimumHours[period];
-      setSuggestions(newSuggestions);
-    }
-  };
 
-  const handleAddTimeZone = (zone: string) => {
-    if (!suggestions || !zone || suggestions.schedule.timeZones.includes(zone))
-      return;
-    const newSuggestions = {
-      ...suggestions,
-      schedule: {
-        ...suggestions.schedule,
-        timeZones: [...suggestions.schedule.timeZones, zone],
-      },
-    };
-    setSuggestions(newSuggestions);
-  };
 
-  const handleRemoveTimeZone = (zoneToRemove: string) => {
-    if (!suggestions) return;
-    const newSuggestions = {
-      ...suggestions,
-      schedule: {
-        ...suggestions.schedule,
-        timeZones: suggestions.schedule.timeZones.filter(
-          (zone) => zone !== zoneToRemove
-        ),
-      },
-    };
-    setSuggestions(newSuggestions);
-  };
 
-  const handleAddFlexibility = (option: string) => {
-    if (
-      !suggestions ||
-      !option ||
-      suggestions.schedule.flexibility.includes(option)
-    )
-      return;
-    const newSuggestions = {
-      ...suggestions,
-      schedule: {
-        ...suggestions.schedule,
-        flexibility: [...suggestions.schedule.flexibility, option],
-      },
-    };
-    setSuggestions(newSuggestions);
-  };
 
-  const handleRemoveFlexibility = (optionToRemove: string) => {
-    if (!suggestions) return;
-    const newSuggestions = {
-      ...suggestions,
-      schedule: {
-        ...suggestions.schedule,
-        flexibility: suggestions.schedule.flexibility.filter(
-          (option) => option !== optionToRemove
-        ),
-      },
-    };
-    setSuggestions(newSuggestions);
-  };
 
   const handleConfirm = () => {
     if (suggestions) {
@@ -1596,17 +1306,17 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     };
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {Object.keys(groupedSchedules).length > 0 ? (
-          Object.entries(groupedSchedules).map(([key, group], index) => (
+          Object.entries(groupedSchedules).map(([key, group]) => (
             <div
               key={key}
-              className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm"
+              className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
             >
-              <h5 className="text-md font-semibold text-gray-800 mb-4">
+              <h5 className="text-sm font-semibold text-gray-800 mb-3">
                 Working Days
               </h5>
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex gap-1 mb-4">
                 {allWeekDays.map((day) => {
                   const isSelected = group.days.includes(day);
                   const isInOtherGroup =
@@ -1618,9 +1328,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                       key={day}
                       onClick={() => handleDayToggle(day, group.hours)}
                       disabled={isInOtherGroup}
-                      className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                      className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                         isSelected
-                          ? "bg-blue-600 text-white shadow-md"
+                          ? "bg-blue-600 text-white shadow-sm"
                           : isInOtherGroup
                           ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                           : "bg-gray-100 text-gray-700 hover:bg-blue-100"
@@ -1632,16 +1342,16 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 })}
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
-                <h5 className="text-md font-semibold text-gray-700 mb-4 flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-blue-600" />
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  <Clock className="w-4 h-4 mr-2 text-blue-600" />
                   Working Hours
                 </h5>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
-                      <Sunrise className="w-4 h-4 mr-1.5 text-orange-400" />
+                    <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
                       Start Time
                     </label>
                     <input
@@ -1650,12 +1360,12 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                       onChange={(e) =>
                         handleHoursChange(group, "start", e.target.value)
                       }
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
-                      <Sunset className="w-4 h-4 mr-1.5 text-indigo-400" />
+                    <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
                       End Time
                     </label>
                     <input
@@ -1664,52 +1374,52 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                       onChange={(e) =>
                         handleHoursChange(group, "end", e.target.value)
                       }
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
 
-                <div className="text-center bg-white border border-gray-200 rounded-lg p-3 mb-6">
-                  <span className="font-semibold text-gray-700 text-lg">
+                <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
+                  <span className="font-semibold text-gray-700 text-sm">
                     {formatTo12Hour(group.hours.start)} -{" "}
                     {formatTo12Hour(group.hours.end)}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <button
                     onClick={() => handlePresetClick(group, "9-5")}
-                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                   >
-                    <Sun className="w-5 h-5 text-yellow-500 mb-1" />
-                    <span className="text-sm font-medium text-gray-600">
+                    <Sun className="w-4 h-4 text-yellow-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
                       9-5
                     </span>
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Early")}
-                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                   >
-                    <Sunrise className="w-5 h-5 text-orange-500 mb-1" />
-                    <span className="text-sm font-medium text-gray-600">
+                    <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
                       Early
                     </span>
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Late")}
-                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                   >
-                    <Clock className="w-5 h-5 text-indigo-500 mb-1" />
-                    <span className="text-sm font-medium text-gray-600">
+                    <Clock className="w-4 h-4 text-indigo-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
                       Late
                     </span>
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Evening")}
-                    className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                   >
-                    <Moon className="w-5 h-5 text-purple-500 mb-1" />
-                    <span className="text-sm font-medium text-gray-600">
+                    <Moon className="w-4 h-4 text-purple-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
                       Evening
                     </span>
                   </button>
@@ -1723,31 +1433,29 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         {emptySchedules.map((emptySchedule, index) => (
           <div
             key={emptySchedule._id?.$oid || index}
-            className="bg-white rounded-xl p-6 border-2 border-dashed border-gray-300 shadow-sm"
+            className="bg-white rounded-lg p-4 border-2 border-dashed border-gray-300 shadow-sm"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h5 className="text-md font-semibold text-gray-600">
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="text-sm font-semibold text-gray-600">
                 New Schedule Group (No days selected)
               </h5>
               <button
                 onClick={() => deleteEmptySchedule(emptySchedule)}
-                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex gap-1 mb-4">
               {allWeekDays.map((day) => {
-                const isSelected = false; // Toujours false pour les groupes vides
                 const isInOtherGroup = suggestions.schedule.schedules.some((s) => s.day === day);
-
                 return (
                   <button
                     key={day}
                     onClick={() => handleEmptyScheduleDayToggle(day, emptySchedule)}
                     disabled={isInOtherGroup}
-                    className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+                    className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                       isInOtherGroup
                         ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                         : "bg-gray-100 text-gray-700 hover:bg-blue-100"
@@ -1759,16 +1467,16 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               })}
             </div>
 
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-100">
-              <h5 className="text-md font-semibold text-gray-700 mb-4 flex items-center">
-                <Clock className="w-5 h-5 mr-2 text-blue-600" />
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+              <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-blue-600" />
                 Working Hours
               </h5>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
-                    <Sunrise className="w-4 h-4 mr-1.5 text-orange-400" />
+                  <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                    <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
                     Start Time
                   </label>
                   <input
@@ -1777,12 +1485,12 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                     onChange={(e) =>
                       handleEmptyScheduleHoursChange(emptySchedule, "start", e.target.value)
                     }
-                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 flex items-center">
-                    <Sunset className="w-4 h-4 mr-1.5 text-indigo-400" />
+                  <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                    <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
                     End Time
                   </label>
                   <input
@@ -1791,52 +1499,52 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                     onChange={(e) =>
                       handleEmptyScheduleHoursChange(emptySchedule, "end", e.target.value)
                     }
-                    className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
-              <div className="text-center bg-white border border-gray-200 rounded-lg p-3 mb-6">
-                <span className="font-semibold text-gray-700 text-lg">
+              <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
+                <span className="font-semibold text-gray-700 text-sm">
                   {formatTo12Hour(emptySchedule.hours.start)} -{" "}
                   {formatTo12Hour(emptySchedule.hours.end)}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "9-5")}
-                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                 >
-                  <Sun className="w-5 h-5 text-yellow-500 mb-1" />
-                  <span className="text-sm font-medium text-gray-600">
+                  <Sun className="w-4 h-4 text-yellow-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
                     9-5
                   </span>
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Early")}
-                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                 >
-                  <Sunrise className="w-5 h-5 text-orange-500 mb-1" />
-                  <span className="text-sm font-medium text-gray-600">
+                  <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
                     Early
                   </span>
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Late")}
-                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                 >
-                  <Clock className="w-5 h-5 text-indigo-500 mb-1" />
-                  <span className="text-sm font-medium text-gray-600">
+                  <Clock className="w-4 h-4 text-indigo-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
                     Late
                   </span>
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Evening")}
-                  className="flex flex-col items-center justify-center py-3 px-2 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
                 >
-                  <Moon className="w-5 h-5 text-purple-500 mb-1" />
-                  <span className="text-sm font-medium text-gray-600">
+                  <Moon className="w-4 h-4 text-purple-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
                     Evening
                   </span>
                 </button>
@@ -3473,12 +3181,4 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
   );
 };
 
-function parseYearsExperience(val: any) {
-  if (typeof val === "number") return val;
-  if (typeof val === "string") {
-    // Prend le premier nombre trouvé dans la string
-    const match = val.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
-  }
-  return 0;
-}
+

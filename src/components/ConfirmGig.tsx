@@ -39,13 +39,13 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         benefits: gig.benefits || [],
         availability: {
           schedule: gig.schedule?.schedules?.map(schedule => ({
-            day: schedule.days?.[0] || "",
+            day: schedule.day?.[0] || "",
             hours: {
               start: schedule.hours?.start || "",
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: gig.schedule?.timeZones || [],
+          timeZones: gig.schedule?.timeZones[0],
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {
             daily: 0,
@@ -61,7 +61,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: gig.schedule?.timeZones || [],
+          timeZones: gig.schedule?.timeZones[0],
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {},
         },

@@ -26,6 +26,7 @@ export interface GigData {
       };
     }>;
     timeZones: string[];
+    timeZone: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -42,6 +43,7 @@ export interface GigData {
       };
     }>;
     timeZones: string[];
+    timeZone?: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -213,6 +215,7 @@ export interface GigSuggestion {
       };
     }>;
     timeZones: string[];
+    timeZone: string;
     flexibility: string[];
     minimumHours: {
       daily: number;

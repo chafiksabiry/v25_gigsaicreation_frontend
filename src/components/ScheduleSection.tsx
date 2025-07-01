@@ -22,7 +22,7 @@ interface ScheduleSectionProps {
       weekly?: number;
       monthly?: number;
     };
-    timeZones: TimezoneCode[];
+    timeZone?: TimezoneCode;
     flexibility: string[];
   };
   onChange: (data: ScheduleSectionProps['data']) => void;
@@ -165,10 +165,9 @@ export function ScheduleSection({
   };
 
   const handleTimezoneChange = (tz: TimezoneCode) => {
-    const newTimezones = data.timeZones.includes(tz)
-      ? data.timeZones.filter(t => t !== tz)
-      : [...data.timeZones, tz];
-    onChange({ ...data, timeZones: newTimezones });
+    // Allow only single selection - replace the entire timezone with the selected one
+    const newTimezone = data.timeZone === tz ? undefined : tz;
+    onChange({ ...data, timeZone: newTimezone });
   };
 
   const handleFlexibilityChange = (option: string) => {
@@ -228,23 +227,26 @@ export function ScheduleSection({
     setSchedules((prev) => prev.filter((s) => !group.days.includes(s.day)));
   };
 
+  // Sécurise timeZone pour l'affichage
+  const timeZone = data.timeZone;
+
   return (
     <div className="w-full max-w-3xl mx-auto p-4 sm:p-6">
       <div className="space-y-6">
         {/* Display normal groups */}
         {groupedSchedules.map((group, index) => (
-          <div key={index} className="p-6 bg-white border border-gray-200/80 rounded-2xl shadow-sm relative transition-shadow hover:shadow-md">
+          <div key={index} className="p-4 bg-white border border-gray-200/80 rounded-lg shadow-sm relative transition-shadow hover:shadow-md">
             <button
               onClick={() => handleRemoveScheduleGroup(group)}
-              className="absolute top-3 right-3 p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
+              className="absolute top-2 right-2 p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
               aria-label="Remove schedule group"
             >
               <Trash2 className="w-4 h-4" />
             </button>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <h4 className="text-base font-semibold text-gray-800 mb-3">Working Days</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">Working Days</h4>
+                <div className="flex gap-1">
                   {workingDays.map(day => {
                     const isSelected = group.days.includes(day);
                     const isInOtherGroup = !isSelected && schedules.some(s => s.day === day);
@@ -253,9 +255,9 @@ export function ScheduleSection({
                         key={day}
                         onClick={() => handleDayToggle(day, group.hours)}
                         disabled={isInOtherGroup}
-                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${
+                        className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
                           isSelected
-                            ? 'bg-blue-600 text-white shadow-md'
+                            ? 'bg-blue-600 text-white shadow-sm'
                             : isInOtherGroup
                             ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -270,56 +272,56 @@ export function ScheduleSection({
               </div>
 
               <div>
-                <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-gray-500" />
+                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                  <Clock className="w-4 h-4 mr-2 text-gray-500" />
                   Working Hours
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 flex items-center">
-                      <Sunrise className="w-4 h-4 mr-1.5 text-gray-400" />
+                      <Sunrise className="w-3 h-3 mr-1 text-gray-400" />
                       Start Time
                     </label>
                     <input
                       type="time"
                       value={group.hours.start}
                       onChange={(e) => handleHoursChange(group, 'start', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 flex items-center">
-                      <Sunset className="w-4 h-4 mr-1.5 text-gray-400" />
+                      <Sunset className="w-3 h-3 mr-1 text-gray-400" />
                       End Time
                     </label>
                     <input
                       type="time"
                       value={group.hours.end}
                       onChange={(e) => handleHoursChange(group, 'end', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
-                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center font-semibold text-gray-800 tracking-wider">
+                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-semibold text-gray-800 text-sm">
                   {formatTime(group.hours.start)} - {formatTime(group.hours.end)}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <button onClick={() => handlePresetClick(group, '9-5')} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Sun className="w-5 h-5 text-orange-400"/>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  <button onClick={() => handlePresetClick(group, '9-5')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
+                      <Sun className="w-4 h-4 text-orange-400"/>
                       <span className="text-xs font-medium">9-5</span>
                   </button>
-                  <button onClick={() => handlePresetClick(group, 'Early')} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Sunrise className="w-5 h-5 text-yellow-400"/>
+                  <button onClick={() => handlePresetClick(group, 'Early')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
+                      <Sunrise className="w-4 h-4 text-yellow-400"/>
                       <span className="text-xs font-medium">Early</span>
                   </button>
-                  <button onClick={() => handlePresetClick(group, 'Late')} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Clock className="w-5 h-5 text-sky-400"/>
+                  <button onClick={() => handlePresetClick(group, 'Late')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
+                      <Clock className="w-4 h-4 text-sky-400"/>
                       <span className="text-xs font-medium">Late</span>
                   </button>
-                  <button onClick={() => handlePresetClick(group, 'Evening')} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Moon className="w-5 h-5 text-indigo-400"/>
+                  <button onClick={() => handlePresetClick(group, 'Evening')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
+                      <Moon className="w-4 h-4 text-indigo-400"/>
                       <span className="text-xs font-medium">Evening</span>
                   </button>
               </div>
@@ -329,18 +331,18 @@ export function ScheduleSection({
 
         {/* Display empty groups */}
         {emptyGroups.map((emptyGroup) => (
-          <div key={emptyGroup.id} className="p-6 bg-white border border-gray-200/80 rounded-2xl shadow-sm relative transition-shadow hover:shadow-md">
+          <div key={emptyGroup.id} className="p-4 bg-white border border-gray-200/80 rounded-lg shadow-sm relative transition-shadow hover:shadow-md">
             <button
               onClick={() => setEmptyGroups(prev => prev.filter(g => g.id !== emptyGroup.id))}
-              className="absolute top-3 right-3 p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
+              className="absolute top-2 right-2 p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
               aria-label="Remove empty group"
             >
               <Trash2 className="w-4 h-4" />
             </button>
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div>
-                <h4 className="text-base font-semibold text-gray-800 mb-3">Working Days</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">Working Days</h4>
+                <div className="flex gap-1">
                   {workingDays.map(day => {
                     const isInOtherGroup = schedules.some(s => s.day === day);
                     return (
@@ -348,7 +350,7 @@ export function ScheduleSection({
                         key={day}
                         onClick={() => handleDayToggle(day, emptyGroup.hours, emptyGroup.id)}
                         disabled={isInOtherGroup}
-                        className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-200 ${
+                        className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
                           isInOtherGroup
                             ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -363,37 +365,37 @@ export function ScheduleSection({
               </div>
 
               <div>
-                <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-gray-500" />
+                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                  <Clock className="w-4 h-4 mr-2 text-gray-500" />
                   Working Hours
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 flex items-center">
-                      <Sunrise className="w-4 h-4 mr-1.5 text-gray-400" />
+                      <Sunrise className="w-3 h-3 mr-1 text-gray-400" />
                       Start Time
                     </label>
                     <input
                       type="time"
                       value={emptyGroup.hours.start}
                       onChange={(e) => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {...g.hours, start: e.target.value}} : g))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 flex items-center">
-                      <Sunset className="w-4 h-4 mr-1.5 text-gray-400" />
+                      <Sunset className="w-3 h-3 mr-1 text-gray-400" />
                       End Time
                     </label>
                     <input
                       type="time"
                       value={emptyGroup.hours.end}
                       onChange={(e) => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {...g.hours, end: e.target.value}} : g))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
-                <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center font-semibold text-gray-800 tracking-wider">
+                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-semibold text-gray-800 text-sm">
                   {formatTime(emptyGroup.hours.start)} - {formatTime(emptyGroup.hours.end)}
                 </div>
               </div>
@@ -421,8 +423,8 @@ export function ScheduleSection({
         ))}
 
         <div className="pt-4">
-          {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés */}
-          {!allDaysSelected && (
+          {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés ET qu'il n'y a pas de groupes vides */}
+          {!allDaysSelected && emptyGroups.length === 0 && (
             <button
               onClick={handleAddScheduleGroup}
               className="w-full flex justify-center items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
@@ -488,37 +490,40 @@ export function ScheduleSection({
             </div>
           </div>
 
-          {/* Time Zones */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-100">
-            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+          {/* Time Zone */}
+          <div className="bg-green-50 border border-green-200 rounded-xl">
+            <h4 className="text-lg font-bold text-gray-800 flex items-center px-4 pt-4 pb-2">
               <div className="w-6 h-6 mr-3 bg-green-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs font-bold">TZ</span>
               </div>
-              Time Zones
+              Time Zone
             </h4>
-            <div className="bg-white p-4 rounded-lg border border-green-200 shadow-sm">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
+            <div className="flex justify-center">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 m-0 p-0">
                 {Object.entries(MAJOR_TIMEZONES).map(([code, {name}]) => {
-                  const isSelected = data.timeZones.includes(code as TimezoneCode);
+                  const isSelected = data.timeZone === code;
                   return (
-                    <label key={code} className={`flex items-center space-x-3 p-2 rounded-lg transition-all duration-200 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-green-100 border border-green-300 shadow-sm' 
-                        : 'hover:bg-green-50'
-                    }`}>
-                      <input type="checkbox"
+                    <label
+                      key={code}
+                      className={`flex flex-col items-center justify-center border rounded-lg transition-all duration-200 cursor-pointer text-center text-xs font-medium
+                        ${isSelected ? 'bg-green-100 border-2 border-green-500 shadow' : 'bg-white border-green-200 hover:bg-green-50'}
+                        p-0 m-0 h-14 w-36`}
+                      style={{ minWidth: 0, minHeight: 0 }}
+                    >
+                      <input
+                        type="radio"
+                        name="timezone"
                         checked={isSelected}
                         onChange={() => handleTimezoneChange(code as TimezoneCode)}
-                        className="h-4 w-4 rounded border-gray-300 accent-green-600 focus:ring-green-500 focus:ring-2"
+                        className="appearance-none"
                       />
-                      <span className={`text-sm font-medium ${
-                        isSelected ? 'text-green-800' : 'text-gray-700'
-                      }`}>{name}</span>
+                      <span className="leading-tight">{name}</span>
                     </label>
                   );
                 })}
               </div>
             </div>
+            <p className="text-xs text-gray-500 mt-2 mb-2 text-center italic">Select one timezone for your schedule</p>
           </div>
 
           {/* Schedule Flexibility */}

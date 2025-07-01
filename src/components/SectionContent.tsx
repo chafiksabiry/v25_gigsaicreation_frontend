@@ -70,7 +70,8 @@ export function SectionContent({
     ...data,
     schedule: {
       schedules: cleanSchedules(data.schedule?.schedules || []),
-      timeZones: data.schedule?.timeZones || [],
+      timeZone: data.schedule?.timeZone || (Array.isArray(data.schedule?.timeZones) ? data.schedule?.timeZones[0] : ""),
+      timeZones: data.schedule?.timeZone ? [data.schedule?.timeZone] : [],
       flexibility: data.schedule?.flexibility || [],
       minimumHours: data.schedule?.minimumHours || {
         daily: undefined,
@@ -131,18 +132,18 @@ export function SectionContent({
       case "schedule":
         return (
           <ScheduleSection
-            data={initializedData.schedule ? {
-              schedules: initializedData.schedule.schedules || [],
-              timeZones: initializedData.schedule.timeZones as TimezoneCode[],
-              flexibility: initializedData.schedule.flexibility || [],
-              minimumHours: initializedData.schedule.minimumHours || {
+            data={data.schedule ? {
+              schedules: data.schedule.schedules || [],
+              timeZone: (data.schedule.timeZone || (Array.isArray(data.schedule.timeZones) ? data.schedule.timeZones[0] : "")) as TimezoneCode,
+              flexibility: data.schedule.flexibility || [],
+              minimumHours: data.schedule.minimumHours || {
                 daily: undefined,
                 weekly: undefined,
                 monthly: undefined,
               }
             } : {
               schedules: [],
-              timeZones: [] as TimezoneCode[],
+              timeZone: "" as TimezoneCode,
               flexibility: [],
               minimumHours: {
                 daily: undefined,
@@ -151,13 +152,21 @@ export function SectionContent({
               }
             }}
             onChange={(scheduleData) => onChange({
-              ...initializedData,
+              ...data,
               schedule: {
                 schedules: scheduleData.schedules,
-                timeZones: scheduleData.timeZones,
+                timeZone: scheduleData.timeZone || "",
+                timeZones: scheduleData.timeZone ? [scheduleData.timeZone] : [],
                 flexibility: scheduleData.flexibility,
                 minimumHours: scheduleData.minimumHours,
               },
+              availability: {
+                ...data.availability,
+                schedule: scheduleData.schedules,
+                timeZone: scheduleData.timeZone || "",
+                flexibility: scheduleData.flexibility,
+                minimumHours: scheduleData.minimumHours,
+              }
             })}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
@@ -324,6 +333,9 @@ export function SectionContent({
               onSectionChange?.('docs');
             }}
             skipValidation={false}
+            onSubmit={async () => {
+              console.log('Submitting gig data:', initializedData);
+            }}
           />
         );
 

@@ -45,7 +45,12 @@ type GigFormData = {
       };
     }[];
     timeZones: string[];
-    flexibility: string;
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
   };
   commission: {
     base: string;
@@ -296,8 +301,8 @@ export function GigForm() {
               }
             }
           ],
-          timeZones: data.schedule?.timeZones || [],
-          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
+          timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
           minimumHours: {
             daily: undefined,
             weekly: undefined,
@@ -314,8 +319,8 @@ export function GigForm() {
               }
             }
           ],
-          timeZones: data.schedule?.timeZones || [],
-          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
+          timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
           minimumHours: {
             daily: undefined,
             weekly: undefined,

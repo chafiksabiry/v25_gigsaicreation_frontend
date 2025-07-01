@@ -52,7 +52,7 @@ const initialGigData: GigData = {
         end: "18:00"
       }
     }],
-    timeZones: [],
+    timeZones: "",
     flexibility: [],
     minimumHours: {
       daily: 8,
@@ -199,10 +199,43 @@ export function GigCreator({ children }: GigCreatorProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleGigDataChange = (newData: GigData) => {
-    const updatedData = {
-      ...newData,
-      destinationZones: newData.destinationZones || []
-    };
+    // Synchroniser les données entre schedule et availability
+    let updatedData = { ...newData, destinationZones: newData.destinationZones || [] };
+    
+    // Si les données de schedule ont changé, synchroniser avec availability
+    if (newData.schedule && newData.schedule.schedules) {
+      updatedData = {
+        ...updatedData,
+        availability: {
+          ...updatedData.availability,
+          schedule: newData.schedule.schedules.map(schedule => ({
+            day: schedule.day,
+            hours: schedule.hours
+          })),
+          timeZones: newData.schedule.timeZones || "",
+          flexibility: newData.schedule.flexibility || [],
+          minimumHours: newData.schedule.minimumHours || {}
+        }
+      };
+    }
+    
+    // Si les données de availability ont changé, synchroniser avec schedule
+    if (newData.availability && newData.availability.schedule) {
+      updatedData = {
+        ...updatedData,
+        schedule: {
+          ...updatedData.schedule,
+          schedules: newData.availability.schedule.map(schedule => ({
+            day: schedule.day,
+            hours: schedule.hours
+          })),
+          timeZones: newData.availability.timeZones || ""
+          flexibility: newData.availability.flexibility || [],
+          minimumHours: newData.availability.minimumHours || {}
+        }
+      };
+    }
+    
     setGigData(updatedData);
     const validation = validateGigData(updatedData);
     setValidationErrors(validation.errors);
@@ -319,7 +352,7 @@ export function GigCreator({ children }: GigCreatorProps) {
               }
             }
           ],
-          timeZones: gigData.availability?.timeZones || [],
+          timeZones: gigData.availability?.timeZones[0] || "",
           flexibility: gigData.availability?.flexibility || [],
           minimumHours: gigData.availability?.minimumHours || {
             daily: 0,
@@ -337,7 +370,7 @@ export function GigCreator({ children }: GigCreatorProps) {
               }
             }
           ],
-          timeZones: gigData.schedule?.timeZones || [],
+          timeZones: gigData.schedule?.timeZones || "",
           flexibility: gigData.schedule?.flexibility || [],
           minimumHours: {
             daily: gigData.schedule?.minimumHours?.daily || 0,

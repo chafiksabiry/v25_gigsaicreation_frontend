@@ -71,6 +71,7 @@ const PrompAI: React.FC = () => {
         }
       }],
       timeZones: [],
+      timeZone: "",
       flexibility: [],
       minimumHours: {},
     },

@@ -65,7 +65,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
           }
         }
       ],
-      timeZones: gig.schedule_timezone || [],
+      timeZones: gig.schedule_timezone || "",
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
         daily: gig.minimum_hours_daily,
@@ -83,7 +83,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
           }
         }
       ],
-      timeZones: gig.schedule_timezone || [],
+      timeZones: gig.schedule_timezone || "",
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
         daily: gig.minimum_hours_daily,

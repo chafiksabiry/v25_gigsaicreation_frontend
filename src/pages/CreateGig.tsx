@@ -54,7 +54,7 @@ export function CreateGig() {
                 <ScheduleSection
                   data={data.schedule ? {
                     schedules: data.schedule.schedules || [],
-                    timeZones: data.schedule.timeZones as TimezoneCode[],
+                    timeZone: (data.schedule.timeZone || (Array.isArray(data.schedule.timeZones) ? data.schedule.timeZones[0] : "")) as TimezoneCode,
                     flexibility: data.schedule.flexibility || [],
                     minimumHours: data.schedule.minimumHours || {
                       daily: undefined,
@@ -63,7 +63,7 @@ export function CreateGig() {
                     }
                   } : {
                     schedules: [],
-                    timeZones: [] as TimezoneCode[],
+                    timeZone: "" as TimezoneCode,
                     flexibility: [],
                     minimumHours: {
                       daily: undefined,
@@ -75,7 +75,8 @@ export function CreateGig() {
                     ...data,
                     schedule: {
                       schedules: scheduleData.schedules,
-                      timeZones: scheduleData.timeZones,
+                      timeZone: scheduleData.timeZone,
+                      timeZones: scheduleData.timeZone ? [scheduleData.timeZone] : [],
                       flexibility: scheduleData.flexibility,
                       minimumHours: scheduleData.minimumHours,
                     },

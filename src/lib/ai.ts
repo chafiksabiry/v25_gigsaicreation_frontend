@@ -74,7 +74,7 @@ Return ONLY a valid JSON object with the following structure:
     "level": string (MUST be one of the available seniority levels),
     "yearsExperience": string
   },
-  "timeZone": string (MUST be one of the available time zones),
+  "timeZones": string[] (MUST be an array of time zones from the available options),
   "scheduleFlexibility": string[] (MUST be from available options),
   "destinationZone": string (MUST be one of the available zones),
   "skills": {
@@ -93,7 +93,7 @@ CRITICAL:
 - Each line should be a complete, meaningful sentence
 - The seniority level MUST exactly match one of the provided options
 - The category MUST be EXACTLY one of the provided options, no variations or new categories allowed
-- The time zone MUST be one of the provided options
+- The time zones MUST be an array of time zones from the provided options (we will use the first element as primary)
 - The schedule flexibility options MUST be from the provided list
 - The destination zone MUST be one of the provided options`
           },
@@ -125,9 +125,10 @@ CRITICAL:
           throw new Error('Invalid seniority level suggestion');
         }
 
-        // Validate time zone
-        if (!predefinedOptions.basic.timeZones.includes(parsed.timeZone)) {
-          throw new Error('Invalid time zone suggestion');
+        // Validate time zones
+        if (!Array.isArray(parsed.timeZones) || !parsed.timeZones.every((tz: string) => 
+          predefinedOptions.basic.timeZones.includes(tz))) {
+          throw new Error('Invalid time zones suggestion');
         }
 
         // Validate schedule flexibility
@@ -1158,28 +1159,6 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const endTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.end || '17:00');
 
   // Function to expand day ranges into individual days
-  const expandDayRange = (dayRange: string): string[] => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
-    // Check if the input contains any range indicators or multiple days
-    if (dayRange.toLowerCase().includes('to') || 
-        dayRange.includes('-') || 
-        dayRange.includes(',') || 
-        dayRange.includes('through') ||
-        dayRange.includes('&') ||
-        dayRange.includes('and')) {
-      throw new Error('Only single days are allowed. Please specify a single day (e.g., "Monday", "Tuesday", etc.).');
-    }
-    
-    // Validate that it's a valid day
-    const normalizedDay = dayRange.trim();
-    if (!days.includes(normalizedDay)) {
-      throw new Error(`Invalid day: ${dayRange}. Must be one of: ${days.join(', ')}`);
-    }
-    
-    // Return single day
-    return [normalizedDay];
-  };
 
   // Generate schedule based on input or default to weekdays
   let scheduleDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -1448,6 +1427,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     availability: {
       schedule: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
+      timeZone: generatedData.schedule?.timeZones?.[0] || '',
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
@@ -1458,6 +1438,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     schedule: {
       schedules: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
+      timeZone: generatedData.schedule?.timeZones?.[0] || '',
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
