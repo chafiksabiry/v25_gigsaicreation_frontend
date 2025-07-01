@@ -534,7 +534,7 @@ export function ScheduleSection({
               </div>
               Schedule Flexibility
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 m-0 p-0">
               {flexibilityOptions.map((option) => {
                 const isSelected = data.flexibility.includes(option);
                 return (
