@@ -45,7 +45,15 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: gig.schedule?.timeZones[0],
+          timeZones: (() => {
+            const firstTimezone = gig.schedule?.timeZones?.[0];
+            if (typeof firstTimezone === 'string') {
+              return [firstTimezone];
+            } else if (firstTimezone && typeof firstTimezone === 'object' && 'zoneName' in firstTimezone) {
+              return [firstTimezone.zoneName];
+            }
+            return [];
+          })(),
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {
             daily: 0,

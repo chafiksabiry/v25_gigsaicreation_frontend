@@ -31,7 +31,6 @@ interface SkillsSectionProps {
   errors: { [key: string]: string[] };
   onNext?: () => void;
   onPrevious?: () => void;
-  onBackToSuggestions?: () => void;
 }
 
 // Language levels from Suggestions.tsx
@@ -185,7 +184,7 @@ const SOFT_SKILLS = [
   "Willingness to Learn",
 ];
 
-export function SkillsSection({ data, onChange, errors, onNext, onPrevious, onBackToSuggestions }: SkillsSectionProps) {
+export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: SkillsSectionProps) {
   // Ensure data is never undefined and all properties are initialized
   const safeData = {
     languages: (data?.languages || []),
@@ -645,126 +644,123 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious, onBa
   };
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
-      <InfoText>
-        Define all required skills for the role, including languages, technical tools, and soft skills.
-        Be specific about proficiency levels where applicable.
-      </InfoText>
+    <div className="w-full bg-white p-0">
+      <div className="space-y-8">
+        <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
+          <InfoText>
+            Define all required skills for the role, including languages, technical tools, and soft skills.
+            Be specific about proficiency levels where applicable.
+          </InfoText>
 
-      <div className="grid grid-cols-1 gap-8">
-        {/* Languages */}
-        {renderSkillSection(
-          'languages',
-          'Languages',
-          'Specify required languages and proficiency levels',
-          <Languages className="w-5 h-5 text-blue-600" />,
-          languageOptions,
-          'blue',
-          'blue',
-          true
-        )}
-
-        {/* Professional Skills */}
-        {renderSkillSection(
-          'professional',
-          'Professional Skills',
-          'Add required professional and industry-specific skills',
-          <BookOpen className="w-5 h-5 text-purple-600" />,
-          PROFESSIONAL_SKILLS,
-          'purple',
-          'purple'
-        )}
-
-        {/* Technical Skills */}
-        {renderSkillSection(
-          'technical',
-          'Technical Skills',
-          'Specify required technical tools and software proficiency',
-          <Laptop className="w-5 h-5 text-emerald-600" />,
-          TECHNICAL_SKILLS,
-          'emerald',
-          'emerald'
-        )}
-
-        {/* Soft Skills */}
-        {renderSkillSection(
-          'soft',
-          'Soft Skills',
-          'Add interpersonal and communication skills',
-          <Users className="w-5 h-5 text-orange-600" />,
-          SOFT_SKILLS,
-          'orange',
-          'orange'
-        )}
-      </div>
-
-      {/* Skill Summary */}
-      {(safeData.languages.length > 0 || safeData.professional.length > 0 || 
-        safeData.technical.length > 0 || safeData.soft.length > 0) && (
-        <div className="mt-8 p-6 bg-white rounded-xl shadow-sm border border-slate-100">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Skills Summary</h4>
-          <div className="space-y-3">
-            {safeData.languages.length > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-blue-50/50 rounded-lg">
-                <Languages className="w-4 h-4 text-blue-600" />
-                <span className="text-sm text-gray-600">
-                  {safeData.languages.length} language{safeData.languages.length > 1 ? 's' : ''} required
-                </span>
-              </div>
+          <div className="grid grid-cols-1 gap-8">
+            {/* Languages */}
+            {renderSkillSection(
+              'languages',
+              'Languages',
+              'Specify required languages and proficiency levels',
+              <Languages className="w-5 h-5 text-blue-600" />,
+              languageOptions,
+              'blue',
+              'blue',
+              true
             )}
-            {safeData.professional.length > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-lg">
-                <BookOpen className="w-4 h-4 text-purple-600" />
-                <span className="text-sm text-gray-600">
-                  {safeData.professional.length} professional skill{safeData.professional.length > 1 ? 's' : ''}
-                </span>
-              </div>
+
+            {/* Professional Skills */}
+            {renderSkillSection(
+              'professional',
+              'Professional Skills',
+              'Add required professional and industry-specific skills',
+              <BookOpen className="w-5 h-5 text-purple-600" />,
+              PROFESSIONAL_SKILLS,
+              'purple',
+              'purple'
             )}
-            {safeData.technical.length > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-emerald-50/50 rounded-lg">
-                <Laptop className="w-4 h-4 text-emerald-600" />
-                <span className="text-sm text-gray-600">
-                  {safeData.technical.length} technical skill{safeData.technical.length > 1 ? 's' : ''}
-                </span>
-              </div>
+
+            {/* Technical Skills */}
+            {renderSkillSection(
+              'technical',
+              'Technical Skills',
+              'Specify required technical tools and software proficiency',
+              <Laptop className="w-5 h-5 text-emerald-600" />,
+              TECHNICAL_SKILLS,
+              'emerald',
+              'emerald'
             )}
-            {safeData.soft.length > 0 && (
-              <div className="flex items-center gap-2 p-2 bg-orange-50/50 rounded-lg">
-                <Users className="w-4 h-4 text-orange-600" />
-                <span className="text-sm text-gray-600">
-                  {safeData.soft.length} soft skill{safeData.soft.length > 1 ? 's' : ''}
-                </span>
-              </div>
+
+            {/* Soft Skills */}
+            {renderSkillSection(
+              'soft',
+              'Soft Skills',
+              'Add interpersonal and communication skills',
+              <Users className="w-5 h-5 text-orange-600" />,
+              SOFT_SKILLS,
+              'orange',
+              'orange'
             )}
           </div>
-        </div>
-      )}
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onPrevious}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Previous
-          </button>
-          {onBackToSuggestions && (
-            <button onClick={onBackToSuggestions}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-200 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-              Retour aux suggestions
-            </button>
+          {/* Skill Summary */}
+          {(safeData.languages.length > 0 || safeData.professional.length > 0 || 
+            safeData.technical.length > 0 || safeData.soft.length > 0) && (
+            <div className="mt-8 p-6 bg-white rounded-xl shadow-sm border border-slate-100">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Skills Summary</h4>
+              <div className="space-y-3">
+                {safeData.languages.length > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50/50 rounded-lg">
+                    <Languages className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm text-gray-600">
+                      {safeData.languages.length} language{safeData.languages.length > 1 ? 's' : ''} required
+                    </span>
+                  </div>
+                )}
+                {safeData.professional.length > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-purple-50/50 rounded-lg">
+                    <BookOpen className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm text-gray-600">
+                      {safeData.professional.length} professional skill{safeData.professional.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+                {safeData.technical.length > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-emerald-50/50 rounded-lg">
+                    <Laptop className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm text-gray-600">
+                      {safeData.technical.length} technical skill{safeData.technical.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+                {safeData.soft.length > 0 && (
+                  <div className="flex items-center gap-2 p-2 bg-orange-50/50 rounded-lg">
+                    <Users className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm text-gray-600">
+                      {safeData.soft.length} soft skill{safeData.soft.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onPrevious}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Previous
+              </button>
+            </div>
+            <button
+              onClick={onNext}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Next
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <button
-          onClick={onNext}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Next
-          <ArrowRight className="w-5 h-5" />
-        </button>
       </div>
     </div>
   );

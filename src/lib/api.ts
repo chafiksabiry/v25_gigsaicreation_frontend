@@ -165,7 +165,13 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     // Format availability data
     const formattedAvailability = {
       ...fixedGigData.availability,
-      timeZone: fixedGigData.availability.timeZones?.[0] || 'UTC', // Use first timezone as default
+      time_zone: (() => {
+        const firstTimezone = fixedGigData.availability.timeZones?.[0];
+        if (typeof firstTimezone === 'string') {
+          return firstTimezone;
+        }
+        return fixedGigData.availability.time_zone || 'UTC';
+      })(),
       schedule: fixedGigData.availability.schedule.map(schedule => ({
         day: schedule.day, // Use 'day' (singular) instead of converting to array
         hours: schedule.hours
@@ -233,5 +239,57 @@ export async function getGig(gigId: string | null) {
   } catch (error) {
     console.error('Error fetching gig:', error);
     return { data: null, error };
+  }
+}
+
+export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error }> {
+  try {
+    console.log('[fetchAllTimezones] Fetching all timezones from API...');
+    const response = await fetch('http://localhost:5002/api/timezones');
+    console.log('[fetchAllTimezones] Response received:', response);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch timezones: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('[fetchAllTimezones] JSON parsed:', result);
+    
+    if (!result.success) {
+      throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
+    }
+    
+    console.log('[fetchAllTimezones] Returning data:', result.data);
+    return { data: result.data || [], error: undefined };
+  } catch (error) {
+    console.error('Error fetching timezones:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
+    };
+  }
+}
+
+export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
+  try {
+    const response = await fetch(`http://localhost:5002/api/timezones/country/${countryCode}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch timezones for country ${countryCode}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
+    }
+    
+    return { data: result.data || [], error: undefined };
+  } catch (error) {
+    console.error('Error fetching timezones:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
+    };
   }
 }

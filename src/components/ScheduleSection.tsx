@@ -10,10 +10,33 @@ import {
   ArrowLeft,
   ArrowRight,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { DaySchedule, GroupedSchedule, groupSchedules as groupSchedulesUtil } from "../lib/scheduleUtils";
 import { TimezoneCode, MAJOR_TIMEZONES } from "../lib/ai";
+import { fetchAllTimezones, fetchTimezonesByCountry } from "../lib/api";
 
+// Timezone data type with _id
+type TimezoneData = {
+  _id: string;
+  countryCode: string;
+  countryName: string;
+  zoneName: string;
+  gmtOffset: number;
+  lastUpdated?: string;
+  __v?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+// Processed timezone type for UI
+type ProcessedTimezone = {
+  _id: string;
+  name: string;
+  offset: number;
+  abbreviation: string;
+  countryName: string;
+};
 
 interface ScheduleSectionProps {
   data: {
@@ -23,13 +46,13 @@ interface ScheduleSectionProps {
       weekly?: number;
       monthly?: number;
     };
-    timeZone?: TimezoneCode;
+    time_zone?: string;
     flexibility: string[];
   };
+  destination_zone?: string;
   onChange: (data: ScheduleSectionProps['data']) => void;
   onNext?: () => void;
   onPrevious?: () => void;
-  onBackToSuggestions?: () => void;
 }
 
 const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -69,19 +92,111 @@ const getUnusedDay = (schedules: DaySchedule[]): string | undefined => {
 
 export function ScheduleSection({
   data,
+  destination_zone,
   onChange,
   onNext,
-  onPrevious,
-  onBackToSuggestions
+  onPrevious
 }: ScheduleSectionProps) {
   // Use flat schedules as source of truth
   const [schedules, setSchedules] = useState<DaySchedule[]>(data.schedules);
   // Track empty groups that haven't been populated yet
   const [emptyGroups, setEmptyGroups] = useState<Array<{id: string, hours: {start: string, end: string}}>>([]);
+  
+  // Timezone states
+  const [allTimezones, setAllTimezones] = useState<TimezoneData[]>([]);
+  const [availableTimezones, setAvailableTimezones] = useState<ProcessedTimezone[]>([]);
+  const [timezoneLoading, setTimezoneLoading] = useState(false);
+  const [timezonesLoaded, setTimezonesLoaded] = useState(false);
+  const [timezoneSearch, setTimezoneSearch] = useState("");
+  const [showAllTimezones, setShowAllTimezones] = useState(false);
 
   useEffect(() => {
     onChange({ ...data, schedules });
   }, [schedules]);
+
+  // Fetch timezones based on destination_zone or all timezones
+  useEffect(() => {
+    const fetchTimezones = async () => {
+      if (timezonesLoaded) return;
+      
+      setTimezoneLoading(true);
+      try {
+        let timezoneData;
+        
+        // If we have a destination_zone, fetch timezones for that country
+        if (destination_zone && destination_zone.length === 2) {
+          console.log('🕐 Fetching timezones for country:', destination_zone);
+          const { data, error } = await fetchTimezonesByCountry(destination_zone);
+          if (!error && data.length > 0) {
+            console.log('✅ Fetched', data.length, 'timezones for', destination_zone);
+            timezoneData = data;
+          } else {
+            console.log('⚠️ No timezones found for country, fetching all timezones');
+            const { data: allData, error: allError } = await fetchAllTimezones();
+            if (!allError && allData.length > 0) {
+              timezoneData = allData;
+            }
+          }
+        } else {
+          // Fetch all timezones if no destination_zone
+          console.log('🌍 Fetching all timezones');
+          const { data, error } = await fetchAllTimezones();
+          if (!error && data.length > 0) {
+            timezoneData = data;
+          } else {
+            console.error('Failed to fetch timezones:', error);
+          }
+        }
+        
+        if (timezoneData && timezoneData.length > 0) {
+          setAllTimezones(timezoneData);
+          setTimezonesLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error fetching timezones:', error);
+      } finally {
+        setTimezoneLoading(false);
+      }
+    };
+
+    fetchTimezones();
+  }, [timezonesLoaded, destination_zone]);
+
+  // Process all timezones when loaded
+  useEffect(() => {
+    if (!timezonesLoaded) {
+      return;
+    }
+
+    setTimezoneLoading(true);
+    
+    try {
+      // Process all timezones from the API
+      const processedTimezones = allTimezones
+        .map(tz => ({
+          _id: tz._id,
+          name: tz.zoneName,
+          offset: tz.gmtOffset / 3600, // Convert seconds to hours
+          abbreviation: tz.zoneName.split('/').pop() || '',
+          countryName: tz.countryName
+        }))
+        .sort((a, b) => a.offset - b.offset);
+
+      setAvailableTimezones(processedTimezones);
+    } catch (error) {
+      console.error('Error processing timezones:', error);
+      // Fallback to default timezones if processing fails
+      setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+        _id: `default_${code}`,
+        name,
+        offset,
+        abbreviation: code.split('(')[1]?.split(')')[0] || '',
+        countryName: ''
+      })));
+    } finally {
+      setTimezoneLoading(false);
+    }
+  }, [allTimezones, timezonesLoaded]);
 
   // Group for display
   const groupedSchedules = groupSchedulesByHours(schedules);
@@ -167,11 +282,29 @@ export function ScheduleSection({
     );
   };
 
-  const handleTimezoneChange = (tz: TimezoneCode) => {
-    // Allow only single selection - replace the entire timezone with the selected one
-    const newTimezone = data.timeZone === tz ? undefined : tz;
-    onChange({ ...data, timeZone: newTimezone });
+  const handleTimezoneChange = (value: string | React.ChangeEvent<HTMLSelectElement>) => {
+    const timezoneValue = typeof value === 'string' ? value : value.target.value;
+    
+    if (timezoneValue) {
+      // Find the selected timezone to get the _id
+      const selectedTimezone = filteredTimezones.find(tz => tz._id === timezoneValue);
+      if (selectedTimezone) {
+        onChange({ ...data, time_zone: selectedTimezone._id });
+      } else {
+        onChange({ ...data, time_zone: timezoneValue }); // Fallback to string
+      }
+    } else {
+      onChange({ ...data, time_zone: undefined });
+    }
   };
+
+  // Filter timezones based on search
+  const filteredTimezones = availableTimezones.filter(tz =>
+    tz.name && tz._id && (
+      tz.name.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
+      tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
+    )
+  );
 
   const handleFlexibilityChange = (option: string) => {
     const newFlexibility = data.flexibility.includes(option)
@@ -227,15 +360,63 @@ export function ScheduleSection({
     setSchedules((prev) => prev.filter((s) => !group.days.includes(s.day)));
   };
 
-  // Sécurise timeZone pour l'affichage
-  const timeZone = data.timeZone;
+  // Sécurise time_zone pour l'affichage
+  const timeZone = data.time_zone;
+
+  // Helper function to get country name from country code
+  const getCountryName = (countryCode: string): string => {
+    const countryNames: { [key: string]: string } = {
+      'US': 'United States',
+      'FR': 'France',
+      'GB': 'United Kingdom',
+      'DE': 'Germany',
+      'CA': 'Canada',
+      'AU': 'Australia',
+      'JP': 'Japan',
+      'IN': 'India',
+      'BR': 'Brazil',
+      'MX': 'Mexico',
+      'ES': 'Spain',
+      'IT': 'Italy',
+      'NL': 'Netherlands',
+      'SE': 'Sweden',
+      'NO': 'Norway',
+      'DK': 'Denmark',
+      'FI': 'Finland',
+      'CH': 'Switzerland',
+      'AT': 'Austria',
+      'BE': 'Belgium',
+      'PT': 'Portugal',
+      'IE': 'Ireland',
+      'NZ': 'New Zealand',
+      'SG': 'Singapore',
+      'KR': 'South Korea',
+      'CN': 'China',
+      'RU': 'Russia',
+      'ZA': 'South Africa',
+      'AR': 'Argentina',
+      'CL': 'Chile',
+      'CO': 'Colombia',
+      'PE': 'Peru',
+      'VE': 'Venezuela',
+      'UY': 'Uruguay',
+      'PY': 'Paraguay',
+      'BO': 'Bolivia',
+      'EC': 'Ecuador',
+      'GY': 'Guyana',
+      'SR': 'Suriname',
+      'GF': 'French Guiana',
+      'TN': 'Tunisia',
+    };
+    return countryNames[countryCode] || countryCode;
+  };
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-4 sm:p-6">
-      <div className="space-y-6">
+    <div className="w-full bg-white p-0">
+      <div className="space-y-8">
         {/* Display normal groups */}
         {groupedSchedules.map((group, index) => (
-          <div key={index} className="p-4 bg-white border border-gray-200/80 rounded-lg shadow-sm relative transition-shadow hover:shadow-md">
+          <div key={index} className="p-6 bg-white border border-gray-200/80 rounded-xl shadow-sm relative transition-shadow hover:shadow-md">
             <button
               onClick={() => handleRemoveScheduleGroup(group)}
               className="absolute top-2 right-2 p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
@@ -330,7 +511,7 @@ export function ScheduleSection({
 
         {/* Display empty groups */}
         {emptyGroups.map((emptyGroup) => (
-          <div key={emptyGroup.id} className="p-4 bg-white border border-gray-200/80 rounded-lg shadow-sm relative transition-shadow hover:shadow-md">
+          <div key={emptyGroup.id} className="p-6 bg-white border border-gray-200/80 rounded-xl shadow-sm relative transition-shadow hover:shadow-md">
             <button
               onClick={() => setEmptyGroups(prev => prev.filter(g => g.id !== emptyGroup.id))}
               className="absolute top-2 right-2 p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
@@ -489,39 +670,84 @@ export function ScheduleSection({
           </div>
 
           {/* Time Zone */}
-          <div className="bg-green-50 border border-green-200 rounded-xl">
-            <h4 className="text-lg font-bold text-gray-800 flex items-center px-4 pt-4 pb-2">
-              <div className="w-6 h-6 mr-3 bg-green-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">TZ</span>
+          <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
+                <div>
+                  <h4 className="text-lg font-bold text-green-900">Time Zone</h4>
+                  <p className="text-sm text-green-700">
+                    {destination_zone && !showAllTimezones 
+                      ? `Based on destination: ${getCountryName(destination_zone)} (${destination_zone})`
+                      : showAllTimezones 
+                        ? 'Showing all available timezones' 
+                        : 'Select from available timezones'
+                    }
+                  </p>
+                </div>
               </div>
-              Time Zone
-            </h4>
-            <div className="flex justify-center">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 m-0 p-0">
-                {Object.entries(MAJOR_TIMEZONES).map(([code, {name}]) => {
-                  const isSelected = data.timeZone === code;
-                  return (
-                    <label
-                      key={code}
-                      className={`flex flex-col items-center justify-center border rounded-lg transition-all duration-200 cursor-pointer text-center text-xs font-medium
-                        ${isSelected ? 'bg-green-100 border-2 border-green-500 shadow' : 'bg-white border-green-200 hover:bg-green-50'}
-                        p-0 m-0 h-14 w-36`}
-                      style={{ minWidth: 0, minHeight: 0 }}
-                    >
-                      <input
-                        type="radio"
-                        name="timezone"
-                        checked={isSelected}
-                        onChange={() => handleTimezoneChange(code as TimezoneCode)}
-                        className="appearance-none"
-                      />
-                      <span className="leading-tight">{name}</span>
-                    </label>
-                  );
-                })}
+              <div className="flex items-center space-x-3">
+                {timezoneLoading && (
+                  <div className="flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-green-600" />
+                    <span className="text-sm text-green-600 ml-1">Loading...</span>
+                  </div>
+                )}
+                {destination_zone && (
+                  <button
+                    onClick={() => setShowAllTimezones(!showAllTimezones)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      showAllTimezones
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
+                  </button>
+                )}
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2 mb-2 text-center italic">Select one timezone for your schedule</p>
+            
+            {/* Search input */}
+            {availableTimezones.length > 0 && (
+              <div className="mb-3">
+                <input
+                  type="text"
+                  placeholder="Search timezones by name, country, or abbreviation..."
+                  value={timezoneSearch}
+                  onChange={(e) => setTimezoneSearch(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+              </div>
+            )}
+            
+            <select
+              className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+              value={data.time_zone || ''}
+              onChange={handleTimezoneChange}
+              disabled={timezoneLoading}
+            >
+              <option value="">Select a timezone...</option>
+              {filteredTimezones.length > 0 ? (
+                filteredTimezones.map((tz) => (
+                  <option key={tz._id} value={tz._id}>
+                    {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
+                  </option>
+                ))
+              ) : timezoneSearch ? (
+                <option value="" disabled>No timezones found matching "{timezoneSearch}"</option>
+              ) : (
+                <option value="" disabled>Loading timezones...</option>
+              )}
+            </select>
+            <p className="text-xs text-gray-500 italic text-center mt-2">
+              {availableTimezones.length > 0 
+                ? timezoneSearch 
+                  ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${!showAllTimezones && destination_zone ? ` for ${getCountryName(destination_zone)}` : ''}`
+                  : `${availableTimezones.length} timezones available${!showAllTimezones && destination_zone ? ` for ${getCountryName(destination_zone)}` : ' worldwide'}`
+                : 'Loading timezones from API...'
+              }
+            </p>
           </div>
 
           {/* Schedule Flexibility */}
@@ -562,24 +788,16 @@ export function ScheduleSection({
 
         </div>
       </div>
-      
-      <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-200">
+      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
         <div className="flex items-center gap-3">
           <button onClick={onPrevious} disabled={!onPrevious}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm transition-colors">
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             <ArrowLeft className="w-5 h-5" />
             Previous
           </button>
-          {onBackToSuggestions && (
-            <button onClick={onBackToSuggestions}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-200 transition-colors font-semibold text-sm">
-              <ArrowLeft className="w-5 h-5" />
-              Retour aux suggestions
-            </button>
-          )}
         </div>
         <button onClick={onNext}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-semibold text-sm transition-colors shadow-sm hover:shadow-md">
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
           Next
           <ArrowRight className="w-5 h-5" />
         </button>

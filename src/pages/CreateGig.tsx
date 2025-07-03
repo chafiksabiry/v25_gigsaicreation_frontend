@@ -54,7 +54,18 @@ export function CreateGig() {
                 <ScheduleSection
                   data={data.schedule ? {
                     schedules: data.schedule.schedules || [],
-                    timeZone: (data.schedule.timeZone || (Array.isArray(data.schedule.timeZones) ? data.schedule.timeZones[0] : "")) as TimezoneCode,
+                    time_zone: (() => {
+                      if (data.schedule.time_zone) {
+                        return data.schedule.time_zone;
+                      }
+                      if (Array.isArray(data.schedule.timeZones) && data.schedule.timeZones.length > 0) {
+                        const firstTimezone = data.schedule.timeZones[0];
+                        if (typeof firstTimezone === 'string') {
+                          return firstTimezone;
+                        }
+                      }
+                      return "";
+                    })(),
                     flexibility: data.schedule.flexibility || [],
                     minimumHours: data.schedule.minimumHours || {
                       daily: undefined,
@@ -63,7 +74,7 @@ export function CreateGig() {
                     }
                   } : {
                     schedules: [],
-                    timeZone: "" as TimezoneCode,
+                    time_zone: "",
                     flexibility: [],
                     minimumHours: {
                       daily: undefined,
@@ -71,12 +82,13 @@ export function CreateGig() {
                       monthly: undefined,
                     }
                   }}
+                  destination_zone={data.destination_zone}
                   onChange={(scheduleData) => onChange({
                     ...data,
                     schedule: {
                       schedules: scheduleData.schedules,
-                      timeZone: scheduleData.timeZone,
-                      timeZones: scheduleData.timeZone ? [scheduleData.timeZone] : [],
+                      time_zone: scheduleData.time_zone,
+                      timeZones: scheduleData.time_zone ? [scheduleData.time_zone] : [],
                       flexibility: scheduleData.flexibility,
                       minimumHours: scheduleData.minimumHours,
                     },

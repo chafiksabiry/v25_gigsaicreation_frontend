@@ -1,25 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { InfoText } from './InfoText';
-import { SectionGuidance } from './SectionGuidance';
 import { predefinedOptions } from '../lib/guidance';
 import {
-  AlertCircle,
   Brain,
-  Save,
   Briefcase,
-  FileText,
   Globe2,
   Target,
   ArrowRight,
   ArrowLeft,
   GraduationCap,
   CheckCircle,
-  Sparkles,
 } from "lucide-react";
 import { GigData } from '../types';
 import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
+import { countryToAlpha2, alpha2ToCountry } from '../lib/countryCodes';
 
 // Enregistrement des langues pour la traduction des noms de pays
 i18n.registerLocale(fr);
@@ -46,7 +42,6 @@ interface BasicSectionProps {
   onSave?: () => void;
   onAIAssist?: () => void;
   onSectionChange?: (sectionId: string) => void;
-  onBackToSuggestions?: () => void;
   currentSection: string;
 }
 
@@ -59,14 +54,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onChange, 
   errors, 
   onPrevious, 
-  onNext,
-  onSave,
-  onAIAssist,
-  onBackToSuggestions,
+  onNext
 }) => {
-  // États locaux pour la saisie de ville
-  const [searchTerm, setSearchTerm] = useState('');
-
   useEffect(() => {
     if (!data.destinationZones) {
       onChange({
@@ -80,11 +69,19 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   }, [data]);
 
   /**
+   * Obtient le nom du pays à partir du code alpha-2
+   * @param {string} alpha2Code - Le code alpha-2 du pays
+   * @returns {string} - Le nom du pays
+   */
+  const getCountryName = (alpha2Code: string): string => {
+    return i18n.getName(alpha2Code, 'en') || alpha2ToCountry[alpha2Code] || alpha2Code;
+  };
+
+  /**
    * Gère la sélection d'un pays
    * @param {string} countryCode - Le code du pays sélectionné
    */
   const handleCountrySelect = (countryCode: string) => {
-    
     if (!countryCode) {
       // Si aucun pays n'est sélectionné, on met à jour uniquement destination_zone
       onChange({
@@ -101,23 +98,32 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       return;
     }
     
-    // Mettre à jour uniquement destination_zone sans toucher à destinationZones
+    // Mettre à jour destination_zone et s'assurer que le pays sélectionné est dans destinationZones
+    const updatedDestinationZones = data.destinationZones || [];
+    if (!updatedDestinationZones.includes(countryCode)) {
+      // Ajouter le nouveau pays au début de la liste
+      updatedDestinationZones.unshift(countryCode);
+    }
+    
     onChange({
       ...data,
-      destination_zone: countryCode
+      destination_zone: countryCode,
+      destinationZones: updatedDestinationZones
     });
   };
 
   /**
    * Récupère la liste des pays par zone géographique
+   * Basé sur la logique de Suggestions.tsx avec les zones principales
    * @param {string} zone - La zone géographique
    * @returns {Array} - Liste des pays de la zone
    */
   const getCountriesByZone = (zone: string) => {
+    // Utiliser les mêmes zones que dans Suggestions.tsx
     const zoneCountries: { [key: string]: string[] } = {
       'Europe': ['FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'CH', 'AT', 'PT', 'GR', 'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'SK', 'SI', 'DK', 'FI', 'SE', 'NO', 'IE', 'GB', 'EE', 'LV', 'LT', 'LU', 'MT', 'CY'],
       'Amérique du Nord': ['US', 'CA', 'MX'],
-      'Amérique du Sud': ['BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GY', 'SR', 'TT', 'JM', 'HT', 'DO', 'CU', 'HN', 'NI', 'CR', 'PA', 'SV', 'GT', 'BZ'],
+      'Amérique du Sud': ['BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GY', 'SR'],
       'Asie': ['CN', 'JP', 'KR', 'IN', 'ID', 'TH', 'VN', 'MY', 'PH', 'SG', 'HK', 'TW'],
       'Afrique': ['ZA', 'EG', 'MA', 'NG', 'KE', 'GH', 'SN', 'TN', 'DZ', 'CI', 'AO', 'TZ', 'ZM', 'ZW', 'NA', 'MG', 'MU', 'MR', 'MZ', 'NE', 'RW', 'SC', 'SL', 'SO', 'SD', 'SZ', 'TG', 'UG'],
       'Océanie': ['AU', 'NZ'],
@@ -126,7 +132,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
     return (zoneCountries[zone] || [])
       .map(code => {
-        const name = i18n.getName(code, 'en');
+        const name = getCountryName(code);
         return name ? { code, name } : null;
       })
       .filter((country): country is { code: string; name: string } => country !== null)
@@ -134,50 +140,39 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   };
 
   /**
-   * Effet pour logger les codes de zone de destination
-   * Utile pour le débogage
+   * Effet pour initialiser destination_zone seulement si elle est vide
+   * Basé sur la logique de Suggestions.tsx et api.ts
    */
   useEffect(() => {
-
-    if (data.destinationZones && data.destinationZones.length > 0) {
-      // Convert country names to codes with special cases
-      const countryCodes = data.destinationZones.map(country => {
-        // Special cases for countries that are part of larger entities
-        const specialCases: { [key: string]: string } = {
-          'England': 'GB',  // England is part of United Kingdom
-          'Scotland': 'GB', // Scotland is part of United Kingdom
-          'Wales': 'GB',    // Wales is part of United Kingdom
-          'Northern Ireland': 'GB', // Northern Ireland is part of United Kingdom
-          'Germany': 'DE',  // Add Germany explicitly
-          'Deutschland': 'DE', // Add German name for Germany
-          'Egypt': 'EG',    // Add Egypt explicitly
-          'Turkey': 'TR'    // Add Turkey explicitly
-        };
-
-        // Check if the country is a special case
-        if (specialCases[country]) {
-          return { country, code: specialCases[country] };
+    // Seulement initialiser si destination_zone est vide et destinationZones contient des données
+    if (!data.destination_zone && data.destinationZones && data.destinationZones.length > 0) {
+      const firstDestination = data.destinationZones[0];
+      
+      // Si c'est déjà un code de pays (2-3 caractères), l'utiliser directement
+      if (firstDestination && firstDestination.length <= 3) {
+        // Valider que c'est un code de pays valide
+        const countryName = i18n.getName(firstDestination, 'en');
+        if (countryName) {
+          onChange({ ...data, destination_zone: firstDestination });
         }
-
-        // Normal case: look up the country code
-        const code = Object.entries(i18n.getNames('en'))
-          .find(([_, name]) => name === country)?.[0];
-        if (!code) {
-          return { country, code: undefined };
-        }
+      } else {
+        // Convertir les noms de pays en codes
+        const countryCode = countryToAlpha2[firstDestination] || 
+                           Object.entries(i18n.getNames('en'))
+                             .find(([_, name]) => name === firstDestination)?.[0];
         
-        return { country, code };
-      });
-      // Set destination_zone to the first country code if available and different from current
-      if (countryCodes.length > 0 && countryCodes[0].code) {
-        const firstCountryCode = countryCodes[0].code;
-        // Only update if the destination_zone is different to avoid infinite loop
-        if (data.destination_zone !== firstCountryCode) {
-          onChange({ ...data, destination_zone: firstCountryCode });
+        if (countryCode) {
+          onChange({ ...data, destination_zone: countryCode });
         }
       }
+    } else if (data.destination_zone && (!data.destinationZones || data.destinationZones.length === 0)) {
+      // Si destination_zone est défini mais destinationZones est vide, initialiser destinationZones
+      onChange({
+        ...data,
+        destinationZones: [data.destination_zone]
+      });
     }
-  }, [data.destinationZones]); // Removed data.destination_zone from dependencies
+  }, [data.destinationZones, data.destination_zone]);
 
   /**
    * Effet pour ajouter les icônes Material Icons
@@ -254,10 +249,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
   // Le rendu du composant
   return (
-    <div className="w-full bg-white p-6 sm:p-8">
-
-
-      {/* Form Content */}
+    <div className="w-full bg-white p-0">
       <div className="space-y-8">
         <InfoText>
           Start by providing the basic information about the contact center role. Be specific and clear
@@ -265,7 +257,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         </InfoText>
 
         {/* --- Position Details --- */}
-        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
+        <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Briefcase className="w-5 h-5 text-blue-600" />
@@ -340,6 +332,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               return <optgroup key={zone} label={zone}>{countries.map(({ code, name }) => <option key={code} value={code}>{name}</option>)}</optgroup>;
             })}
           </select>
+          {data.destination_zone && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+              <Globe2 className="w-4 h-4" />
+              <span>Selected: {getCountryName(data.destination_zone)}</span>
+            </div>
+          )}
           {errors.destination_zone && <p className="mt-2 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>}
         </div>
 
@@ -390,13 +388,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             <ArrowLeft className="w-5 h-5" />
             Previous
           </button>
-          {onBackToSuggestions && (
-            <button onClick={onBackToSuggestions}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-200 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-              Retour aux suggestions
-            </button>
-          )}
         </div>
         <button onClick={onNext}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">

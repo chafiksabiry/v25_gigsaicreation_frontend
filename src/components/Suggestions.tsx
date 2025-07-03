@@ -11,17 +11,14 @@ import {
   Globe2,
   AlertCircle,
   Edit2,
-  Save,
   X,
   CheckCircle,
   ArrowRight,
-  PlusCircle,
   XCircle,
   Plus,
   Trash2,
   Check,
   Loader2,
-  MapPin,
   Users,
   Sun,
   Sunrise,
@@ -30,20 +27,13 @@ import {
   Calendar,
 } from "lucide-react";
 import OpenAI from "openai";
-import type { JobDescription, GigMetadata } from "../lib/types";
 import type { GigSuggestion } from "../types";
-import Swal from "sweetalert2";
-import Modal from "./Modal";
-import LeadsForm from "./LeadsForm";
-import TeamForm from "./TeamForm";
-import DocumentationForm from "./DocumentationForm";
-import BasicSection from "./BasicSection";
 import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
-import Cookies from "js-cookie";
 import { generateGigSuggestions } from "../lib/ai";
-import { groupSchedules } from "../lib/scheduleUtils";
+import { fetchAllTimezones, fetchTimezonesByCountry } from "../lib/api";
+import { countryToAlpha2 } from "../lib/countryCodes";
 
 type ScheduleEntry = {
   day: string;
@@ -56,15 +46,42 @@ type GroupedSchedule = {
   days: string[];
 };
 
+// Timezone data type with _id
+type TimezoneData = {
+  _id: string;
+  countryCode: string;
+  countryName: string;
+  zoneName: string;
+  gmtOffset: number;
+  lastUpdated?: string;
+  __v?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+// Processed timezone type for UI
+type ProcessedTimezone = {
+  _id: string;
+  name: string;
+  offset: number;
+  abbreviation: string;
+  countryName: string;
+};
+
 // Register languages
 i18n.registerLocale(fr);
 i18n.registerLocale(en);
 
 // Helper function to check if a value is a string array
 
-
-
-
+// Country data type
+type CountryData = {
+  name: {
+    common: string;
+    official: string;
+  };
+  cca2: string;
+};
 
 interface SuggestionsProps {
   input: string;
@@ -85,48 +102,49 @@ try {
 }
 
 
-const DESTINATION_ZONES = [
-  "France",
-  "United States",
-  "United Kingdom",
-  "Germany",
-  "Canada",
-  "Australia",
-  "Japan",
-  "India",
-  "Brazil",
-  "Mexico",
-  "Spain",
-  "Italy",
-  "Netherlands",
-  "Sweden",
-  "Norway",
-  "Denmark",
-  "Finland",
-  "Switzerland",
-  "Austria",
-  "Belgium",
-  "Portugal",
-  "Ireland",
-  "New Zealand",
-  "Singapore",
-  "South Korea",
-  "China",
-  "Russia",
-  "South Africa",
-  "Argentina",
-  "Chile",
-  "Colombia",
-  "Peru",
-  "Venezuela",
-  "Uruguay",
-  "Paraguay",
-  "Bolivia",
-  "Ecuador",
-  "Guyana",
-  "Suriname",
-  "French Guiana",
-];
+// Major countries with their alpha-2 codes
+const DESTINATION_ZONES: { [key: string]: string } = {
+  "FR": "France",
+  "US": "United States",
+  "GB": "United Kingdom",
+  "DE": "Germany",
+  "CA": "Canada",
+  "AU": "Australia",
+  "JP": "Japan",
+  "IN": "India",
+  "BR": "Brazil",
+  "MX": "Mexico",
+  "ES": "Spain",
+  "IT": "Italy",
+  "NL": "Netherlands",
+  "SE": "Sweden",
+  "NO": "Norway",
+  "DK": "Denmark",
+  "FI": "Finland",
+  "CH": "Switzerland",
+  "AT": "Austria",
+  "BE": "Belgium",
+  "PT": "Portugal",
+  "IE": "Ireland",
+  "NZ": "New Zealand",
+  "SG": "Singapore",
+  "KR": "South Korea",
+  "CN": "China",
+  "RU": "Russia",
+  "ZA": "South Africa",
+  "AR": "Argentina",
+  "CL": "Chile",
+  "CO": "Colombia",
+  "PE": "Peru",
+  "VE": "Venezuela",
+  "UY": "Uruguay",
+  "PY": "Paraguay",
+  "BO": "Bolivia",
+  "EC": "Ecuador",
+  "GY": "Guyana",
+  "SR": "Suriname",
+  "GF": "French Guiana",
+};
 
 const SECTORS = [
   "Inbound Sales",
@@ -498,17 +516,23 @@ const FLEXIBILITY_SELECT_OPTIONS = [
   "Shift Swapping Allowed",
 ];
 
-export const Suggestions: React.FC<SuggestionsProps> = ({
-  input,
-  onBack,
-  onConfirm,
-}) => {
+export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const [allTimezones, setAllTimezones] = useState<TimezoneData[]>([]);
+  const [availableTimezones, setAvailableTimezones] = useState<ProcessedTimezone[]>([]);
+  const [timezoneLoading, setTimezoneLoading] = useState(false);
+  const [timezonesLoaded, setTimezonesLoaded] = useState(false);
+  const [allCountries, setAllCountries] = useState<CountryData[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<CountryData[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [timezoneSearch, setTimezoneSearch] = useState("");
+  const [showAllTimezones, setShowAllTimezones] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
 
@@ -587,6 +611,224 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     validateAndFixTeamStructure();
   }, [suggestions?.team?.structure]);
 
+  // Fetch all countries and timezones when component mounts
+  useEffect(() => {
+    const fetchAllData = async () => {
+      // Fetch countries
+      if (allCountries.length === 0) {
+        console.log('🌍 Fetching countries from API...');
+        setCountriesLoading(true);
+        try {
+          const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+          if (response.ok) {
+            const countriesData: CountryData[] = await response.json();
+            console.log('✅ Fetched', countriesData.length, 'countries');
+            console.log('🌍 Sample countries:', countriesData.slice(0, 5));
+            setAllCountries(countriesData);
+          } else {
+            console.error('❌ Failed to fetch countries');
+          }
+        } catch (error) {
+          console.error('❌ Error fetching countries:', error);
+        } finally {
+          setCountriesLoading(false);
+        }
+      }
+
+      // Fetch timezones
+      if (timezonesLoaded) return;
+      
+      setTimezoneLoading(true);
+      try {
+        const { data, error } = await fetchAllTimezones();
+        if (!error && data.length > 0) {
+          setAllTimezones(data);
+          setTimezonesLoaded(true);
+        } else {
+          console.error('Failed to fetch timezones:', error);
+        }
+      } catch (error) {
+        console.error('Error fetching all timezones:', error);
+      } finally {
+        setTimezoneLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [timezonesLoaded, allCountries.length]);
+
+    // Process all timezones when loaded
+  useEffect(() => {
+    if (!timezonesLoaded) {
+      return;
+    }
+
+    setTimezoneLoading(true);
+    
+    try {
+      // Process all timezones from the API
+      const processedTimezones = allTimezones
+        .map(tz => ({
+          _id: tz._id,
+          name: tz.zoneName,
+          offset: tz.gmtOffset / 3600, // Convert seconds to hours
+          abbreviation: tz.zoneName.split('/').pop() || '',
+          countryName: tz.countryName
+        }))
+        .sort((a, b) => a.offset - b.offset);
+
+      setAvailableTimezones(processedTimezones);
+    } catch (error) {
+      console.error('Error processing timezones:', error);
+      // Fallback to default timezones if processing fails
+      setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+        _id: `default_${code}`,
+        name,
+        offset,
+        abbreviation: code.split('(')[1]?.split(')')[0] || '',
+        countryName: ''
+      })));
+    } finally {
+      setTimezoneLoading(false);
+    }
+  }, [allTimezones, timezonesLoaded]);
+
+  // Fetch timezones based on the first destination zone
+  useEffect(() => {
+    const fetchTimezonesForDestination = async () => {
+      if (!suggestions?.destinationZones || suggestions.destinationZones.length === 0) {
+        return;
+      }
+
+      const firstDestination = suggestions.destinationZones[0];
+      if (!firstDestination || firstDestination.length !== 2) {
+        return;
+      }
+
+      console.log('🕐 Fetching timezones for country:', firstDestination);
+      setTimezoneLoading(true);
+      
+      try {
+        const { data, error } = await fetchTimezonesByCountry(firstDestination);
+        if (!error && data.length > 0) {
+          console.log('✅ Fetched', data.length, 'timezones for', firstDestination);
+          
+          // Process timezones for the specific country
+          const processedTimezones = data
+            .map(tz => ({
+              _id: tz._id,
+              name: tz.zoneName,
+              offset: tz.gmtOffset / 3600, // Convert seconds to hours
+              abbreviation: tz.zoneName.split('/').pop() || '',
+              countryName: tz.countryName
+            }))
+            .sort((a, b) => a.offset - b.offset);
+
+          setAvailableTimezones(processedTimezones);
+          
+          // Set the first timezone as default if none is selected
+          if (processedTimezones.length > 0 && (!suggestions.schedule?.timeZones || suggestions.schedule.timeZones.length === 0)) {
+            const newSuggestions = { ...suggestions };
+            if (!newSuggestions.schedule) {
+              newSuggestions.schedule = { schedules: [], timeZones: [], flexibility: [], minimumHours: {} };
+            }
+            // Store _id in timeZones array and time_zone field
+            newSuggestions.schedule.timeZones = [processedTimezones[0]._id];
+            newSuggestions.schedule.time_zone = processedTimezones[0]._id;
+            setSuggestions(newSuggestions);
+          }
+        } else {
+          console.error('Failed to fetch timezones for country:', error);
+          // Fallback to all timezones if country-specific fetch fails
+          const processedTimezones = allTimezones
+            .map(tz => ({
+              _id: tz._id,
+              name: tz.zoneName,
+              offset: tz.gmtOffset / 3600,
+              abbreviation: tz.zoneName.split('/').pop() || '',
+              countryName: tz.countryName
+            }))
+            .filter((tz, index, self) => 
+              index === self.findIndex(t => t.name === tz.name)
+            )
+            .sort((a, b) => a.offset - b.offset);
+          
+          setAvailableTimezones(processedTimezones);
+        }
+      } catch (error) {
+        console.error('Error fetching timezones for country:', error);
+        // Fallback to default timezones
+        setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+          _id: `default_${code}`,
+          name,
+          offset,
+          abbreviation: code.split('(')[1]?.split(')')[0] || '',
+          countryName: ''
+        })));
+      } finally {
+        setTimezoneLoading(false);
+      }
+    };
+
+    fetchTimezonesForDestination();
+  }, [suggestions?.destinationZones, allTimezones]);
+
+  // Effect to handle switching between country-specific and all timezones
+  useEffect(() => {
+    if (showAllTimezones) {
+      // Log all timezones to the console for debugging
+      console.log('ALL TIMEZONES FROM API:', allTimezones);
+      if (allTimezones && allTimezones.length > 0) {
+        const processedTimezones = allTimezones
+          .map(tz => ({
+            _id: tz._id,
+            name: tz.zoneName,
+            offset: tz.gmtOffset / 3600,
+            abbreviation: tz.zoneName.split('/').pop() || '',
+            countryName: tz.countryName
+          }))
+          .sort((a, b) => a.offset - b.offset);
+        setAvailableTimezones(processedTimezones);
+      } else {
+        setAvailableTimezones([]);
+      }
+    } else if (suggestions && suggestions.destinationZones && suggestions.destinationZones.length > 0) {
+      // Show only country-specific timezones
+      const fetchTimezonesForDestination = async () => {
+        const firstDestination = suggestions.destinationZones[0];
+        if (!firstDestination || firstDestination.length !== 2) {
+          setAvailableTimezones([]);
+          return;
+        }
+        setTimezoneLoading(true);
+        try {
+          const { data, error } = await fetchTimezonesByCountry(firstDestination);
+          if (!error && data.length > 0) {
+            const processedTimezones = data
+              .map(tz => ({
+                _id: tz._id,
+                name: tz.zoneName,
+                offset: tz.gmtOffset / 3600, // Convert seconds to hours
+                abbreviation: tz.zoneName.split('/').pop() || '',
+                countryName: tz.countryName
+              }))
+              .sort((a, b) => a.offset - b.offset);
+            setAvailableTimezones(processedTimezones);
+          } else {
+            setAvailableTimezones([]);
+          }
+        } catch (error) {
+          setAvailableTimezones([]);
+        } finally {
+          setTimezoneLoading(false);
+        }
+      };
+      fetchTimezonesForDestination();
+    } else {
+      setAvailableTimezones([]);
+    }
+  }, [showAllTimezones, allTimezones, suggestions && suggestions.destinationZones && suggestions.destinationZones.length > 0 ? suggestions.destinationZones[0] : null]);
+
   useEffect(() => {
     const generateSuggestions = async () => {
       // Prevent multiple simultaneous API calls
@@ -595,16 +837,16 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       }
 
       // Don't regenerate if we already processed this exact input
-      if (lastProcessedInputRef.current === input.trim()) {
+      if (lastProcessedInputRef.current === props.input.trim()) {
         return;
       }
 
       try {
         isGeneratingRef.current = true;
-        lastProcessedInputRef.current = input.trim();
+        lastProcessedInputRef.current = props.input.trim();
         setLoading(true);
         setError(null);
-        const result = await generateGigSuggestions(input);
+        const result = await generateGigSuggestions(props.input);
         
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
@@ -683,6 +925,33 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
           };
         }
 
+        // Convert destination zones from country names to alpha-2 codes
+        if (result.destinationZones && result.destinationZones.length > 0) {
+          console.log('🔄 Converting destination zones from names to alpha-2 codes...');
+          console.log('📋 Original destination zones:', result.destinationZones);
+          
+          const convertedZones = await Promise.all(result.destinationZones.map(async (zone) => {
+            // If it's already an alpha-2 code (2 letters), keep it
+            if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
+              console.log('✅ Already alpha-2 code:', zone);
+              return zone;
+            }
+            
+            // If it's a country name, convert to alpha-2 code
+            if (typeof zone === 'string') {
+              const alpha2Code = await getAlpha2Code(zone);
+              console.log(`🔄 Converting "${zone}" to "${alpha2Code}"`);
+              return alpha2Code;
+            }
+            
+            return zone;
+          }));
+          
+          result.destinationZones = convertedZones;
+          console.log('📋 Converted destination zones:', result.destinationZones);
+          console.log('🏢 Basic Info will display these zones with country names');
+        }
+
         setSuggestions(result);
       } catch (err) {
         setError(
@@ -694,7 +963,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
       }
     };
 
-    if (input.trim()) {
+    if (props.input.trim()) {
       generateSuggestions();
     }
 
@@ -702,17 +971,158 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     return () => {
       isGeneratingRef.current = false;
     };
-  }, [input]);
+  }, [props.input]);
 
+  // Place this BEFORE any useEffect that uses timezoneOptions:
+  function normalizeTimezone(tz: any) {
+    if (tz._id) return tz._id;
+    if (tz.name) return tz.name;
+    return tz;
+  }
+  const timezoneOptions = (availableTimezones.length > 0
+    ? availableTimezones.map(tz => ({
+        _id: tz._id,
+        zoneName: tz.name,
+        countryName: tz.countryName,
+      }))
+    : Object.entries(MAJOR_TIMEZONES).map(([code, { name }]) => ({
+        _id: `default_${code}`,
+        zoneName: name,
+        countryName: '',
+      }))
+  );
 
-
-
-
+  // Now you can use timezoneOptions in useEffect and elsewhere
+  useEffect(() => {
+    if (!suggestions || !suggestions.schedule) return;
+    if (
+      timezoneOptions.length > 0 &&
+      (!suggestions.schedule.timeZones || suggestions.schedule.timeZones.length === 0)
+    ) {
+      setSuggestions({
+        ...suggestions,
+        schedule: {
+          ...suggestions.schedule,
+          timeZones: [timezoneOptions[0]._id],
+          time_zone: timezoneOptions[0]._id
+        }
+      });
+    }
+  }, [timezoneOptions, suggestions]);
 
   const handleConfirm = () => {
     if (suggestions) {
-      onConfirm(suggestions);
+      props.onConfirm(suggestions);
     }
+  };
+
+  // Helper function to get country name from alpha-2 code
+  const getCountryName = (alpha2Code: string): string => {
+    console.log('🔍 getCountryName called with alpha2Code:', alpha2Code);
+    
+    // First check our predefined list
+    if (DESTINATION_ZONES[alpha2Code]) {
+      console.log('✅ Found in predefined list:', DESTINATION_ZONES[alpha2Code]);
+      return DESTINATION_ZONES[alpha2Code];
+    }
+    
+    // Then check the fetched countries
+    const country = allCountries.find(c => c.cca2 === alpha2Code);
+    if (country) {
+      console.log('✅ Found in fetched countries:', country.name.common);
+      return country.name.common;
+    }
+    
+    console.log('❌ Not found, returning alpha2Code as fallback');
+    return alpha2Code;
+  };
+
+  // Helper function to search for countries by name
+  const searchCountries = async (searchTerm: string): Promise<CountryData[]> => {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    
+    console.log('🔍 Searching countries for:', searchTerm);
+    setSearching(true);
+    try {
+      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(searchTerm)}?fields=name,cca2`);
+      if (response.ok) {
+        const data: CountryData[] = await response.json();
+        console.log('✅ Search results:', data.length, 'countries found');
+        console.log('🔍 Search results:', data);
+        return data;
+      } else {
+        console.log('❌ Search failed with status:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error searching countries:', error);
+    } finally {
+      setSearching(false);
+    }
+    return [];
+  };
+
+  // Helper function to get alpha-2 code from country name (synchronous version for UI)
+  const getAlpha2CodeSync = (countryName: string): string => {
+    console.log('🔍 getAlpha2CodeSync called with countryName:', countryName);
+    
+    // First check our predefined list
+    const predefinedCode = Object.keys(DESTINATION_ZONES).find(
+      code => DESTINATION_ZONES[code] === countryName
+    );
+    if (predefinedCode) {
+      console.log('✅ Found in predefined list:', predefinedCode);
+      return predefinedCode;
+    }
+    
+    // Then check the fetched countries
+    const country = allCountries.find(c => c.name.common === countryName);
+    if (country) {
+      console.log('✅ Found in fetched countries:', country.cca2);
+      return country.cca2;
+    }
+    
+    console.log('❌ Not found locally, returning countryName as fallback');
+    return countryName;
+  };
+
+  // Helper function to get alpha-2 code from country name (async version for API calls)
+  const getAlpha2Code = async (countryName: string): Promise<string> => {
+    console.log('🔍 getAlpha2Code called with countryName:', countryName);
+    
+    // First check our predefined list
+    const predefinedCode = Object.keys(DESTINATION_ZONES).find(
+      code => DESTINATION_ZONES[code] === countryName
+    );
+    if (predefinedCode) {
+      console.log('✅ Found in predefined list:', predefinedCode);
+      return predefinedCode;
+    }
+    
+    // Then check the fetched countries
+    const country = allCountries.find(c => c.name.common === countryName);
+    if (country) {
+      console.log('✅ Found in fetched countries:', country.cca2);
+      return country.cca2;
+    }
+    
+    // If not found, try to fetch from API
+    console.log('🔍 Not found locally, searching via API...');
+    try {
+      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fields=name,cca2`);
+      if (response.ok) {
+        const data: CountryData[] = await response.json();
+        if (data.length > 0) {
+          const alpha2Code = data[0].cca2;
+          console.log('✅ Found via API:', alpha2Code);
+          return alpha2Code;
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error fetching from API:', error);
+    }
+    
+    console.log('❌ Not found anywhere, returning countryName as fallback');
+    return countryName;
   };
 
   const addItem = (section: string, item: string) => {
@@ -740,10 +1150,15 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         newSuggestions.sectors = [...(newSuggestions.sectors || []), item];
         break;
       case "destinationZones":
+        // For destination zones, we store the alpha-2 code
+        console.log('➕ Adding destination zone:', item);
+        const alpha2Code = getAlpha2CodeSync(item);
+        console.log('📝 Storing alpha2Code:', alpha2Code);
         newSuggestions.destinationZones = [
           ...(newSuggestions.destinationZones || []),
-          item,
+          alpha2Code,
         ];
+        console.log('📋 Updated destinationZones:', newSuggestions.destinationZones);
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential = [
@@ -799,7 +1214,12 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         newSuggestions.sectors[index] = newValue;
         break;
       case "destinationZones":
-        newSuggestions.destinationZones[index] = newValue;
+        // For destination zones, we store the alpha-2 code
+        console.log('✏️ Updating destination zone at index', index, 'with:', newValue);
+        const alpha2Code = getAlpha2CodeSync(newValue);
+        console.log('📝 Storing alpha2Code:', alpha2Code);
+        newSuggestions.destinationZones[index] = alpha2Code;
+        console.log('📋 Updated destinationZones:', newSuggestions.destinationZones);
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential[index] = newValue;
@@ -892,7 +1312,15 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     setEditingSection(section);
     setEditingIndex(index);
     if (typeof currentValue === "string") {
+      // For destination zones, convert alpha-2 code to country name for editing
+      if (section === "destinationZones") {
+        console.log('🎯 Starting edit for destination zone with alpha2Code:', currentValue);
+        const countryName = getCountryName(currentValue);
+        console.log('📝 Setting editValue to country name:', countryName);
+        setEditValue(countryName);
+      } else {
       setEditValue(currentValue);
+      }
     } else if (currentValue && typeof currentValue === "object") {
       setEditValue(currentValue.skill || currentValue.language || "");
     } else {
@@ -904,6 +1332,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     setEditingSection(null);
     setEditingIndex(null);
     setEditValue("");
+    setSearchResults([]);
   };
 
   const renderEditableList = (section: string, items: any[], title: string) => {
@@ -935,19 +1364,51 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 {editingSection === section && editingIndex === index ? (
                   <div className="flex items-center space-x-2 flex-1">
                     {section === "destinationZones" ? (
-                      <select
+                      <div className="flex-1">
+                        <input
+                          type="text"
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                          onChange={async (e) => {
+                            const value = e.target.value;
+                            setEditValue(value);
+                            
+                            // Search for countries if user types something
+                            if (value.length >= 2) {
+                              const results = await searchCountries(value);
+                              setSearchResults(results);
+                            } else {
+                              setSearchResults([]);
+                            }
+                          }}
+                          placeholder="Type to search countries..."
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                         autoFocus
-                      >
-                        <option value="">Select a destination zone...</option>
-                        {DESTINATION_ZONES.map((zone) => (
-                          <option key={zone} value={zone}>
-                            {zone}
-                          </option>
-                        ))}
-                      </select>
+                        />
+                        {searching && (
+                          <div className="mt-2 text-sm text-gray-500 flex items-center">
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Searching countries...
+                          </div>
+                        )}
+                        {searchResults.length > 0 && (
+                          <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white">
+                            {searchResults.map((country) => (
+                              <button
+                                key={country.cca2}
+                                type="button"
+                                onClick={() => {
+                                  setEditValue(country.name.common);
+                                  setSearchResults([]);
+                                }}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">{country.name.common}</div>
+                                <div className="text-sm text-gray-500">{country.cca2}</div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ) : section === "sectors" ? (
                       <select
                         value={editValue}
@@ -977,6 +1438,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                         setEditingSection(null);
                         setEditingIndex(null);
                         setEditValue("");
+                        setSearchResults([]);
                       }}
                       className="text-green-700 hover:text-green-800 p-1"
                     >
@@ -993,7 +1455,21 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                   <>
                     <span className="text-gray-700 flex-1 font-medium">
                       {typeof item === "string"
-                        ? item
+                        ? section === "destinationZones" 
+                          ? (() => {
+                              console.log('🖥️ Rendering destination zone item:', item);
+                              const countryName = getCountryName(item);
+                              console.log('🖥️ Displaying country name:', countryName);
+                              return (
+                                <div className="flex items-center space-x-2">
+                                  <span>{countryName}</span>
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    {item}
+                                  </span>
+                                </div>
+                              );
+                            })()
+                          : item
                         : item?.skill || item?.language || ""}
                     </span>
                     <div className="flex items-center space-x-2">
@@ -1020,21 +1496,51 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         {editingSection === section && editingIndex === -1 && (
           <div className="flex items-center space-x-3 mt-4">
             {section === "destinationZones" ? (
-              <select
+              <div className="flex-1">
+                <input
+                  type="text"
                 value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                  onChange={async (e) => {
+                    const value = e.target.value;
+                    setEditValue(value);
+                    
+                    // Search for countries if user types something
+                    if (value.length >= 2) {
+                      const results = await searchCountries(value);
+                      setSearchResults(results);
+                    } else {
+                      setSearchResults([]);
+                    }
+                  }}
+                  placeholder="Type to search countries..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                 autoFocus
-              >
-                <option value="">Select a destination zone...</option>
-                {DESTINATION_ZONES.filter(
-                  (zone) => !currentItems.includes(zone)
-                ).map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </select>
+                />
+                {searching && (
+                  <div className="mt-2 text-sm text-gray-500 flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Searching countries...
+                  </div>
+                )}
+                {searchResults.length > 0 && (
+                  <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white">
+                    {searchResults.map((country) => (
+                      <button
+                        key={country.cca2}
+                        type="button"
+                        onClick={() => {
+                          setEditValue(country.name.common);
+                          setSearchResults([]);
+                        }}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium">{country.name.common}</div>
+                        <div className="text-sm text-gray-500">{country.cca2}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : section === "sectors" ? (
               <select
                 value={editValue}
@@ -1068,6 +1574,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                   setEditValue("");
                   setEditingSection(null);
                   setEditingIndex(null);
+                  setSearchResults([]);
                 }
               }}
               className="text-green-700 hover:text-green-800 p-2"
@@ -1719,30 +2226,119 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     if (!suggestions?.schedule) return null;
 
     const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const newSuggestions = { ...suggestions };
       const value = e.target.value;
-      newSuggestions.schedule.timeZones = value ? [value] : [];
+      const newSuggestions = { ...suggestions };
+      
+      if (value) {
+        // Find the selected timezone to get the _id
+        const selectedTimezone = filteredTimezones.find(tz => tz._id === value);
+        if (selectedTimezone) {
+          newSuggestions.schedule.timeZones = [selectedTimezone._id];
+          newSuggestions.schedule.time_zone = selectedTimezone._id;
+        } else {
+          newSuggestions.schedule.timeZones = [value]; // Fallback to string
+          newSuggestions.schedule.time_zone = value;
+        }
+      } else {
+        newSuggestions.schedule.timeZones = [];
+        newSuggestions.schedule.time_zone = undefined;
+      }
+      
       setSuggestions(newSuggestions);
     };
 
+    // Filter timezones based on search
+    const filteredTimezones = timezoneOptions.filter(tz =>
+      tz.zoneName && tz._id && (
+        tz.zoneName.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
+        tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
+      )
+    );
+
+    // Get the first destination zone for display
+    const firstDestination = suggestions.destinationZones?.[0];
+    const destinationCountryName = firstDestination ? getCountryName(firstDestination) : 'Unknown';
+
     return (
       <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
-          <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
+            <div>
+              <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
+              {firstDestination && !showAllTimezones && (
+                <p className="text-sm text-green-700">
+                  Based on destination: <span className="font-semibold">{destinationCountryName} ({firstDestination})</span>
+                </p>
+              )}
+              {showAllTimezones && (
+                <p className="text-sm text-green-700">
+                  Showing <span className="font-semibold">all available timezones</span>
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            {timezoneLoading && (
+              <div className="flex items-center">
+                <Loader2 className="w-4 h-4 animate-spin text-green-600" />
+                <span className="text-sm text-green-600 ml-1">Loading...</span>
+              </div>
+            )}
+            {firstDestination && (
+              <button
+                onClick={() => setShowAllTimezones(!showAllTimezones)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  showAllTimezones
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
+              </button>
+            )}
+          </div>
         </div>
+        
+        {/* Search input */}
+        {timezoneOptions.length > 0 && (
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search timezones by name, country, or abbreviation..."
+              value={timezoneSearch}
+              onChange={(e) => setTimezoneSearch(e.target.value)}
+              className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+        )}
+        
         <select
           className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
-          value={suggestions.schedule.timeZones?.[0] || ''}
+          value={suggestions.schedule.time_zone || suggestions.schedule.timeZones?.[0] || ''}
           onChange={handleTimezoneChange}
+          disabled={timezoneLoading}
         >
           <option value="">Select a timezone...</option>
-          {Object.entries(MAJOR_TIMEZONES).map(([code, { name }]) => (
-            <option key={code} value={code}>{name}</option>
-          ))}
+          {filteredTimezones.length > 0 ? (
+            filteredTimezones.map((tz) => (
+              <option key={tz._id} value={tz._id}>
+                {tz.zoneName} {tz.countryName ? `- ${tz.countryName}` : ''}
+              </option>
+            ))
+          ) : timezoneSearch ? (
+            <option value="" disabled>No timezones found matching "{timezoneSearch}"</option>
+          ) : (
+            <option value="" disabled>Loading timezones...</option>
+          )}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select one timezone for your schedule
+          {timezoneOptions.length > 0 
+            ? timezoneSearch 
+              ? `Showing ${filteredTimezones.length} of ${timezoneOptions.length} timezones${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ''}`
+              : `${timezoneOptions.length} timezones available${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ' worldwide'}`
+            : 'Loading timezones from API...'
+          }
         </p>
       </div>
     );
@@ -2965,7 +3561,6 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                     className="w-20 text-center text-2xl font-bold text-blue-600 bg-white border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                <div className="text-sm text-gray-500">Members</div>
               </div>
             </div>
           </div>
@@ -3285,7 +3880,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
           
           <div className="mt-8">
             <button
-              onClick={onBack}
+              onClick={props.onBack}
               className="flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
             >
               <X className="w-4 h-4" />
@@ -3306,7 +3901,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         </h2>
         <p className="text-center mb-6">{error}</p>
         <button
-          onClick={onBack}
+          onClick={props.onBack}
           className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -3326,7 +3921,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
           again.
         </p>
         <button
-          onClick={onBack}
+          onClick={props.onBack}
           className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -3342,7 +3937,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <button
-              onClick={onBack}
+              onClick={props.onBack}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -3404,11 +3999,14 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 </div>
                 <div>
                   <h4 className="text-base font-semibold text-blue-800 mb-1">Destination Zones</h4>
-                  {renderEditableList(
-                    "destinationZones",
-                    suggestions.destinationZones,
-                    "Destination Zones"
-                  )}
+                  {(() => {
+                    console.log('🏢 Basic Info - Destination Zones:', suggestions.destinationZones);
+                    return renderEditableList(
+                      "destinationZones",
+                      suggestions.destinationZones,
+                      "Destination Zones"
+                    );
+                  })()}
                 </div>
                 <div>
                   {renderSenioritySection()}

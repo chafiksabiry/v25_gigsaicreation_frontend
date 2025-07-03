@@ -352,7 +352,15 @@ export function GigCreator({ children }: GigCreatorProps) {
               }
             }
           ],
-          timeZones: gigData.availability?.timeZones[0] || "",
+          timeZones: (() => {
+            const firstTimezone = gigData.availability?.timeZones?.[0];
+            if (typeof firstTimezone === 'string') {
+              return [firstTimezone];
+            } else if (firstTimezone && typeof firstTimezone === 'object' && 'zoneName' in firstTimezone) {
+              return [firstTimezone.zoneName];
+            }
+            return [];
+          })(),
           flexibility: gigData.availability?.flexibility || [],
           minimumHours: gigData.availability?.minimumHours || {
             daily: 0,

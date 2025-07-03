@@ -39,6 +39,7 @@ const PrompAI: React.FC = () => {
   const [confirmedSuggestions, setConfirmedSuggestions] =
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
+  const [isManualMode, setIsManualMode] = useState(false);
   const [gigData, setGigData] = useState<GigData>({
     userId: Cookies.get('userId') || "",
     companyId: Cookies.get('companyId') || "",
@@ -71,7 +72,7 @@ const PrompAI: React.FC = () => {
         }
       }],
       timeZones: [],
-      timeZone: "",
+      time_zone: "",
       flexibility: [],
       minimumHours: {},
     },
@@ -243,8 +244,14 @@ const PrompAI: React.FC = () => {
     }
   };
 
+  const handleManualMode = () => {
+    setIsManualMode(true);
+    setCurrentSection("basic");
+  };
+
   const handleBackToSuggestions = () => {
     setConfirmedSuggestions(null);
+    setShowSuggestions(true);
     setCurrentSection("basic");
     setGigData({
       userId: Cookies.get('userId') || "",
@@ -278,7 +285,7 @@ const PrompAI: React.FC = () => {
           }
         }],
         timeZones: [],
-        timeZone: "",
+        time_zone: "",
         flexibility: [],
         minimumHours: {},
       },
@@ -402,39 +409,63 @@ const PrompAI: React.FC = () => {
     );
   }
 
-  if (confirmedSuggestions) {
+  if (confirmedSuggestions || isManualMode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="max-w-4xl mx-auto py-8 px-4">
-          {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
-            {sections.map((section) => (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="max-w-6xl mx-auto py-8 px-4">
+          {/* Header with back button for manual mode */}
+          {isManualMode && (
+            <div className="mb-8">
               <button
-                key={section.id}
-                onClick={() => handleSectionChange(section.id)}
-                className={`flex items-center gap-2 px-6 py-3 whitespace-nowrap ${
-                  section.id === currentSection
-                    ? "text-blue-600 border-b-2 border-blue-600 font-medium"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
+                onClick={() => setIsManualMode(false)}
+                className="flex items-center text-blue-600 hover:text-blue-700 mb-6 transition-colors duration-200"
               >
-                <section.icon className="w-5 h-5" />
-                {section.label}
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to AI Assistant
               </button>
-            ))}
+              <div className="text-center">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+                  Create Gig Manually
+                </h1>
+                <p className="text-lg text-gray-600">Fill out the sections below to create your gig</p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Tabs */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 mb-8 shadow-lg border border-white/20">
+            <div className="flex overflow-x-auto">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => handleSectionChange(section.id)}
+                  className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap rounded-xl transition-all duration-300 font-medium ${
+                    section.id === currentSection
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105"
+                      : "text-gray-600 hover:text-gray-800 hover:bg-gray-100/50"
+                  }`}
+                >
+                  <section.icon className={`w-5 h-5 ${section.id === currentSection ? 'text-white' : 'text-gray-500'}`} />
+                  {section.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Section Content */}
-          <div className="bg-white rounded-xl shadow-xl p-6">
-            <SectionContent
-              section={currentSection}
-              data={gigData}
-              onChange={handleGigDataChange}
-              errors={{}}
-              constants={predefinedOptions}
-              onSectionChange={handleSectionChange}
-              onBackToSuggestions={handleBackToSuggestions}
-            />
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+            <div className="p-8">
+              <SectionContent
+                section={currentSection}
+                data={gigData}
+                onChange={handleGigDataChange}
+                errors={{}}
+                constants={predefinedOptions}
+                onSectionChange={handleSectionChange}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -442,19 +473,19 @@ const PrompAI: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-4xl mx-auto py-16 px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
             Create with AI Assistance
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Describe your needs naturally, and let AI help structure your
             content
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-xl p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -475,7 +506,7 @@ const PrompAI: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => (window.location.href = "/gigsmanual")}
+                    onClick={handleManualMode}
                     className="text-green-600 hover:text-green-700 flex items-center text-sm"
                   >
                     <PlusCircle className="w-5 h-5 mr-1" />
@@ -503,12 +534,12 @@ const PrompAI: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Example: I need a sales campaign targeting Spanish-speaking customers in Europe, with a focus on insurance products..."
-                  className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full h-32 px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm resize-none"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="absolute bottom-3 right-3 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <Brain className="w-5 h-5" />
                 </button>

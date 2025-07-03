@@ -20,7 +20,6 @@ interface SectionContentProps {
   errors: { [key: string]: string[] };
   constants: any;
   onSectionChange?: (section: string) => void;
-  onBackToSuggestions?: () => void;
 }
 
 export function SectionContent({
@@ -29,7 +28,6 @@ export function SectionContent({
   onChange,
   errors,
   onSectionChange,
-  onBackToSuggestions,
 }: SectionContentProps) {
 
   // Log section data when component renders
@@ -70,18 +68,29 @@ export function SectionContent({
   // Ensure seniority object is properly initialized
   const initializedData = React.useMemo(() => ({
     ...data,
-    schedule: {
-      schedules: cleanSchedules(data.schedule?.schedules || []),
-      timeZone: data.schedule?.timeZone || (Array.isArray(data.schedule?.timeZones) ? data.schedule?.timeZones[0] : ""),
-      timeZones: data.schedule?.timeZone ? [data.schedule?.timeZone] : [],
-      flexibility: data.schedule?.flexibility || [],
-      minimumHours: data.schedule?.minimumHours || {
-        daily: undefined,
-        weekly: undefined,
-        monthly: undefined,
+          schedule: {
+        schedules: cleanSchedules(data.schedule?.schedules || []),
+        time_zone: (() => {
+          if (data.schedule?.time_zone) {
+            return data.schedule.time_zone;
+          }
+          if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
+            const firstTimezone = data.schedule.timeZones[0];
+            if (typeof firstTimezone === 'string') {
+              return firstTimezone;
+            }
+          }
+          return "";
+        })(),
+        timeZones: data.schedule?.time_zone ? [data.schedule?.time_zone] : [],
+        flexibility: data.schedule?.flexibility || [],
+        minimumHours: data.schedule?.minimumHours || {
+          daily: undefined,
+          weekly: undefined,
+          monthly: undefined,
+        },
+        shifts: data.schedule?.shifts || []
       },
-      shifts: data.schedule?.shifts || []
-    },
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
@@ -127,7 +136,6 @@ export function SectionContent({
             onNext={() => onSectionChange?.('schedule')}
             onSave={() => {}}
             onAIAssist={() => {}}
-            onBackToSuggestions={onBackToSuggestions}
             currentSection={section}
           />
         );
@@ -137,7 +145,18 @@ export function SectionContent({
           <ScheduleSection
             data={data.schedule ? {
               schedules: data.schedule.schedules || [],
-              timeZone: (data.schedule.timeZone || (Array.isArray(data.schedule.timeZones) ? data.schedule.timeZones[0] : "")) as TimezoneCode,
+              time_zone: (() => {
+                if (data.schedule?.time_zone) {
+                  return data.schedule.time_zone;
+                }
+                if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
+                  const firstTimezone = data.schedule.timeZones[0];
+                  if (typeof firstTimezone === 'string') {
+                    return firstTimezone;
+                  }
+                }
+                return "";
+              })(),
               flexibility: data.schedule.flexibility || [],
               minimumHours: data.schedule.minimumHours || {
                 daily: undefined,
@@ -146,7 +165,7 @@ export function SectionContent({
               }
             } : {
               schedules: [],
-              timeZone: "" as TimezoneCode,
+              time_zone: "",
               flexibility: [],
               minimumHours: {
                 daily: undefined,
@@ -154,26 +173,26 @@ export function SectionContent({
                 monthly: undefined,
               }
             }}
+            destination_zone={data.destination_zone}
             onChange={(scheduleData) => onChange({
               ...data,
               schedule: {
                 schedules: scheduleData.schedules,
-                timeZone: scheduleData.timeZone || "",
-                timeZones: scheduleData.timeZone ? [scheduleData.timeZone] : [],
+                time_zone: scheduleData.time_zone || "",
+                timeZones: scheduleData.time_zone ? [scheduleData.time_zone] : [],
                 flexibility: scheduleData.flexibility,
                 minimumHours: scheduleData.minimumHours,
               },
               availability: {
                 ...data.availability,
                 schedule: scheduleData.schedules,
-                timeZone: scheduleData.timeZone || "",
+                time_zone: scheduleData.time_zone || "",
                 flexibility: scheduleData.flexibility,
                 minimumHours: scheduleData.minimumHours,
               }
             })}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
-            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -210,7 +229,6 @@ export function SectionContent({
             warnings={{}}
             onPrevious={() => onSectionChange?.('schedule')}
             onNext={() => onSectionChange?.('skills')}
-            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -278,7 +296,6 @@ export function SectionContent({
             errors={errors}
             onPrevious={() => onSectionChange?.('leads')}
             onNext={() => onSectionChange?.('team')}
-            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -297,7 +314,6 @@ export function SectionContent({
             onPrevious={() => onSectionChange?.('skills')}
             onNext={() => onSectionChange?.('docs')}
             currentSection={section}
-            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -319,7 +335,6 @@ export function SectionContent({
               onSectionChange?.('review');
             }}
             isLastSection={true}
-            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -352,9 +367,11 @@ export function SectionContent({
     }
   };
   return (
-    <div className="space-y-6">
+    <div className="">
       <SectionGuidance section={section} />
-      {renderContent()}
+      {/* <div className="bg-gradient-to-br from-gray-50/50 to-white/50 rounded-2xl p-6 border border-gray-100/50"> */}
+        {renderContent()}
+      {/* </div> */}
     </div>
   );
 }
