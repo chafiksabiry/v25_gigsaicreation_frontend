@@ -29,6 +29,7 @@ interface ScheduleSectionProps {
   onChange: (data: ScheduleSectionProps['data']) => void;
   onNext?: () => void;
   onPrevious?: () => void;
+  onBackToSuggestions?: () => void;
 }
 
 const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -70,7 +71,8 @@ export function ScheduleSection({
   data,
   onChange,
   onNext,
-  onPrevious
+  onPrevious,
+  onBackToSuggestions
 }: ScheduleSectionProps) {
   // Use flat schedules as source of truth
   const [schedules, setSchedules] = useState<DaySchedule[]>(data.schedules);
@@ -341,17 +343,16 @@ export function ScheduleSection({
                 <h4 className="text-sm font-semibold text-gray-800 mb-2">Working Days</h4>
                 <div className="flex gap-1">
                   {workingDays.map(day => {
+                    const isSelected = false; // Un groupe vide n'a pas de jour sélectionné
                     const isInOtherGroup = schedules.some(s => s.day === day);
                     return (
                       <button
                         key={day}
                         onClick={() => handleDayToggle(day, emptyGroup.hours, emptyGroup.id)}
                         disabled={isInOtherGroup}
-                        className={`px-2 py-1 text-xs font-medium rounded transition-all duration-200 ${
-                          isInOtherGroup
-                            ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
+                          ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                        `}
                         title={isInOtherGroup ? `${day} is already selected in another schedule group` : undefined}
                       >
                         {day}
@@ -563,11 +564,20 @@ export function ScheduleSection({
       </div>
       
       <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-200">
-        <button onClick={onPrevious} disabled={!onPrevious}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-          Previous
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={onPrevious} disabled={!onPrevious}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+            Previous
+          </button>
+          {onBackToSuggestions && (
+            <button onClick={onBackToSuggestions}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-200 transition-colors font-semibold text-sm">
+              <ArrowLeft className="w-5 h-5" />
+              Retour aux suggestions
+            </button>
+          )}
+        </div>
         <button onClick={onNext}
           className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-semibold text-sm transition-colors shadow-sm hover:shadow-md">
           Next

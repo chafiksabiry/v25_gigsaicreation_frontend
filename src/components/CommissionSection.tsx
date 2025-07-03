@@ -14,9 +14,10 @@ interface CommissionSectionProps {
   warnings: { [key: string]: string[] };
   onNext?: () => void;
   onPrevious?: () => void;
+  onBackToSuggestions?: () => void;
 }
 
-export function CommissionSection({ data, onChange, errors, warnings, onNext, onPrevious }: CommissionSectionProps) {
+export function CommissionSection({ data, onChange, errors, warnings, onNext, onPrevious, onBackToSuggestions }: CommissionSectionProps) {
   const getCurrencySymbol = () => {
     return data?.commission?.currency ? 
       predefinedOptions.commission.currencies.find(c => c.code === data?.commission?.currency)?.symbol || '$'
@@ -419,13 +420,22 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
 
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center mt-8 pt-8 border-t border-gray-200">
-        <button
-          onClick={onPrevious}
-          className="flex items-center gap-3 px-6 py-3 rounded-xl bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Previous
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onPrevious}
+            className="flex items-center gap-3 px-6 py-3 rounded-xl bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Previous
+          </button>
+          {onBackToSuggestions && (
+            <button onClick={onBackToSuggestions}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-orange-100 text-orange-700 border-2 border-orange-300 hover:bg-orange-200 transition-all duration-200 font-medium">
+              <ArrowLeft className="w-5 h-5" />
+              Retour aux suggestions
+            </button>
+          )}
+        </div>
         <button
           onClick={onNext}
           className="flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"

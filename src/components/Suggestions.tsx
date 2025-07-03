@@ -153,35 +153,7 @@ const SECTORS = [
   "Collections",
   "Dispatch Services",
   "Emergency Support",
-  "Technology",
-  "Healthcare",
-  "Finance",
-  "Education",
-  "Retail",
-  "Manufacturing",
-  "Real Estate",
-  "Transportation",
-  "Energy",
-  "Media",
-  "Entertainment",
-  "Sports",
-  "Food & Beverage",
-  "Fashion",
-  "Automotive",
-  "Aerospace",
-  "Pharmaceuticals",
-  "Biotechnology",
-  "Telecommunications",
-  "Consulting",
-  "Legal",
-  "Accounting",
-  "Marketing",
-  "Sales",
-  "Human Resources",
-  "Operations",
-  "Research & Development",
-  "Quality Assurance",
-  "Project Management",
+  "Multilingual Support",
 ];
 
 interface LeadType {
@@ -481,6 +453,49 @@ const TEAM_TERRITORIES = [
   "China",
   "India",
   "Southeast Asia",
+];
+
+const MAJOR_TIMEZONES: { [key: string]: { name: string; offset: number } } = {
+  "New York (EST/EDT)": { name: "New York (EST/EDT)", offset: -5 },
+  "Chicago (CST/CDT)": { name: "Chicago (CST/CDT)", offset: -6 },
+  "Denver (MST/MDT)": { name: "Denver (MST/MDT)", offset: -7 },
+  "Los Angeles (PST/PDT)": { name: "Los Angeles (PST/PDT)", offset: -8 },
+  "London (GMT/BST)": { name: "London (GMT/BST)", offset: 0 },
+  "Paris (CET/CEST)": { name: "Paris (CET/CEST)", offset: 1 },
+  "Dubai (GST)": { name: "Dubai (GST)", offset: 4 },
+  "Singapore (SGT)": { name: "Singapore (SGT)", offset: 8 },
+  "Tokyo (JST)": { name: "Tokyo (JST)", offset: 9 },
+  "Sydney (AEST/AEDT)": { name: "Sydney (AEST/AEDT)", offset: 10 },
+};
+
+const FLEXIBILITY_OPTIONS = [
+  "Remote Work Available",
+  "Flexible Hours",
+  "Part-time Available",
+  "Weekend Work",
+  "Night Shift",
+  "Split Shifts",
+  "On-call Availability",
+  "Overtime Available",
+  "Compressed Work Week",
+  "Job Sharing",
+  "Seasonal Work",
+  "Temporary Assignment",
+  "Project-based",
+  "Contract Work",
+  "Freelance",
+  "Consulting",
+];
+
+const FLEXIBILITY_SELECT_OPTIONS = [
+  "Remote Work Available",
+  "Flexible Hours",
+  "Weekend Rotation",
+  "Night Shift Available",
+  "Split Shifts",
+  "Part-Time Options",
+  "Compressed Work Week",
+  "Shift Swapping Allowed",
 ];
 
 export const Suggestions: React.FC<SuggestionsProps> = ({
@@ -896,15 +911,14 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
     return (
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-lg font-semibold text-blue-900">{title}</h4>
+        <div className="flex items-center justify-end mb-4">
           <button
             onClick={() => {
               setEditingSection(section);
               setEditingIndex(-1);
               setEditValue("");
             }}
-            className="flex items-center space-x-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
+            className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Add</span>
@@ -942,7 +956,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                         autoFocus
                       >
                         <option value="">Select a sector...</option>
-                        {SECTORS.map((sector) => (
+                        {SECTORS.filter((sector) => !currentItems.includes(sector) || sector === items[index]).map((sector) => (
                           <option key={sector} value={sector}>
                             {sector}
                           </option>
@@ -1424,7 +1438,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
         {emptySchedules.map((emptySchedule, index) => (
           <div
             key={emptySchedule._id?.$oid || index}
-            className="bg-white rounded-lg p-4 border-2 border-dashed border-gray-300 shadow-sm"
+            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
           >
             <div className="flex items-center justify-between mb-3">
               <h5 className="text-sm font-semibold text-gray-600">
@@ -1440,17 +1454,16 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             
             <div className="flex gap-1 mb-4">
               {allWeekDays.map((day) => {
+                const isSelected = emptySchedule.day === day;
                 const isInOtherGroup = suggestions.schedule.schedules.some((s) => s.day === day);
                 return (
                   <button
                     key={day}
                     onClick={() => handleEmptyScheduleDayToggle(day, emptySchedule)}
                     disabled={isInOtherGroup}
-                    className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                      isInOtherGroup
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-gray-100 text-gray-700 hover:bg-blue-100"
-                    }`}
+                    className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
+                      ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                    `}
                   >
                     {day}
                   </button>
@@ -1580,6 +1593,226 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
     );
   };
 
+  const renderMinimumHoursSection = () => {
+    if (!suggestions?.schedule) return null;
+
+    const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.schedule.minimumHours) {
+        newSuggestions.schedule.minimumHours = { daily: 0, weekly: 0, monthly: 0 };
+      }
+      
+      const numericValue = value ? parseInt(value, 10) : 0;
+      newSuggestions.schedule.minimumHours[field] = numericValue;
+      setSuggestions(newSuggestions);
+    };
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Gauge className="w-5 h-5 text-orange-600" />
+            </div>
+            <h4 className="text-lg font-bold text-gray-800">Minimum Hours Requirements</h4>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 border-2 border-orange-100">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-gray-700 flex items-center">
+                <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                Daily Hours
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={suggestions.schedule.minimumHours?.daily || ''}
+                  onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
+                  placeholder="e.g. 8"
+                  className="w-full p-4 pr-12 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
+                />
+                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                  hrs
+                </span>
+              </div>
+              <p className="text-xs text-gray-600">Minimum hours per day</p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-gray-700 flex items-center">
+                <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                Weekly Hours
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  max="168"
+                  value={suggestions.schedule.minimumHours?.weekly || ''}
+                  onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
+                  placeholder="e.g. 40"
+                  className="w-full p-4 pr-12 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white transition-all duration-200 hover:border-amber-300"
+                />
+                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                  hrs
+                </span>
+              </div>
+              <p className="text-xs text-gray-600">Minimum hours per week</p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-gray-700 flex items-center">
+                <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                Monthly Hours
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0"
+                  max="744"
+                  value={suggestions.schedule.minimumHours?.monthly || ''}
+                  onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
+                  placeholder="e.g. 160"
+                  className="w-full p-4 pr-12 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white transition-all duration-200 hover:border-red-300"
+                />
+                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                  hrs
+                </span>
+              </div>
+              <p className="text-xs text-gray-600">Minimum hours per month</p>
+            </div>
+          </div>
+
+          {/* Summary Card */}
+          <div className="mt-6 p-4 bg-white rounded-lg border border-orange-200">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {suggestions.schedule.minimumHours?.daily || 0}
+                </div>
+                <div className="text-xs text-gray-500">Daily</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-amber-600">
+                  {suggestions.schedule.minimumHours?.weekly || 0}
+                </div>
+                <div className="text-xs text-gray-500">Weekly</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-600">
+                  {suggestions.schedule.minimumHours?.monthly || 0}
+                </div>
+                <div className="text-xs text-gray-500">Monthly</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTimezoneSection = () => {
+    if (!suggestions?.schedule) return null;
+
+    const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const newSuggestions = { ...suggestions };
+      const value = e.target.value;
+      newSuggestions.schedule.timeZones = value ? [value] : [];
+      setSuggestions(newSuggestions);
+    };
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
+          <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
+        </div>
+        <select
+          className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+          value={suggestions.schedule.timeZones?.[0] || ''}
+          onChange={handleTimezoneChange}
+        >
+          <option value="">Select a timezone...</option>
+          {Object.entries(MAJOR_TIMEZONES).map(([code, { name }]) => (
+            <option key={code} value={code}>{name}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select one timezone for your schedule
+        </p>
+      </div>
+    );
+  };
+
+  const renderFlexibilitySection = () => {
+    if (!suggestions?.schedule) return null;
+
+    const handleAddFlexibility = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.schedule.flexibility) newSuggestions.schedule.flexibility = [];
+      if (!newSuggestions.schedule.flexibility.includes(value)) {
+        newSuggestions.schedule.flexibility = [...newSuggestions.schedule.flexibility, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveFlexibility = (option: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.schedule.flexibility = newSuggestions.schedule.flexibility.filter(f => f !== option);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.schedule.flexibility || [];
+    const available = FLEXIBILITY_SELECT_OPTIONS.filter(opt => !selected.includes(opt));
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-purple-200 bg-purple-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-500 text-white font-bold mr-3">F</div>
+          <h4 className="text-xl font-bold text-purple-900">Schedule Flexibility</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(option => (
+            <span key={option} className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {option}
+              <button
+                type="button"
+                onClick={() => handleRemoveFlexibility(option)}
+                className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
+          defaultValue=""
+          onChange={handleAddFlexibility}
+        >
+          <option value="" disabled>Add flexibility option...</option>
+          {available.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all applicable schedule flexibility options
+        </p>
+      </div>
+    );
+  };
+
   const renderSenioritySection = () => {
     if (!suggestions) return null;
 
@@ -1643,6 +1876,37 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             />
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const renderDescriptionSection = () => {
+    if (!suggestions) return null;
+
+    const handleDescriptionChange = (newDescription: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.description = newDescription;
+      setSuggestions(newSuggestions);
+    };
+
+    return (
+      <div className="mb-8">
+                  <textarea
+            value={suggestions.description || ""}
+            onChange={(e) => handleDescriptionChange(e.target.value)}
+            placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
+            rows={8}
+            className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
+          />
+          
+          <div className="mt-3 flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              {suggestions.description ? `${suggestions.description.length} characters` : "0 characters"}
+            </div>
+            <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+              Detailed description helps attract the right candidates
+            </div>
+          </div>
       </div>
     );
   };
@@ -1747,9 +2011,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             </div>
             <button
               onClick={addCommissionOption}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold transform hover:scale-105"
+              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               <span>Add Option</span>
             </button>
           </div>
@@ -2225,7 +2489,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 setEditingIndex(-1);
                 setEditValue("");
               }}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>Add</span>
@@ -2796,7 +3060,7 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
             </div>
             <button
               onClick={addTeamRole}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium"
+              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>Add Role</span>
@@ -2860,9 +3124,6 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-sm font-medium text-gray-700 mb-2 block">
-                            Seniority Level
-                          </label>
                           <select
                             value={seniorityLevel}
                             onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
@@ -2907,9 +3168,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
               </p>
               <button
                 onClick={addTeamRole}
-                className="flex items-center space-x-2 mx-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium"
+                className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 <span>Add Team Role</span>
               </button>
             </div>
@@ -3101,33 +3362,58 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
 
           <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
             {/* Basic Section */}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Briefcase className="w-7 h-7 mr-3 text-blue-700" />
-                Basic Information
-              </h3>
-              {renderEditableList(
-                "highlights",
-                suggestions.highlights,
-                "Highlights"
-              )}
-              {renderEditableList(
-                "jobTitles",
-                suggestions.jobTitles,
-                "Job Titles"
-              )}
-              {renderEditableList(
-                "deliverables",
-                suggestions.deliverables,
-                "Deliverables"
-              )}
-              {renderEditableList("sectors", suggestions.sectors, "Sectors")}
-              {renderEditableList(
-                "destinationZones",
-                suggestions.destinationZones,
-                "Destination Zones"
-              )}
-              {renderSenioritySection()}
+            <div className="p-3 rounded-2xl border-2 border-blue-200 bg-blue-50">
+              <div className="flex items-center mb-3">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white mr-2">
+                  <Briefcase className="w-5 h-5" />
+                </span>
+                <h3 className="text-lg font-extrabold text-blue-900 tracking-tight">Basic Information</h3>
+              </div>
+              <div className="space-y-2">
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Job Titles</h4>
+                  {renderEditableList(
+                    "jobTitles",
+                    suggestions.jobTitles,
+                    "Job Titles"
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Job Description</h4>
+                  {renderDescriptionSection()}
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Highlights</h4>
+                  {renderEditableList(
+                    "highlights",
+                    suggestions.highlights,
+                    "Highlights"
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>
+                  {renderEditableList(
+                    "deliverables",
+                    suggestions.deliverables,
+                    "Deliverables"
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Sectors</h4>
+                  {renderEditableList("sectors", suggestions.sectors, "Sectors")}
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Destination Zones</h4>
+                  {renderEditableList(
+                    "destinationZones",
+                    suggestions.destinationZones,
+                    "Destination Zones"
+                  )}
+                </div>
+                <div>
+                  {renderSenioritySection()}
+                </div>
+              </div>
             </div>
 
             {/* Schedule Section */}
@@ -3137,6 +3423,9 @@ export const Suggestions: React.FC<SuggestionsProps> = ({
                 Schedule
               </h3>
               {renderEditableSchedules()}
+              {renderMinimumHoursSection()}
+              {renderTimezoneSection()}
+              {renderFlexibilitySection()}
             </div>
 
             {/* Commission Section */}

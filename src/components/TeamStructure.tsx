@@ -42,9 +42,10 @@ interface TeamStructureProps {
   onAIAssist?: () => void;
   onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs') => void;
   currentSection: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs';
+  onBackToSuggestions?: () => void;
 }
 
-export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection }: TeamStructureProps) {
+export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection, onBackToSuggestions }: TeamStructureProps) {
   // Initialize team with default values if undefined
   const initializedTeam = {
     ...data,
@@ -506,13 +507,22 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-        <button
-          onClick={onPrevious}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Previous
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onPrevious}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Previous
+          </button>
+          {onBackToSuggestions && (
+            <button onClick={onBackToSuggestions}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-200 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+              Retour aux suggestions
+            </button>
+          )}
+        </div>
         <button
           onClick={onNext}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"

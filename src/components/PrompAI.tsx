@@ -89,19 +89,19 @@ const PrompAI: React.FC = () => {
     },
     commission: {
       base: "",
-      baseAmount: "",
+      baseAmount: 0,
       bonus: "",
-      bonusAmount: "",
+      bonusAmount: 0,
       structure: "",
       currency: "",
       minimumVolume: {
-        amount: "",
+        amount: 0,
         period: "",
         unit: ""
       },
       transactionCommission: {
         type: "",
-        amount: ""
+        amount: 0
       },
       kpis: []
     },
@@ -243,6 +243,155 @@ const PrompAI: React.FC = () => {
     }
   };
 
+  const handleBackToSuggestions = () => {
+    setConfirmedSuggestions(null);
+    setCurrentSection("basic");
+    setGigData({
+      userId: Cookies.get('userId') || "",
+      companyId: Cookies.get('companyId') || "",
+      destination_zone: "",
+      destinationZones: [],
+      callTypes: [],
+      highlights: [],
+      requirements: {
+        essential: [],
+        preferred: []
+      },
+      benefits: [],
+      tools: {
+        provided: [],
+        required: []
+      },
+      equipment: {
+        provided: [],
+        required: []
+      },
+      title: "",
+      description: "",
+      category: "",
+      availability: {
+        schedule: [{
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }],
+        timeZones: [],
+        timeZone: "",
+        flexibility: [],
+        minimumHours: {},
+      },
+      schedule: {
+        schedules: [{
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }],
+        timeZones: [],
+        flexibility: [],
+        minimumHours: {},
+      },
+      commission: {
+        base: "",
+        baseAmount: 0,
+        bonus: "",
+        bonusAmount: 0,
+        structure: "",
+        currency: "",
+        minimumVolume: {
+          amount: 0,
+          period: "",
+          unit: ""
+        },
+        transactionCommission: {
+          type: "",
+          amount: 0
+        },
+        kpis: []
+      },
+      leads: {
+        types: [],
+        sources: [],
+        distribution: {
+          method: "",
+          rules: []
+        },
+        qualificationCriteria: []
+      },
+      skills: {
+        languages: [{
+          language: "French",
+          proficiency: "B1",
+          iso639_1: "fr"
+        }],
+        soft: [{
+          skill: "Communication",
+          level: 1
+        }],
+        professional: [{
+          skill: "Brand Identity Design",
+          level: 1
+        }],
+        technical: [{
+          skill: "Adobe Illustrator",
+          level: 1
+        }],
+        certifications: []
+      },
+      seniority: {
+
+        level: "",
+        yearsExperience: 0
+      },
+      team: {
+        size: 0,
+        structure: [],
+        territories: [],
+        reporting: {
+          to: "",
+          frequency: ""
+        },
+        collaboration: []
+      },
+      training: {
+        initial: {
+          duration: "",
+          format: "",
+          topics: []
+        },
+        ongoing: {
+          frequency: "",
+          format: "",
+          topics: []
+        },
+        support: []
+      },
+      metrics: {
+        kpis: [],
+        targets: {},
+        reporting: {
+          frequency: "",
+          metrics: []
+        }
+      },
+      documentation: {
+        templates: null,
+        reference: null,
+        product: [],
+        process: [],
+        training: []
+      },
+      compliance: {
+        requirements: [],
+        certifications: [],
+        policies: []
+      }
+    });
+  };
+
   if (showSuggestions) {
     return (
       <Suggestions
@@ -284,6 +433,7 @@ const PrompAI: React.FC = () => {
               errors={{}}
               constants={predefinedOptions}
               onSectionChange={handleSectionChange}
+              onBackToSuggestions={handleBackToSuggestions}
             />
           </div>
         </div>

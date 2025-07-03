@@ -35,6 +35,7 @@ interface DocumentationSectionProps {
   onPrevious?: () => void;
   onReview?: () => void;
   isLastSection?: boolean;
+  onBackToSuggestions?: () => void;
 }
 
 export function DocumentationSection({
@@ -45,6 +46,7 @@ export function DocumentationSection({
   onPrevious,
   onReview,
   isLastSection = false,
+  onBackToSuggestions,
 }: DocumentationSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -420,13 +422,22 @@ export function DocumentationSection({
       )}
 
       <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-        <button
-          onClick={onPrevious}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Previous
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onPrevious}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Previous
+          </button>
+          {onBackToSuggestions && (
+            <button onClick={onBackToSuggestions}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-100 text-orange-700 border border-orange-300 hover:bg-orange-200 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+              Retour aux suggestions
+            </button>
+          )}
+        </div>
         <button
           onClick={() => {
             if (onReview) {

@@ -20,6 +20,7 @@ interface SectionContentProps {
   errors: { [key: string]: string[] };
   constants: any;
   onSectionChange?: (section: string) => void;
+  onBackToSuggestions?: () => void;
 }
 
 export function SectionContent({
@@ -28,6 +29,7 @@ export function SectionContent({
   onChange,
   errors,
   onSectionChange,
+  onBackToSuggestions,
 }: SectionContentProps) {
 
   // Log section data when component renders
@@ -125,6 +127,7 @@ export function SectionContent({
             onNext={() => onSectionChange?.('schedule')}
             onSave={() => {}}
             onAIAssist={() => {}}
+            onBackToSuggestions={onBackToSuggestions}
             currentSection={section}
           />
         );
@@ -170,6 +173,7 @@ export function SectionContent({
             })}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
+            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -184,19 +188,19 @@ export function SectionContent({
               },
               commission: initializedData.commission || {
                 base: "",
-                baseAmount: "",
+                baseAmount: 0,
                 bonus: "",
-                bonusAmount: "",
+                bonusAmount: 0,
                 structure: "",
                 currency: "",
                 minimumVolume: {
-                  amount: "",
+                  amount: 0,
                   period: "",
                   unit: ""
                 },
                 transactionCommission: {
                   type: "",
-                  amount: ""
+                  amount: 0
                 },
                 kpis: []
               }
@@ -206,6 +210,7 @@ export function SectionContent({
             warnings={{}}
             onPrevious={() => onSectionChange?.('schedule')}
             onNext={() => onSectionChange?.('skills')}
+            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -273,6 +278,7 @@ export function SectionContent({
             errors={errors}
             onPrevious={() => onSectionChange?.('leads')}
             onNext={() => onSectionChange?.('team')}
+            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -291,6 +297,7 @@ export function SectionContent({
             onPrevious={() => onSectionChange?.('skills')}
             onNext={() => onSectionChange?.('docs')}
             currentSection={section}
+            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
@@ -312,6 +319,7 @@ export function SectionContent({
               onSectionChange?.('review');
             }}
             isLastSection={true}
+            onBackToSuggestions={onBackToSuggestions}
           />
         );
 
