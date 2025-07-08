@@ -144,6 +144,27 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
     }
   };
 
+  const handleSyncPredefinedSkills = async () => {
+    try {
+      setLoading(true);
+      setMessage('Syncing predefined skills with database...');
+      
+      const { syncPredefinedSkills } = await import('../lib/skillsManager');
+      await syncPredefinedSkills();
+      
+      setMessage('Predefined skills synced successfully!');
+      setMessage({ type: 'success', text: 'Predefined skills synced successfully!' });
+      
+      // Refresh the skills list
+      await loadSkills();
+    } catch (error) {
+      console.error('Error syncing predefined skills:', error);
+      setMessage({ type: 'error', text: `Error syncing predefined skills: ${error instanceof Error ? error.message : 'Unknown error'}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredSkills = skills[selectedCategory] || [];
 
   const getCategoryColor = (category: string) => {
@@ -172,6 +193,14 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
+            </button>
+            <button
+              onClick={handleSyncPredefinedSkills}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Sync Predefined Skills
             </button>
             <button
               onClick={onClose}

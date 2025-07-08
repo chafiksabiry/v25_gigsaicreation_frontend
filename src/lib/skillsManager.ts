@@ -337,5 +337,123 @@ export class SkillsManager {
   }
 }
 
+/**
+ * Sync predefined skills with the database
+ * This ensures all predefined skills exist in the database with proper ObjectIds
+ */
+export async function syncPredefinedSkills(): Promise<void> {
+  try {
+    console.log('Starting predefined skills sync...');
+    
+    // Import predefined skills
+    const { predefinedOptions } = await import('./guidance');
+    
+    // Sync soft skills
+    for (const skillData of predefinedOptions.skills.soft) {
+      await createSkillIfNotExists({
+        name: skillData.skill,
+        description: `Soft skill: ${skillData.skill}`,
+        category: 'soft'
+      });
+    }
+    
+    // Sync professional skills
+    for (const skillData of predefinedOptions.skills.professional) {
+      await createSkillIfNotExists({
+        name: skillData.skill,
+        description: `Professional skill: ${skillData.skill}`,
+        category: 'professional'
+      });
+    }
+    
+    // Sync technical skills
+    for (const skillData of predefinedOptions.skills.technical) {
+      await createSkillIfNotExists({
+        name: skillData.skill,
+        description: `Technical skill: ${skillData.skill}`,
+        category: 'technical'
+      });
+    }
+    
+    console.log('Predefined skills sync completed successfully');
+  } catch (error) {
+    console.error('Error syncing predefined skills:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a skill if it doesn't already exist in the database
+ */
+async function createSkillIfNotExists(skillData: {
+  name: string;
+  description: string;
+  category: string;
+}): Promise<void> {
+  try {
+    // First, try to find the skill by name
+    const existingSkills = await searchSkillsByName(skillData.name, skillData.category);
+    
+    // Check if skill already exists
+    const skillExists = existingSkills.data.some(skill => 
+      skill.name.toLowerCase() === skillData.name.toLowerCase()
+    );
+    
+    if (!skillExists) {
+      // Create the skill
+      await saveSkillToDatabase({
+        name: skillData.name,
+        description: skillData.description,
+        category: skillData.category
+      });
+      console.log(`Created skill: ${skillData.name} (${skillData.category})`);
+    } else {
+      console.log(`Skill already exists: ${skillData.name} (${skillData.category})`);
+    }
+  } catch (error) {
+    console.error(`Error checking/creating skill ${skillData.name}:`, error);
+    // Don't throw here to continue with other skills
+  }
+}
+
+/**
+ * Convert skill names to ObjectIds by looking them up in the database
+ * This is used when we have skill names but need ObjectIds for the backend
+ */
+export async function convertSkillNamesToObjectIds(
+  skillNames: string[], 
+  category: string
+): Promise<Array<{ $oid: string }>> {
+  try {
+    const objectIds: Array<{ $oid: string }> = [];
+    
+    for (const skillName of skillNames) {
+      // Search for the skill in the database
+      const skills = await searchSkillsByName(skillName, category);
+      const skill = skills.data.find(s => 
+        s.name.toLowerCase() === skillName.toLowerCase()
+      );
+      
+      if (skill) {
+        objectIds.push({ $oid: skill._id });
+      } else {
+        // If skill doesn't exist, create it first
+        console.log(`Skill not found, creating: ${skillName} (${category})`);
+        const newSkill = await saveSkillToDatabase({
+          name: skillName,
+          description: `${category} skill: ${skillName}`,
+          category: category
+        });
+        objectIds.push({ $oid: newSkill._id });
+      }
+    }
+    
+    return objectIds;
+  } catch (error) {
+    console.error('Error converting skill names to ObjectIds:', error);
+    throw error;
+  }
+}
+
 // Export singleton instance
 export const skillsManager = SkillsManager.getInstance(); 

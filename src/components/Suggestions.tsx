@@ -3674,8 +3674,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <button
                     onClick={() => {
                       if (editValue.trim()) {
-                        const level = skillType === "languages" ? 2 : 1; // Default to B1 for languages (index 2), Basic for skills
-                        addSkill(skillType, editValue.trim(), level);
+                        if (skillType === "languages") {
+                          const level = 2; // Default to B1 for languages (index 2)
+                          addSkill(skillType, editValue.trim(), level);
+                        } else {
+                          // For skills, editValue should already be the ObjectId
+                          const level = 1; // Default to Basic for skills
+                          addSkill(skillType, editValue.trim(), level);
+                        }
                         setEditValue("");
                         setEditingSection(null);
                         setEditingIndex(null);

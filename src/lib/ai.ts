@@ -1493,9 +1493,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     skills: {
       languages: validatedLanguages,
-      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1 })),
-      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
-      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
+      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
+      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
+      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
       certifications: generatedData.skills?.certifications || []
     },
     requirements: {
@@ -1530,9 +1530,9 @@ export async function generateSkills(title: string, description: string): Promis
     proficiency: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
     iso639_1: string;
   }>;
-  soft: string[];
-  professional: string[];
-  technical: string[];
+  soft: Array<{ skill: { $oid: string }; level: number; details: string }>;
+  professional: Array<{ skill: { $oid: string }; level: number; details: string }>;
+  technical: Array<{ skill: { $oid: string }; level: number; details: string }>;
 }> {
   if (!isValidApiKey(OPENAI_API_KEY)) {
     throw new Error('Please configure your OpenAI API key in the .env file');
@@ -1543,6 +1543,10 @@ export async function generateSkills(title: string, description: string): Promis
   }
 
   try {
+    // First, ensure all predefined skills exist in the database
+    const { syncPredefinedSkills, convertSkillNamesToObjectIds } = await import('./skillsManager');
+    await syncPredefinedSkills();
+
     const completion = await openai.chat.completions.create({
       messages: [
         {
@@ -1660,7 +1664,30 @@ Select the most relevant skills from the provided lists based on the job require
       }
     });
 
-    return result;
+    // Convert skill names to ObjectIds
+    const softObjectIds = await convertSkillNamesToObjectIds(result.soft, 'soft');
+    const professionalObjectIds = await convertSkillNamesToObjectIds(result.professional, 'professional');
+    const technicalObjectIds = await convertSkillNamesToObjectIds(result.technical, 'technical');
+
+    // Return with ObjectIds and details
+    return {
+      languages: result.languages,
+      soft: softObjectIds.map((objId, index) => ({
+        skill: objId,
+        level: 3, // Default to Advanced level
+        details: `Generated for ${title} position`
+      })),
+      professional: professionalObjectIds.map((objId, index) => ({
+        skill: objId,
+        level: 3, // Default to Advanced level
+        details: `Generated for ${title} position`
+      })),
+      technical: technicalObjectIds.map((objId, index) => ({
+        skill: objId,
+        level: 3, // Default to Advanced level
+        details: `Generated for ${title} position`
+      }))
+    };
   } catch (error) {
     console.error('Error generating skills:', error);
     throw error;
