@@ -3339,15 +3339,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             return LANGUAGES.filter(lang => !currentItems.some(item => item.language === lang));
           case "professional":
             return professionalSkills
-              .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+              .filter(skill => !currentItems.some(item => {
+                if (!item || !item.skill) return false;
+                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                return skillId === skill._id;
+              }))
               .map(skill => ({ id: skill._id, name: skill.name }));
           case "technical":
             return technicalSkills
-              .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+              .filter(skill => !currentItems.some(item => {
+                if (!item || !item.skill) return false;
+                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                return skillId === skill._id;
+              }))
               .map(skill => ({ id: skill._id, name: skill.name }));
           case "soft":
             return softSkills
-              .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+              .filter(skill => !currentItems.some(item => {
+                if (!item || !item.skill) return false;
+                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                return skillId === skill._id;
+              }))
               .map(skill => ({ id: skill._id, name: skill.name }));
           default:
             return [];
@@ -3495,7 +3507,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               default:
                                 skillArray = [];
                             }
-                            const skillId = typeof item.skill === 'string' ? item.skill : item.skill.$oid;
+                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
                             const skillObject = skillArray.find(s => s._id === skillId);
                             return skillObject ? skillObject.name : skillId;
                           })()}
@@ -3523,7 +3535,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   default:
                                     skillArray = [];
                                 }
-                                const skillId = typeof item.skill === 'string' ? item.skill : item.skill.$oid;
+                                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
                                 const skillObject = skillArray.find(s => s._id === skillId);
                                 setEditValue(skillObject ? skillObject.name : skillId);
                               }
@@ -3592,7 +3604,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         ))
                       : skillType === "professional"
                       ? professionalSkills
-                          .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+                          .filter(skill => !currentItems.some(item => {
+                            if (!item || !item.skill) return false;
+                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                            return skillId === skill._id;
+                          }))
                           .map((skill) => (
                             <option key={skill._id} value={skill._id}>
                               {skill.name}
@@ -3600,14 +3616,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           ))
                       : skillType === "technical"
                       ? technicalSkills
-                          .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+                          .filter(skill => !currentItems.some(item => {
+                            if (!item || !item.skill) return false;
+                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                            return skillId === skill._id;
+                          }))
                           .map((skill) => (
                             <option key={skill._id} value={skill._id}>
                               {skill.name}
                             </option>
                           ))
                       : softSkills
-                          .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+                          .filter(skill => !currentItems.some(item => {
+                            if (!item || !item.skill) return false;
+                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                            return skillId === skill._id;
+                          }))
                           .map((skill) => (
                             <option key={skill._id} value={skill._id}>
                               {skill.name}

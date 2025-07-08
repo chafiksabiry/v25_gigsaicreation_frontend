@@ -271,7 +271,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         return s.language === name;
       } else {
         // For skills, compare ObjectId
-        return (typeof s.skill === 'string' ? s.skill : s.skill.$oid) === name;
+        return (typeof s.skill === 'string' ? s.skill : (s.skill && typeof s.skill === 'object' && s.skill.$oid ? s.skill.$oid : null)) === name;
       }
     });
   };
@@ -292,7 +292,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       // Handle non-language skills with proper typing
       const skillObj = typeof skill === 'string' ? { skill: { $oid: skill }, level: 1 } : skill as { skill: { $oid: string }; level: number };
       setNewSkill({ 
-        language: skillObj.skill.$oid || '', 
+        language: skillObj.skill && skillObj.skill.$oid ? skillObj.skill.$oid : '', 
         proficiency: '', 
         iso639_1: '',
         level: skillObj.level || 1
@@ -316,7 +316,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       nameChanged = languageSkill.language !== newSkill.language;
     } else {
       const skillObj = currentSkill as { skill: { $oid: string }; level: number };
-      nameChanged = skillObj.skill.$oid !== newSkill.language;
+      nameChanged = (skillObj.skill && skillObj.skill.$oid ? skillObj.skill.$oid : '') !== newSkill.language;
     }
     
     if (nameChanged && isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
@@ -605,7 +605,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                         : (() => {
                             // For skills, find the name by ObjectId
                             if (typeof skill === 'string') return skill;
-                            const skillId = typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid;
+                            const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill && typeof skill.skill === 'object' && skill.skill.$oid ? skill.skill.$oid : null);
                             let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
                             switch (type) {
                               case 'professional':
