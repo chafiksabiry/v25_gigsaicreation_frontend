@@ -688,6 +688,103 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     fetchSkills();
   }, []); // Empty dependency array - only run once on mount
 
+  // Global migration effect - runs when skills are loaded
+  useEffect(() => {
+    if (suggestions && (softSkills.length > 0 || professionalSkills.length > 0 || technicalSkills.length > 0)) {
+      console.log('🔄 Running global skills migration...');
+      
+      const migrateAllSkills = () => {
+        if (!suggestions.skills) return;
+        
+        let needsUpdate = false;
+        const migratedSkills = { ...suggestions.skills };
+        
+        ['soft', 'professional', 'technical'].forEach(type => {
+          const skillArray = migratedSkills[type as keyof typeof migratedSkills];
+          if (skillArray && Array.isArray(skillArray)) {
+            (migratedSkills as any)[type] = skillArray.map((skill: any) => {
+              if (skill && typeof skill.skill === 'string') {
+                console.log(`🔄 Global migration: "${skill.skill}" (${type})`);
+                
+                let skillArray: any[] = [];
+                switch (type) {
+                  case 'soft': skillArray = softSkills; break;
+                  case 'professional': skillArray = professionalSkills; break;
+                  case 'technical': skillArray = technicalSkills; break;
+                }
+                
+                const found = skillArray.find(s => s.name === skill.skill);
+                if (found) {
+                  console.log(`✅ Global migration to ObjectId: ${found._id}`);
+                  needsUpdate = true;
+                  return { 
+                    ...skill, 
+                    skill: { $oid: found._id },
+                    details: skill.details || 'Migrated from string'
+                  };
+                } else {
+                  console.log(`⚠️ Skill not found in database: "${skill.skill}"`);
+                  return skill;
+                }
+              }
+              return skill;
+            });
+          }
+        });
+        
+        if (needsUpdate) {
+          console.log('🔄 Updating suggestions with globally migrated ObjectIds');
+          setSuggestions({ ...suggestions, skills: migratedSkills });
+        }
+      };
+      
+      migrateAllSkills();
+    }
+  }, [suggestions, softSkills, professionalSkills, technicalSkills]);
+
+  // Force migration on component mount
+  useEffect(() => {
+    const forceMigration = () => {
+      if (suggestions && suggestions.skills) {
+        console.log('🔄 Force migration check on mount...');
+        let hasStringSkills = false;
+        
+        ['soft', 'professional', 'technical'].forEach(type => {
+          const skillArray = (suggestions.skills as any)[type];
+          if (skillArray && Array.isArray(skillArray)) {
+            skillArray.forEach((skill: any) => {
+              if (skill && typeof skill.skill === 'string') {
+                hasStringSkills = true;
+                console.log(`⚠️ Found string skill: "${skill.skill}" in ${type}`);
+              }
+            });
+          }
+        });
+        
+        if (hasStringSkills) {
+          console.log('🔄 Forcing migration of string skills...');
+          // Trigger the global migration effect
+          const event = new CustomEvent('forceSkillsMigration');
+          window.dispatchEvent(event);
+        }
+      }
+    };
+    
+    // Run on mount
+    forceMigration();
+    
+    // Listen for force migration events
+    const handleForceMigration = () => {
+      forceMigration();
+    };
+    
+    window.addEventListener('forceSkillsMigration', handleForceMigration);
+    
+    return () => {
+      window.removeEventListener('forceSkillsMigration', handleForceMigration);
+    };
+  }, [suggestions]);
+
     // Process all timezones when loaded
   useEffect(() => {
     if (!timezonesLoaded) {
@@ -3215,6 +3312,49 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       const found = arr.find(s => s.name === skillName);
       return found?._id;
     }
+
+    // MIGRATION: Convert string skills to ObjectIds automatically
+    const migrateSkillsToObjectIds = () => {
+      if (!suggestions.skills) return;
+      
+      let needsUpdate = false;
+      const migratedSkills = { ...suggestions.skills } as any;
+      
+      ['soft', 'professional', 'technical'].forEach(type => {
+        const skillArray = migratedSkills[type];
+        if (skillArray && Array.isArray(skillArray)) {
+          migratedSkills[type] = skillArray.map((skill: any) => {
+            if (skill && typeof skill.skill === 'string') {
+              console.log(`🔄 Migrating skill: "${skill.skill}" (${type})`);
+              const oid = getSkillObjectId(skill.skill, type);
+              if (oid) {
+                console.log(`✅ Migrated to ObjectId: ${oid}`);
+                needsUpdate = true;
+                return { 
+                  ...skill, 
+                  skill: { $oid: oid },
+                  details: skill.details || 'Migrated from string'
+                };
+              } else {
+                console.log(`⚠️ Skill not found in database: "${skill.skill}"`);
+                return skill; // Keep as string if not found
+              }
+            }
+            return skill; // Already ObjectId format
+          });
+        }
+      });
+      
+      if (needsUpdate) {
+        console.log('🔄 Updating suggestions with migrated ObjectIds');
+        setSuggestions({ ...suggestions, skills: migratedSkills });
+      }
+    };
+
+    // Run migration on every render
+    React.useEffect(() => {
+      migrateSkillsToObjectIds();
+    }, [suggestions?.skills, softSkills, professionalSkills, technicalSkills]);
 
     // Mapping for display: always show ObjectId if possible
     const skillsWithObjectIds: any = { ...suggestions.skills };
