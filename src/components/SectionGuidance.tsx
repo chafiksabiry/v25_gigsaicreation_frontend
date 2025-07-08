@@ -14,7 +14,7 @@ export function SectionGuidance({ section }: SectionGuidanceProps) {
     return null;
   }
   return (
-    <div className="space-y-6 mb-8">
+    <div className="space-y-6">
       <div className="flex items-center gap-3 text-blue-700 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-200/50">
         <div className="p-2 bg-blue-100 rounded-lg">
           <HelpCircle className="w-5 h-5 text-blue-600" />

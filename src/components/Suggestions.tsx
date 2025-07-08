@@ -32,8 +32,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchAllTimezones, fetchTimezonesByCountry } from "../lib/api";
-import { countryToAlpha2 } from "../lib/countryCodes";
+import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
 
 type ScheduleEntry = {
   day: string;
@@ -146,33 +145,7 @@ const DESTINATION_ZONES: { [key: string]: string } = {
   "GF": "French Guiana",
 };
 
-const SECTORS = [
-  "Inbound Sales",
-  "Outbound Sales",
-  "Customer Service",
-  "Technical Support",
-  "Account Management",
-  "Lead Generation",
-  "Market Research",
-  "Appointment Setting",
-  "Order Processing",
-  "Customer Retention",
-  "Billing Support",
-  "Product Support",
-  "Help Desk",
-  "Chat Support",
-  "Email Support",
-  "Social Media Support",
-  "Survey Calls",
-  "Welcome Calls",
-  "Follow-up Calls",
-  "Complaint Resolution",
-  "Warranty Support",
-  "Collections",
-  "Dispatch Services",
-  "Emergency Support",
-  "Multilingual Support",
-];
+
 
 interface LeadType {
   type: "hot" | "warm" | "cold";
@@ -207,6 +180,7 @@ interface PredefinedOptions {
   basic: {
     seniorityLevels: string[];
   };
+  sectors: string[];
 }
 
 const predefinedOptions: PredefinedOptions = {
@@ -266,6 +240,33 @@ const predefinedOptions: PredefinedOptions = {
       "Director",
     ],
   },
+  sectors: [
+    "Inbound Sales",
+    "Outbound Sales",
+    "Customer Service",
+    "Technical Support",
+    "Account Management",
+    "Lead Generation",
+    "Market Research",
+    "Appointment Setting",
+    "Order Processing",
+    "Customer Retention",
+    "Billing Support",
+    "Product Support",
+    "Help Desk",
+    "Chat Support",
+    "Email Support",
+    "Social Media Support",
+    "Survey Calls",
+    "Welcome Calls",
+    "Follow-up Calls",
+    "Complaint Resolution",
+    "Warranty Support",
+    "Collections",
+    "Dispatch Services",
+    "Emergency Support",
+    "Multilingual Support",
+  ],
 };
 
 
@@ -486,24 +487,6 @@ const MAJOR_TIMEZONES: { [key: string]: { name: string; offset: number } } = {
   "Sydney (AEST/AEDT)": { name: "Sydney (AEST/AEDT)", offset: 10 },
 };
 
-const FLEXIBILITY_OPTIONS = [
-  "Remote Work Available",
-  "Flexible Hours",
-  "Part-time Available",
-  "Weekend Work",
-  "Night Shift",
-  "Split Shifts",
-  "On-call Availability",
-  "Overtime Available",
-  "Compressed Work Week",
-  "Job Sharing",
-  "Seasonal Work",
-  "Temporary Assignment",
-  "Project-based",
-  "Contract Work",
-  "Freelance",
-  "Consulting",
-];
 
 const FLEXIBILITY_SELECT_OPTIONS = [
   "Remote Work Available",
@@ -533,6 +516,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [searching, setSearching] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
   const [showAllTimezones, setShowAllTimezones] = useState(false);
+  const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
 
@@ -611,7 +598,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     validateAndFixTeamStructure();
   }, [suggestions?.team?.structure]);
 
-  // Fetch all countries and timezones when component mounts
+  // Fetch all countries, timezones, and skills when component mounts
   useEffect(() => {
     const fetchAllData = async () => {
       // Fetch countries
@@ -656,6 +643,47 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     fetchAllData();
   }, [timezonesLoaded, allCountries.length]);
+
+  // Fetch skills from API
+  useEffect(() => {
+    const fetchSkills = async () => {
+      if (softSkills.length > 0 && technicalSkills.length > 0 && professionalSkills.length > 0) {
+        return; // Already loaded
+      }
+
+      console.log('🎯 Fetching skills from API...');
+      setSkillsLoading(true);
+      
+      try {
+        const [softResult, technicalResult, professionalResult] = await Promise.all([
+          fetchSoftSkills(),
+          fetchTechnicalSkills(),
+          fetchProfessionalSkills()
+        ]);
+
+        if (!softResult.error && softResult.data.length > 0) {
+          console.log('✅ Fetched', softResult.data.length, 'soft skills');
+          setSoftSkills(softResult.data);
+        }
+
+        if (!technicalResult.error && technicalResult.data.length > 0) {
+          console.log('✅ Fetched', technicalResult.data.length, 'technical skills');
+          setTechnicalSkills(technicalResult.data);
+        }
+
+        if (!professionalResult.error && professionalResult.data.length > 0) {
+          console.log('✅ Fetched', professionalResult.data.length, 'professional skills');
+          setProfessionalSkills(professionalResult.data);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching skills:', error);
+      } finally {
+        setSkillsLoading(false);
+      }
+    };
+
+    fetchSkills();
+  }, [softSkills.length, technicalSkills.length, professionalSkills.length]);
 
     // Process all timezones when loaded
   useEffect(() => {
@@ -925,6 +953,109 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           };
         }
 
+        // Validate and filter sectors to only allow predefined ones
+        if (result.sectors && result.sectors.length > 0) {
+          console.log('🔍 Validating sectors...');
+          console.log('📋 Original sectors:', result.sectors);
+          
+          const validSectors = result.sectors.filter(sector => {
+            const isValid = predefinedOptions.sectors.includes(sector);
+            if (!isValid) {
+              console.warn(`❌ Invalid sector "${sector}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          
+          result.sectors = validSectors;
+          console.log('✅ Validated sectors:', result.sectors);
+        }
+
+        // Validate and filter flexibility options to only allow predefined ones
+        if (result.schedule?.flexibility && result.schedule.flexibility.length > 0) {
+          console.log('🔍 Validating flexibility options...');
+          console.log('📋 Original flexibility options:', result.schedule.flexibility);
+          
+          const validFlexibility = result.schedule.flexibility.filter(option => {
+            const isValid = FLEXIBILITY_SELECT_OPTIONS.includes(option);
+            if (!isValid) {
+              console.warn(`❌ Invalid flexibility option "${option}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          
+          result.schedule.flexibility = validFlexibility;
+          console.log('✅ Validated flexibility options:', result.schedule.flexibility);
+        }
+
+        // Validate and filter skills to only allow predefined ones from API
+        if (result.skills) {
+          console.log('🔍 Validating skills...');
+          console.log('🎯 AI Generated Skills:', {
+            professional: result.skills.professional,
+            technical: result.skills.technical,
+            soft: result.skills.soft
+          });
+          console.log('📊 Available skills from API:', {
+            professional: professionalSkills.length,
+            technical: technicalSkills.length,
+            soft: softSkills.length
+          });
+          
+          // Only validate if skills are loaded from API
+          if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
+            console.log('📋 Professional skills from API:', professionalSkills.map(s => s.name));
+            console.log('📋 Technical skills from API:', technicalSkills.map(s => s.name));
+            console.log('📋 Soft skills from API:', softSkills.map(s => s.name));
+            
+            // Validate professional skills
+            if (result.skills.professional && result.skills.professional.length > 0) {
+              const validProfessionalSkills = professionalSkills.map(skill => skill.name);
+              const validProfessional = result.skills.professional.filter(skill => {
+                const skillName = typeof skill === 'string' ? skill : skill.skill;
+                const isValid = validProfessionalSkills.includes(skillName);
+                if (!isValid) {
+                  console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
+                }
+                return isValid;
+              });
+              result.skills.professional = validProfessional;
+              console.log('✅ Validated professional skills:', result.skills.professional);
+            }
+
+            // Validate technical skills
+            if (result.skills.technical && result.skills.technical.length > 0) {
+              const validTechnicalSkills = technicalSkills.map(skill => skill.name);
+              const validTechnical = result.skills.technical.filter(skill => {
+                const skillName = typeof skill === 'string' ? skill : skill.skill;
+                const isValid = validTechnicalSkills.includes(skillName);
+                if (!isValid) {
+                  console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
+                }
+                return isValid;
+              });
+              result.skills.technical = validTechnical;
+              console.log('✅ Validated technical skills:', result.skills.technical);
+            }
+
+            // Validate soft skills
+            if (result.skills.soft && result.skills.soft.length > 0) {
+              const validSoftSkills = softSkills.map(skill => skill.name);
+              const validSoft = result.skills.soft.filter(skill => {
+                const skillName = typeof skill === 'string' ? skill : skill.skill;
+                const isValid = validSoftSkills.includes(skillName);
+                if (!isValid) {
+                  console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
+                }
+                return isValid;
+              });
+              result.skills.soft = validSoft;
+              console.log('✅ Validated soft skills:', result.skills.soft);
+            }
+          } else {
+            console.log('⚠️ Skills not yet loaded from API, skipping validation');
+          }
+        }
+
         // Convert destination zones from country names to alpha-2 codes
         if (result.destinationZones && result.destinationZones.length > 0) {
           console.log('🔄 Converting destination zones from names to alpha-2 codes...');
@@ -935,6 +1066,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
               console.log('✅ Already alpha-2 code:', zone);
               return zone;
+            }
+            
+            // If it's "Global", replace with "France" (FR)
+            if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
+              console.log('🔄 Converting "Global" to "France" (FR)');
+              return 'FR';
             }
             
             // If it's a country name, convert to alpha-2 code
@@ -950,6 +1087,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           result.destinationZones = convertedZones;
           console.log('📋 Converted destination zones:', result.destinationZones);
           console.log('🏢 Basic Info will display these zones with country names');
+        } else {
+          // If no destination zones are provided, default to France
+          console.log('🔄 No destination zones provided, defaulting to France (FR)');
+          result.destinationZones = ['FR'];
         }
 
         setSuggestions(result);
@@ -974,11 +1115,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   }, [props.input]);
 
   // Place this BEFORE any useEffect that uses timezoneOptions:
-  function normalizeTimezone(tz: any) {
-    if (tz._id) return tz._id;
-    if (tz.name) return tz.name;
-    return tz;
-  }
   const timezoneOptions = (availableTimezones.length > 0
     ? availableTimezones.map(tz => ({
         _id: tz._id,
@@ -1009,6 +1145,81 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       });
     }
   }, [timezoneOptions, suggestions]);
+
+  // Auto-select first timezone when available timezones change
+  useEffect(() => {
+    if (!suggestions?.schedule) return;
+    if (
+      availableTimezones.length > 0 &&
+      (!suggestions.schedule.timeZones || suggestions.schedule.timeZones.length === 0)
+    ) {
+      setSuggestions({
+        ...suggestions,
+        schedule: {
+          ...suggestions.schedule,
+          timeZones: [availableTimezones[0]._id],
+          time_zone: availableTimezones[0]._id
+        }
+      });
+    }
+  }, [availableTimezones, suggestions]);
+
+  // Re-validate skills when they are loaded from API
+  useEffect(() => {
+    if (!suggestions?.skills) return;
+    if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
+      console.log('🔄 Re-validating skills now that API data is loaded...');
+      
+      const newSuggestions = { ...suggestions };
+      
+      // Validate professional skills
+      if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
+        const validProfessionalSkills = professionalSkills.map(skill => skill.name);
+        const validProfessional = newSuggestions.skills.professional.filter(skill => {
+          const skillName = typeof skill === 'string' ? skill : skill.skill;
+          const isValid = validProfessionalSkills.includes(skillName);
+          if (!isValid) {
+            console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
+          }
+          return isValid;
+        });
+        newSuggestions.skills.professional = validProfessional;
+        console.log('✅ Re-validated professional skills:', newSuggestions.skills.professional);
+      }
+
+      // Validate technical skills
+      if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
+        const validTechnicalSkills = technicalSkills.map(skill => skill.name);
+        const validTechnical = newSuggestions.skills.technical.filter(skill => {
+          const skillName = typeof skill === 'string' ? skill : skill.skill;
+          const isValid = validTechnicalSkills.includes(skillName);
+          if (!isValid) {
+            console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
+          }
+          return isValid;
+        });
+        newSuggestions.skills.technical = validTechnical;
+        console.log('✅ Re-validated technical skills:', newSuggestions.skills.technical);
+      }
+
+      // Validate soft skills
+      if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
+        const validSoftSkills = softSkills.map(skill => skill.name);
+        const validSoft = newSuggestions.skills.soft.filter(skill => {
+          const skillName = typeof skill === 'string' ? skill : skill.skill;
+          const isValid = validSoftSkills.includes(skillName);
+          if (!isValid) {
+            console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
+          }
+          return isValid;
+        });
+        newSuggestions.skills.soft = validSoft;
+        console.log('✅ Re-validated soft skills:', newSuggestions.skills.soft);
+      }
+
+      setSuggestions(newSuggestions);
+    }
+  }, [professionalSkills, technicalSkills, softSkills, suggestions]);
 
   const handleConfirm = () => {
     if (suggestions) {
@@ -1147,11 +1358,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         ];
         break;
       case "sectors":
-        newSuggestions.sectors = [...(newSuggestions.sectors || []), item];
+        // Validate that the sector is in the allowed list
+        if (predefinedOptions.sectors.includes(item)) {
+          newSuggestions.sectors = [...(newSuggestions.sectors || []), item];
+        } else {
+          console.warn(`Sector "${item}" is not in the allowed list. Skipping.`);
+        }
         break;
       case "destinationZones":
         // For destination zones, we store the alpha-2 code
         console.log('➕ Adding destination zone:', item);
+        
+        // If someone tries to add "Global", replace with "France"
+        if (item.toLowerCase() === 'global') {
+          console.log('🔄 Converting "Global" to "France"');
+          item = 'France';
+        }
+        
         const alpha2Code = getAlpha2CodeSync(item);
         console.log('📝 Storing alpha2Code:', alpha2Code);
         newSuggestions.destinationZones = [
@@ -1211,11 +1434,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.deliverables[index] = newValue;
         break;
       case "sectors":
-        newSuggestions.sectors[index] = newValue;
+        // Validate that the sector is in the allowed list
+        if (predefinedOptions.sectors.includes(newValue)) {
+          newSuggestions.sectors[index] = newValue;
+        } else {
+          console.warn(`Sector "${newValue}" is not in the allowed list. Skipping update.`);
+        }
         break;
       case "destinationZones":
         // For destination zones, we store the alpha-2 code
         console.log('✏️ Updating destination zone at index', index, 'with:', newValue);
+        
+        // If someone tries to update to "Global", replace with "France"
+        if (newValue.toLowerCase() === 'global') {
+          console.log('🔄 Converting "Global" to "France"');
+          newValue = 'France';
+        }
+        
         const alpha2Code = getAlpha2CodeSync(newValue);
         console.log('📝 Storing alpha2Code:', alpha2Code);
         newSuggestions.destinationZones[index] = alpha2Code;
@@ -1417,7 +1652,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         autoFocus
                       >
                         <option value="">Select a sector...</option>
-                        {SECTORS.filter((sector) => !currentItems.includes(sector) || sector === items[index]).map((sector) => (
+                        {predefinedOptions.sectors.filter((sector) => !currentItems.includes(sector) || sector === items[index]).map((sector) => (
                           <option key={sector} value={sector}>
                             {sector}
                           </option>
@@ -1549,7 +1784,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 autoFocus
               >
                 <option value="">Select a sector...</option>
-                {SECTORS.filter((sector) => !currentItems.includes(sector)).map(
+                {predefinedOptions.sectors.filter((sector) => !currentItems.includes(sector)).map(
                   (sector) => (
                     <option key={sector} value={sector}>
                       {sector}
@@ -2315,22 +2550,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         
         <select
           className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
-          value={suggestions.schedule.time_zone || suggestions.schedule.timeZones?.[0] || ''}
+          value={suggestions.schedule.time_zone || (filteredTimezones.length > 0 ? filteredTimezones[0]._id : '')}
           onChange={handleTimezoneChange}
           disabled={timezoneLoading}
         >
-          <option value="">Select a timezone...</option>
-          {filteredTimezones.length > 0 ? (
-            filteredTimezones.map((tz) => (
-              <option key={tz._id} value={tz._id}>
-                {tz.zoneName} {tz.countryName ? `- ${tz.countryName}` : ''}
-              </option>
-            ))
-          ) : timezoneSearch ? (
-            <option value="" disabled>No timezones found matching "{timezoneSearch}"</option>
-          ) : (
-            <option value="" disabled>Loading timezones...</option>
-          )}
+          {/* Show placeholder only if no timezone is selected or available */}
+          {filteredTimezones.length === 0 || !suggestions.schedule.time_zone ? (
+            <option value="">Select a timezone...</option>
+          ) : null}
+          {filteredTimezones.map((tz) => (
+            <option key={tz._id} value={tz._id}>
+              {tz.zoneName} {tz.countryName ? `- ${tz.countryName}` : ''}
+            </option>
+          ))}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {timezoneOptions.length > 0 
@@ -3058,11 +3290,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           case "languages":
             return LANGUAGES.filter(lang => !currentItems.some(item => item.language === lang));
           case "professional":
-            return PROFESSIONAL_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+            return professionalSkills
+              .filter(skill => !currentItems.some(item => item.skill === skill.name))
+              .map(skill => skill.name);
           case "technical":
-            return TECHNICAL_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+            return technicalSkills
+              .filter(skill => !currentItems.some(item => item.skill === skill.name))
+              .map(skill => skill.name);
           case "soft":
-            return SOFT_SKILLS.filter(skill => !currentItems.some(item => item.skill === skill));
+            return softSkills
+              .filter(skill => !currentItems.some(item => item.skill === skill.name))
+              .map(skill => skill.name);
           default:
             return [];
         }
@@ -3077,7 +3315,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <div className="p-2 bg-blue-100 rounded-lg">
                 {icon}
               </div>
-              <h4 className="text-lg font-bold text-gray-800">{title}</h4>
+              <div>
+                <h4 className="text-lg font-bold text-gray-800">{title}</h4>
+                {skillType !== "languages" && (
+                  <p className="text-sm text-gray-600">
+                    {skillType === "professional" && `${professionalSkills.length} available`}
+                    {skillType === "technical" && `${technicalSkills.length} available`}
+                    {skillType === "soft" && `${softSkills.length} available`}
+                  </p>
+                )}
+              </div>
             </div>
             <button
               onClick={() => {
@@ -3115,20 +3362,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               </option>
                             ))
                           : skillType === "professional"
-                          ? PROFESSIONAL_SKILLS.map((skill) => (
-                              <option key={skill} value={skill}>
-                                {skill}
+                          ? professionalSkills.map((skill) => (
+                              <option key={skill._id} value={skill.name}>
+                                {skill.name}
                               </option>
                             ))
                           : skillType === "technical"
-                          ? TECHNICAL_SKILLS.map((skill) => (
-                              <option key={skill} value={skill}>
-                                {skill}
+                          ? technicalSkills.map((skill) => (
+                              <option key={skill._id} value={skill.name}>
+                                {skill.name}
                               </option>
                             ))
-                          : SOFT_SKILLS.map((skill) => (
-                              <option key={skill} value={skill}>
-                                {skill}
+                          : softSkills.map((skill) => (
+                              <option key={skill._id} value={skill.name}>
+                                {skill.name}
                               </option>
                             ))
                         }
@@ -3236,19 +3483,51 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           {editingSection === skillType && editingIndex === -1 && (
             <div className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
               <div className="space-y-4">
-                <select
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autoFocus
-                >
-                  <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
-                  {skillOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                {skillsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+                    <span className="text-gray-600">Loading skills from API...</span>
+                  </div>
+                ) : (
+                  <select
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    autoFocus
+                  >
+                    <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
+                    {skillType === "languages" 
+                      ? skillOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))
+                      : skillType === "professional"
+                      ? professionalSkills
+                          .filter(skill => !currentItems.some(item => item.skill === skill.name))
+                          .map((skill) => (
+                            <option key={skill._id} value={skill.name}>
+                              {skill.name}
+                            </option>
+                          ))
+                      : skillType === "technical"
+                      ? technicalSkills
+                          .filter(skill => !currentItems.some(item => item.skill === skill.name))
+                          .map((skill) => (
+                            <option key={skill._id} value={skill.name}>
+                              {skill.name}
+                            </option>
+                          ))
+                      : softSkills
+                          .filter(skill => !currentItems.some(item => item.skill === skill.name))
+                          .map((skill) => (
+                            <option key={skill._id} value={skill.name}>
+                              {skill.name}
+                            </option>
+                          ))
+                    }
+                  </select>
+                )}
                 {skillType === "languages" ? (
                   <select
                     defaultValue="B1"

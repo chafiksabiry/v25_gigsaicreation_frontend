@@ -2,19 +2,16 @@ import React, { useState } from "react";
 import Cookies from 'js-cookie';
 import {
   Brain,
-  Send,
   HelpCircle,
   Briefcase,
   FileText,
   Globe2,
   DollarSign,
   Users,
-  Target,
   PlusCircle,
 } from "lucide-react";
 import { AIDialog } from "./AIDialog";
 import { Suggestions } from "./Suggestions";
-import BasicSection from "./BasicSection";
 import { SectionContent } from "./SectionContent";
 import type { GigData, GigSuggestion } from "../types";
 import { predefinedOptions } from "../lib/guidance";
@@ -434,29 +431,31 @@ const PrompAI: React.FC = () => {
             </div>
           )}
 
-          {/* Navigation Tabs */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 mb-8 shadow-lg border border-white/20">
-            <div className="flex overflow-x-auto">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => handleSectionChange(section.id)}
-                  className={`flex items-center gap-3 px-6 py-4 whitespace-nowrap rounded-xl transition-all duration-300 font-medium ${
-                    section.id === currentSection
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105"
-                      : "text-gray-600 hover:text-gray-800 hover:bg-gray-100/50"
-                  }`}
-                >
-                  <section.icon className={`w-5 h-5 ${section.id === currentSection ? 'text-white' : 'text-gray-500'}`} />
-                  {section.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Navigation and Section Content */}
+          <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden max-w-4xl mx-auto">
+            {/* Navigation Tabs */}
+            <nav className="border-b border-gray-200 bg-white px-4 py-3">
+              <div className="flex justify-start gap-2">
+                {sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => handleSectionChange(section.id)}
+                    className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200
+                      ${section.id === currentSection
+                        ? "border-b-2 border-blue-600 text-blue-600"
+                        : "text-gray-600 hover:text-blue-600 border-b-2 border-transparent"
+                      }`}
+                    style={{ outline: "none" }}
+                  >
+                    <section.icon className={`w-5 h-5 ${section.id === currentSection ? 'text-blue-600' : 'text-gray-400'}`} />
+                    {section.label}
+                  </button>
+                ))}
+              </div>
+            </nav>
 
-          {/* Section Content */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-            <div className="p-8">
+            {/* Section Content */}
+            <div>
               <SectionContent
                 section={currentSection}
                 data={gigData}

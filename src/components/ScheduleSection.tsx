@@ -412,7 +412,7 @@ export function ScheduleSection({
   };
 
   return (
-    <div className="w-full bg-white p-0">
+    <div className="w-full bg-white py-6">
       <div className="space-y-8">
         {/* Display normal groups */}
         {groupedSchedules.map((group, index) => (

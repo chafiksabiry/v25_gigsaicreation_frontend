@@ -5,12 +5,13 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+
 // TODO: Implement these functions with your preferred storage solution
-export async function createGig(gigData: Partial<Gig>) {
+export async function createGig() {
   throw new Error('Not implemented');
 }
 
-export async function updateGig(id: string, updates: Partial<Gig>) {
+export async function updateGig(_id: string, _updates: Partial<Gig>) {
   throw new Error('Not implemented');
 }
 
@@ -245,7 +246,8 @@ export async function getGig(gigId: string | null) {
 export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error }> {
   try {
     console.log('[fetchAllTimezones] Fetching all timezones from API...');
-    const response = await fetch('http://localhost:5002/api/timezones');
+    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const response = await fetch(`${timezoneApiUrl}/timezones`);
     console.log('[fetchAllTimezones] Response received:', response);
     
     if (!response.ok) {
@@ -272,7 +274,8 @@ export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error 
 
 export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
   try {
-    const response = await fetch(`http://localhost:5002/api/timezones/country/${countryCode}`);
+    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https://preprod-api-repcreationwizard.harx.ai/api';
+    const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch timezones for country ${countryCode}: ${response.statusText}`);
@@ -291,5 +294,48 @@ export async function fetchTimezonesByCountry(countryCode: string): Promise<{ da
       data: [], 
       error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
     };
+  }
+}
+
+// Skills API functions
+export async function fetchSoftSkills() {
+  try {
+    const response = await fetch('https://preprod-api-repcreationwizard.harx.ai/api/skills/soft');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error('Error fetching soft skills:', error);
+    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export async function fetchTechnicalSkills() {
+  try {
+    const response = await fetch('https://preprod-api-repcreationwizard.harx.ai/api/skills/technical');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error('Error fetching technical skills:', error);
+    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export async function fetchProfessionalSkills() {
+  try {
+    const response = await fetch('https://preprod-api-repcreationwizard.harx.ai/api/skills/professional');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error('Error fetching professional skills:', error);
+    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

@@ -363,7 +363,7 @@ export function DocumentationSection({
   };
 
   return (
-    <div className="w-full bg-white p-0">
+    <div className="w-full bg-white py-6">
       <div className="space-y-8">
         {uploadError && (
           <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">

@@ -367,11 +367,9 @@ export function SectionContent({
     }
   };
   return (
-    <div className="">
+    <div className="bg-white border border-gray-100/50 p-8">
       <SectionGuidance section={section} />
-      {/* <div className="bg-gradient-to-br from-gray-50/50 to-white/50 rounded-2xl p-6 border border-gray-100/50"> */}
-        {renderContent()}
-      {/* </div> */}
+      {renderContent()}
     </div>
   );
 }

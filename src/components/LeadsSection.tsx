@@ -86,7 +86,7 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
   const totalPercentage = data.types?.reduce((sum, type) => sum + type.percentage, 0) || 0;
 
   return (
-    <div className="space-y-8">
+    <div className="w-full bg-white py-6 space-y-8">
       <InfoText>
         Define the lead distribution strategy, including the mix of different lead types and their sources.
         Ensure the total percentage equals 100%. Set forecasted conversion rates to track expected success.

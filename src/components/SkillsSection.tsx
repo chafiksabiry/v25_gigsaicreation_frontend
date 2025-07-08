@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InfoText } from './InfoText';
 import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
 
@@ -96,95 +96,24 @@ const LANGUAGES = [
   "Lithuanian",
 ];
 
-// Professional skills from Suggestions.tsx
-const PROFESSIONAL_SKILLS = [
-  "In-depth understanding of products/services",
-  "Knowledge of company policies, terms, SLAs, and escalation paths",
-  "Familiarity with standard operating procedures (SOPs) for different issue types",
-  "Voice Support: call handling techniques, hold/transfer/escalation protocol",
-  "Email Support: structured writing, canned responses, professional formatting",
-  "Live Chat/Messenger: real-time typing, handling multiple chats, shortcut commands",
-  "Social Media Messaging: brand-safe communication, crisis handling, sentiment detection",
-  "Proficiency in tools like Salesforce, HubSpot, Zoho, etc.",
-  "Ability to log, tag, update, and close tickets accurately",
-  "Understanding of ticket priority levels and SLA timelines",
-  "Usage of dialers, softphones, VoIP systems (e.g. Twilio)",
-  "Call dispositioning and tagging",
-  "Knowledge of call recording and QA monitoring systems",
-  "Fast and accurate typing (ideally 40–60 WPM for chat agents)",
-  "Proficient in copy-paste discipline, keyboard shortcuts, and multitab workflows",
-  "Real-time data entry during live interactions",
-  "Familiarity with basic troubleshooting steps (especially for tech/product support roles)",
-  "Comfort with remote support tools, screen sharing, or device guides",
-  "Use of knowledge bases, macros, and FAQs to guide responses",
-  "Adherence to quality assurance (QA) frameworks",
-  "Awareness of data protection regulations (GDPR, CCPA, PCI DSS, etc.)",
-  "Following compliance scripts and avoiding unauthorized statements",
-  "Understanding of: AHT (Average Handle Time), CSAT (Customer Satisfaction), FCR (First Call Resolution), QA Scores, NPS, etc.",
-  "Ability to self-monitor performance and meet targets",
-  "Multilingual abilities depending on geography",
-  "Familiarity with regional expressions and cultural tone",
-  "Correct use of formal/informal register depending on the context",
-  "Ability to flag product issues, bugs, or patterns",
-  "Use of tools like Excel, Google Sheets, or internal dashboards for reporting",
-  "Writing internal case notes and handover summaries clearly and concisely",
-];
-
-// Technical skills from Suggestions.tsx
-const TECHNICAL_SKILLS = [
-  "Proficiency in using cloud-based contact center software (e.g. Genesys, Five9, Talkdesk, NICE, Twilio, Aircall)",
-  "Understanding of VoIP systems, automatic call distributors (ACD), and interactive voice response (IVR)",
-  "Handling call transfers, holds, recordings, conferencing, and dispositions",
-  "Daily use of CRM systems: Salesforce, Zoho CRM, HubSpot, etc.",
-  "Familiarity with ticketing platforms: Zendesk, Freshdesk, Jira, Help Scout, etc.",
-  "Tagging, prioritizing, escalating, and resolving tickets efficiently",
-  "Managing multiple concurrent chats using tools like Intercom, LivePerson, Drift, Crisp, Tawk.to",
-  "Use of shortcuts, canned responses, and chat routing rules",
-  "Basic understanding of chatbot integrations and human handoffs",
-  "Efficient use of shared inboxes (e.g., Outlook 365 Shared Mailboxes, Gmail for Business)",
-  "Familiarity with email automation, filters, and categorization",
-  "Adherence to email templates and formatting standards",
-  "Navigating internal knowledge bases (e.g., Confluence, Guru, Notion)",
-  "Using search functions and contributing to documentation updates",
-  "Retrieving correct information quickly to answer queries",
-  "Proficiency in Windows/macOS, including multitasking between tools",
-  "Using MS Office or Google Workspace for basic reporting (Excel/Sheets), documentation (Word/Docs), and presentations (PowerPoint/Slides)",
-  "Working with cloud platforms: Google Drive, Dropbox, OneDrive for internal document sharing",
-  "Using collaboration tools like Slack, Microsoft Teams, or Zoom for internal communication",
-  "Typing at 40–60 words per minute (WPM) with low error rate",
-  "Using keyboard shortcuts and productivity tools (clipboard managers, text expanders)",
-  "Navigating call listening, screen recording, and coaching feedback systems",
-  "Diagnosing common user issues (e.g., login problems, app bugs, basic config)",
-  "Using remote desktop tools (e.g., TeamViewer, AnyDesk, Zoom screen sharing)",
-  "Logging reproducible bugs for product/engineering",
-];
-
-// Soft skills from Suggestions.tsx
-const SOFT_SKILLS = [
-  "Active Listening",
-  "Clear Articulation",
-  "Proper Tone & Language",
-  "Spelling & Grammar Accuracy",
-  "Empathy",
-  "Patience",
-  "Self-Regulation",
-  "Analytical Thinking",
-  "Creativity",
-  "Decision-Making",
-  "Service Orientation",
-  "Ownership",
-  "Adaptability",
-  "Team Collaboration",
-  "Conflict Resolution",
-  "Cultural Sensitivity",
-  "Multitasking",
-  "Efficiency",
-  "Resilience",
-  "Receptiveness to Feedback",
-  "Willingness to Learn",
-];
+// Skills will be loaded from APIs
 
 export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: SkillsSectionProps) {
+  // API data states
+  const [professionalSkills, setProfessionalSkills] = useState<string[]>([]);
+  const [softSkills, setSoftSkills] = useState<string[]>([]);
+  const [technicalSkills, setTechnicalSkills] = useState<string[]>([]);
+  const [loadingSkills, setLoadingSkills] = useState({
+    professional: false,
+    soft: false,
+    technical: false
+  });
+  const [errorSkills, setErrorSkills] = useState({
+    professional: false,
+    soft: false,
+    technical: false
+  });
+
   // Ensure data is never undefined and all properties are initialized
   const safeData = {
     languages: (data?.languages || []),
@@ -193,6 +122,55 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     technical: (data?.technical || []),
     certifications: (data?.certifications || [])
   };
+
+  // Load skills from APIs
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        // Fetch professional skills
+        setLoadingSkills(prev => ({ ...prev, professional: true }));
+        setErrorSkills(prev => ({ ...prev, professional: false }));
+        const professionalResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/professional');
+        if (professionalResponse.ok) {
+          const professionalData = await professionalResponse.json();
+          setProfessionalSkills(professionalData.data?.map((skill: any) => skill.name || skill) || []);
+        } else {
+          setErrorSkills(prev => ({ ...prev, professional: true }));
+        }
+        setLoadingSkills(prev => ({ ...prev, professional: false }));
+
+        // Fetch soft skills
+        setLoadingSkills(prev => ({ ...prev, soft: true }));
+        setErrorSkills(prev => ({ ...prev, soft: false }));
+        const softResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/soft');
+        if (softResponse.ok) {
+          const softData = await softResponse.json();
+          setSoftSkills(softData.data?.map((skill: any) => skill.name || skill) || []);
+        } else {
+          setErrorSkills(prev => ({ ...prev, soft: true }));
+        }
+        setLoadingSkills(prev => ({ ...prev, soft: false }));
+
+        // Fetch technical skills
+        setLoadingSkills(prev => ({ ...prev, technical: true }));
+        setErrorSkills(prev => ({ ...prev, technical: false }));
+        const technicalResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/technical');
+        if (technicalResponse.ok) {
+          const technicalData = await technicalResponse.json();
+          setTechnicalSkills(technicalData.data?.map((skill: any) => skill.name || skill) || []);
+        } else {
+          setErrorSkills(prev => ({ ...prev, technical: true }));
+        }
+        setLoadingSkills(prev => ({ ...prev, technical: false }));
+      } catch (error) {
+        console.error('Error fetching skills:', error);
+        setLoadingSkills({ professional: false, soft: false, technical: false });
+        setErrorSkills({ professional: true, soft: true, technical: true });
+      }
+    };
+
+    fetchSkills();
+  }, []);
 
   // Log Skills Section data
   React.useEffect(() => {
@@ -204,9 +182,14 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       technical: safeData.technical,
       certifications: safeData.certifications
     });
+    console.log('API Skills:', {
+      professional: professionalSkills,
+      soft: softSkills,
+      technical: technicalSkills
+    });
     console.log('Skills Errors:', errors);
     console.log('========================');
-  }, [safeData, errors]);
+  }, [safeData, errors, professionalSkills, softSkills, technicalSkills]);
 
   // State for editing
   const [editingIndex, setEditingIndex] = useState<{ type: string; index: number } | null>(null);
@@ -279,10 +262,10 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
   const isDuplicate = (name: string, type: string, excludeIndex?: number) => {
     if (type === 'languages') {
       const languages = safeData.languages;
-      return languages.some((lang, idx) => lang.language === name && idx !== excludeIndex);
+      return languages.some((lang: any, idx: number) => lang.language === name && idx !== excludeIndex);
     }
     const skills = safeData[type as keyof typeof safeData];
-    return skills.some((s: any, idx) => {
+    return skills.some((s: any, idx: number) => {
       if (typeof s === 'string') return s === name;
       return s.skill === name || s.name === name;
     });
@@ -356,7 +339,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
   };
 
   const handleRemove = (type: string, idx: number) => {
-    const updated = safeData[type as keyof typeof safeData].filter((_, i) => i !== idx);
+    const updated = safeData[type as keyof typeof safeData].filter((_: any, i: number) => i !== idx);
     onChange({ ...safeData, [type]: updated });
     if (editingIndex?.index === idx) setEditingIndex(null);
   };
@@ -388,7 +371,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     title: string,
     description: string,
     icon: React.ReactNode,
-    options: any[],
     bgColor: string,
     iconColor: string,
     isLanguage: boolean = false
@@ -396,6 +378,35 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     const skills = safeData[type as keyof typeof safeData] as any[];
     const isEditing = editingIndex?.type === type;
     const isAdding = addMode.type === type && addMode.active;
+    
+    // Get the appropriate skills array based on type
+    let options: string[] = [];
+    let isLoading = false;
+    let hasError = false;
+    
+    if (isLanguage) {
+      options = LANGUAGES;
+    } else {
+      switch (type) {
+        case 'professional':
+          options = professionalSkills;
+          isLoading = loadingSkills.professional;
+          hasError = errorSkills.professional;
+          break;
+        case 'technical':
+          options = technicalSkills;
+          isLoading = loadingSkills.technical;
+          hasError = errorSkills.technical;
+          break;
+        case 'soft':
+          options = softSkills;
+          isLoading = loadingSkills.soft;
+          hasError = errorSkills.soft;
+          break;
+        default:
+          options = [];
+      }
+    }
 
     return (
       <div className={`bg-gradient-to-br from-${bgColor}-50 via-${bgColor}-50/30 to-${bgColor}-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-${bgColor}-100/50`}>
@@ -403,8 +414,49 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           <div className={`p-2.5 bg-${bgColor}-100/80 rounded-lg shadow-inner`}>
             {icon}
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              {isLoading && (
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <div className="w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                  <span>Loading...</span>
+                </div>
+              )}
+              {hasError && !isLoading && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-red-500">⚠️ Failed to load skills</span>
+                  <button
+                    onClick={() => {
+                      const fetchSkills = async () => {
+                        try {
+                          setLoadingSkills(prev => ({ ...prev, [type]: true }));
+                          setErrorSkills(prev => ({ ...prev, [type]: false }));
+                          const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${type}`);
+                          if (response.ok) {
+                            const data = await response.json();
+                            const setter = type === 'professional' ? setProfessionalSkills : 
+                                         type === 'technical' ? setTechnicalSkills : setSoftSkills;
+                            setter(data.data?.map((skill: any) => skill.name || skill) || []);
+                          } else {
+                            setErrorSkills(prev => ({ ...prev, [type]: true }));
+                          }
+                          setLoadingSkills(prev => ({ ...prev, [type]: false }));
+                        } catch (error) {
+                          console.error(`Error fetching ${type} skills:`, error);
+                          setLoadingSkills(prev => ({ ...prev, [type]: false }));
+                          setErrorSkills(prev => ({ ...prev, [type]: true }));
+                        }
+                      };
+                      fetchSkills();
+                    }}
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+            </div>
             <p className="text-sm text-gray-600">{description}</p>
           </div>
         </div>
@@ -440,8 +492,9 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                         handleEditChange('language', e.target.value);
                       }
                     }}
+                    disabled={isLoading}
                   >
-                    <option value="">{isLanguage ? 'Select language' : 'Select skill'}</option>
+                    <option value="">{isLoading ? 'Loading...' : (isLanguage ? 'Select language' : 'Select skill')}</option>
                     {isLanguage ? (
                       languageOptions.map(opt => (
                         <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
@@ -547,6 +600,11 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           ))}
         </div>
         {/* Add skill */}
+        {!isLanguage && options.length === 0 && !isLoading && !hasError && (
+          <div className="text-center py-4 text-gray-500">
+            <p>No skills available</p>
+          </div>
+        )}
         {isAdding ? (
           <div className="flex gap-3 items-center mb-2 bg-blue-50/70 border border-blue-200 rounded-lg p-3.5 shadow-sm">
             <select
@@ -568,8 +626,9 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   handleEditChange('language', e.target.value);
                 }
               }}
+              disabled={isLoading}
             >
-              <option value="">{isLanguage ? 'Select language' : 'Select skill'}</option>
+              <option value="">{isLoading ? 'Loading...' : (isLanguage ? 'Select language' : 'Select skill')}</option>
               {isLanguage ? (
                 languageOptions.map(opt => (
                   <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type)}>
@@ -630,8 +689,9 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           </div>
         ) : (
           <button 
-            className={`text-${iconColor}-600 hover:text-${iconColor}-700 flex items-center gap-1.5 font-medium transition-colors duration-200 hover:underline`} 
+            className={`${!isLanguage && (options.length === 0 || isLoading || hasError) ? 'text-gray-400 cursor-not-allowed' : `text-${iconColor}-600 hover:text-${iconColor}-700 hover:underline`} flex items-center gap-1.5 font-medium transition-colors duration-200`} 
             onClick={() => { setAddMode({ type, active: true }); setEditingIndex(null); setNewSkill({ language: '', proficiency: '', iso639_1: '', level: 1 }); }}
+            disabled={!isLanguage && (options.length === 0 || isLoading || hasError)}
           >
             + Add {type} skill
           </button>
@@ -659,7 +719,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               'Languages',
               'Specify required languages and proficiency levels',
               <Languages className="w-5 h-5 text-blue-600" />,
-              languageOptions,
               'blue',
               'blue',
               true
@@ -671,7 +730,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               'Professional Skills',
               'Add required professional and industry-specific skills',
               <BookOpen className="w-5 h-5 text-purple-600" />,
-              PROFESSIONAL_SKILLS,
               'purple',
               'purple'
             )}
@@ -682,7 +740,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               'Technical Skills',
               'Specify required technical tools and software proficiency',
               <Laptop className="w-5 h-5 text-emerald-600" />,
-              TECHNICAL_SKILLS,
               'emerald',
               'emerald'
             )}
@@ -693,7 +750,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               'Soft Skills',
               'Add interpersonal and communication skills',
               <Users className="w-5 h-5 text-orange-600" />,
-              SOFT_SKILLS,
               'orange',
               'orange'
             )}
