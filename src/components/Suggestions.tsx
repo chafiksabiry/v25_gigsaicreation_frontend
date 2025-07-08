@@ -734,13 +734,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         
         if (needsUpdate) {
           console.log('🔄 Updating suggestions with globally migrated ObjectIds');
-          setSuggestions({ ...suggestions, skills: migratedSkills });
+          setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
       
       migrateAllSkills();
     }
-  }, [suggestions, softSkills, professionalSkills, technicalSkills]);
+  }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
 
   // Force migration on component mount
   useEffect(() => {
