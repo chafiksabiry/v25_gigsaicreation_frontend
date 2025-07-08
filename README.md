@@ -15,7 +15,7 @@ A React-based frontend application for creating and managing gigs with AI assist
 The application uses the following environment variables:
 
 - `VITE_API_URL`: Main API endpoint for gigs
-- `VITE_TIMEZONE_API_URL`: Timezone API endpoint (defaults to `https://preprod-api-repcreationwizard.harx.ai/api`)
+- `VITE_TIMEZONE_API_URL`: Timezone API endpoint (defaults to `https://api-repcreationwizard.harx.ai/api`)
 - `VITE_SUPABASE_URL`: Supabase database URL
 - `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key
 - `VITE_CLOUDINARY_CLOUD_NAME`: Cloudinary cloud name
@@ -84,7 +84,7 @@ The application uses the following timezone API endpoints:
 - `GET /api/timezones` - Fetch all available timezones
 - `GET /api/timezones/country/:countryCode` - Fetch timezones for a specific country
 
-These endpoints are provided by `https://preprod-api-repcreationwizard.harx.ai/api` and can be configured via the `VITE_TIMEZONE_API_URL` environment variable.
+These endpoints are provided by `https://api-repcreationwizard.harx.ai/api` and can be configured via the `VITE_TIMEZONE_API_URL` environment variable.
 
 ## Add your files
 

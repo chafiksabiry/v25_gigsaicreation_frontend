@@ -33,7 +33,7 @@ export async function getGigHistory(gigId: string) {
 
 export async function fetchCompanies() {
   try {
-    const response = await fetch('https://preprod-api-companysearchwizard.harx.ai/api/companies');
+    const response = await fetch('https://api-companysearchwizard.harx.ai/api/companies');
     if (!response.ok) {
       throw new Error('Failed to fetch companies');
     }
@@ -274,7 +274,7 @@ export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error 
 
 export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
   try {
-    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https://preprod-api-repcreationwizard.harx.ai/api';
+    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https:/api-repcreationwizard.harx.ai/api';
     const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
     
     if (!response.ok) {
@@ -300,7 +300,7 @@ export async function fetchTimezonesByCountry(countryCode: string): Promise<{ da
 // Skills API functions
 export async function fetchSoftSkills() {
   try {
-    const response = await fetch('https://preprod-api-repcreationwizard.harx.ai/api/skills/soft');
+    const response = await fetch('https://api-repcreationwizard.harx.ai/api/skills/soft');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -314,7 +314,7 @@ export async function fetchSoftSkills() {
 
 export async function fetchTechnicalSkills() {
   try {
-    const response = await fetch('https://preprod-api-repcreationwizard.harx.ai/api/skills/technical');
+    const response = await fetch('https://api-repcreationwizard.harx.ai/api/skills/technical');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -328,7 +328,7 @@ export async function fetchTechnicalSkills() {
 
 export async function fetchProfessionalSkills() {
   try {
-    const response = await fetch('https://preprod-api-repcreationwizard.harx.ai/api/skills/professional');
+    const response = await fetch('https://api-repcreationwizard.harx.ai/api/skills/professional');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
