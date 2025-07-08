@@ -94,22 +94,25 @@ export interface GigData {
     qualificationCriteria: string[];
   };
   skills: {
-    languages: Array<{ 
-      language: string; 
-      proficiency: string;
-      iso639_1: string;
-    }>;
-    soft: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format
-      level: number;
-    }>;
     professional: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
     }>;
     technical: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
+    }>;
+    soft: Array<{
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
+      level: number;
+      details: string; // Added details field to match backend
+    }>;
+    languages: Array<{
+      language: string;
+      proficiency: string;
+      iso639_1: string;
     }>;
     certifications: Array<{
       name: string;

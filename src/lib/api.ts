@@ -339,3 +339,191 @@ export async function fetchProfessionalSkills() {
     return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
+// New functions to save skills to database
+export async function saveSkillToDatabase(skillData: {
+  name: string;
+  description: string;
+  category: 'soft' | 'technical' | 'professional';
+  level?: number;
+}): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${skillData.category}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: skillData.name,
+        description: skillData.description,
+        category: skillData.category,
+        level: skillData.level || 1
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to save skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error saving skill to database:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to save skill') 
+    };
+  }
+}
+
+export async function updateSkillInDatabase(
+  skillId: string, 
+  skillData: {
+    name?: string;
+    description?: string;
+    category?: 'soft' | 'technical' | 'professional';
+    level?: number;
+  }
+): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${skillId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(skillData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error updating skill in database:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to update skill') 
+    };
+  }
+}
+
+export async function deleteSkillFromDatabase(skillId: string): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${skillId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to delete skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error deleting skill from database:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to delete skill') 
+    };
+  }
+}
+
+export async function getSkillById(skillId: string): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/id/${skillId}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error getting skill by ID:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to get skill') 
+    };
+  }
+}
+
+export async function searchSkillsByName(name: string, category?: 'soft' | 'technical' | 'professional'): Promise<{ data: any[]; error?: Error }> {
+  try {
+    const categoryParam = category ? `&category=${category}` : '';
+    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/search?name=${encodeURIComponent(name)}${categoryParam}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to search skills: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data || [], error: undefined };
+  } catch (error) {
+    console.error('Error searching skills:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to search skills') 
+    };
+  }
+}
+
+// Function to sync skills from external sources to database
+export async function syncSkillsToDatabase(skills: Array<{
+  name: string;
+  description: string;
+  category: 'soft' | 'technical' | 'professional';
+  source?: string;
+}>): Promise<{ data: any[]; error?: Error }> {
+  try {
+    const results = [];
+    
+    for (const skill of skills) {
+      try {
+        // Check if skill already exists
+        const searchResult = await searchSkillsByName(skill.name, skill.category);
+        
+        if (searchResult.data.length > 0) {
+          // Skill exists, update if needed
+          const existingSkill = searchResult.data[0];
+          if (existingSkill.description !== skill.description) {
+            const updateResult = await updateSkillInDatabase(existingSkill._id, {
+              description: skill.description
+            });
+            if (updateResult.data) {
+              results.push(updateResult.data);
+            }
+          } else {
+            results.push(existingSkill);
+          }
+        } else {
+          // Skill doesn't exist, create new one
+          const createResult = await saveSkillToDatabase(skill);
+          if (createResult.data) {
+            results.push(createResult.data);
+          }
+        }
+      } catch (skillError) {
+        console.error(`Error processing skill ${skill.name}:`, skillError);
+        // Continue with other skills even if one fails
+      }
+    }
+    
+    return { data: results, error: undefined };
+  } catch (error) {
+    console.error('Error syncing skills to database:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to sync skills') 
+    };
+  }
+}

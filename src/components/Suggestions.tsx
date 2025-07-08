@@ -3250,11 +3250,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           if (skillObject) {
             (newSuggestions.skills as any)[skillType].push({ 
               skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
-              level 
+              level,
+              details: skillObject.description || '' // Add details field
             });
           } else {
             // Fallback if skill not found
-            (newSuggestions.skills as any)[skillType].push({ skill: { $oid: skill }, level });
+            (newSuggestions.skills as any)[skillType].push({ 
+              skill: { $oid: skill }, 
+              level,
+              details: '' // Add empty details field
+            });
           }
           break;
       }
@@ -3297,9 +3302,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             const skillObject = skillArray.find(s => s._id === value);
             if (skillObject) {
               (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
+              (newSuggestions.skills as any)[skillType][index].details = skillObject.description || ''; // Update details field
             } else {
               // Fallback if skill not found
               (newSuggestions.skills as any)[skillType][index].skill = { $oid: value as string };
+              (newSuggestions.skills as any)[skillType][index].details = ''; // Set empty details
             }
           } else if (field === "level") {
             (newSuggestions.skills as any)[skillType][index].level = value as number;

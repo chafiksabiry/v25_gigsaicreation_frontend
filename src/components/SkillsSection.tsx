@@ -10,16 +10,19 @@ interface SkillsSectionProps {
       iso639_1: string;
     }>;
     soft: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
     }>;
     professional: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
     }>;
     technical: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
     }>;
     certifications: Array<{
       name: string;
@@ -337,13 +340,15 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       if (selectedSkill) {
         updated[editingIndex.index] = {
           skill: { $oid: selectedSkill._id }, // Store MongoDB ObjectId format
-          level: newSkill.level
+          level: newSkill.level,
+          details: selectedSkill.description || '' // Add details field
         };
       } else {
         // Fallback if skill not found
         updated[editingIndex.index] = {
           skill: { $oid: newSkill.language },
-          level: newSkill.level
+          level: newSkill.level,
+          details: '' // Add empty details field
         };
       }
     }
@@ -382,13 +387,15 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       if (selectedSkill) {
         updated = [...safeData[addMode.type as keyof typeof safeData], {
           skill: { $oid: selectedSkill._id }, // Store MongoDB ObjectId format
-          level: newSkill.level
+          level: newSkill.level,
+          details: selectedSkill.description || '' // Add details field
         }];
       } else {
         // Fallback if skill not found
         updated = [...safeData[addMode.type as keyof typeof safeData], {
           skill: { $oid: newSkill.language },
-          level: newSkill.level
+          level: newSkill.level,
+          details: '' // Add empty details field
         }];
       }
     }
