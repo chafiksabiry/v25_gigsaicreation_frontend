@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import Cookies from 'js-cookie';
 import axios from 'axios';
@@ -66,6 +66,72 @@ export function GigReview({
   const hasErrors = Object.keys(validation.errors).length > 0;
   const hasWarnings = Object.keys(validation.warnings).length > 0;
 
+  // State for skills data
+  const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [skillsLoading, setSkillsLoading] = useState(true);
+
+  // Load skills from API
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        setSkillsLoading(true);
+        
+        // Fetch all skills categories
+        const [softResponse, professionalResponse, technicalResponse] = await Promise.all([
+          fetch('https://api-repcreationwizard.harx.ai/api/skills/soft'),
+          fetch('https://api-repcreationwizard.harx.ai/api/skills/professional'),
+          fetch('https://api-repcreationwizard.harx.ai/api/skills/technical')
+        ]);
+
+        if (softResponse.ok) {
+          const softData = await softResponse.json();
+          setSoftSkills(softData.data || []);
+        }
+
+        if (professionalResponse.ok) {
+          const professionalData = await professionalResponse.json();
+          setProfessionalSkills(professionalData.data || []);
+        }
+
+        if (technicalResponse.ok) {
+          const technicalData = await technicalResponse.json();
+          setTechnicalSkills(technicalData.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching skills:', error);
+      } finally {
+        setSkillsLoading(false);
+      }
+    };
+
+    fetchSkills();
+  }, []);
+
+  // Helper function to get skill name by ObjectId
+  const getSkillNameById = (skillId: string | { $oid: string }, category: string): string => {
+    const id = typeof skillId === 'string' ? skillId : skillId.$oid;
+    let skillArray: Array<{_id: string, name: string, description: string, category: string}> = [];
+    
+    switch (category) {
+      case 'soft':
+        skillArray = softSkills;
+        break;
+      case 'professional':
+        skillArray = professionalSkills;
+        break;
+      case 'technical':
+        skillArray = technicalSkills;
+        break;
+      default:
+        return 'Unknown Skill';
+    }
+    
+    const skill = skillArray.find(s => s._id === id);
+    return skill ? skill.name : 'Unknown Skill';
+  };
+
   const getCurrencySymbol = () => {
     if (!data.commission) {
       return "€";
@@ -92,6 +158,9 @@ export function GigReview({
 
   const handlePublish = async () => {
     try {
+      // Log the data being sent to ensure ObjectIds are preserved
+      console.log('🚀 Publishing gig with skills data:', data.skills);
+      
       await saveGigData(data);
       await onSubmit();
       Swal.fire({
@@ -612,14 +681,19 @@ export function GigReview({
                       Technical Skills
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.skills.technical.map((skill, index) => (
-                        <span
-                          key={`${skill.skill}-${index}`}
-                          className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                        >
-                          {skill.skill} (Level {skill.level})
-                        </span>
-                      ))}
+                      {data.skills.technical.map((skill, index) => {
+                        const skillName = getSkillNameById(skill.skill, 'technical');
+                        const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill as { $oid: string }).$oid;
+                        return (
+                          <span
+                            key={`${skillId}-${index}`}
+                            className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
+                            title={`ObjectId: ${skillId}`}
+                          >
+                            {skillName} (Level {skill.level})
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -632,14 +706,44 @@ export function GigReview({
                       Soft Skills
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {data.skills.soft.map((skill, index) => (
-                        <span
-                          key={`${skill.skill}-${index}`}
-                          className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-                        >
-                          {skill.skill} (Level {skill.level})
-                        </span>
-                      ))}
+                      {data.skills.soft.map((skill, index) => {
+                        const skillName = getSkillNameById(skill.skill, 'soft');
+                        const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill as { $oid: string }).$oid;
+                        return (
+                          <span
+                            key={`${skillId}-${index}`}
+                            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
+                            title={`ObjectId: ${skillId}`}
+                          >
+                            {skillName} (Level {skill.level})
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Professional Skills */}
+                {data.skills?.professional?.length > 0 && (
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-gray-600" />
+                      Professional Skills
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {data.skills.professional.map((skill, index) => {
+                        const skillName = getSkillNameById(skill.skill, 'professional');
+                        const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill as { $oid: string }).$oid;
+                        return (
+                          <span
+                            key={`${skillId}-${index}`}
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                            title={`ObjectId: ${skillId}`}
+                          >
+                            {skillName} (Level {skill.level})
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

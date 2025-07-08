@@ -3206,7 +3206,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderSkillsSection = () => {
     if (!suggestions) return null;
 
+    // Helper: get ObjectId for a skill name and type
+    function getSkillObjectId(skillName: string, type: string): string | undefined {
+      let arr: any[] = [];
+      if (type === 'soft') arr = softSkills;
+      if (type === 'professional') arr = professionalSkills;
+      if (type === 'technical') arr = technicalSkills;
+      const found = arr.find(s => s.name === skillName);
+      return found?._id;
+    }
+
+    // Mapping for display: always show ObjectId if possible
+    const skillsWithObjectIds: any = { ...suggestions.skills };
+    ['soft', 'professional', 'technical'].forEach(type => {
+      skillsWithObjectIds[type] = ((suggestions.skills as any)[type] as any[]).map(s => {
+        if (typeof s.skill === 'string') {
+          const oid = getSkillObjectId(s.skill, type);
+          return { ...s, skill: oid ? { $oid: oid } : s.skill };
+        }
+        return s;
+      });
+    });
+    console.log('Current suggestions skills (with ObjectIds):', skillsWithObjectIds);
+
     const addSkill = (skillType: string, skill: string, level: number = 1) => {
+      console.log(`🔄 Adding skill - Type: ${skillType}, Skill ID: ${skill}, Level: ${level}`);
+      
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) {
         newSuggestions.skills = {
@@ -3225,6 +3250,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             proficiency: LANGUAGE_LEVELS[level - 1]?.value || "B1",
             iso639_1: "en",
           });
+          console.log(`✅ Added language: ${skill}`);
           break;
         case "soft":
         case "professional":
@@ -3247,26 +3273,38 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           
           // Find the skill by ObjectId (skill parameter is now the ObjectId)
           const skillObject = skillArray.find(s => s._id === skill);
+          console.log(`🔍 Looking for skill with ID: ${skill}`);
+          console.log(`📋 Available skills in ${skillType}:`, skillArray.map(s => ({ id: s._id, name: s.name })));
+          
           if (skillObject) {
-            (newSuggestions.skills as any)[skillType].push({ 
+            const skillData = { 
               skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
               level,
               details: skillObject.description || '' // Add details field
-            });
+            };
+            (newSuggestions.skills as any)[skillType].push(skillData);
+            console.log(`✅ Added ${skillType} skill:`, skillData);
+            console.log(`📝 Skill ObjectId: ${skillObject._id}, Name: ${skillObject.name}`);
           } else {
             // Fallback if skill not found
-            (newSuggestions.skills as any)[skillType].push({ 
+            const fallbackData = { 
               skill: { $oid: skill }, 
               level,
               details: '' // Add empty details field
-            });
+            };
+            (newSuggestions.skills as any)[skillType].push(fallbackData);
+            console.log(`⚠️ Skill not found, using fallback:`, fallbackData);
           }
           break;
       }
+      
+      console.log('📊 Updated suggestions skills:', newSuggestions.skills);
       setSuggestions(newSuggestions);
     };
 
     const updateSkill = (skillType: string, index: number, field: string, value: string | number) => {
+      console.log(`🔄 Updating skill - Type: ${skillType}, Index: ${index}, Field: ${field}, Value: ${value}`);
+      
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) return;
 
@@ -3300,13 +3338,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             // Find the skill by ObjectId (value parameter is now the ObjectId)
             const skillObject = skillArray.find(s => s._id === value);
+            console.log(`🔍 Updating skill - Looking for skill with ID: ${value}`);
+            console.log(`📋 Available skills in ${skillType}:`, skillArray.map(s => ({ id: s._id, name: s.name })));
+            
             if (skillObject) {
               (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
               (newSuggestions.skills as any)[skillType][index].details = skillObject.description || ''; // Update details field
+              console.log(`✅ Updated ${skillType} skill:`, {
+                skill: { $oid: skillObject._id },
+                level: (newSuggestions.skills as any)[skillType][index].level,
+                details: skillObject.description || ''
+              });
+              console.log(`📝 Skill ObjectId: ${skillObject._id}, Name: ${skillObject.name}`);
             } else {
               // Fallback if skill not found
               (newSuggestions.skills as any)[skillType][index].skill = { $oid: value as string };
               (newSuggestions.skills as any)[skillType][index].details = ''; // Set empty details
+              console.log(`⚠️ Skill not found during update, using fallback:`, { $oid: value as string });
             }
           } else if (field === "level") {
             (newSuggestions.skills as any)[skillType][index].level = value as number;
@@ -3317,9 +3365,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const deleteSkill = (skillType: string, index: number) => {
+      console.log(`🗑️ Deleting skill - Type: ${skillType}, Index: ${index}`);
+      const arr = (suggestions.skills as any)[skillType];
+      if (arr && arr[index]) {
+        const skillEntry = arr[index];
+        if (skillEntry && skillEntry.skill && skillEntry.skill.$oid) {
+          console.log(`🗑️ Skill ObjectId to delete: ${skillEntry.skill.$oid}`);
+        } else {
+          console.log('🗑️ Skill entry to delete:', skillEntry);
+        }
+      }
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) return;
-
       switch (skillType) {
         case "languages":
           newSuggestions.skills.languages.splice(index, 1);

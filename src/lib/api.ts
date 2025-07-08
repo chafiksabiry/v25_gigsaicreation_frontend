@@ -136,16 +136,19 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         iso639_1: lang.iso639_1
       })),
       soft: fixedGigData.skills.soft.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: skill.skill, // This preserves ObjectId format { $oid: "..." }
+        level: skill.level,
+        details: skill.details || ''
       })),
       professional: fixedGigData.skills.professional.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: skill.skill, // This preserves ObjectId format { $oid: "..." }
+        level: skill.level,
+        details: skill.details || ''
       })),
       technical: fixedGigData.skills.technical.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: skill.skill, // This preserves ObjectId format { $oid: "..." }
+        level: skill.level,
+        details: skill.details || ''
       })),
       certifications: fixedGigData.skills.certifications.map(cert => ({
         name: cert.name,
@@ -153,6 +156,9 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         provider: cert.provider
       }))
     };
+
+    // Log the formatted skills to ensure ObjectIds are preserved
+    console.log('📤 Sending skills data to API:', formattedSkills);
 
     // Format schedule data to remove invalid ObjectId references
     const formattedSchedule = {
