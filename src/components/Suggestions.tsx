@@ -590,13 +590,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     });
     
     if (needsUpdate) {
-      setSuggestions(newSuggestions);
+      setSuggestions(prev => prev ? newSuggestions : null);
     }
   };
 
   // Validate team structure when suggestions change
   useEffect(() => {
-    validateAndFixTeamStructure();
+    if (suggestions?.team?.structure) {
+      validateAndFixTeamStructure();
+    }
   }, [suggestions?.team?.structure]);
 
   // Fetch all countries, timezones, and skills when component mounts
@@ -742,7 +744,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
   }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
 
-  // Force migration on component mount
+  // Force migration on component mount - only run once
   useEffect(() => {
     const forceMigration = () => {
       if (suggestions && suggestions.skills) {
@@ -783,7 +785,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return () => {
       window.removeEventListener('forceSkillsMigration', handleForceMigration);
     };
-  }, [suggestions]);
+  }, []); // Only run on mount, removed suggestions dependency
 
     // Process all timezones when loaded
   useEffect(() => {
@@ -863,7 +865,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             // Store _id in timeZones array and time_zone field
             newSuggestions.schedule.timeZones = [processedTimezones[0]._id];
             newSuggestions.schedule.time_zone = processedTimezones[0]._id;
-            setSuggestions(newSuggestions);
+            setSuggestions(prev => prev ? newSuggestions : null);
           }
         } else {
           console.error('Failed to fetch timezones for country:', error);
@@ -899,7 +901,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     fetchTimezonesForDestination();
-  }, [suggestions?.destinationZones, allTimezones]);
+  }, [suggestions?.destinationZones?.[0], allTimezones]); // Only depend on the first destination zone to prevent infinite loops
 
   // Effect to handle switching between country-specific and all timezones
   useEffect(() => {
@@ -955,7 +957,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     } else {
       setAvailableTimezones([]);
     }
-  }, [showAllTimezones, allTimezones, suggestions?.destinationZones]);
+  }, [showAllTimezones, allTimezones, suggestions?.destinationZones?.[0]]); // Only depend on the first destination zone to prevent infinite loops
 
   useEffect(() => {
     const generateSuggestions = async () => {
@@ -1235,16 +1237,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       timezoneOptions.length > 0 &&
       (!suggestions.schedule.timeZones || suggestions.schedule.timeZones.length === 0)
     ) {
-      setSuggestions({
-        ...suggestions,
-        schedule: {
-          ...suggestions.schedule,
-          timeZones: [timezoneOptions[0]._id],
-          time_zone: timezoneOptions[0]._id
-        }
+      setSuggestions(prev => {
+        if (!prev || !prev.schedule) return prev;
+        return {
+          ...prev,
+          schedule: {
+            ...prev.schedule,
+            timeZones: [timezoneOptions[0]._id],
+            time_zone: timezoneOptions[0]._id
+          }
+        };
       });
     }
-  }, [timezoneOptions, suggestions]);
+  }, [timezoneOptions]); // Removed suggestions dependency to prevent infinite loop
 
   // Auto-select first timezone when available timezones change
   useEffect(() => {
@@ -1253,16 +1258,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       availableTimezones.length > 0 &&
       (!suggestions.schedule.timeZones || suggestions.schedule.timeZones.length === 0)
     ) {
-      setSuggestions({
-        ...suggestions,
-        schedule: {
-          ...suggestions.schedule,
-          timeZones: [availableTimezones[0]._id],
-          time_zone: availableTimezones[0]._id
-        }
+      setSuggestions(prev => {
+        if (!prev || !prev.schedule) return prev;
+        return {
+          ...prev,
+          schedule: {
+            ...prev.schedule,
+            timeZones: [availableTimezones[0]._id],
+            time_zone: availableTimezones[0]._id
+          }
+        };
       });
     }
-  }, [availableTimezones, suggestions]);
+  }, [availableTimezones]); // Removed suggestions dependency to prevent infinite loop
 
   // Re-validate skills when they are loaded from API
   useEffect(() => {
@@ -1270,56 +1278,60 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
       console.log('🔄 Re-validating skills now that API data is loaded...');
       
-      const newSuggestions = { ...suggestions };
-      
-      // Validate professional skills
-      if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
-        const validProfessionalSkills = professionalSkills.map(skill => skill.name);
-        const validProfessional = newSuggestions.skills.professional.filter(skill => {
-          const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-          const isValid = validProfessionalSkills.includes(skillName);
-          if (!isValid) {
-            console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
-          }
-          return isValid;
-        });
-        newSuggestions.skills.professional = validProfessional;
-        console.log('✅ Re-validated professional skills:', newSuggestions.skills.professional);
-      }
+      setSuggestions(prev => {
+        if (!prev || !prev.skills) return prev;
+        
+        const newSuggestions = { ...prev };
+        
+        // Validate professional skills
+        if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
+          const validProfessionalSkills = professionalSkills.map(skill => skill.name);
+          const validProfessional = newSuggestions.skills.professional.filter(skill => {
+            const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+            const isValid = validProfessionalSkills.includes(skillName);
+            if (!isValid) {
+              console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          newSuggestions.skills.professional = validProfessional;
+          console.log('✅ Re-validated professional skills:', newSuggestions.skills.professional);
+        }
 
-      // Validate technical skills
-      if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
-        const validTechnicalSkills = technicalSkills.map(skill => skill.name);
-        const validTechnical = newSuggestions.skills.technical.filter(skill => {
-          const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-          const isValid = validTechnicalSkills.includes(skillName);
-          if (!isValid) {
-            console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
-          }
-          return isValid;
-        });
-        newSuggestions.skills.technical = validTechnical;
-        console.log('✅ Re-validated technical skills:', newSuggestions.skills.technical);
-      }
+        // Validate technical skills
+        if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
+          const validTechnicalSkills = technicalSkills.map(skill => skill.name);
+          const validTechnical = newSuggestions.skills.technical.filter(skill => {
+            const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+            const isValid = validTechnicalSkills.includes(skillName);
+            if (!isValid) {
+              console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          newSuggestions.skills.technical = validTechnical;
+          console.log('✅ Re-validated technical skills:', newSuggestions.skills.technical);
+        }
 
-      // Validate soft skills
-      if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
-        const validSoftSkills = softSkills.map(skill => skill.name);
-        const validSoft = newSuggestions.skills.soft.filter(skill => {
-          const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-          const isValid = validSoftSkills.includes(skillName);
-          if (!isValid) {
-            console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
-          }
-          return isValid;
-        });
-        newSuggestions.skills.soft = validSoft;
-        console.log('✅ Re-validated soft skills:', newSuggestions.skills.soft);
-      }
+        // Validate soft skills
+        if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
+          const validSoftSkills = softSkills.map(skill => skill.name);
+          const validSoft = newSuggestions.skills.soft.filter(skill => {
+            const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+            const isValid = validSoftSkills.includes(skillName);
+            if (!isValid) {
+              console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          newSuggestions.skills.soft = validSoft;
+          console.log('✅ Re-validated soft skills:', newSuggestions.skills.soft);
+        }
 
-      setSuggestions(newSuggestions);
+        return newSuggestions;
+      });
     }
-  }, [professionalSkills, technicalSkills, softSkills]);
+  }, [professionalSkills, technicalSkills, softSkills]); // Removed suggestions dependency to prevent infinite loop
 
   const handleConfirm = () => {
     if (suggestions) {
@@ -3347,14 +3359,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       
       if (needsUpdate) {
         console.log('🔄 Updating suggestions with migrated ObjectIds');
-        setSuggestions({ ...suggestions, skills: migratedSkills });
+        setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
       }
     };
 
     // Run migration on every render
     React.useEffect(() => {
       migrateSkillsToObjectIds();
-    }, [suggestions?.skills, softSkills, professionalSkills, technicalSkills]);
+    }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions?.skills to prevent infinite loop
 
     // Mapping for display: always show ObjectId if possible
     const skillsWithObjectIds: any = { ...suggestions.skills };
