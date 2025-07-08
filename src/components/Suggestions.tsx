@@ -522,6 +522,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
+  const skillsLoadedRef = useRef(false);
 
   // Ensure all team roles have valid seniority structure
   const validateAndFixTeamStructure = () => {
@@ -647,7 +648,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Fetch skills from API
   useEffect(() => {
     const fetchSkills = async () => {
-      if (softSkills.length > 0 && technicalSkills.length > 0 && professionalSkills.length > 0) {
+      if (skillsLoadedRef.current) {
         return; // Already loaded
       }
 
@@ -675,6 +676,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           console.log('✅ Fetched', professionalResult.data.length, 'professional skills');
           setProfessionalSkills(professionalResult.data);
         }
+
+        skillsLoadedRef.current = true;
       } catch (error) {
         console.error('❌ Error fetching skills:', error);
       } finally {
@@ -683,7 +686,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     fetchSkills();
-  }, [softSkills.length, technicalSkills.length, professionalSkills.length]);
+  }, []); // Empty dependency array - only run once on mount
 
     // Process all timezones when loaded
   useEffect(() => {
@@ -855,7 +858,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     } else {
       setAvailableTimezones([]);
     }
-  }, [showAllTimezones, allTimezones, suggestions && suggestions.destinationZones && suggestions.destinationZones.length > 0 ? suggestions.destinationZones[0] : null]);
+  }, [showAllTimezones, allTimezones, suggestions?.destinationZones]);
 
   useEffect(() => {
     const generateSuggestions = async () => {
@@ -1009,12 +1012,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             // Validate professional skills
             if (result.skills.professional && result.skills.professional.length > 0) {
-              const validProfessionalSkills = professionalSkills.map(skill => skill.name);
+              const validProfessionalSkills = professionalSkills.map(skill => skill._id);
               const validProfessional = result.skills.professional.filter(skill => {
-                const skillName = typeof skill === 'string' ? skill : skill.skill;
-                const isValid = validProfessionalSkills.includes(skillName);
+                const skillId = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+                const isValid = validProfessionalSkills.includes(skillId);
                 if (!isValid) {
-                  console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
+                  console.warn(`❌ Invalid professional skill "${skillId}" - not in allowed list`);
                 }
                 return isValid;
               });
@@ -1024,12 +1027,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             // Validate technical skills
             if (result.skills.technical && result.skills.technical.length > 0) {
-              const validTechnicalSkills = technicalSkills.map(skill => skill.name);
+              const validTechnicalSkills = technicalSkills.map(skill => skill._id);
               const validTechnical = result.skills.technical.filter(skill => {
-                const skillName = typeof skill === 'string' ? skill : skill.skill;
-                const isValid = validTechnicalSkills.includes(skillName);
+                const skillId = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+                const isValid = validTechnicalSkills.includes(skillId);
                 if (!isValid) {
-                  console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
+                  console.warn(`❌ Invalid technical skill "${skillId}" - not in allowed list`);
                 }
                 return isValid;
               });
@@ -1039,12 +1042,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             // Validate soft skills
             if (result.skills.soft && result.skills.soft.length > 0) {
-              const validSoftSkills = softSkills.map(skill => skill.name);
+              const validSoftSkills = softSkills.map(skill => skill._id);
               const validSoft = result.skills.soft.filter(skill => {
-                const skillName = typeof skill === 'string' ? skill : skill.skill;
-                const isValid = validSoftSkills.includes(skillName);
+                const skillId = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+                const isValid = validSoftSkills.includes(skillId);
                 if (!isValid) {
-                  console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
+                  console.warn(`❌ Invalid soft skill "${skillId}" - not in allowed list`);
                 }
                 return isValid;
               });
@@ -1176,7 +1179,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
         const validProfessionalSkills = professionalSkills.map(skill => skill.name);
         const validProfessional = newSuggestions.skills.professional.filter(skill => {
-          const skillName = typeof skill === 'string' ? skill : skill.skill;
+          const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
           const isValid = validProfessionalSkills.includes(skillName);
           if (!isValid) {
             console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
@@ -1191,7 +1194,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
         const validTechnicalSkills = technicalSkills.map(skill => skill.name);
         const validTechnical = newSuggestions.skills.technical.filter(skill => {
-          const skillName = typeof skill === 'string' ? skill : skill.skill;
+          const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
           const isValid = validTechnicalSkills.includes(skillName);
           if (!isValid) {
             console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
@@ -1206,7 +1209,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
         const validSoftSkills = softSkills.map(skill => skill.name);
         const validSoft = newSuggestions.skills.soft.filter(skill => {
-          const skillName = typeof skill === 'string' ? skill : skill.skill;
+          const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
           const isValid = validSoftSkills.includes(skillName);
           if (!isValid) {
             console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
@@ -1219,7 +1222,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       setSuggestions(newSuggestions);
     }
-  }, [professionalSkills, technicalSkills, softSkills, suggestions]);
+  }, [professionalSkills, technicalSkills, softSkills]);
 
   const handleConfirm = () => {
     if (suggestions) {
@@ -1398,13 +1401,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       case "skills.technical":
         newSuggestions.skills.technical = [
           ...(newSuggestions.skills.technical || []),
-          { skill: item, level: 1 },
+          { skill: { $oid: item }, level: 1 },
         ];
         break;
       case "skills.soft":
         newSuggestions.skills.soft = [
           ...(newSuggestions.skills.soft || []),
-          { skill: item, level: 1 },
+          { skill: { $oid: item }, level: 1 },
         ];
         break;
       case "skills.languages":
@@ -1464,13 +1467,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "skills.technical":
         newSuggestions.skills.technical[index] = {
-          skill: newValue,
+          skill: { $oid: newValue },
           level: newSuggestions.skills.technical[index].level,
         };
         break;
       case "skills.soft":
         newSuggestions.skills.soft[index] = {
-          skill: newValue,
+          skill: { $oid: newValue },
           level: newSuggestions.skills.soft[index].level,
         };
         break;
@@ -3224,13 +3227,35 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           });
           break;
         case "soft":
-          newSuggestions.skills.soft.push({ skill, level });
-          break;
         case "professional":
-          newSuggestions.skills.professional.push({ skill, level });
-          break;
         case "technical":
-          newSuggestions.skills.technical.push({ skill, level });
+          // For skills, we need to find the skill object to get the ObjectId
+          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+          switch (skillType) {
+            case "soft":
+              skillArray = softSkills;
+              break;
+            case "professional":
+              skillArray = professionalSkills;
+              break;
+            case "technical":
+              skillArray = technicalSkills;
+              break;
+            default:
+              skillArray = [];
+          }
+          
+          // Find the skill by ObjectId (skill parameter is now the ObjectId)
+          const skillObject = skillArray.find(s => s._id === skill);
+          if (skillObject) {
+            (newSuggestions.skills as any)[skillType].push({ 
+              skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
+              level 
+            });
+          } else {
+            // Fallback if skill not found
+            (newSuggestions.skills as any)[skillType].push({ skill: { $oid: skill }, level });
+          }
           break;
       }
       setSuggestions(newSuggestions);
@@ -3252,7 +3277,30 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         case "professional":
         case "technical":
           if (field === "skill") {
-            (newSuggestions.skills as any)[skillType][index].skill = value as string;
+            // For skills, we need to find the skill object to get the ObjectId
+            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+            switch (skillType) {
+              case "soft":
+                skillArray = softSkills;
+                break;
+              case "professional":
+                skillArray = professionalSkills;
+                break;
+              case "technical":
+                skillArray = technicalSkills;
+                break;
+              default:
+                skillArray = [];
+            }
+            
+            // Find the skill by ObjectId (value parameter is now the ObjectId)
+            const skillObject = skillArray.find(s => s._id === value);
+            if (skillObject) {
+              (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
+            } else {
+              // Fallback if skill not found
+              (newSuggestions.skills as any)[skillType][index].skill = { $oid: value as string };
+            }
           } else if (field === "level") {
             (newSuggestions.skills as any)[skillType][index].level = value as number;
           }
@@ -3291,16 +3339,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             return LANGUAGES.filter(lang => !currentItems.some(item => item.language === lang));
           case "professional":
             return professionalSkills
-              .filter(skill => !currentItems.some(item => item.skill === skill.name))
-              .map(skill => skill.name);
+              .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+              .map(skill => ({ id: skill._id, name: skill.name }));
           case "technical":
             return technicalSkills
-              .filter(skill => !currentItems.some(item => item.skill === skill.name))
-              .map(skill => skill.name);
+              .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+              .map(skill => ({ id: skill._id, name: skill.name }));
           case "soft":
             return softSkills
-              .filter(skill => !currentItems.some(item => item.skill === skill.name))
-              .map(skill => skill.name);
+              .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
+              .map(skill => ({ id: skill._id, name: skill.name }));
           default:
             return [];
         }
@@ -3431,14 +3479,54 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h5 className="font-semibold text-gray-800">
-                          {skillType === "languages" ? item.language : item.skill}
+                          {skillType === "languages" ? item.language : (() => {
+                            // For skills, find the name by ObjectId
+                            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                            switch (skillType) {
+                              case "soft":
+                                skillArray = softSkills;
+                                break;
+                              case "professional":
+                                skillArray = professionalSkills;
+                                break;
+                              case "technical":
+                                skillArray = technicalSkills;
+                                break;
+                              default:
+                                skillArray = [];
+                            }
+                            const skillId = typeof item.skill === 'string' ? item.skill : item.skill.$oid;
+                            const skillObject = skillArray.find(s => s._id === skillId);
+                            return skillObject ? skillObject.name : skillId;
+                          })()}
                         </h5>
                         <div className="flex space-x-1">
                           <button
                             onClick={() => {
                               setEditingSection(skillType);
                               setEditingIndex(index);
-                              setEditValue(skillType === "languages" ? item.language : item.skill);
+                              if (skillType === "languages") {
+                                setEditValue(item.language);
+                              } else {
+                                // For skills, find the name by ObjectId
+                                let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                                switch (skillType) {
+                                  case "soft":
+                                    skillArray = softSkills;
+                                    break;
+                                  case "professional":
+                                    skillArray = professionalSkills;
+                                    break;
+                                  case "technical":
+                                    skillArray = technicalSkills;
+                                    break;
+                                  default:
+                                    skillArray = [];
+                                }
+                                const skillId = typeof item.skill === 'string' ? item.skill : item.skill.$oid;
+                                const skillObject = skillArray.find(s => s._id === skillId);
+                                setEditValue(skillObject ? skillObject.name : skillId);
+                              }
                             }}
                             className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                           >
@@ -3497,31 +3585,31 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   >
                     <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
                     {skillType === "languages" 
-                      ? skillOptions.map((option) => (
+                      ? (skillOptions as string[]).map((option) => (
                           <option key={option} value={option}>
                             {option}
                           </option>
                         ))
                       : skillType === "professional"
                       ? professionalSkills
-                          .filter(skill => !currentItems.some(item => item.skill === skill.name))
+                          .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
                           .map((skill) => (
-                            <option key={skill._id} value={skill.name}>
+                            <option key={skill._id} value={skill._id}>
                               {skill.name}
                             </option>
                           ))
                       : skillType === "technical"
                       ? technicalSkills
-                          .filter(skill => !currentItems.some(item => item.skill === skill.name))
+                          .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
                           .map((skill) => (
-                            <option key={skill._id} value={skill.name}>
+                            <option key={skill._id} value={skill._id}>
                               {skill.name}
                             </option>
                           ))
                       : softSkills
-                          .filter(skill => !currentItems.some(item => item.skill === skill.name))
+                          .filter(skill => !currentItems.some(item => (typeof item.skill === 'string' ? item.skill : item.skill.$oid) === skill._id))
                           .map((skill) => (
-                            <option key={skill._id} value={skill.name}>
+                            <option key={skill._id} value={skill._id}>
                               {skill.name}
                             </option>
                           ))

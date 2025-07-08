@@ -100,15 +100,15 @@ export interface GigData {
       iso639_1: string;
     }>;
     soft: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     professional: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     technical: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     certifications: Array<{
@@ -261,16 +261,16 @@ export interface GigSuggestion {
       iso639_1: string;
     }>;
     soft: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     professional: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
       details?: string;
     }>;
     technical: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
       details?: string;
     }>;

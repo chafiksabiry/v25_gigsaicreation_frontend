@@ -10,15 +10,15 @@ interface SkillsSectionProps {
       iso639_1: string;
     }>;
     soft: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     professional: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     technical: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     certifications: Array<{
@@ -100,9 +100,9 @@ const LANGUAGES = [
 
 export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: SkillsSectionProps) {
   // API data states
-  const [professionalSkills, setProfessionalSkills] = useState<string[]>([]);
-  const [softSkills, setSoftSkills] = useState<string[]>([]);
-  const [technicalSkills, setTechnicalSkills] = useState<string[]>([]);
+  const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [loadingSkills, setLoadingSkills] = useState({
     professional: false,
     soft: false,
@@ -133,7 +133,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         const professionalResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/professional');
         if (professionalResponse.ok) {
           const professionalData = await professionalResponse.json();
-          setProfessionalSkills(professionalData.data?.map((skill: any) => skill.name || skill) || []);
+          setProfessionalSkills(professionalData.data || []);
         } else {
           setErrorSkills(prev => ({ ...prev, professional: true }));
         }
@@ -145,7 +145,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         const softResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/soft');
         if (softResponse.ok) {
           const softData = await softResponse.json();
-          setSoftSkills(softData.data?.map((skill: any) => skill.name || skill) || []);
+          setSoftSkills(softData.data || []);
         } else {
           setErrorSkills(prev => ({ ...prev, soft: true }));
         }
@@ -157,7 +157,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         const technicalResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/technical');
         if (technicalResponse.ok) {
           const technicalData = await technicalResponse.json();
-          setTechnicalSkills(technicalData.data?.map((skill: any) => skill.name || skill) || []);
+          setTechnicalSkills(technicalData.data || []);
         } else {
           setErrorSkills(prev => ({ ...prev, technical: true }));
         }
@@ -267,7 +267,12 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     const skills = safeData[type as keyof typeof safeData];
     return skills.some((s: any, idx: number) => {
       if (typeof s === 'string') return s === name;
-      return s.skill === name || s.name === name;
+      if (type === 'languages') {
+        return s.language === name;
+      } else {
+        // For skills, compare ObjectId
+        return (typeof s.skill === 'string' ? s.skill : s.skill.$oid) === name;
+      }
     });
   };
 
@@ -285,9 +290,9 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       });
     } else {
       // Handle non-language skills with proper typing
-      const skillObj = typeof skill === 'string' ? { skill: skill, level: 1 } : skill as { skill: string; level: number };
+      const skillObj = typeof skill === 'string' ? { skill: { $oid: skill }, level: 1 } : skill as { skill: { $oid: string }; level: number };
       setNewSkill({ 
-        language: skillObj.skill || '', 
+        language: skillObj.skill.$oid || '', 
         proficiency: '', 
         iso639_1: '',
         level: skillObj.level || 1
@@ -310,8 +315,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       const languageSkill = currentSkill as { language: string; proficiency: string; iso639_1: string };
       nameChanged = languageSkill.language !== newSkill.language;
     } else {
-      const skillObj = currentSkill as { skill: string; level: number };
-      nameChanged = skillObj.skill !== newSkill.language;
+      const skillObj = currentSkill as { skill: { $oid: string }; level: number };
+      nameChanged = skillObj.skill.$oid !== newSkill.language;
     }
     
     if (nameChanged && isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
@@ -324,10 +329,23 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         iso639_1: newSkill.iso639_1
       };
     } else {
-      updated[editingIndex.index] = {
-        skill: newSkill.language,
-        level: newSkill.level
-      };
+      // For skills, we need to find the skill object to get both ID and name
+      const skillOptions = editingIndex.type === 'professional' ? professionalSkills : 
+                          editingIndex.type === 'technical' ? technicalSkills : softSkills;
+      const selectedSkill = skillOptions.find(s => s._id === newSkill.language);
+      
+      if (selectedSkill) {
+        updated[editingIndex.index] = {
+          skill: { $oid: selectedSkill._id }, // Store MongoDB ObjectId format
+          level: newSkill.level
+        };
+      } else {
+        // Fallback if skill not found
+        updated[editingIndex.index] = {
+          skill: { $oid: newSkill.language },
+          level: newSkill.level
+        };
+      }
     }
     
     onChange({ ...safeData, [editingIndex.type]: updated });
@@ -356,10 +374,23 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         iso639_1: newSkill.iso639_1
       }];
     } else {
-      updated = [...safeData[addMode.type as keyof typeof safeData], {
-        skill: newSkill.language,
-        level: newSkill.level
-      }];
+      // For skills, we need to find the skill object to get both ID and name
+      const skillOptions = addMode.type === 'professional' ? professionalSkills : 
+                          addMode.type === 'technical' ? technicalSkills : softSkills;
+      const selectedSkill = skillOptions.find(s => s._id === newSkill.language);
+      
+      if (selectedSkill) {
+        updated = [...safeData[addMode.type as keyof typeof safeData], {
+          skill: { $oid: selectedSkill._id }, // Store MongoDB ObjectId format
+          level: newSkill.level
+        }];
+      } else {
+        // Fallback if skill not found
+        updated = [...safeData[addMode.type as keyof typeof safeData], {
+          skill: { $oid: newSkill.language },
+          level: newSkill.level
+        }];
+      }
     }
     onChange({ ...safeData, [addMode.type]: updated });
     setNewSkill({ language: '', proficiency: '', iso639_1: '', level: 1 });
@@ -380,12 +411,13 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     const isAdding = addMode.type === type && addMode.active;
     
     // Get the appropriate skills array based on type
-    let options: string[] = [];
+    let options: Array<{_id: string, name: string, description: string, category: string}> = [];
     let isLoading = false;
     let hasError = false;
     
     if (isLanguage) {
-      options = LANGUAGES;
+      // For languages, we still use the static LANGUAGES array
+      options = LANGUAGES.map(lang => ({ _id: lang, name: lang, description: '', category: 'language' }));
     } else {
       switch (type) {
         case 'professional':
@@ -437,7 +469,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                             const data = await response.json();
                             const setter = type === 'professional' ? setProfessionalSkills : 
                                          type === 'technical' ? setTechnicalSkills : setSoftSkills;
-                            setter(data.data?.map((skill: any) => skill.name || skill) || []);
+                            setter(data.data || []);
                           } else {
                             setErrorSkills(prev => ({ ...prev, [type]: true }));
                           }
@@ -488,9 +520,18 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                         } else {
                           handleEditChange('language', e.target.value);
                         }
-                      } else {
-                        handleEditChange('language', e.target.value);
-                      }
+                                              } else {
+                          // For skills, store the ObjectId
+                          const selectedSkill = options.find(opt => opt._id === e.target.value);
+                          if (selectedSkill) {
+                            setNewSkill({
+                              ...newSkill,
+                              language: selectedSkill._id // Store ObjectId
+                            });
+                          } else {
+                            handleEditChange('language', e.target.value);
+                          }
+                        }
                     }}
                     disabled={isLoading}
                   >
@@ -504,14 +545,14 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     ) : (
                       options.map(opt => {
                         // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
-                        const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt);
+                        const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt._id);
                         return (
                           <option
-                            key={opt}
-                            value={opt}
-                            disabled={isDuplicate(opt, type, editingIndex?.index) && !isCurrent}
+                            key={opt._id}
+                            value={opt._id}
+                            disabled={isDuplicate(opt._id, type, editingIndex?.index) && !isCurrent}
                           >
-                            {opt}
+                            {opt.name}
                           </option>
                         );
                       })
@@ -561,9 +602,27 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     <span className="font-medium">
                       {isLanguage 
                         ? skill.language 
-                        : (typeof skill === 'string' 
-                            ? skill 
-                            : skill.skill || skill.name || '')}
+                        : (() => {
+                            // For skills, find the name by ObjectId
+                            if (typeof skill === 'string') return skill;
+                            const skillId = typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid;
+                            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                            switch (type) {
+                              case 'professional':
+                                skillArray = professionalSkills;
+                                break;
+                              case 'technical':
+                                skillArray = technicalSkills;
+                                break;
+                              case 'soft':
+                                skillArray = softSkills;
+                                break;
+                              default:
+                                skillArray = [];
+                            }
+                            const skillObject = skillArray.find(s => s._id === skillId);
+                            return skillObject ? skillObject.name : skillId;
+                          })()}
                     </span>
                     {isLanguage && (
                       <>
@@ -638,14 +697,14 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               ) : (
                 options.map(opt => {
                   // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
-                  const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt);
+                  const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt._id);
                   return (
                     <option
-                      key={opt}
-                      value={opt}
-                      disabled={isDuplicate(opt, type, editingIndex?.index) && !isCurrent}
+                      key={opt._id}
+                      value={opt._id}
+                      disabled={isDuplicate(opt._id, type, editingIndex?.index) && !isCurrent}
                     >
-                      {opt}
+                      {opt.name}
                     </option>
                   );
                 })

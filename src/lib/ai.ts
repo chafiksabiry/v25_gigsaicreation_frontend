@@ -1276,7 +1276,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     }; // Default to empty language and A1 level if invalid
   });
 
-  // Validate soft skills
+  // Validate soft skills - keep names for now, will be mapped to ObjectId later
   const validatedSoftSkills = (skills.soft || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
       return { skill: skill.trim(), level: 1 };
@@ -1287,7 +1287,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     return { skill: '', level: 1 };
   });
 
-  // Validate professional skills
+  // Validate professional skills - keep names for now, will be mapped to ObjectId later
   const validatedProfessionalSkills = (skills.professional || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
       return { skill: skill.trim(), level: 1 };
@@ -1298,7 +1298,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     return { skill: '', level: 1 };
   });
 
-  // Validate technical skills
+  // Validate technical skills - keep names for now, will be mapped to ObjectId later
   const validatedTechnicalSkills = (skills.technical || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
       return { skill: skill.trim(), level: 1 };
@@ -1432,7 +1432,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     availability: {
       schedule: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
-      timeZone: generatedData.schedule?.timeZones?.[0] || '',
+      time_zone: generatedData.schedule?.timeZones?.[0] || '',
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
@@ -1443,7 +1443,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     schedule: {
       schedules: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
-      timeZone: generatedData.schedule?.timeZones?.[0] || '',
+      time_zone: generatedData.schedule?.timeZones?.[0] || '',
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
