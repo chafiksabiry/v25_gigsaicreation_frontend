@@ -128,9 +128,11 @@ export function ScheduleSection({
           const { data, error } = await fetchTimezonesByCountry(destination_zone);
           if (!error && data.length > 0) {
             console.log('✅ Fetched', data.length, 'timezones for', destination_zone);
+            console.log('📋 API Timezones:', data);
             timezoneData = data;
           } else {
             console.log('⚠️ No timezones found for country, using default timezones');
+            console.log('❌ API Error:', error);
             // Use default timezones if no country-specific timezones found
             timezoneData = Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
               _id: `default_${code}`,
@@ -197,6 +199,9 @@ export function ScheduleSection({
     setTimezoneLoading(true);
     
     try {
+      console.log('🔄 Processing timezones from API...');
+      console.log('📥 Raw timezones from API:', allTimezones);
+      
       // Process all timezones from the API
       const processedTimezones = allTimezones
         .map(tz => ({
@@ -208,6 +213,7 @@ export function ScheduleSection({
         }))
         .sort((a, b) => a.offset - b.offset);
 
+      console.log('✅ Processed timezones:', processedTimezones);
       setAvailableTimezones(processedTimezones);
     } catch (error) {
       console.error('Error processing timezones:', error);
@@ -331,6 +337,18 @@ export function ScheduleSection({
       tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
     )
   );
+
+  // Log filtered timezones for debugging
+  useEffect(() => {
+    if (availableTimezones.length > 0) {
+      console.log('🔍 Available timezones:', availableTimezones.length);
+      console.log('🔍 Filtered timezones:', filteredTimezones.length);
+      console.log('🔍 Search term:', timezoneSearch);
+      if (filteredTimezones.length > 0) {
+        console.log('🔍 First few filtered timezones:', filteredTimezones.slice(0, 3));
+      }
+    }
+  }, [availableTimezones, filteredTimezones, timezoneSearch]);
 
   const handleFlexibilityChange = (option: string) => {
     const newFlexibility = data.flexibility.includes(option)
@@ -707,6 +725,11 @@ export function ScheduleSection({
                       `Based on destination: ${getCountryName(destination_zone)} (${destination_zone})`
                     )}
                   </p>
+                  {destination_zone && availableTimezones.length > 0 && (
+                    <p className="text-xs text-green-600 mt-1">
+                      📡 Fetched from API: {availableTimezones.length} timezones for {getCountryName(destination_zone)}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center space-x-3">
