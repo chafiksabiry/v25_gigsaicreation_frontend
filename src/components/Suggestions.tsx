@@ -1488,7 +1488,97 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const handleConfirm = () => {
     if (suggestions) {
-      props.onConfirm(suggestions);
+      // Final migration to ensure all skills are in ObjectId format
+      const finalMigration = () => {
+        if (!suggestions.skills) return suggestions;
+        
+        let needsUpdate = false;
+        const migratedSkills = { ...suggestions.skills };
+        
+        ['soft', 'professional', 'technical'].forEach(type => {
+          const skillArray = migratedSkills[type as keyof typeof migratedSkills];
+          if (skillArray && Array.isArray(skillArray)) {
+            (migratedSkills as any)[type] = skillArray.map((skill: any) => {
+              // Helper function to find skill by name
+              const findSkillByName = (skillName: string, skillType: string) => {
+                let skillArray: any[] = [];
+                switch (skillType) {
+                  case 'soft': skillArray = softSkills; break;
+                  case 'professional': skillArray = professionalSkills; break;
+                  case 'technical': skillArray = technicalSkills; break;
+                  default: skillArray = [];
+                }
+                
+                // Try exact match first
+                let found = skillArray.find(s => s.name === skillName);
+                
+                // If not found, try case-insensitive match
+                if (!found) {
+                  found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+                }
+                
+                // If still not found, try partial match
+                if (!found) {
+                  found = skillArray.find(s => 
+                    s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                    skillName.toLowerCase().includes(s.name.toLowerCase())
+                  );
+                }
+                
+                return found;
+              };
+
+              // If skill is a string, convert to ObjectId format
+              if (typeof skill === 'string') {
+                console.log(`🔄 Final migration: Converting string skill "${skill}" to ObjectId`);
+                const foundSkill = findSkillByName(skill, type);
+                if (foundSkill) {
+                  console.log(`✅ Final migration: Found skill "${skill}" with ID: ${foundSkill._id}`);
+                  needsUpdate = true;
+                  return { 
+                    skill: { $oid: foundSkill._id }, 
+                    level: 1,
+                    details: foundSkill.description || 'Migrated from string'
+                  };
+                } else {
+                  console.log(`⚠️ Final migration: Skill "${skill}" not found in database - removing`);
+                  return null; // Remove skills that don't exist in database
+                }
+              }
+              
+              // If skill.skill is a string, convert to ObjectId format
+              if (skill && typeof skill.skill === 'string') {
+                console.log(`🔄 Final migration: Converting skill.skill string "${skill.skill}" to ObjectId`);
+                const foundSkill = findSkillByName(skill.skill, type);
+                if (foundSkill) {
+                  console.log(`✅ Final migration: Found skill "${skill.skill}" with ID: ${foundSkill._id}`);
+                  needsUpdate = true;
+                  return { 
+                    ...skill, 
+                    skill: { $oid: foundSkill._id },
+                    details: skill.details || foundSkill.description || 'Migrated from string'
+                  };
+                } else {
+                  console.log(`⚠️ Final migration: Skill "${skill.skill}" not found in database - removing`);
+                  return null; // Remove skills that don't exist in database
+                }
+              }
+              
+              return skill; // Already in correct format
+            }).filter(Boolean); // Remove null entries
+          }
+        });
+        
+        if (needsUpdate) {
+          console.log('🔄 Final migration completed, updating suggestions');
+          return { ...suggestions, skills: migratedSkills };
+        }
+        
+        return suggestions;
+      };
+      
+      const finalSuggestions = finalMigration();
+      props.onConfirm(finalSuggestions);
     }
   };
 
