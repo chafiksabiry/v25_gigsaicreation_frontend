@@ -599,7 +599,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (suggestions?.team?.structure) {
       validateAndFixTeamStructure();
     }
-  }, [suggestions?.team?.structure]);
+  }, []); // Only run once on mount to prevent infinite loop
 
   // Fetch all countries, timezones, and skills when component mounts
   useEffect(() => {
@@ -715,18 +715,38 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   case 'technical': skillArray = technicalSkills; break;
                 }
                 
-                const found = skillArray.find(s => s.name === skill.skill);
+                // Try exact match first
+                let found = skillArray.find(s => s.name === skill.skill);
+                
+                // If not found, try case-insensitive match
+                if (!found) {
+                  found = skillArray.find(s => s.name.toLowerCase() === skill.skill.toLowerCase());
+                }
+                
+                // If still not found, try partial match
+                if (!found) {
+                  found = skillArray.find(s => 
+                    s.name.toLowerCase().includes(skill.skill.toLowerCase()) ||
+                    skill.skill.toLowerCase().includes(s.name.toLowerCase())
+                  );
+                }
+                
                 if (found) {
-                  console.log(`✅ Global migration to ObjectId: ${found._id}`);
+                  console.log(`✅ Global migration to ObjectId: ${found._id} (matched "${found.name}")`);
                   needsUpdate = true;
                   return { 
                     ...skill, 
                     skill: { $oid: found._id },
-                    details: skill.details || 'Migrated from string'
+                    details: skill.details || `Migrated from "${skill.skill}" to "${found.name}"`
                   };
                 } else {
-                  console.log(`⚠️ Skill not found in database: "${skill.skill}"`);
-                  return skill;
+                  console.log(`⚠️ Skill not found in database: "${skill.skill}" - keeping as string for now`);
+                  // Keep as string but mark for later processing
+                  return { 
+                    ...skill, 
+                    _needsMigration: true,
+                    _originalSkill: skill.skill
+                  };
                 }
               }
               return skill;
@@ -741,6 +761,62 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       };
       
       migrateAllSkills();
+    }
+  }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
+
+  // Skills migration effect - runs when skills are loaded
+  useEffect(() => {
+    if (suggestions && (softSkills.length > 0 || professionalSkills.length > 0 || technicalSkills.length > 0)) {
+      console.log('🔄 Running skills migration from renderSkillsSection...');
+      
+      // Helper: get ObjectId for a skill name and type
+      const getSkillObjectId = (skillName: string, type: string): string | undefined => {
+        let arr: any[] = [];
+        if (type === 'soft') arr = softSkills;
+        if (type === 'professional') arr = professionalSkills;
+        if (type === 'technical') arr = technicalSkills;
+        const found = arr.find(s => s.name === skillName);
+        return found?._id;
+      };
+
+      const migrateSkillsToObjectIds = () => {
+        if (!suggestions.skills) return;
+        
+        let needsUpdate = false;
+        const migratedSkills = { ...suggestions.skills } as any;
+        
+        ['soft', 'professional', 'technical'].forEach(type => {
+          const skillArray = migratedSkills[type];
+          if (skillArray && Array.isArray(skillArray)) {
+            migratedSkills[type] = skillArray.map((skill: any) => {
+              if (skill && typeof skill.skill === 'string') {
+                console.log(`🔄 Migrating skill: "${skill.skill}" (${type})`);
+                const oid = getSkillObjectId(skill.skill, type);
+                if (oid) {
+                  console.log(`✅ Migrated to ObjectId: ${oid}`);
+                  needsUpdate = true;
+                  return { 
+                    ...skill, 
+                    skill: { $oid: oid },
+                    details: skill.details || 'Migrated from string'
+                  };
+                } else {
+                  console.log(`⚠️ Skill not found in database: "${skill.skill}"`);
+                  return skill; // Keep as string if not found
+                }
+              }
+              return skill; // Already ObjectId format
+            });
+          }
+        });
+        
+        if (needsUpdate) {
+          console.log('🔄 Updating suggestions with migrated ObjectIds');
+          setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
+        }
+      };
+      
+      migrateSkillsToObjectIds();
     }
   }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
 
@@ -901,7 +977,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     fetchTimezonesForDestination();
-  }, [suggestions?.destinationZones?.[0], allTimezones]); // Only depend on the first destination zone to prevent infinite loops
+  }, [allTimezones]); // Removed suggestions?.destinationZones?.[0] to prevent infinite loop
 
   // Effect to handle switching between country-specific and all timezones
   useEffect(() => {
@@ -957,7 +1033,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     } else {
       setAvailableTimezones([]);
     }
-  }, [showAllTimezones, allTimezones, suggestions?.destinationZones?.[0]]); // Only depend on the first destination zone to prevent infinite loops
+  }, [showAllTimezones, allTimezones]); // Removed suggestions?.destinationZones?.[0] to prevent infinite loop
 
   useEffect(() => {
     const generateSuggestions = async () => {
@@ -1109,46 +1185,84 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             console.log('📋 Technical skills from API:', technicalSkills.map(s => s.name));
             console.log('📋 Soft skills from API:', softSkills.map(s => s.name));
             
-            // Validate professional skills
+            // Helper function to find best match for a skill
+            const findBestSkillMatch = (skillName: string, skillArray: any[]) => {
+              // Try exact match first
+              let found = skillArray.find(s => s.name === skillName);
+              
+              // If not found, try case-insensitive match
+              if (!found) {
+                found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+              }
+              
+              // If still not found, try partial match
+              if (!found) {
+                found = skillArray.find(s => 
+                  s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                  skillName.toLowerCase().includes(s.name.toLowerCase())
+                );
+              }
+              
+              return found;
+            };
+            
+            // Validate and migrate professional skills
             if (result.skills.professional && result.skills.professional.length > 0) {
-              const validProfessionalSkills = professionalSkills.map(skill => skill._id);
-              const validProfessional = result.skills.professional.filter(skill => {
-                const skillId = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-                const isValid = validProfessionalSkills.includes(skillId);
-                if (!isValid) {
-                  console.warn(`❌ Invalid professional skill "${skillId}" - not in allowed list`);
+              const validProfessional = result.skills.professional.map(skill => {
+                const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+                const found = findBestSkillMatch(skillName, professionalSkills);
+                if (found) {
+                  console.log(`✅ Professional skill "${skillName}" matched to "${found.name}" (${found._id})`);
+                  return { 
+                    skill: { $oid: found._id },
+                    level: typeof skill === 'object' ? skill.level : 1,
+                    details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
+                  };
+                } else {
+                  console.warn(`⚠️ Professional skill "${skillName}" not found in database - keeping as string`);
+                  return skill; // Keep original format
                 }
-                return isValid;
               });
               result.skills.professional = validProfessional;
               console.log('✅ Validated professional skills:', result.skills.professional);
             }
 
-            // Validate technical skills
+            // Validate and migrate technical skills
             if (result.skills.technical && result.skills.technical.length > 0) {
-              const validTechnicalSkills = technicalSkills.map(skill => skill._id);
-              const validTechnical = result.skills.technical.filter(skill => {
-                const skillId = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-                const isValid = validTechnicalSkills.includes(skillId);
-                if (!isValid) {
-                  console.warn(`❌ Invalid technical skill "${skillId}" - not in allowed list`);
+              const validTechnical = result.skills.technical.map(skill => {
+                const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+                const found = findBestSkillMatch(skillName, technicalSkills);
+                if (found) {
+                  console.log(`✅ Technical skill "${skillName}" matched to "${found.name}" (${found._id})`);
+                  return { 
+                    skill: { $oid: found._id },
+                    level: typeof skill === 'object' ? skill.level : 1,
+                    details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
+                  };
+                } else {
+                  console.warn(`⚠️ Technical skill "${skillName}" not found in database - keeping as string`);
+                  return skill; // Keep original format
                 }
-                return isValid;
               });
               result.skills.technical = validTechnical;
               console.log('✅ Validated technical skills:', result.skills.technical);
             }
 
-            // Validate soft skills
+            // Validate and migrate soft skills
             if (result.skills.soft && result.skills.soft.length > 0) {
-              const validSoftSkills = softSkills.map(skill => skill._id);
-              const validSoft = result.skills.soft.filter(skill => {
-                const skillId = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-                const isValid = validSoftSkills.includes(skillId);
-                if (!isValid) {
-                  console.warn(`❌ Invalid soft skill "${skillId}" - not in allowed list`);
+              const validSoft = result.skills.soft.map(skill => {
+                const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
+                const found = findBestSkillMatch(skillName, softSkills);
+                if (found) {
+                  console.log(`✅ Soft skill "${skillName}" matched to "${found.name}" (${found._id})`);
+                  return { 
+                    skill: { $oid: found._id },
+                    level: typeof skill === 'object' ? skill.level : 1,
+                  };
+                } else {
+                  console.warn(`⚠️ Soft skill "${skillName}" not found in database - keeping as string`);
+                  return skill; // Keep original format
                 }
-                return isValid;
               });
               result.skills.soft = validSoft;
               console.log('✅ Validated soft skills:', result.skills.soft);
@@ -1217,18 +1331,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   }, [props.input]);
 
   // Place this BEFORE any useEffect that uses timezoneOptions:
-  const timezoneOptions = (availableTimezones.length > 0
-    ? availableTimezones.map(tz => ({
-        _id: tz._id,
-        zoneName: tz.name,
-        countryName: tz.countryName,
-      }))
-    : Object.entries(MAJOR_TIMEZONES).map(([code, { name }]) => ({
-        _id: `default_${code}`,
-        zoneName: name,
-        countryName: '',
-      }))
-  );
+  const timezoneOptions = React.useMemo(() => {
+    return availableTimezones.length > 0
+      ? availableTimezones.map(tz => ({
+          _id: tz._id,
+          zoneName: tz.name,
+          countryName: tz.countryName,
+        }))
+      : Object.entries(MAJOR_TIMEZONES).map(([code, { name }]) => ({
+          _id: `default_${code}`,
+          zoneName: name,
+          countryName: '',
+        }));
+  }, [availableTimezones]);
 
   // Now you can use timezoneOptions in useEffect and elsewhere
   useEffect(() => {
@@ -1283,46 +1398,84 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         
         const newSuggestions = { ...prev };
         
-        // Validate professional skills
+        // Helper function to find best match for a skill
+        const findBestSkillMatch = (skillName: string, skillArray: any[]) => {
+          // Try exact match first
+          let found = skillArray.find(s => s.name === skillName);
+          
+          // If not found, try case-insensitive match
+          if (!found) {
+            found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+          }
+          
+          // If still not found, try partial match
+          if (!found) {
+            found = skillArray.find(s => 
+              s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+              skillName.toLowerCase().includes(s.name.toLowerCase())
+            );
+          }
+          
+          return found;
+        };
+        
+        // Validate and migrate professional skills
         if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
-          const validProfessionalSkills = professionalSkills.map(skill => skill.name);
-          const validProfessional = newSuggestions.skills.professional.filter(skill => {
+          const validProfessional = newSuggestions.skills.professional.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-            const isValid = validProfessionalSkills.includes(skillName);
-            if (!isValid) {
-              console.warn(`❌ Invalid professional skill "${skillName}" - not in allowed list`);
+            const found = findBestSkillMatch(skillName, professionalSkills);
+            if (found) {
+              console.log(`✅ Re-validation: Professional skill "${skillName}" matched to "${found.name}" (${found._id})`);
+              return { 
+                skill: { $oid: found._id },
+                level: typeof skill === 'object' ? skill.level : 1,
+                details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
+              };
+            } else {
+              console.warn(`⚠️ Re-validation: Professional skill "${skillName}" not found in database - keeping as string`);
+              return skill; // Keep original format
             }
-            return isValid;
           });
           newSuggestions.skills.professional = validProfessional;
           console.log('✅ Re-validated professional skills:', newSuggestions.skills.professional);
         }
 
-        // Validate technical skills
+        // Validate and migrate technical skills
         if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
-          const validTechnicalSkills = technicalSkills.map(skill => skill.name);
-          const validTechnical = newSuggestions.skills.technical.filter(skill => {
+          const validTechnical = newSuggestions.skills.technical.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-            const isValid = validTechnicalSkills.includes(skillName);
-            if (!isValid) {
-              console.warn(`❌ Invalid technical skill "${skillName}" - not in allowed list`);
+            const found = findBestSkillMatch(skillName, technicalSkills);
+            if (found) {
+              console.log(`✅ Re-validation: Technical skill "${skillName}" matched to "${found.name}" (${found._id})`);
+              return { 
+                skill: { $oid: found._id },
+                level: typeof skill === 'object' ? skill.level : 1,
+                details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
+              };
+            } else {
+              console.warn(`⚠️ Re-validation: Technical skill "${skillName}" not found in database - keeping as string`);
+              return skill; // Keep original format
             }
-            return isValid;
           });
           newSuggestions.skills.technical = validTechnical;
           console.log('✅ Re-validated technical skills:', newSuggestions.skills.technical);
         }
 
-        // Validate soft skills
+        // Validate and migrate soft skills
         if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
-          const validSoftSkills = softSkills.map(skill => skill.name);
-          const validSoft = newSuggestions.skills.soft.filter(skill => {
+          const validSoft = newSuggestions.skills.soft.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
-            const isValid = validSoftSkills.includes(skillName);
-            if (!isValid) {
-              console.warn(`❌ Invalid soft skill "${skillName}" - not in allowed list`);
+            const found = findBestSkillMatch(skillName, softSkills);
+            if (found) {
+              console.log(`✅ Re-validation: Soft skill "${skillName}" matched to "${found.name}" (${found._id})`);
+              return { 
+                skill: { $oid: found._id },
+                level: typeof skill === 'object' ? skill.level : 1,
+              };
+            } else {
+              console.warn(`⚠️ Re-validation: Soft skill "${skillName}" not found in database - keeping as string`);
+              return skill; // Keep original format
             }
-            return isValid;
           });
           newSuggestions.skills.soft = validSoft;
           console.log('✅ Re-validated soft skills:', newSuggestions.skills.soft);
@@ -2662,7 +2815,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         
         <select
           className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
-          value={suggestions.schedule.time_zone || (filteredTimezones.length > 0 ? filteredTimezones[0]._id : '')}
+          value={suggestions.schedule.time_zone || (filteredTimezones.length > 0 ? filteredTimezones[0]._id : '') || ''}
           onChange={handleTimezoneChange}
           disabled={timezoneLoading}
         >
@@ -3325,48 +3478,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       return found?._id;
     }
 
-    // MIGRATION: Convert string skills to ObjectIds automatically
-    const migrateSkillsToObjectIds = () => {
-      if (!suggestions.skills) return;
-      
-      let needsUpdate = false;
-      const migratedSkills = { ...suggestions.skills } as any;
-      
-      ['soft', 'professional', 'technical'].forEach(type => {
-        const skillArray = migratedSkills[type];
-        if (skillArray && Array.isArray(skillArray)) {
-          migratedSkills[type] = skillArray.map((skill: any) => {
-            if (skill && typeof skill.skill === 'string') {
-              console.log(`🔄 Migrating skill: "${skill.skill}" (${type})`);
-              const oid = getSkillObjectId(skill.skill, type);
-              if (oid) {
-                console.log(`✅ Migrated to ObjectId: ${oid}`);
-                needsUpdate = true;
-                return { 
-                  ...skill, 
-                  skill: { $oid: oid },
-                  details: skill.details || 'Migrated from string'
-                };
-              } else {
-                console.log(`⚠️ Skill not found in database: "${skill.skill}"`);
-                return skill; // Keep as string if not found
-              }
-            }
-            return skill; // Already ObjectId format
-          });
-        }
-      });
-      
-      if (needsUpdate) {
-        console.log('🔄 Updating suggestions with migrated ObjectIds');
-        setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
-      }
-    };
-
-    // Run migration on every render
-    React.useEffect(() => {
-      migrateSkillsToObjectIds();
-    }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions?.skills to prevent infinite loop
+    // Note: Skills migration is now handled at the top level of the component
 
     // Mapping for display: always show ObjectId if possible
     const skillsWithObjectIds: any = { ...suggestions.skills };
@@ -3438,14 +3550,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             console.log(`✅ Added ${skillType} skill:`, skillData);
             console.log(`📝 Skill ObjectId: ${skillObject._id}, Name: ${skillObject.name}`);
           } else {
-            // Fallback if skill not found
-            const fallbackData = { 
-              skill: { $oid: skill }, 
-              level,
-              details: '' // Add empty details field
-            };
-            (newSuggestions.skills as any)[skillType].push(fallbackData);
-            console.log(`⚠️ Skill not found, using fallback:`, fallbackData);
+            // Don't add skills that don't exist in the database
+            console.log(`❌ Skill not found in database: "${skill}". Skipping addition.`);
+            return; // Exit early without adding the skill
           }
           break;
       }
@@ -3503,10 +3610,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               });
               console.log(`📝 Skill ObjectId: ${skillObject._id}, Name: ${skillObject.name}`);
             } else {
-              // Fallback if skill not found
-              (newSuggestions.skills as any)[skillType][index].skill = { $oid: value as string };
-              (newSuggestions.skills as any)[skillType][index].details = ''; // Set empty details
-              console.log(`⚠️ Skill not found during update, using fallback:`, { $oid: value as string });
+              // Don't update with skills that don't exist in the database
+              console.log(`❌ Skill not found in database during update: "${value}". Skipping update.`);
+              return; // Exit early without updating the skill
             }
           } else if (field === "level") {
             (newSuggestions.skills as any)[skillType][index].level = value as number;
@@ -3888,12 +3994,34 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           addSkill(skillType, editValue.trim(), level);
                         } else {
                           // For skills, editValue should already be the ObjectId
-                          const level = 1; // Default to Basic for skills
-                          addSkill(skillType, editValue.trim(), level);
+                          // Verify that the skill exists in the database before adding
+                          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                          switch (skillType) {
+                            case "soft":
+                              skillArray = softSkills;
+                              break;
+                            case "professional":
+                              skillArray = professionalSkills;
+                              break;
+                            case "technical":
+                              skillArray = technicalSkills;
+                              break;
+                            default:
+                              skillArray = [];
+                          }
+                          
+                          const skillExists = skillArray.some(s => s._id === editValue.trim());
+                          if (skillExists) {
+                            const level = 1; // Default to Basic for skills
+                            addSkill(skillType, editValue.trim(), level);
+                            setEditValue("");
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                          } else {
+                            console.log(`❌ Selected skill does not exist in database: "${editValue}"`);
+                            // You could show an error message to the user here
+                          }
                         }
-                        setEditValue("");
-                        setEditingSection(null);
-                        setEditingIndex(null);
                       }
                     }}
                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"

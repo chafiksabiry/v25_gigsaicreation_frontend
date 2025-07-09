@@ -175,6 +175,99 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     fetchSkills();
   }, []);
 
+  // Migrate skills to ObjectId format if needed
+  const migrateSkillsToObjectIds = () => {
+    let needsUpdate = false;
+    const migratedData = { ...safeData };
+    
+    ['soft', 'professional', 'technical'].forEach(type => {
+      const skillArray = migratedData[type as keyof typeof migratedData];
+      if (skillArray && Array.isArray(skillArray)) {
+        const migratedSkills = skillArray.map((skill: any) => {
+          // Helper function to find skill by name
+          const findSkillByName = (skillName: string, skillType: string) => {
+            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+            switch (skillType) {
+              case 'soft': skillArray = softSkills; break;
+              case 'professional': skillArray = professionalSkills; break;
+              case 'technical': skillArray = technicalSkills; break;
+              default: skillArray = [];
+            }
+            
+            // Try exact match first
+            let found = skillArray.find(s => s.name === skillName);
+            
+            // If not found, try case-insensitive match
+            if (!found) {
+              found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+            }
+            
+            // If still not found, try partial match
+            if (!found) {
+              found = skillArray.find(s => 
+                s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                skillName.toLowerCase().includes(s.name.toLowerCase())
+              );
+            }
+            
+            return found;
+          };
+
+          // If skill is a string, convert to ObjectId format
+          if (typeof skill === 'string') {
+            console.log(`🔄 Migrating string skill "${skill}" to ObjectId format`);
+            const foundSkill = findSkillByName(skill, type);
+            if (foundSkill) {
+              console.log(`✅ Found skill "${skill}" in database with ID: ${foundSkill._id}`);
+              needsUpdate = true;
+              return { 
+                skill: { $oid: foundSkill._id }, 
+                level: 1,
+                details: foundSkill.description || 'Migrated from string'
+              };
+            } else {
+              console.log(`⚠️ Skill "${skill}" not found in database, keeping as string for now`);
+              return skill; // Keep as string if not found
+            }
+          }
+          
+          // If skill.skill is a string, convert to ObjectId format
+          if (skill && typeof skill.skill === 'string') {
+            console.log(`🔄 Migrating skill.skill string "${skill.skill}" to ObjectId format`);
+            const foundSkill = findSkillByName(skill.skill, type);
+            if (foundSkill) {
+              console.log(`✅ Found skill "${skill.skill}" in database with ID: ${foundSkill._id}`);
+              needsUpdate = true;
+              return { 
+                ...skill, 
+                skill: { $oid: foundSkill._id },
+                details: skill.details || foundSkill.description || 'Migrated from string'
+              };
+            } else {
+              console.log(`⚠️ Skill "${skill.skill}" not found in database, keeping as string for now`);
+              return skill; // Keep as string if not found
+            }
+          }
+          
+          return skill;
+        });
+        (migratedData as any)[type] = migratedSkills;
+      }
+    });
+    
+    if (needsUpdate) {
+      console.log('🔄 Migrating skills to ObjectId format');
+      onChange(migratedData);
+    }
+  };
+
+  // Run migration when component mounts or when skills are loaded
+  useEffect(() => {
+    if (professionalSkills.length > 0 || softSkills.length > 0 || technicalSkills.length > 0) {
+      migrateSkillsToObjectIds();
+    }
+  }, [professionalSkills, softSkills, technicalSkills]);
+
   // Log Skills Section data
   React.useEffect(() => {
     console.log('=== SKILLS SECTION DATA ===');
@@ -263,18 +356,29 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   // Prevent duplicate skills
   const isDuplicate = (name: string, type: string, excludeIndex?: number) => {
-    if (type === 'languages') {
-      const languages = safeData.languages;
-      return languages.some((lang: any, idx: number) => lang.language === name && idx !== excludeIndex);
-    }
     const skills = safeData[type as keyof typeof safeData];
-    return skills.some((s: any, idx: number) => {
-      if (typeof s === 'string') return s === name;
+    return skills.some((s: any, i: number) => {
+      if (excludeIndex !== undefined && i === excludeIndex) return false;
       if (type === 'languages') {
         return s.language === name;
       } else {
-        // For skills, compare ObjectId
-        return (typeof s.skill === 'string' ? s.skill : (s.skill && typeof s.skill === 'object' && s.skill.$oid ? s.skill.$oid : null)) === name;
+        // For skills, handle both ObjectId format and string format
+        let skillId = null;
+        
+        if (typeof s === 'string') {
+          // Handle case where skill is still a string (not yet migrated)
+          skillId = s;
+        } else if (typeof s === 'object' && s !== null && 'skill' in s) {
+          if (typeof s.skill === 'string') {
+            // Handle case where skill.skill is still a string (not yet migrated)
+            skillId = s.skill;
+          } else if (typeof s.skill === 'object' && s.skill.$oid) {
+            // Handle ObjectId format
+            skillId = s.skill.$oid;
+          }
+        }
+        
+        return skillId === name;
       }
     });
   };
@@ -292,13 +396,34 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         level: 1
       });
     } else {
-      // Handle non-language skills with proper typing
-      const skillObj = typeof skill === 'string' ? { skill: { $oid: skill }, level: 1 } : skill as { skill: { $oid: string }; level: number };
+      // Handle non-language skills - support both ObjectId format and string format
+      let skillId = '';
+      let skillLevel = 1;
+      
+      if (typeof skill === 'string') {
+        // Handle case where skill is still a string (not yet migrated)
+        skillId = skill;
+        skillLevel = 1;
+      } else if (typeof skill === 'object' && skill !== null) {
+        // Type guard to check if it's a skill object
+        if ('skill' in skill && skill.skill) {
+          if (typeof skill.skill === 'string') {
+            // Handle case where skill.skill is still a string (not yet migrated)
+            skillId = skill.skill;
+            skillLevel = (skill as any).level || 1;
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            // Handle ObjectId format
+            skillId = skill.skill.$oid;
+            skillLevel = (skill as any).level || 1;
+          }
+        }
+      }
+      
       setNewSkill({ 
-        language: skillObj.skill && skillObj.skill.$oid ? skillObj.skill.$oid : '', 
+        language: skillId, 
         proficiency: '', 
         iso639_1: '',
-        level: skillObj.level || 1
+        level: skillLevel
       });
     }
   };
@@ -318,8 +443,20 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       const languageSkill = currentSkill as { language: string; proficiency: string; iso639_1: string };
       nameChanged = languageSkill.language !== newSkill.language;
     } else {
-      const skillObj = currentSkill as { skill: { $oid: string }; level: number };
-      nameChanged = (skillObj.skill && skillObj.skill.$oid ? skillObj.skill.$oid : '') !== newSkill.language;
+      // Handle skills - support both ObjectId format and string format
+      let currentSkillId = '';
+      
+      if (typeof currentSkill === 'string') {
+        currentSkillId = currentSkill;
+      } else if (typeof currentSkill === 'object' && currentSkill !== null && 'skill' in currentSkill) {
+        if (typeof currentSkill.skill === 'string') {
+          currentSkillId = currentSkill.skill;
+        } else if (typeof currentSkill.skill === 'object' && currentSkill.skill.$oid) {
+          currentSkillId = currentSkill.skill.$oid;
+        }
+      }
+      
+      nameChanged = currentSkillId !== newSkill.language;
     }
     
     if (nameChanged && isDuplicate(newSkill.language, editingIndex.type, editingIndex.index)) return;
@@ -344,12 +481,9 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           details: selectedSkill.description || '' // Add details field
         };
       } else {
-        // Fallback if skill not found
-        updated[editingIndex.index] = {
-          skill: { $oid: newSkill.language },
-          level: newSkill.level,
-          details: '' // Add empty details field
-        };
+        // Don't update with skills that don't exist in the database
+        console.log(`❌ Skill not found in database during update: "${newSkill.language}". Skipping update.`);
+        return; // Exit early without updating the skill
       }
     }
     
@@ -391,12 +525,9 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
           details: selectedSkill.description || '' // Add details field
         }];
       } else {
-        // Fallback if skill not found
-        updated = [...safeData[addMode.type as keyof typeof safeData], {
-          skill: { $oid: newSkill.language },
-          level: newSkill.level,
-          details: '' // Add empty details field
-        }];
+        // Don't add skills that don't exist in the database
+        console.log(`❌ Skill not found in database: "${newSkill.language}". Skipping addition.`);
+        return; // Exit early without adding the skill
       }
     }
     onChange({ ...safeData, [addMode.type]: updated });
@@ -535,8 +666,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                               ...newSkill,
                               language: selectedSkill._id // Store ObjectId
                             });
-                          } else {
-                            handleEditChange('language', e.target.value);
                           }
                         }
                     }}
@@ -552,7 +681,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     ) : (
                       options.map(opt => {
                         // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
-                        const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt._id);
+                        const currentSkill = skills[editingIndex?.index ?? -1];
+                        const isCurrent = currentSkill && currentSkill.skill && typeof currentSkill.skill === 'object' && currentSkill.skill.$oid === opt._id;
                         return (
                           <option
                             key={opt._id}
@@ -610,25 +740,39 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                       {isLanguage 
                         ? skill.language 
                         : (() => {
-                            // For skills, find the name by ObjectId
-                            if (typeof skill === 'string') return skill;
-                            const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill && typeof skill.skill === 'object' && skill.skill.$oid ? skill.skill.$oid : null);
-                            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                            switch (type) {
-                              case 'professional':
-                                skillArray = professionalSkills;
-                                break;
-                              case 'technical':
-                                skillArray = technicalSkills;
-                                break;
-                              case 'soft':
-                                skillArray = softSkills;
-                                break;
-                              default:
-                                skillArray = [];
+                            // For skills, handle both ObjectId format and string format (for backward compatibility)
+                            let skillName = '';
+                            
+                            if (typeof skill === 'string') {
+                              // Handle case where skill is still a string (not yet migrated)
+                              skillName = skill;
+                            } else if (skill.skill) {
+                              if (typeof skill.skill === 'string') {
+                                // Handle case where skill.skill is still a string (not yet migrated)
+                                skillName = skill.skill;
+                              } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+                                // Handle ObjectId format
+                                const skillId = skill.skill.$oid;
+                                let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                                switch (type) {
+                                  case 'professional':
+                                    skillArray = professionalSkills;
+                                    break;
+                                  case 'technical':
+                                    skillArray = technicalSkills;
+                                    break;
+                                  case 'soft':
+                                    skillArray = softSkills;
+                                    break;
+                                  default:
+                                    skillArray = [];
+                                }
+                                const skillObject = skillArray.find(s => s._id === skillId);
+                                skillName = skillObject ? skillObject.name : skillId;
+                              }
                             }
-                            const skillObject = skillArray.find(s => s._id === skillId);
-                            return skillObject ? skillObject.name : skillId;
+                            
+                            return skillName || 'Unknown Skill';
                           })()}
                     </span>
                     {isLanguage && (
@@ -689,7 +833,14 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                     handleEditChange('language', e.target.value);
                   }
                 } else {
-                  handleEditChange('language', e.target.value);
+                  // For skills, store the ObjectId
+                  const selectedSkill = options.find(opt => opt._id === e.target.value);
+                  if (selectedSkill) {
+                    setNewSkill({
+                      ...newSkill,
+                      language: selectedSkill._id // Store ObjectId
+                    });
+                  }
                 }
               }}
               disabled={isLoading}
@@ -703,13 +854,12 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 ))
               ) : (
                 options.map(opt => {
-                  // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
-                  const isCurrent = (skills[editingIndex?.index ?? -1]?.skill === opt._id);
+                  // Ne disable que si c'est un doublon
                   return (
                     <option
                       key={opt._id}
                       value={opt._id}
-                      disabled={isDuplicate(opt._id, type, editingIndex?.index) && !isCurrent}
+                      disabled={isDuplicate(opt._id, type)}
                     >
                       {opt.name}
                     </option>
