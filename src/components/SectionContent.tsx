@@ -146,28 +146,38 @@ export function SectionContent({
             data={data.schedule ? {
               schedules: data.schedule.schedules || [],
               time_zone: (() => {
+                // Priorité 1: time_zone direct depuis schedule
                 if (data.schedule?.time_zone) {
+                  console.log('🕐 Using time_zone from schedule:', data.schedule.time_zone);
                   return data.schedule.time_zone;
                 }
+                // Priorité 2: premier élément de timeZones array
                 if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
                   const firstTimezone = data.schedule.timeZones[0];
                   if (typeof firstTimezone === 'string') {
+                    console.log('🕐 Using first timezone from timeZones array:', firstTimezone);
                     return firstTimezone;
                   }
                 }
+                // Priorité 3: timezone depuis availability (qui vient de Suggestions)
+                if (data.availability?.time_zone) {
+                  console.log('🕐 Using timezone from availability (Suggestions):', data.availability.time_zone);
+                  return data.availability.time_zone;
+                }
+                console.log('🕐 No timezone found, using empty string');
                 return "";
               })(),
-              flexibility: data.schedule.flexibility || [],
-              minimumHours: data.schedule.minimumHours || {
+              flexibility: data.schedule.flexibility || data.availability?.flexibility || [],
+              minimumHours: data.schedule.minimumHours || data.availability?.minimumHours || {
                 daily: undefined,
                 weekly: undefined,
                 monthly: undefined,
               }
             } : {
               schedules: [],
-              time_zone: "",
-              flexibility: [],
-              minimumHours: {
+              time_zone: data.availability?.time_zone || "",
+              flexibility: data.availability?.flexibility || [],
+              minimumHours: data.availability?.minimumHours || {
                 daily: undefined,
                 weekly: undefined,
                 monthly: undefined,

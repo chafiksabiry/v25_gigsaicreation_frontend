@@ -145,26 +145,6 @@ const DESTINATION_ZONES: { [key: string]: string } = {
   "GF": "French Guiana",
 };
 
-
-
-interface LeadType {
-  type: "hot" | "warm" | "cold";
-  percentage: number;
-  description: string;
-  conversionRate?: number;
-}
-
-
-interface TeamRole {
-  roleId: string;
-  count: number;
-  seniority: {
-    level: string;
-    yearsExperience: number;
-  };
-}
-
-
 interface PredefinedOptions {
   leads: {
     sources: string[];
@@ -331,91 +311,6 @@ const LANGUAGES = [
   "Estonian",
   "Latvian",
   "Lithuanian",
-];
-
-const PROFESSIONAL_SKILLS = [
-  "In-depth understanding of products/services",
-  "Knowledge of company policies, terms, SLAs, and escalation paths",
-  "Familiarity with standard operating procedures (SOPs) for different issue types",
-  "Voice Support: call handling techniques, hold/transfer/escalation protocol",
-  "Email Support: structured writing, canned responses, professional formatting",
-  "Live Chat/Messenger: real-time typing, handling multiple chats, shortcut commands",
-  "Social Media Messaging: brand-safe communication, crisis handling, sentiment detection",
-  "Proficiency in tools like Salesforce, HubSpot, Zoho, etc.",
-  "Ability to log, tag, update, and close tickets accurately",
-  "Understanding of ticket priority levels and SLA timelines",
-  "Usage of dialers, softphones, VoIP systems (e.g. Twilio)",
-  "Call dispositioning and tagging",
-  "Knowledge of call recording and QA monitoring systems",
-  "Fast and accurate typing (ideally 40–60 WPM for chat agents)",
-  "Proficient in copy-paste discipline, keyboard shortcuts, and multitab workflows",
-  "Real-time data entry during live interactions",
-  "Familiarity with basic troubleshooting steps (especially for tech/product support roles)",
-  "Comfort with remote support tools, screen sharing, or device guides",
-  "Use of knowledge bases, macros, and FAQs to guide responses",
-  "Adherence to quality assurance (QA) frameworks",
-  "Awareness of data protection regulations (GDPR, CCPA, PCI DSS, etc.)",
-  "Following compliance scripts and avoiding unauthorized statements",
-  "Understanding of: AHT (Average Handle Time), CSAT (Customer Satisfaction), FCR (First Call Resolution), QA Scores, NPS, etc.",
-  "Ability to self-monitor performance and meet targets",
-  "Multilingual abilities depending on geography",
-  "Familiarity with regional expressions and cultural tone",
-  "Correct use of formal/informal register depending on the context",
-  "Ability to flag product issues, bugs, or patterns",
-  "Use of tools like Excel, Google Sheets, or internal dashboards for reporting",
-  "Writing internal case notes and handover summaries clearly and concisely",
-];
-
-const TECHNICAL_SKILLS = [
-  "Proficiency in using cloud-based contact center software (e.g. Genesys, Five9, Talkdesk, NICE, Twilio, Aircall)",
-  "Understanding of VoIP systems, automatic call distributors (ACD), and interactive voice response (IVR)",
-  "Handling call transfers, holds, recordings, conferencing, and dispositions",
-  "Daily use of CRM systems: Salesforce, Zoho CRM, HubSpot, etc.",
-  "Familiarity with ticketing platforms: Zendesk, Freshdesk, Jira, Help Scout, etc.",
-  "Tagging, prioritizing, escalating, and resolving tickets efficiently",
-  "Managing multiple concurrent chats using tools like Intercom, LivePerson, Drift, Crisp, Tawk.to",
-  "Use of shortcuts, canned responses, and chat routing rules",
-  "Basic understanding of chatbot integrations and human handoffs",
-  "Efficient use of shared inboxes (e.g., Outlook 365 Shared Mailboxes, Gmail for Business)",
-  "Familiarity with email automation, filters, and categorization",
-  "Adherence to email templates and formatting standards",
-  "Navigating internal knowledge bases (e.g., Confluence, Guru, Notion)",
-  "Using search functions and contributing to documentation updates",
-  "Retrieving correct information quickly to answer queries",
-  "Proficiency in Windows/macOS, including multitasking between tools",
-  "Using MS Office or Google Workspace for basic reporting (Excel/Sheets), documentation (Word/Docs), and presentations (PowerPoint/Slides)",
-  "Working with cloud platforms: Google Drive, Dropbox, OneDrive for internal document sharing",
-  "Using collaboration tools like Slack, Microsoft Teams, or Zoom for internal communication",
-  "Typing at 40–60 words per minute (WPM) with low error rate",
-  "Using keyboard shortcuts and productivity tools (clipboard managers, text expanders)",
-  "Navigating call listening, screen recording, and coaching feedback systems",
-  "Diagnosing common user issues (e.g., login problems, app bugs, basic config)",
-  "Using remote desktop tools (e.g., TeamViewer, AnyDesk, Zoom screen sharing)",
-  "Logging reproducible bugs for product/engineering",
-];
-
-const SOFT_SKILLS = [
-  "Active Listening",
-  "Clear Articulation",
-  "Proper Tone & Language",
-  "Spelling & Grammar Accuracy",
-  "Empathy",
-  "Patience",
-  "Self-Regulation",
-  "Analytical Thinking",
-  "Creativity",
-  "Decision-Making",
-  "Service Orientation",
-  "Ownership",
-  "Adaptability",
-  "Team Collaboration",
-  "Conflict Resolution",
-  "Cultural Sensitivity",
-  "Multitasking",
-  "Efficiency",
-  "Resilience",
-  "Receptiveness to Feedback",
-  "Willingness to Learn",
 ];
 
 const BONUS_TYPES = ["Performance Bonus", "Team Bonus"];
@@ -625,27 +520,164 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
       }
 
-      // Fetch timezones
-      if (timezonesLoaded) return;
-      
+      // Fetch timezones only once
+      if (!timezonesLoaded) {
+        console.log('🕐 Fetching all timezones from API...');
       setTimezoneLoading(true);
       try {
         const { data, error } = await fetchAllTimezones();
         if (!error && data.length > 0) {
+            console.log('✅ Fetched', data.length, 'timezones from API');
           setAllTimezones(data);
           setTimezonesLoaded(true);
         } else {
-          console.error('Failed to fetch timezones:', error);
+            console.error('❌ Failed to fetch timezones:', error);
+            // Fallback to default timezones
+            setAllTimezones([]);
+            setTimezonesLoaded(true);
         }
       } catch (error) {
-        console.error('Error fetching all timezones:', error);
+          console.error('❌ Error fetching timezones:', error);
+          setAllTimezones([]);
+          setTimezonesLoaded(true);
+      } finally {
+        setTimezoneLoading(false);
+        }
+      }
+    };
+
+    fetchAllData();
+  }, []); // Empty dependency array - only run once on mount
+
+  // Process all timezones when loaded
+  useEffect(() => {
+    if (!timezonesLoaded || allTimezones.length === 0) {
+      return;
+    }
+
+    console.log('🔄 Processing timezones...');
+    setTimezoneLoading(true);
+    
+    try {
+      // Process all timezones from the API
+      const processedTimezones = allTimezones
+        .map(tz => ({
+          _id: tz._id,
+          name: tz.zoneName,
+          offset: tz.gmtOffset / 3600, // Convert seconds to hours
+          abbreviation: tz.zoneName.split('/').pop() || '',
+          countryName: tz.countryName
+        }))
+        .sort((a, b) => a.offset - b.offset);
+
+      console.log('✅ Processed', processedTimezones.length, 'timezones');
+      setAvailableTimezones(processedTimezones);
+    } catch (error) {
+      console.error('❌ Error processing timezones:', error);
+      // Fallback to default timezones if processing fails
+      setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+        _id: `default_${code}`,
+        name,
+        offset,
+        abbreviation: code.split('(')[1]?.split(')')[0] || '',
+        countryName: ''
+      })));
+    } finally {
+      setTimezoneLoading(false);
+    }
+  }, [allTimezones, timezonesLoaded]);
+
+  // Fetch country-specific timezones when destination changes
+  useEffect(() => {
+    const fetchCountryTimezones = async () => {
+      if (!suggestions?.destinationZones || suggestions.destinationZones.length === 0) {
+        return;
+      }
+
+      const firstDestination = suggestions.destinationZones[0];
+      if (!firstDestination || firstDestination.length !== 2) {
+        return;
+      }
+
+      // Only fetch if we're not showing all timezones
+      if (showAllTimezones) {
+        return;
+      }
+
+      console.log('🕐 Fetching timezones for country:', firstDestination);
+      setTimezoneLoading(true);
+      
+      try {
+        const { data, error } = await fetchTimezonesByCountry(firstDestination);
+        if (!error && data.length > 0) {
+          console.log('✅ Fetched', data.length, 'timezones for', firstDestination);
+          
+          // Process timezones for the specific country
+          const processedTimezones = data
+            .map(tz => ({
+              _id: tz._id,
+              name: tz.zoneName,
+              offset: tz.gmtOffset / 3600, // Convert seconds to hours
+              abbreviation: tz.zoneName.split('/').pop() || '',
+              countryName: tz.countryName
+            }))
+            .sort((a, b) => a.offset - b.offset);
+
+          setAvailableTimezones(processedTimezones);
+          
+          // Set the first timezone as default
+          if (processedTimezones.length > 0) {
+            const newSuggestions = { ...suggestions };
+            if (!newSuggestions.schedule) {
+              newSuggestions.schedule = { schedules: [], timeZones: [], flexibility: [], minimumHours: {} };
+            }
+            newSuggestions.schedule.timeZones = [processedTimezones[0]._id];
+            newSuggestions.schedule.time_zone = processedTimezones[0]._id;
+            setSuggestions(newSuggestions);
+          }
+        } else {
+          console.error('❌ Failed to fetch timezones for country:', error);
+          // Keep current timezones if country-specific fetch fails
+        }
+      } catch (error) {
+        console.error('❌ Error fetching timezones for country:', error);
+        // Keep current timezones if fetch fails
       } finally {
         setTimezoneLoading(false);
       }
     };
 
-    fetchAllData();
-  }, [timezonesLoaded, allCountries.length]);
+    fetchCountryTimezones();
+  }, [suggestions?.destinationZones?.[0], showAllTimezones]); // Only depend on first destination and showAllTimezones
+
+  // Effect to handle switching between country-specific and all timezones
+  useEffect(() => {
+    if (showAllTimezones) {
+      // Show all timezones from API
+      if (allTimezones && allTimezones.length > 0) {
+        const processedTimezones = allTimezones
+          .map(tz => ({
+            _id: tz._id,
+            name: tz.zoneName,
+            offset: tz.gmtOffset / 3600,
+            abbreviation: tz.zoneName.split('/').pop() || '',
+            countryName: tz.countryName
+          }))
+          .sort((a, b) => a.offset - b.offset);
+        setAvailableTimezones(processedTimezones);
+      } else {
+        // Fallback to default timezones if API data is not available
+        setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+          _id: `default_${code}`,
+          name,
+          offset,
+          abbreviation: code.split('(')[1]?.split(')')[0] || '',
+          countryName: ''
+        })));
+      }
+    }
+    // If not showing all timezones, the country-specific effect will handle it
+  }, [showAllTimezones, allTimezones]);
 
   // Fetch skills from API
   useEffect(() => {
@@ -862,178 +894,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       window.removeEventListener('forceSkillsMigration', handleForceMigration);
     };
   }, []); // Only run on mount, removed suggestions dependency
-
-    // Process all timezones when loaded
-  useEffect(() => {
-    if (!timezonesLoaded) {
-      return;
-    }
-
-    setTimezoneLoading(true);
-    
-    try {
-      // Process all timezones from the API
-      const processedTimezones = allTimezones
-        .map(tz => ({
-          _id: tz._id,
-          name: tz.zoneName,
-          offset: tz.gmtOffset / 3600, // Convert seconds to hours
-          abbreviation: tz.zoneName.split('/').pop() || '',
-          countryName: tz.countryName
-        }))
-        .sort((a, b) => a.offset - b.offset);
-
-      setAvailableTimezones(processedTimezones);
-    } catch (error) {
-      console.error('Error processing timezones:', error);
-      // Fallback to default timezones if processing fails
-      setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
-        _id: `default_${code}`,
-        name,
-        offset,
-        abbreviation: code.split('(')[1]?.split(')')[0] || '',
-        countryName: ''
-      })));
-    } finally {
-      setTimezoneLoading(false);
-    }
-  }, [allTimezones, timezonesLoaded]);
-
-  // Fetch timezones based on the first destination zone
-  useEffect(() => {
-    const fetchTimezonesForDestination = async () => {
-      if (!suggestions?.destinationZones || suggestions.destinationZones.length === 0) {
-        return;
-      }
-
-      const firstDestination = suggestions.destinationZones[0];
-      if (!firstDestination || firstDestination.length !== 2) {
-        return;
-      }
-
-      console.log('🕐 Fetching timezones for country:', firstDestination);
-      setTimezoneLoading(true);
-      
-      try {
-        const { data, error } = await fetchTimezonesByCountry(firstDestination);
-        if (!error && data.length > 0) {
-          console.log('✅ Fetched', data.length, 'timezones for', firstDestination);
-          
-          // Process timezones for the specific country
-          const processedTimezones = data
-            .map(tz => ({
-              _id: tz._id,
-              name: tz.zoneName,
-              offset: tz.gmtOffset / 3600, // Convert seconds to hours
-              abbreviation: tz.zoneName.split('/').pop() || '',
-              countryName: tz.countryName
-            }))
-            .sort((a, b) => a.offset - b.offset);
-
-          setAvailableTimezones(processedTimezones);
-          
-          // Set the first timezone as default if none is selected
-          if (processedTimezones.length > 0 && (!suggestions.schedule?.timeZones || suggestions.schedule.timeZones.length === 0)) {
-            const newSuggestions = { ...suggestions };
-            if (!newSuggestions.schedule) {
-              newSuggestions.schedule = { schedules: [], timeZones: [], flexibility: [], minimumHours: {} };
-            }
-            // Store _id in timeZones array and time_zone field
-            newSuggestions.schedule.timeZones = [processedTimezones[0]._id];
-            newSuggestions.schedule.time_zone = processedTimezones[0]._id;
-            setSuggestions(prev => prev ? newSuggestions : null);
-          }
-        } else {
-          console.error('Failed to fetch timezones for country:', error);
-          // Fallback to all timezones if country-specific fetch fails
-          const processedTimezones = allTimezones
-            .map(tz => ({
-              _id: tz._id,
-              name: tz.zoneName,
-              offset: tz.gmtOffset / 3600,
-              abbreviation: tz.zoneName.split('/').pop() || '',
-              countryName: tz.countryName
-            }))
-            .filter((tz, index, self) => 
-              index === self.findIndex(t => t.name === tz.name)
-            )
-            .sort((a, b) => a.offset - b.offset);
-          
-          setAvailableTimezones(processedTimezones);
-        }
-      } catch (error) {
-        console.error('Error fetching timezones for country:', error);
-        // Fallback to default timezones
-        setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
-          _id: `default_${code}`,
-          name,
-          offset,
-          abbreviation: code.split('(')[1]?.split(')')[0] || '',
-          countryName: ''
-        })));
-      } finally {
-        setTimezoneLoading(false);
-      }
-    };
-
-    fetchTimezonesForDestination();
-  }, [allTimezones]); // Removed suggestions?.destinationZones?.[0] to prevent infinite loop
-
-  // Effect to handle switching between country-specific and all timezones
-  useEffect(() => {
-    if (showAllTimezones) {
-      // Log all timezones to the console for debugging
-      console.log('ALL TIMEZONES FROM API:', allTimezones);
-      if (allTimezones && allTimezones.length > 0) {
-        const processedTimezones = allTimezones
-          .map(tz => ({
-            _id: tz._id,
-            name: tz.zoneName,
-            offset: tz.gmtOffset / 3600,
-            abbreviation: tz.zoneName.split('/').pop() || '',
-            countryName: tz.countryName
-          }))
-          .sort((a, b) => a.offset - b.offset);
-        setAvailableTimezones(processedTimezones);
-      } else {
-        setAvailableTimezones([]);
-      }
-    } else if (suggestions && suggestions.destinationZones && suggestions.destinationZones.length > 0) {
-      // Show only country-specific timezones
-      const fetchTimezonesForDestination = async () => {
-        const firstDestination = suggestions.destinationZones[0];
-        if (!firstDestination || firstDestination.length !== 2) {
-          setAvailableTimezones([]);
-          return;
-        }
-        setTimezoneLoading(true);
-        try {
-          const { data, error } = await fetchTimezonesByCountry(firstDestination);
-          if (!error && data.length > 0) {
-            const processedTimezones = data
-              .map(tz => ({
-                _id: tz._id,
-                name: tz.zoneName,
-                offset: tz.gmtOffset / 3600, // Convert seconds to hours
-                abbreviation: tz.zoneName.split('/').pop() || '',
-                countryName: tz.countryName
-              }))
-              .sort((a, b) => a.offset - b.offset);
-            setAvailableTimezones(processedTimezones);
-          } else {
-            setAvailableTimezones([]);
-          }
-        } catch (error) {
-          setAvailableTimezones([]);
-        } finally {
-          setTimezoneLoading(false);
-        }
-      };
-      fetchTimezonesForDestination();
-    } else {
-      setAvailableTimezones([]);
-    }
-  }, [showAllTimezones, allTimezones]); // Removed suggestions?.destinationZones?.[0] to prevent infinite loop
 
   useEffect(() => {
     const generateSuggestions = async () => {
@@ -1330,62 +1190,40 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
   }, [props.input]);
 
-  // Place this BEFORE any useEffect that uses timezoneOptions:
+  // Memoized timezone options for the UI
   const timezoneOptions = React.useMemo(() => {
     return availableTimezones.length > 0
       ? availableTimezones.map(tz => ({
           _id: tz._id,
           zoneName: tz.name,
           countryName: tz.countryName,
+          offset: tz.offset, // Include offset for GMT display
         }))
-      : Object.entries(MAJOR_TIMEZONES).map(([code, { name }]) => ({
+      : Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
           _id: `default_${code}`,
           zoneName: name,
           countryName: '',
+          offset: offset,
         }));
   }, [availableTimezones]);
 
-  // Now you can use timezoneOptions in useEffect and elsewhere
-  useEffect(() => {
-    if (!suggestions || !suggestions.schedule) return;
-    if (
-      timezoneOptions.length > 0 &&
-      (!suggestions.schedule.timeZones || suggestions.schedule.timeZones.length === 0)
-    ) {
-      setSuggestions(prev => {
-        if (!prev || !prev.schedule) return prev;
-        return {
-          ...prev,
-          schedule: {
-            ...prev.schedule,
-            timeZones: [timezoneOptions[0]._id],
-            time_zone: timezoneOptions[0]._id
-          }
-        };
-      });
-    }
-  }, [timezoneOptions]); // Removed suggestions dependency to prevent infinite loop
-
   // Auto-select first timezone when available timezones change
   useEffect(() => {
-    if (!suggestions?.schedule) return;
-    if (
-      availableTimezones.length > 0 &&
-      (!suggestions.schedule.timeZones || suggestions.schedule.timeZones.length === 0)
-    ) {
-      setSuggestions(prev => {
-        if (!prev || !prev.schedule) return prev;
-        return {
-          ...prev,
-          schedule: {
-            ...prev.schedule,
-            timeZones: [availableTimezones[0]._id],
-            time_zone: availableTimezones[0]._id
-          }
-        };
-      });
-    }
-  }, [availableTimezones]); // Removed suggestions dependency to prevent infinite loop
+    if (!suggestions?.schedule || availableTimezones.length === 0) return;
+    
+    console.log('🕐 Setting default timezone:', availableTimezones[0]._id);
+    setSuggestions(prev => {
+      if (!prev || !prev.schedule) return prev;
+      return {
+        ...prev,
+        schedule: {
+          ...prev.schedule,
+          timeZones: [availableTimezones[0]._id],
+          time_zone: availableTimezones[0]._id
+        }
+      };
+    });
+  }, [availableTimezones]); // Only depend on availableTimezones
 
   // Re-validate skills when they are loaded from API
   useEffect(() => {
@@ -2838,9 +2676,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     // Filter timezones based on search
-    const filteredTimezones = timezoneOptions.filter(tz =>
-      tz.zoneName && tz._id && (
-        tz.zoneName.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
+    const filteredTimezones = availableTimezones.filter(tz =>
+      tz.name && tz._id && (
+        tz.name.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
         tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
       )
     );
@@ -2905,26 +2743,25 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         
         <select
           className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
-          value={suggestions.schedule.time_zone || (filteredTimezones.length > 0 ? filteredTimezones[0]._id : '') || ''}
+          value={suggestions.schedule.time_zone || ''}
           onChange={handleTimezoneChange}
           disabled={timezoneLoading}
         >
-          {/* Show placeholder only if no timezone is selected or available */}
-          {filteredTimezones.length === 0 || !suggestions.schedule.time_zone ? (
             <option value="">Select a timezone...</option>
-          ) : null}
           {filteredTimezones.map((tz) => (
             <option key={tz._id} value={tz._id}>
-              {tz.zoneName} {tz.countryName ? `- ${tz.countryName}` : ''}
+              {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
             </option>
           ))}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
-          {timezoneOptions.length > 0 
+          {availableTimezones.length > 0 
             ? timezoneSearch 
-              ? `Showing ${filteredTimezones.length} of ${timezoneOptions.length} timezones${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ''}`
-              : `${timezoneOptions.length} timezones available${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ' worldwide'}`
-            : 'Loading timezones from API...'
+              ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ''}`
+              : `${availableTimezones.length} timezones available${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ' worldwide'}`
+            : timezoneLoading 
+              ? 'Loading timezones from API...'
+              : 'No timezones available'
           }
         </p>
       </div>

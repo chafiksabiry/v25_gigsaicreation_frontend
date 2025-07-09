@@ -314,7 +314,7 @@ export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error 
 
 export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
   try {
-    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https:/api-repcreationwizard.harx.ai/api';
+    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https://api-repcreationwizard.harx.ai/api';
     const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
     
     if (!response.ok) {

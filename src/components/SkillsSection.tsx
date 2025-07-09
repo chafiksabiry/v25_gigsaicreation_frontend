@@ -753,21 +753,21 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                               } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
                                 // Handle ObjectId format
                                 const skillId = skill.skill.$oid;
-                                let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                                switch (type) {
-                                  case 'professional':
-                                    skillArray = professionalSkills;
-                                    break;
-                                  case 'technical':
-                                    skillArray = technicalSkills;
-                                    break;
-                                  case 'soft':
-                                    skillArray = softSkills;
-                                    break;
-                                  default:
-                                    skillArray = [];
-                                }
-                                const skillObject = skillArray.find(s => s._id === skillId);
+                            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                            switch (type) {
+                              case 'professional':
+                                skillArray = professionalSkills;
+                                break;
+                              case 'technical':
+                                skillArray = technicalSkills;
+                                break;
+                              case 'soft':
+                                skillArray = softSkills;
+                                break;
+                              default:
+                                skillArray = [];
+                            }
+                            const skillObject = skillArray.find(s => s._id === skillId);
                                 skillName = skillObject ? skillObject.name : skillId;
                               }
                             }
