@@ -108,7 +108,6 @@ export function ScheduleSection({
   const [timezoneLoading, setTimezoneLoading] = useState(false);
   const [timezonesLoaded, setTimezonesLoaded] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
-  const [showAllTimezones, setShowAllTimezones] = useState(false);
 
   useEffect(() => {
     onChange({ ...data, schedules });
@@ -131,21 +130,34 @@ export function ScheduleSection({
             console.log('✅ Fetched', data.length, 'timezones for', destination_zone);
             timezoneData = data;
           } else {
-            console.log('⚠️ No timezones found for country, fetching all timezones');
-            const { data: allData, error: allError } = await fetchAllTimezones();
-            if (!allError && allData.length > 0) {
-              timezoneData = allData;
-            }
+            console.log('⚠️ No timezones found for country, using default timezones');
+            // Use default timezones if no country-specific timezones found
+            timezoneData = Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+              _id: `default_${code}`,
+              countryCode: destination_zone,
+              countryName: getCountryName(destination_zone),
+              zoneName: name,
+              gmtOffset: offset * 3600, // Convert hours to seconds
+              lastUpdated: new Date().toISOString(),
+              __v: 0,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }));
           }
         } else {
-          // Fetch all timezones if no destination_zone
-          console.log('🌍 Fetching all timezones');
-          const { data, error } = await fetchAllTimezones();
-          if (!error && data.length > 0) {
-            timezoneData = data;
-          } else {
-            console.error('Failed to fetch timezones:', error);
-          }
+          // If no destination_zone, use default timezones
+          console.log('🌍 No destination zone, using default timezones');
+          timezoneData = Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+            _id: `default_${code}`,
+            countryCode: 'US', // Default to US
+            countryName: 'United States',
+            zoneName: name,
+            gmtOffset: offset * 3600, // Convert hours to seconds
+            lastUpdated: new Date().toISOString(),
+            __v: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }));
         }
         
         if (timezoneData && timezoneData.length > 0) {
@@ -154,6 +166,20 @@ export function ScheduleSection({
         }
       } catch (error) {
         console.error('Error fetching timezones:', error);
+        // Fallback to default timezones
+        const fallbackTimezones = Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
+          _id: `default_${code}`,
+          countryCode: destination_zone || 'US',
+          countryName: destination_zone ? getCountryName(destination_zone) : 'United States',
+          zoneName: name,
+          gmtOffset: offset * 3600,
+          lastUpdated: new Date().toISOString(),
+          __v: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }));
+        setAllTimezones(fallbackTimezones);
+        setTimezonesLoaded(true);
       } finally {
         setTimezoneLoading(false);
       }
@@ -677,12 +703,9 @@ export function ScheduleSection({
                 <div>
                   <h4 className="text-lg font-bold text-green-900">Time Zone</h4>
                   <p className="text-sm text-green-700">
-                    {destination_zone && !showAllTimezones 
-                      ? `Based on destination: ${getCountryName(destination_zone)} (${destination_zone})`
-                      : showAllTimezones 
-                        ? 'Showing all available timezones' 
-                        : 'Select from available timezones'
-                    }
+                    {destination_zone && (
+                      `Based on destination: ${getCountryName(destination_zone)} (${destination_zone})`
+                    )}
                   </p>
                 </div>
               </div>
@@ -692,18 +715,6 @@ export function ScheduleSection({
                     <Loader2 className="w-4 h-4 animate-spin text-green-600" />
                     <span className="text-sm text-green-600 ml-1">Loading...</span>
                   </div>
-                )}
-                {destination_zone && (
-                  <button
-                    onClick={() => setShowAllTimezones(!showAllTimezones)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      showAllTimezones
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    }`}
-                  >
-                    {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
-                  </button>
                 )}
               </div>
             </div>
@@ -743,8 +754,8 @@ export function ScheduleSection({
             <p className="text-xs text-gray-500 italic text-center mt-2">
               {availableTimezones.length > 0 
                 ? timezoneSearch 
-                  ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${!showAllTimezones && destination_zone ? ` for ${getCountryName(destination_zone)}` : ''}`
-                  : `${availableTimezones.length} timezones available${!showAllTimezones && destination_zone ? ` for ${getCountryName(destination_zone)}` : ' worldwide'}`
+                  ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${destination_zone ? ` for ${getCountryName(destination_zone)}` : ''}`
+                  : `${availableTimezones.length} timezones available${destination_zone ? ` for ${getCountryName(destination_zone)}` : ' worldwide'}`
                 : 'Loading timezones from API...'
               }
             </p>
