@@ -136,17 +136,41 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         iso639_1: lang.iso639_1
       })),
       soft: fixedGigData.skills.soft.map(skill => ({
-        skill: skill.skill, // This preserves ObjectId format { $oid: "..." }
+        skill: (() => {
+          // Extract ObjectId string from { $oid: "..." } format
+          if (typeof skill.skill === 'string') {
+            return skill.skill; // Already a string
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            return skill.skill.$oid; // Extract the ObjectId string
+          }
+          return skill.skill; // Fallback
+        })(),
         level: skill.level,
         details: skill.details || ''
       })),
       professional: fixedGigData.skills.professional.map(skill => ({
-        skill: skill.skill, // This preserves ObjectId format { $oid: "..." }
+        skill: (() => {
+          // Extract ObjectId string from { $oid: "..." } format
+          if (typeof skill.skill === 'string') {
+            return skill.skill; // Already a string
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            return skill.skill.$oid; // Extract the ObjectId string
+          }
+          return skill.skill; // Fallback
+        })(),
         level: skill.level,
         details: skill.details || ''
       })),
       technical: fixedGigData.skills.technical.map(skill => ({
-        skill: skill.skill, // This preserves ObjectId format { $oid: "..." }
+        skill: (() => {
+          // Extract ObjectId string from { $oid: "..." } format
+          if (typeof skill.skill === 'string') {
+            return skill.skill; // Already a string
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            return skill.skill.$oid; // Extract the ObjectId string
+          }
+          return skill.skill; // Fallback
+        })(),
         level: skill.level,
         details: skill.details || ''
       })),
@@ -157,8 +181,18 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       }))
     };
 
-    // Log the formatted skills to ensure ObjectIds are preserved
+    // Log the formatted skills to ensure ObjectIds are extracted correctly
     console.log('📤 Sending skills data to API:', formattedSkills);
+    console.log('🔍 Sample skill format check:');
+    if (formattedSkills.soft.length > 0) {
+      console.log('  Soft skill example:', formattedSkills.soft[0]);
+    }
+    if (formattedSkills.professional.length > 0) {
+      console.log('  Professional skill example:', formattedSkills.professional[0]);
+    }
+    if (formattedSkills.technical.length > 0) {
+      console.log('  Technical skill example:', formattedSkills.technical[0]);
+    }
 
     // Format schedule data to remove invalid ObjectId references
     const formattedSchedule = {
