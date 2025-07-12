@@ -296,18 +296,46 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <p className="text-sm text-gray-500">Select the primary focus area</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {allCategories.map((category) => (
-              <button key={category} onClick={() => onChange({ ...data, category })}
-                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200 border-2 ${data.category === category ? 'bg-purple-50 border-purple-500' : 'bg-white hover:bg-gray-50 border-gray-200'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center border-2 ${data.category === category ? 'border-purple-600 bg-purple-600' : 'border-gray-300'}`}>
-                  {data.category === category && <CheckCircle className="w-3 h-3 text-white" />}
-                </div>
-                <span className="flex-1 font-medium text-gray-800">{category}</span>
-                {!predefinedOptions.basic.categories.includes(category) && <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">New</span>}
-              </button>
-            ))}
+          
+          {/* Affichage de la catégorie sélectionnée */}
+          {data.category && (
+            <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-800">Selected Category:</span>
+                <span className="text-sm text-purple-700">{data.category}</span>
+                {!predefinedOptions.basic.categories.includes(data.category) && (
+                  <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Custom</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Sélecteur de catégorie */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <div className="flex items-center gap-2 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Target className="w-5 h-5 text-purple-400" />
+              </span>
+              <select
+                value={data.category || ''}
+                onChange={e => onChange({ ...data, category: e.target.value })}
+                className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-800 appearance-none transition-all"
+              >
+                <option value="" disabled className="text-gray-400">Select a category</option>
+                {allCategories.map(category => (
+                  <option key={category} value={category} className="text-gray-800">{category}</option>
+                ))}
+              </select>
+              {/* Badge Custom à côté du select si catégorie personnalisée */}
+              {data.category && !predefinedOptions.basic.categories.includes(data.category) && (
+                <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full ml-2">Custom</span>
+              )}
+            </div>
           </div>
+
+          {/* Ancienne grille de boutons supprimée */}
           {errors.category && <p className="mt-2 text-sm text-red-600">{errors.category.join(', ')}</p>}
         </div>
 
@@ -323,15 +351,20 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </div>
           </div>
           <label className="block text-sm font-medium text-gray-700">Country</label>
-          <select value={data.destination_zone || ''} onChange={(e) => handleCountrySelect(e.target.value)}
-            className="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
-            <option value="">Select a country</option>
-            {['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].map((zone) => {
-              const countries = getCountriesByZone(zone);
-              if (countries.length === 0) return null;
-              return <optgroup key={zone} label={zone}>{countries.map(({ code, name }) => <option key={code} value={code}>{name}</option>)}</optgroup>;
-            })}
-          </select>
+          <div className="flex items-center gap-2 relative mb-2">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <Globe2 className="w-5 h-5 text-amber-400" />
+            </span>
+            <select value={data.destination_zone || ''} onChange={(e) => handleCountrySelect(e.target.value)}
+              className="mt-1 block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm appearance-none transition-all">
+              <option value="" disabled className="text-gray-400">Select a country</option>
+              {['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].map((zone) => {
+                const countries = getCountriesByZone(zone);
+                if (countries.length === 0) return null;
+                return <optgroup key={zone} label={zone}>{countries.map(({ code, name }) => <option key={code} value={code} className="text-gray-800">{name}</option>)}</optgroup>;
+              })}
+            </select>
+          </div>
           {data.destination_zone && (
             <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
               <Globe2 className="w-4 h-4" />
@@ -355,16 +388,22 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">Seniority Level</label>
-              <select value={data.seniority?.level || ''} onChange={(e) => handleSeniorityChange('level', e.target.value)}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500">
-                <option value="">Select seniority level</option>
-                {predefinedOptions.basic.seniorityLevels.map(level => <option key={level} value={level}>{level}</option>)}
-              </select>
+              <div className="flex items-center gap-2 relative mb-2">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <GraduationCap className="w-5 h-5 text-emerald-400" />
+                </span>
+                <select value={data.seniority?.level || ''} onChange={(e) => handleSeniorityChange('level', e.target.value)}
+                  className="mt-1 block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-gray-800 appearance-none transition-all">
+                  <option value="" disabled className="text-gray-400">Select seniority level</option>
+                  {predefinedOptions.basic.seniorityLevels.map(level => <option key={level} value={level} className="text-gray-800">{level}</option>)}
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Years of Experience</label>
               <input type="number" value={data.seniority?.yearsExperience || ''} onChange={(e) => handleSeniorityChange('years', e.target.value)}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-emerald-500 focus:border-emerald-500" placeholder="e.g., 2" />
+                className="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-gray-800 placeholder-gray-400 py-2 px-4 transition-all"
+                placeholder="e.g., 2" />
             </div>
           </div>
           {data.seniority?.level && (data.seniority?.yearsExperience || 0) > 0 && (

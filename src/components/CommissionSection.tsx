@@ -40,7 +40,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
       ...data,
       commission: {
         ...data.commission,
-        [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+        [field]: field === 'baseAmount'
+          ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+          : value, // pour les selects, garder la string
       },
     });
   };
@@ -52,7 +54,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         ...data.commission,
         minimumVolume: {
           ...data.commission?.minimumVolume,
-          [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+          [field]: field === 'amount'
+            ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+            : value, // pour unit et period, garder la string
         },
       },
     });
@@ -65,7 +69,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         ...data.commission,
         transactionCommission: {
           ...data.commission?.transactionCommission,
-          [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+          [field]: field === 'amount'
+            ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+            : value, // pour type, garder la string
         },
       },
     });
@@ -76,7 +82,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
       ...data,
       commission: {
         ...data.commission,
-        [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+        [field]: field === 'bonusAmount'
+          ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+          : value, // pour bonus, garder la string
       },
     });
   };

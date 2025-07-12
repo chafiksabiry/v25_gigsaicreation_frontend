@@ -644,228 +644,65 @@ export function GigReview({
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Skills Required */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-              <div className="border-b border-gray-200 px-6 py-4">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                  <Brain className="w-5 h-5 text-gray-600" />
-                  Required Skills
-                </h2>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Languages */}
-                {data.skills?.languages?.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Languages className="w-4 h-4 text-gray-600" />
-                      Languages
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.skills.languages.map((lang, index) => (
-                        <span
-                          key={`${lang.language}-${index}`}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                        >
-                          {lang.language} ({getLanguageLevelLabel(lang.proficiency)})
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Technical Skills */}
-                {data.skills?.technical?.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Laptop className="w-4 h-4 text-gray-600" />
-                      Technical Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.skills.technical.map((skill, index) => {
-                        const skillName = getSkillNameById(skill.skill, 'technical');
-                        const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill as { $oid: string }).$oid;
-                        return (
-                          <span
-                            key={`${skillId}-${index}`}
-                            className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                            title={`ObjectId: ${skillId}`}
-                          >
-                            {skillName} (Level {skill.level})
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Soft Skills */}
-                {data.skills?.soft?.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Heart className="w-4 h-4 text-gray-600" />
-                      Soft Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.skills.soft.map((skill, index) => {
-                        const skillName = getSkillNameById(skill.skill, 'soft');
-                        const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill as { $oid: string }).$oid;
-                        return (
-                          <span
-                            key={`${skillId}-${index}`}
-                            className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-                            title={`ObjectId: ${skillId}`}
-                          >
-                            {skillName} (Level {skill.level})
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Professional Skills */}
-                {data.skills?.professional?.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Briefcase className="w-4 h-4 text-gray-600" />
-                      Professional Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.skills.professional.map((skill, index) => {
-                        const skillName = getSkillNameById(skill.skill, 'professional');
-                        const skillId = typeof skill.skill === 'string' ? skill.skill : (skill.skill as { $oid: string }).$oid;
-                        return (
-                          <span
-                            key={`${skillId}-${index}`}
-                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                            title={`ObjectId: ${skillId}`}
-                          >
-                            {skillName} (Level {skill.level})
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Certifications */}
-                {data.skills?.certifications?.length > 0 && (
-                  <div>
-                    <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Award className="w-4 h-4 text-gray-600" />
-                      Certifications
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {data.skills.certifications.map((cert, index) => (
-                        <span
-                          key={`${cert.name}-${index}`}
-                          className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium"
-                        >
-                          {cert.name} {cert.required ? '(Required)' : '(Optional)'}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            {/* Skills, Certifications, Documentation Summary */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-3">
+                <Brain className="w-5 h-5 text-gray-600" />
+                Résumé
+              </h2>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Laptop className="w-4 h-4 text-purple-600" />
+                  <span className="font-medium">Tech Skills:</span>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                    {data.skills?.technical?.length || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-green-600" />
+                  <span className="font-medium">Soft Skills:</span>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                    {data.skills?.soft?.length || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">Pro Skills:</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                    {data.skills?.professional?.length || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-orange-600" />
+                  <span className="font-medium">Certifications:</span>
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">
+                    {data.skills?.certifications?.length || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Languages className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">Languages:</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                    {data.skills?.languages?.length || 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-600" />
+                  <span className="font-medium">Documentation:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${data.documentation ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>{data.documentation ? 'Oui' : 'Non'}</span>
+                </div>
               </div>
             </div>
-
-            {/* Team Structure */}
+            {/* Team Structure (summary only) */}
             {data.team && (
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-                <div className="border-b border-gray-200 px-6 py-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                    <Users className="w-5 h-5 text-gray-600" />
-                    Team Structure
-                  </h2>
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Users className="w-5 h-5 text-purple-600" />
+                  <span className="font-semibold text-gray-900">Team</span>
                 </div>
-                <div className="p-6 space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">Team Size</h3>
-                      <span className="text-2xl font-bold text-gray-900">{data.team.size}</span>
-                    </div>
-                    <div className="text-gray-600 text-sm">
-                      {data.team.structure.length} role types defined
-                    </div>
-                  </div>
-
-                  {data.team.structure && data.team.structure.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Roles</h3>
-                      <div className="space-y-2">
-                        {data.team.structure.map((role, index) => (
-                          <div
-                            key={`${role.roleId}-${index}`}
-                            className="bg-gray-50 rounded-lg p-3"
-                          >
-                            <div className="font-semibold text-gray-900 mb-1">Role {index + 1}</div>
-                            <p className="text-gray-600 text-sm">
-                              Count: {role.count} | Level: {role.seniority.level} ({role.seniority.yearsExperience} years)
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Documentation */}
-            {data.documentation && (
-              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-                <div className="border-b border-gray-200 px-6 py-4">
-                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-gray-600" />
-                    Documentation
-                  </h2>
-                </div>
-                <div className="p-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">Available Resources</h3>
-                    <div className="space-y-3">
-                      {data.documentation.product && data.documentation.product.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Product Documentation</h4>
-                          <div className="space-y-1">
-                            {data.documentation.product.map((doc, index) => (
-                              <div key={`product-${index}`} className="flex items-center gap-2">
-                                <Check className="w-4 h-4 text-green-500" />
-                                <span className="text-gray-700 text-sm">{doc.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {data.documentation.process && data.documentation.process.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Process Documentation</h4>
-                          <div className="space-y-1">
-                            {data.documentation.process.map((doc, index) => (
-                              <div key={`process-${index}`} className="flex items-center gap-2">
-                                <Check className="w-4 h-4 text-green-500" />
-                                <span className="text-gray-700 text-sm">{doc.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {data.documentation.training && data.documentation.training.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-2">Training Materials</h4>
-                          <div className="space-y-1">
-                            {data.documentation.training.map((doc, index) => (
-                              <div key={`training-${index}`} className="flex items-center gap-2">
-                                <Check className="w-4 h-4 text-green-500" />
-                                <span className="text-gray-700 text-sm">{doc.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-gray-700 text-sm">Team Size: <span className="font-bold">{data.team.size}</span></span>
+                  <span className="text-gray-700 text-sm">Roles: <span className="font-bold">{data.team.structure?.length || 0}</span></span>
                 </div>
               </div>
             )}

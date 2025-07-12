@@ -3061,31 +3061,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.commission &&
         newSuggestions.commission.options[index]
       ) {
+        // Correction : parser uniquement les champs numériques
+        const numericFields = [
+          'amount', 'baseAmount', 'bonusAmount'
+        ];
         if (field.includes(".")) {
           const [parent, child] = field.split(".");
-          if (
-            typeof value === "string" &&
-            (child === "amount" ||
-              child === "baseAmount" ||
-              child === "bonusAmount")
-          ) {
-            // Convert string to number for amount fields
-            const numericValue = parseFloat(value) || 0;
-            (newSuggestions.commission.options[index] as any)[parent][child] =
-              numericValue;
+          if (numericFields.includes(child)) {
+            const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+            (newSuggestions.commission.options[index] as any)[parent][child] = numericValue;
           } else {
-            (newSuggestions.commission.options[index] as any)[parent][child] =
-              value;
+            (newSuggestions.commission.options[index] as any)[parent][child] = value;
           }
         } else {
-          if (
-            typeof value === "string" &&
-            (field === "baseAmount" || field === "bonusAmount")
-          ) {
-            // Convert string to number for amount fields
-            const numericValue = parseFloat(value) || 0;
-            (newSuggestions.commission.options[index] as any)[field] =
-              numericValue;
+          if (numericFields.includes(field)) {
+            const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+            (newSuggestions.commission.options[index] as any)[field] = numericValue;
           } else {
             (newSuggestions.commission.options[index] as any)[field] = value;
           }
