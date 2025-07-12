@@ -286,7 +286,7 @@ export async function getGig(gigId: string | null) {
 export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error }> {
   try {
     console.log('[fetchAllTimezones] Fetching all timezones from API...');
-    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
     const response = await fetch(`${timezoneApiUrl}/timezones`);
     console.log('[fetchAllTimezones] Response received:', response);
     
@@ -314,7 +314,7 @@ export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error 
 
 export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
   try {
-    const timezoneApiUrl = import.meta.env.VITE_TIMEZONE_API_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
     const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
     
     if (!response.ok) {
@@ -340,7 +340,7 @@ export async function fetchTimezonesByCountry(countryCode: string): Promise<{ da
 // Skills API functions
 export async function fetchSoftSkills() {
   try {
-    const response = await fetch('https://api-repcreationwizard.harx.ai/api/skills/soft');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -354,7 +354,7 @@ export async function fetchSoftSkills() {
 
 export async function fetchTechnicalSkills() {
   try {
-    const response = await fetch('https://api-repcreationwizard.harx.ai/api/skills/technical');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/technical`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -368,7 +368,7 @@ export async function fetchTechnicalSkills() {
 
 export async function fetchProfessionalSkills() {
   try {
-    const response = await fetch('https://api-repcreationwizard.harx.ai/api/skills/professional');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -388,7 +388,7 @@ export async function saveSkillToDatabase(skillData: {
   level?: number;
 }): Promise<{ data: any; error?: Error }> {
   try {
-    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${skillData.category}`, {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${skillData.category}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -427,7 +427,7 @@ export async function updateSkillInDatabase(
   }
 ): Promise<{ data: any; error?: Error }> {
   try {
-    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${skillId}`, {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${skillId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -453,7 +453,7 @@ export async function updateSkillInDatabase(
 
 export async function deleteSkillFromDatabase(skillId: string): Promise<{ data: any; error?: Error }> {
   try {
-    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${skillId}`, {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${skillId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -478,7 +478,7 @@ export async function deleteSkillFromDatabase(skillId: string): Promise<{ data: 
 
 export async function getSkillById(skillId: string): Promise<{ data: any; error?: Error }> {
   try {
-    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/id/${skillId}`);
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/id/${skillId}`);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -499,7 +499,7 @@ export async function getSkillById(skillId: string): Promise<{ data: any; error?
 export async function searchSkillsByName(name: string, category?: 'soft' | 'technical' | 'professional'): Promise<{ data: any[]; error?: Error }> {
   try {
     const categoryParam = category ? `&category=${category}` : '';
-    const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/search?name=${encodeURIComponent(name)}${categoryParam}`);
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/search?name=${encodeURIComponent(name)}${categoryParam}`);
     
     if (!response.ok) {
       const errorText = await response.text();

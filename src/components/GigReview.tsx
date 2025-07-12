@@ -80,9 +80,9 @@ export function GigReview({
         
         // Fetch all skills categories
         const [softResponse, professionalResponse, technicalResponse] = await Promise.all([
-          fetch('https://api-repcreationwizard.harx.ai/api/skills/soft'),
-          fetch('https://api-repcreationwizard.harx.ai/api/skills/professional'),
-          fetch('https://api-repcreationwizard.harx.ai/api/skills/technical')
+          fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`),
+          fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`),
+          fetch(`${import.meta.env.VITE_REP_URL}/skills/technical`)
         ]);
 
         if (softResponse.ok) {

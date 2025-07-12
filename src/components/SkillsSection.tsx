@@ -133,7 +133,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         // Fetch professional skills
         setLoadingSkills(prev => ({ ...prev, professional: true }));
         setErrorSkills(prev => ({ ...prev, professional: false }));
-        const professionalResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/professional');
+        const professionalResponse = await fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`);
         if (professionalResponse.ok) {
           const professionalData = await professionalResponse.json();
           setProfessionalSkills(professionalData.data || []);
@@ -145,7 +145,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         // Fetch soft skills
         setLoadingSkills(prev => ({ ...prev, soft: true }));
         setErrorSkills(prev => ({ ...prev, soft: false }));
-        const softResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/soft');
+        const softResponse = await fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`);
         if (softResponse.ok) {
           const softData = await softResponse.json();
           setSoftSkills(softData.data || []);
@@ -157,7 +157,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         // Fetch technical skills
         setLoadingSkills(prev => ({ ...prev, technical: true }));
         setErrorSkills(prev => ({ ...prev, technical: false }));
-        const technicalResponse = await fetch('https://api-repcreationwizard.harx.ai/api/skills/technical');
+        const technicalResponse = await fetch(`${import.meta.env.VITE_REP_URL}/skills/technical`);
         if (technicalResponse.ok) {
           const technicalData = await technicalResponse.json();
           setTechnicalSkills(technicalData.data || []);
@@ -602,7 +602,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                         try {
                           setLoadingSkills(prev => ({ ...prev, [type]: true }));
                           setErrorSkills(prev => ({ ...prev, [type]: false }));
-                          const response = await fetch(`https://api-repcreationwizard.harx.ai/api/skills/${type}`);
+                          const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${type}`);
                           if (response.ok) {
                             const data = await response.json();
                             const setter = type === 'professional' ? setProfessionalSkills : 
