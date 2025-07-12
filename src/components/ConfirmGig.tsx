@@ -30,6 +30,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         companyId: Cookies.get('companyId') || "",
         category: gig.category || "",
         destination_zone: gig.destination_zone || "",
+        logoUrl: gig.logoUrl, // Include the logo URL
         callTypes: gig.callTypes || [],
         highlights: gig.highlights || [],
         requirements: {

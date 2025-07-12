@@ -43,7 +43,7 @@ export async function analyzeTitleAndGenerateDescription(title: string): Promise
   try {
     const result = await retryWithBackoff(async () => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -174,7 +174,7 @@ export async function generateSeniorityAndExperience(title: string, description:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -537,7 +537,7 @@ export async function generateCommissionAndActivity(title: string, description: 
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -827,7 +827,7 @@ export async function generateTeamAndTerritories(title: string, description: str
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -932,7 +932,7 @@ export async function analyzeCityAndGetCountry(city: string): Promise<string> {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -980,7 +980,7 @@ export async function generateSeniorityByCategory(
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -1151,6 +1151,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   // Convert times to 24h format
   const startTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.start || '09:00');
   const endTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.end || '17:00');
+
+  // Include logoUrl if available
+  const logoUrl = generatedData.logoUrl;
 
   // Function to expand day ranges into individual days
 
@@ -1511,7 +1514,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         frequency: generatedData.team?.reporting?.frequency || "Weekly"
       },
       collaboration: generatedData.team?.collaboration || []
-    }
+    },
+    logoUrl: logoUrl // Include the logo URL if available
   };
 }
 
@@ -1539,6 +1543,7 @@ export async function generateSkills(title: string, description: string): Promis
     await syncPredefinedSkills();
 
     const completion = await openai.chat.completions.create({
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -1605,7 +1610,6 @@ Description: ${description}
 Select the most relevant skills from the provided lists based on the job requirements and responsibilities.`
         }
       ],
-      model: "gpt-3.5-turbo",
       temperature: 0.7,
       max_tokens: 1000
     });
@@ -1697,7 +1701,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
   try {
     const result = await retryWithBackoff(async () => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -2005,5 +2009,80 @@ Rules:
       throw new Error(`AI suggestion failed: ${error.message}`);
     }
     throw new Error('AI suggestion failed');
+  }
+}
+
+export async function generateLogo(title: string, description: string): Promise<string> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!title) {
+    throw new Error('Title is required');
+  }
+
+  try {
+    // Use custom description if provided, otherwise use default prompt
+    const customPrompt = description.trim() 
+      ? `Create a modern, professional logo for a job position titled "${title}". ${description}. The logo should be:
+      - Clean and minimalist design
+      - Professional color scheme
+      - High quality, vector-style design
+      - No text, just the logo symbol
+      - White or transparent background
+      - Modern and contemporary style`
+      : `Create a modern, professional logo for a job position titled "${title}". The logo should be:
+      - Clean and minimalist design
+      - Professional color scheme (blues, grays, or corporate colors)
+      - Include subtle job-related elements (briefcase, people, or abstract business symbols)
+      - Suitable for a job listing platform
+      - High quality, vector-style design
+      - No text, just the logo symbol
+      - White or transparent background
+      - Modern and contemporary style`;
+
+    const completion = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: customPrompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+      style: "natural"
+    });
+
+    if (!completion.data || completion.data.length === 0) {
+      throw new Error('Failed to generate logo');
+    }
+
+    const dallEUrl = completion.data[0].url || '';
+    
+    // Use backend proxy to upload to Cloudinary (avoids CORS issues)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003/api';
+      const response = await fetch(`${API_URL}/gigs/proxy/upload-dalle-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dallEUrl,
+          title
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Backend error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.data.url;
+    } catch (uploadError) {
+      console.warn('Failed to upload via backend proxy, returning original URL:', uploadError);
+      return dallEUrl;
+    }
+  } catch (error) {
+    console.error('Error generating logo:', error);
+    throw error;
   }
 }

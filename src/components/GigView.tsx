@@ -48,6 +48,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     title: gig.title,
     description: gig.description,
     category: gig.category,
+    logoUrl: gig.logoUrl, // Include the logo URL
     callTypes: gig.call_types || [],
     highlights: [],
     requirements: {
@@ -249,7 +250,18 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
           }}
           className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-200 p-6 cursor-pointer"
         >
-          <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start">
+          <div className="flex items-start gap-4">
+            {/* Logo */}
+            {gig.logoUrl && (
+              <div className="flex-shrink-0">
+                <img 
+                  src={gig.logoUrl} 
+                  alt="Gig Logo" 
+                  className="w-12 h-12 rounded-lg border border-gray-200 bg-white object-contain"
+                />
+              </div>
+            )}
             <div className="space-y-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{gig.title}</h2>

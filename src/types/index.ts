@@ -7,6 +7,7 @@ export interface GigData {
   destination_zone: string;
   destination_zone_ai_generated?: string;
   destinationZones?: string[];
+  logoUrl?: string; // URL du logo généré par DALL-E et uploadé sur Cloudinary
   callTypes: string[];
   highlights: string[];
   requirements: {
@@ -209,6 +210,7 @@ export interface GigSuggestion {
   sectors: string[];
   destinationZones: string[];
   timeframes: string[];
+  logoUrl?: string; // URL du logo généré par DALL-E et uploadé sur Cloudinary
   availability: {
     schedule: Array<{
       days: string[];

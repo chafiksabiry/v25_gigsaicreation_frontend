@@ -60,18 +60,30 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           Back to Gigs
         </button>
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {gig?.category || 'Uncategorized'}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                {gig?.seniority_level || 'Not Specified'}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                {gig?.years_experience || '0'} Experience
-              </span>
+          <div className="flex items-start gap-4">
+            {/* Logo */}
+            {gig?.logoUrl && (
+              <div className="flex-shrink-0">
+                <img 
+                  src={gig.logoUrl} 
+                  alt="Gig Logo" 
+                  className="w-16 h-16 rounded-lg border-2 border-gray-200 bg-white object-contain shadow-sm"
+                />
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {gig?.category || 'Uncategorized'}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  {gig?.seniority_level || 'Not Specified'}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  {gig?.years_experience || '0'} Experience
+                </span>
+              </div>
             </div>
           </div>
           <div className="text-right">
