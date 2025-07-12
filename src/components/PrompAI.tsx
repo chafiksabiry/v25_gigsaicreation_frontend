@@ -220,6 +220,20 @@ const PrompAI: React.FC = () => {
   };
 
   const handleSectionChange = (sectionId: string) => {
+    // Si onSectionChange est appelé avec 'suggestions', revenir aux suggestions
+    if (sectionId === 'suggestions') {
+      // Préserver les suggestions confirmées pour pouvoir y revenir
+      setShowSuggestions(true);
+      setCurrentSection("basic");
+      // Préserver l'input original pour éviter la régénération
+      if (confirmedSuggestions && !input.trim()) {
+        // Si l'input est vide mais qu'on a des suggestions confirmées,
+        // on peut utiliser un placeholder ou garder l'input vide
+        // car les suggestions sont déjà chargées
+      }
+      return;
+    }
+    
     setCurrentSection(sectionId);
   };
 
@@ -402,6 +416,7 @@ const PrompAI: React.FC = () => {
         input={input}
         onBack={() => setShowSuggestions(false)}
         onConfirm={handleConfirmSuggestions}
+        initialSuggestions={confirmedSuggestions}
       />
     );
   }

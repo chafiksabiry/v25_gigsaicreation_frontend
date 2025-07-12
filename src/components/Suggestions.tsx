@@ -86,6 +86,7 @@ interface SuggestionsProps {
   input: string;
   onBack: () => void;
   onConfirm: (suggestions: GigSuggestion) => void;
+  initialSuggestions?: GigSuggestion | null;
 }
 
 let openai: OpenAI | null = null;
@@ -368,8 +369,8 @@ const FLEXIBILITY_SELECT_OPTIONS = [
 ];
 
 export const Suggestions: React.FC<SuggestionsProps> = (props) => {
-  const [suggestions, setSuggestions] = useState<GigSuggestion | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [suggestions, setSuggestions] = useState<GigSuggestion | null>(props.initialSuggestions || null);
+  const [loading, setLoading] = useState(!props.initialSuggestions);
   const [error, setError] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -961,6 +962,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         return;
       }
 
+      // Don't regenerate if we have initial suggestions (coming back from manual mode)
+      if (props.initialSuggestions) {
+        setSuggestions(props.initialSuggestions);
+        setLoading(false);
+        return;
+      }
+
       try {
         isGeneratingRef.current = true;
         lastProcessedInputRef.current = props.input.trim();
@@ -1234,7 +1242,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       }
     };
 
-    if (props.input.trim()) {
+    if (props.input.trim() && !props.initialSuggestions) {
       generateSuggestions();
     }
 
@@ -4574,7 +4582,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     );
   };
 
-  if (loading) {
+  if (loading && !props.initialSuggestions) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="text-center max-w-md">
