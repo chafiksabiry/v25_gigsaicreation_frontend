@@ -3455,7 +3455,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <h3 className="text-2xl font-bold text-gray-800 mb-3">
               No Commission Options
             </h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg leading-relaxed">
+            <p className="text-gray-600 mb-8 w-full mx-auto text-lg leading-relaxed">
               Create commission options to define how your team will be
               compensated for their performance and achievements.
             </p>
@@ -4506,7 +4506,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
                 No Team Roles Defined
               </h3>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              <p className="text-gray-500 mb-6 w-full mx-auto">
                 Add team roles to define the structure and responsibilities of your team members.
               </p>
               <button
@@ -4682,8 +4682,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="w-full h-full px-4 py-8">
+        <div className="w-full h-full">
           <div className="flex justify-between items-center mb-8">
             <button
               onClick={props.onBack}

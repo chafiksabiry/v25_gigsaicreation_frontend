@@ -199,7 +199,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full h-full">
       <h2 className="text-2xl font-bold mb-4">Confirm Gig Details</h2>
       
       <div className="space-y-4">

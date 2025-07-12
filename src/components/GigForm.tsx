@@ -512,7 +512,7 @@ export function GigForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto py-8 px-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full py-8 px-4">
       <div className="space-y-8">
         {/* Basic Information */}
         <section className="bg-white rounded-lg shadow-md p-6">

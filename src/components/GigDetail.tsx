@@ -49,7 +49,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+    <div className="w-full h-full py-8 px-4">
       {/* Header */}
       <div className="mb-8">
         <button

@@ -190,7 +190,7 @@ export function GigCreator({ children }: GigCreatorProps) {
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [skipValidation, setSkipValidation] = useState(true);
+  const [skipValidation, setSkipValidation] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
@@ -562,7 +562,7 @@ export function GigCreator({ children }: GigCreatorProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="w-full h-full py-8 px-4">
         <div className="bg-white rounded-xl shadow-xl">
           {children({
             data: gigData,

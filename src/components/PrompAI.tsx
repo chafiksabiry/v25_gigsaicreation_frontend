@@ -118,18 +118,9 @@ const PrompAI: React.FC = () => {
         proficiency: "B1",
         iso639_1: "fr"
       }],
-      soft: [{
-        skill: "Communication",
-        level: 1
-      }],
-      professional: [{
-        skill: "Brand Identity Design",
-        level: 1
-      }],
-      technical: [{
-        skill: "Adobe Illustrator",
-        level: 1
-      }],
+      soft: [{ skill: { $oid: "softSkillOid" }, level: 1, details: "" }],
+      professional: [{ skill: { $oid: "professionalSkillOid" }, level: 1, details: "" }],
+      technical: [{ skill: { $oid: "technicalSkillOid" }, level: 1, details: "" }],
       certifications: []
     },
     seniority: {
@@ -345,18 +336,9 @@ const PrompAI: React.FC = () => {
           proficiency: "B1",
           iso639_1: "fr"
         }],
-        soft: [{
-          skill: "Communication",
-          level: 1
-        }],
-        professional: [{
-          skill: "Brand Identity Design",
-          level: 1
-        }],
-        technical: [{
-          skill: "Adobe Illustrator",
-          level: 1
-        }],
+        soft: [{ skill: { $oid: "softSkillOid" }, level: 1, details: "" }],
+        professional: [{ skill: { $oid: "professionalSkillOid" }, level: 1, details: "" }],
+        technical: [{ skill: { $oid: "technicalSkillOid" }, level: 1, details: "" }],
         certifications: []
       },
       seniority: {
@@ -424,7 +406,7 @@ const PrompAI: React.FC = () => {
   if (confirmedSuggestions || isManualMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="max-w-6xl mx-auto py-8 px-4">
+        <div className="w-full h-full py-8 px-4">
           {/* Header with back button for manual mode */}
           {isManualMode && (
             <div className="mb-8">
@@ -447,27 +429,29 @@ const PrompAI: React.FC = () => {
           )}
 
           {/* Navigation and Section Content */}
-          <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden max-w-4xl mx-auto">
+          <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
             {/* Navigation Tabs */}
-            <nav className="border-b border-gray-200 bg-white px-4 py-3">
-              <div className="flex justify-start gap-2">
-                {sections.map((section) => (
-                  <button
-                    key={section.id}
-                    onClick={() => handleSectionChange(section.id)}
-                    className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200
-                      ${section.id === currentSection
-                        ? "border-b-2 border-blue-600 text-blue-600"
-                        : "text-gray-600 hover:text-blue-600 border-b-2 border-transparent"
-                      }`}
-                    style={{ outline: "none" }}
-                  >
-                    <section.icon className={`w-5 h-5 ${section.id === currentSection ? 'text-blue-600' : 'text-gray-400'}`} />
-                    {section.label}
-                  </button>
-                ))}
-              </div>
-            </nav>
+            {currentSection !== 'review' && (
+              <nav className="border-b border-gray-200 bg-white px-4 py-3">
+                <div className="flex justify-start gap-2">
+                  {sections.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => handleSectionChange(section.id)}
+                      className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200
+                        ${section.id === currentSection
+                          ? "border-b-2 border-blue-600 text-blue-600"
+                          : "text-gray-600 hover:text-blue-600 border-b-2 border-transparent"
+                        }`}
+                      style={{ outline: "none" }}
+                    >
+                      <section.icon className={`w-5 h-5 ${section.id === currentSection ? 'text-blue-600' : 'text-gray-400'}`} />
+                      {section.label}
+                    </button>
+                  ))}
+                </div>
+              </nav>
+            )}
 
             {/* Section Content */}
             <div>
@@ -488,12 +472,12 @@ const PrompAI: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-4xl mx-auto py-16 px-4">
+      <div className="w-full h-full py-16 px-4">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
             Create with AI Assistance
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 w-full mx-auto">
             Describe your needs naturally, and let AI help structure your
             content
           </p>
