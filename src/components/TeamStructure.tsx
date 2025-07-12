@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, Check, Globe, Users, Building2, ChevronRight, Briefcase, GraduationCap, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Check, Globe, Users, Building2, ChevronRight, Briefcase, GraduationCap, ArrowLeft, ArrowRight, XCircle } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
 
@@ -45,6 +45,92 @@ interface TeamStructureProps {
 }
 
 export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection }: TeamStructureProps) {
+  // State for territories from API
+  const [territories, setTerritories] = React.useState<string[]>([]);
+  const [territoriesLoading, setTerritoriesLoading] = React.useState(true);
+
+  // Fetch territories from API on component mount
+  React.useEffect(() => {
+    const fetchTerritories = async () => {
+      try {
+        console.log('🌍 Fetching territories from API...');
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+        if (response.ok) {
+          const countriesData = await response.json();
+          const countryNames = countriesData.map((country: any) => country.name.common).sort();
+          console.log('✅ Fetched', countryNames.length, 'territories from API');
+          setTerritories(countryNames);
+        } else {
+          console.error('❌ Failed to fetch territories');
+          // Fallback to basic territories
+          setTerritories([
+            "North America",
+            "Europe",
+            "Asia Pacific",
+            "Latin America",
+            "Middle East & Africa",
+            "Global",
+            "United States",
+            "Canada",
+            "United Kingdom",
+            "France",
+            "Germany",
+            "Spain",
+            "Italy",
+            "Netherlands",
+            "Belgium",
+            "Switzerland",
+            "Austria",
+            "Scandinavia",
+            "Eastern Europe",
+            "Australia",
+            "New Zealand",
+            "Japan",
+            "South Korea",
+            "China",
+            "India",
+            "Southeast Asia",
+          ]);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching territories:', error);
+        // Fallback to basic territories
+        setTerritories([
+          "North America",
+          "Europe",
+          "Asia Pacific",
+          "Latin America",
+          "Middle East & Africa",
+          "Global",
+          "United States",
+          "Canada",
+          "United Kingdom",
+          "France",
+          "Germany",
+          "Spain",
+          "Italy",
+          "Netherlands",
+          "Belgium",
+          "Switzerland",
+          "Austria",
+          "Scandinavia",
+          "Eastern Europe",
+          "Australia",
+          "New Zealand",
+          "Japan",
+          "South Korea",
+          "China",
+          "India",
+          "Southeast Asia",
+        ]);
+      } finally {
+        setTerritoriesLoading(false);
+      }
+    };
+
+    fetchTerritories();
+  }, []);
+
   // Initialize team with default values if undefined
   const initializedTeam = {
     ...data,
@@ -374,51 +460,53 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
         </div>
 
         {/* Territories */}
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <Globe className="w-5 h-5 text-emerald-600" />
+        <div>
+          <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg mr-3">
+              <Globe className="w-5 h-5 text-purple-600" />
             </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Coverage Areas</h3>
-              <p className="text-sm text-gray-600">Select territories for team operations</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {predefinedOptions.team.territories.map((territory) => (
-              <button
+            Territories
+          </h4>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {initializedTeam.team.territories.map((territory) => (
+              <div
                 key={territory}
-                onClick={() => handleTerritoryToggle(territory)}
-                className={`flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
-                  initializedTeam.team.territories.includes(territory)
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                }`}
+                className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
               >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                  initializedTeam.team.territories.includes(territory)
-                    ? 'bg-emerald-600'
-                    : 'border-2 border-gray-300'
-                }`}>
-                  {initializedTeam.team.territories.includes(territory) && (
-                    <Check className="w-4 h-4 text-white" />
-                  )}
-                </div>
-                <span className="flex-1">{territory}</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
+                {territory}
+                <button
+                  onClick={() => handleTerritoryToggle(territory)}
+                  className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </div>
             ))}
           </div>
-
-          {initializedTeam.team.territories.length > 0 && (
-            <div className="mt-4 p-3 bg-white rounded-lg border border-emerald-200">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Selected Territories:</span>
-                <span className="font-medium text-emerald-600">{initializedTeam.team.territories.length}</span>
-              </div>
-            </div>
-          )}
+          
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                handleTerritoryToggle(e.target.value);
+                e.target.value = ""; // Reset select
+              }
+            }}
+            className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            defaultValue=""
+            disabled={territoriesLoading}
+          >
+            <option value="" disabled>
+              {territoriesLoading ? "Loading territories..." : "Add a territory..."}
+            </option>
+            {territories.filter(
+              (territory) => !initializedTeam.team.territories.includes(territory)
+            ).map((territory) => (
+              <option key={territory} value={territory}>
+                {territory}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Reporting */}

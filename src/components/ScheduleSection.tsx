@@ -331,20 +331,22 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
       <div className="space-y-4">
         {/* Display normal groups */}
         {groupedSchedules.map((group, index) => (
-          <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-            <button
-              onClick={() => handleRemoveScheduleGroup(group)}
-              className="absolute top-2 right-2 p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
-              aria-label="Remove schedule group"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+          <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm relative">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-gray-800 flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                Working Days
+              </h4>
+              <button
+                onClick={() => handleRemoveScheduleGroup(group)}
+                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete schedule group"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                  <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                  Working Days
-                </h4>
                 <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
                   {workingDays.map((day: string) => {
                     const isSelected = group.days.includes(day);
@@ -423,17 +425,22 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
         ))}
         {/* Display empty groups */}
         {emptyGroups.map((emptyGroup) => (
-          <div key={emptyGroup.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-            <button
-              onClick={() => setEmptyGroups(prev => prev.filter(g => g.id !== emptyGroup.id))}
-              className="absolute top-2 right-2 p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors"
-              aria-label="Remove empty group"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+          <div key={emptyGroup.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm relative">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-gray-800 flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                Working Days (No days selected)
+              </h4>
+              <button
+                onClick={() => setEmptyGroups(prev => prev.filter(g => g.id !== emptyGroup.id))}
+                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete empty schedule group"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Working Days</h4>
                 <div className="flex gap-1">
                   {workingDays.map((day: string) => {
                     const isSelected = false; // Un groupe vide n'a pas de jour sélectionné

@@ -340,34 +340,7 @@ const TEAM_ROLES = [
   "Intern",
 ];
 
-const TEAM_TERRITORIES = [
-  "North America",
-  "Europe",
-  "Asia Pacific",
-  "Latin America",
-  "Middle East & Africa",
-  "Global",
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "France",
-  "Germany",
-  "Spain",
-  "Italy",
-  "Netherlands",
-  "Belgium",
-  "Switzerland",
-  "Austria",
-  "Scandinavia",
-  "Eastern Europe",
-  "Australia",
-  "New Zealand",
-  "Japan",
-  "South Korea",
-  "China",
-  "India",
-  "Southeast Asia",
-];
+// Territories will be loaded from API
 
 const MAJOR_TIMEZONES: { [key: string]: { name: string; offset: number } } = {
   "New York (EST/EDT)": { name: "New York (EST/EDT)", offset: -5 },
@@ -415,6 +388,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [skillsLoading, setSkillsLoading] = useState(false);
+  const [territories, setTerritories] = useState<string[]>([]);
+  const [territoriesLoading, setTerritoriesLoading] = useState(true);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
   const skillsLoadedRef = useRef(false);
@@ -517,6 +492,85 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           console.error('❌ Error fetching countries:', error);
         } finally {
           setCountriesLoading(false);
+        }
+      }
+
+      // Fetch territories
+      if (territories.length === 0) {
+        console.log('🌍 Fetching territories from API...');
+        setTerritoriesLoading(true);
+        try {
+          const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+          if (response.ok) {
+            const countriesData = await response.json();
+            const countryNames = countriesData.map((country: any) => country.name.common).sort();
+            console.log('✅ Fetched', countryNames.length, 'territories from API');
+            setTerritories(countryNames);
+          } else {
+            console.error('❌ Failed to fetch territories');
+            // Fallback to basic territories
+            setTerritories([
+              "North America",
+              "Europe",
+              "Asia Pacific",
+              "Latin America",
+              "Middle East & Africa",
+              "Global",
+              "United States",
+              "Canada",
+              "United Kingdom",
+              "France",
+              "Germany",
+              "Spain",
+              "Italy",
+              "Netherlands",
+              "Belgium",
+              "Switzerland",
+              "Austria",
+              "Scandinavia",
+              "Eastern Europe",
+              "Australia",
+              "New Zealand",
+              "Japan",
+              "South Korea",
+              "China",
+              "India",
+              "Southeast Asia",
+            ]);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching territories:', error);
+          // Fallback to basic territories
+          setTerritories([
+            "North America",
+            "Europe",
+            "Asia Pacific",
+            "Latin America",
+            "Middle East & Africa",
+            "Global",
+            "United States",
+            "Canada",
+            "United Kingdom",
+            "France",
+            "Germany",
+            "Spain",
+            "Italy",
+            "Netherlands",
+            "Belgium",
+            "Switzerland",
+            "Austria",
+            "Scandinavia",
+            "Eastern Europe",
+            "Australia",
+            "New Zealand",
+            "Japan",
+            "South Korea",
+            "China",
+            "India",
+            "Southeast Asia",
+          ]);
+        } finally {
+          setTerritoriesLoading(false);
         }
       }
 
@@ -2251,6 +2305,24 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       }
     };
 
+    const deleteScheduleGroup = (groupHours: { start: string; end: string }) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const schedulesToRemove = newSuggestions.schedule.schedules.filter(
+        (s: ScheduleEntry) => s.hours.start === groupHours.start && s.hours.end === groupHours.end
+      );
+      
+      schedulesToRemove.forEach((schedule: ScheduleEntry) => {
+        const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+          (s: ScheduleEntry) => s._id?.$oid === schedule._id?.$oid
+        );
+        if (scheduleIndex > -1) {
+          newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
+        }
+      });
+      
+      setSuggestions(newSuggestions);
+    };
+
     return (
       <div className="space-y-4">
         {Object.keys(groupedSchedules).length > 0 ? (
@@ -2259,10 +2331,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               key={key}
               className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
             >
-              <h5 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                Working Days
-              </h5>
+              <div className="flex items-center justify-between mb-3">
+                <h5 className="text-sm font-semibold text-gray-800 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                  Working Days
+                </h5>
+                <button
+                  onClick={() => deleteScheduleGroup(group.hours)}
+                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete schedule group"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
               <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
                 {allWeekDays.map((day) => {
                   const isSelected = group.days.includes(day);
@@ -4475,13 +4556,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }}
             className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             defaultValue=""
+            disabled={territoriesLoading}
           >
             <option value="" disabled>
-              Add a territory...
+              {territoriesLoading ? "Loading territories..." : "Add a territory..."}
             </option>
-            {TEAM_TERRITORIES.filter(
-              (territory) => !suggestions.team?.territories?.includes(territory)
-            ).map((territory) => (
+            {territories.filter(
+              (territory: string) => !suggestions.team?.territories?.includes(territory)
+            ).map((territory: string) => (
               <option key={territory} value={territory}>
                 {territory}
               </option>

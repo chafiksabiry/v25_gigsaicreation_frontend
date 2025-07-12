@@ -839,7 +839,7 @@ Available team roles:
 ${(predefinedOptions.team.roles as Array<{id: string; name: string; description: string}>).map(role => `- ${role.name} (${role.description})`).join('\n')}
 
 Available territories:
-${(predefinedOptions.team.territories as string[]).map(territory => `- ${territory}`).join('\n')}
+You can suggest any country or region name. Common examples include: United States, Canada, United Kingdom, France, Germany, Spain, Italy, Australia, Japan, China, India, Brazil, Mexico, South Africa, etc.
 
 Return ONLY a valid JSON object with the following structure:
 {
@@ -860,8 +860,8 @@ Return ONLY a valid JSON object with the following structure:
     }
   },
   "territories": {
-    "primary": string[] (MUST be from available territories),
-    "secondary": string[] (MUST be from available territories),
+    "primary": string[] (country or region names),
+    "secondary": string[] (country or region names),
     "coverage": [
       {
         "type": string (e.g., "Regional", "Global"),
@@ -887,7 +887,7 @@ Consider the following factors when determining team structure and territories:
           content: `Title: ${title}
 Description: ${description}
 
-Based on this job title and description, suggest appropriate team structure and territory assignments. The roles MUST be from the available options listed above, and territories MUST be from the available list.`
+Based on this job title and description, suggest appropriate team structure and territory assignments. The roles MUST be from the available options listed above, and territories can be any country or region names.`
         }
       ],
       temperature: 0.7,
@@ -912,13 +912,7 @@ Based on this job title and description, suggest appropriate team structure and 
       }
     });
 
-    // Validate territories
-    const allTerritories = [...result.territories.primary, ...result.territories.secondary];
-    allTerritories.forEach((territory: string) => {
-      if (!(predefinedOptions.team.territories as string[]).includes(territory)) {
-        throw new Error(`Invalid territory: ${territory}`);
-      }
-    });
+    // No territory validation needed since we now use API for territories
 
     return result;
   } catch (error) {
@@ -1383,11 +1377,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     };
   });
 
-  // Validate team territories - ensure only predefined territories are used
-  const validTeamTerritories = predefinedOptions.team.territories;
-  const validatedTeamTerritories = (generatedData.team?.territories || []).filter(territory => 
-    validTeamTerritories.includes(territory)
-  );
+  // Use team territories as provided - no validation against predefined list since we now use API
+  const validatedTeamTerritories = generatedData.team?.territories || [];
 
   return {
     title: generatedData.jobTitles?.[0] || generatedData.title || '',
