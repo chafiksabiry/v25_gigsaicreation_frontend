@@ -121,7 +121,9 @@ export function SectionContent({
   }), [data]);
 
   const renderContent = () => {
-    switch (section) {
+    // Correction navigation : transformer 'documentation' en 'docs' si besoin
+    const effectiveSection = (section === 'documentation' ? 'docs' : section) as 'docs' | 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
+    switch (effectiveSection) {
       case "basic":
         return (
           <BasicSection

@@ -4692,9 +4692,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           {/* AI Mode Title with HARX Logo */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                AI-Powered Gig Creation
-              </h1>
+              <h1 className="text-4xl font-bold text-center ...">AI-Powered Gig Creation</h1>
             </div>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.

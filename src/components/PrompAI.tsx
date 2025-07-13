@@ -430,11 +430,11 @@ const PrompAI: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center mb-8">
-                  <div className="flex items-center justify-center space-x-3 mb-4">
+                  <div className="flex flex-col items-center justify-center mb-4">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                       AI-Powered Gig Creation
                     </h1>
-                    <p className="text-base text-gray-700 text-center max-w-xl">
+                    <p className="text-base text-gray-700 text-center max-w-xl mt-2">
                       Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
                     </p>
                   </div>

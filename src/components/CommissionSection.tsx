@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';

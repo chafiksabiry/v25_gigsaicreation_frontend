@@ -577,7 +577,8 @@ export function GigCreator({ children }: GigCreatorProps) {
       <GigReview
         data={gigData}
         onEdit={(section) => {
-          setCurrentSection(section);
+          // Correction : si section === 'documentation', rediriger vers 'docs'
+          setCurrentSection(section === 'documentation' ? 'docs' : section);
           setIsReviewing(false);
         }}
         onSubmit={handleSubmit}
