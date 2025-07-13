@@ -325,6 +325,9 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
   };
   // Sécurise time_zone pour l'affichage
   const timeZone = props.data.time_zone;
+  // Get readable name for selected time zone
+  const selectedTimezoneObj = availableTimezones.find(tz => tz._id === timeZone);
+  const selectedTimezoneName = selectedTimezoneObj ? `${selectedTimezoneObj.name} (GMT${selectedTimezoneObj.offset >= 0 ? '+' : ''}${selectedTimezoneObj.offset})` : timeZone;
 
   return (
     <div className="w-full bg-white py-6">
@@ -724,18 +727,10 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
               }
             </p>
             {props.data.time_zone && (
-                    <p className="text-xs text-green-600 mt-1">
-                      Selected: <span className="font-semibold">
-                        {(() => {
-                          const selectedTz = availableTimezones.find(tz => tz._id === props.data.time_zone);
-                          if (selectedTz) {
-                            return `${selectedTz.name} (GMT${selectedTz.offset >= 0 ? '+' : ''}${selectedTz.offset})`;
-                          }
-                          return props.data.time_zone;
-                        })()}
-                      </span>
-                    </p>
-                  )}
+              <p className="text-xs text-green-600 mt-1">
+                Selected: <span className="font-semibold">{selectedTimezoneName}</span>
+              </p>
+            )}
           </div>
 
           {/* Schedule Flexibility */}

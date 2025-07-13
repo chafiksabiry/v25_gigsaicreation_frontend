@@ -46,15 +46,8 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: (() => {
-            const firstTimezone = gig.schedule?.timeZones?.[0];
-            if (typeof firstTimezone === 'string') {
-              return [firstTimezone];
-            } else if (firstTimezone && typeof firstTimezone === 'object' && 'zoneName' in firstTimezone) {
-              return [firstTimezone.zoneName];
-            }
-            return [];
-          })(),
+          timeZones: Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones : (gig.schedule?.timeZones ? [gig.schedule.timeZones] : []),
+          time_zone: gig.schedule?.time_zone || (Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones[0] : ""),
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {
             daily: 0,
@@ -64,31 +57,31 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         },
         schedule: {
           schedules: gig.schedule?.schedules?.map(schedule => ({
-            days: schedule.days || [],
+            day: schedule.day || "",
             hours: {
               start: schedule.hours?.start || "",
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: gig.schedule?.timeZones[0],
+          timeZones: Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones : (gig.schedule?.timeZones ? [gig.schedule.timeZones] : []),
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {},
         },
         commission: {
           base: gig.commission?.base || "",
-          baseAmount: gig.commission?.baseAmount || "",
+          baseAmount: gig.commission?.baseAmount || 0,
           bonus: gig.commission?.bonus || "",
-          bonusAmount: gig.commission?.bonusAmount || "",
+          bonusAmount: gig.commission?.bonusAmount || 0,
           structure: gig.commission?.structure || "",
           currency: gig.commission?.currency || "",
           minimumVolume: {
-            amount: gig.commission?.minimumVolume?.amount || "",
+            amount: gig.commission?.minimumVolume?.amount || 0,
             period: gig.commission?.minimumVolume?.period || "",
             unit: gig.commission?.minimumVolume?.unit || ""
           },
           transactionCommission: {
             type: gig.commission?.transactionCommission?.type || "",
-            amount: gig.commission?.transactionCommission?.amount || ""
+            amount: gig.commission?.transactionCommission?.amount || 0
           },
           kpis: gig.commission?.kpis || []
         },
@@ -109,15 +102,18 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           })) || [],
           soft: gig.skills?.soft.map(skill => ({
             skill: skill.skill,
-            level: skill.level
+            level: skill.level,
+            details: ""
           })) || [],
           professional: gig.skills?.professional.map(skill => ({
             skill: skill.skill,
-            level: skill.level
+            level: skill.level,
+            details: ""
           })) || [],
           technical: gig.skills?.technical.map(skill => ({
             skill: skill.skill,
-            level: skill.level
+            level: skill.level,
+            details: ""
           })) || [],
           certifications: gig.skills?.certifications || []
         },

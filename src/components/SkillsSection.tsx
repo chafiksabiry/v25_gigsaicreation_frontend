@@ -632,182 +632,166 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         </div>
         {/* List */}
         <div className="mb-4 space-y-2">
-          {skills.map((skill, idx) => (
-            <div
-              key={idx}
-              className={`flex items-center justify-between p-3.5 mb-2 border transition-all duration-200 ${
-                editingIndex?.type === type && editingIndex?.index === idx && !addMode.active
-                  ? `bg-${bgColor}-50/70 border-${bgColor}-300 shadow-sm ring-2 ring-${bgColor}-200` 
-                  : 'bg-white border-blue-100 hover:border-blue-200 hover:shadow-sm'
-              } rounded-lg group`}
-            >
-              {editingIndex?.type === type && editingIndex?.index === idx && !addMode.active ? (
-                <div className="flex gap-3 items-center w-full">
-                  <select
-                    className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-                    value={newSkill.language}
-                    onChange={e => {
-                      if (isLanguage) {
-                        const selected = languageOptions.find(opt => opt.language === e.target.value);
-                        if (selected) {
-                          setNewSkill({
-                            ...newSkill,
-                            language: selected.language,
-                            iso639_1: selected.iso639_1
-                          });
-                        } else {
-                          handleEditChange('language', e.target.value);
-                        }
+          {skills
+            .map((skill, idx) => {
+              let skillName = '';
+              if (isLanguage) {
+                skillName = skill.language;
+              } else {
+                if (typeof skill === 'string') {
+                  const skillObject = options.find(s => s._id === skill || s.name === skill);
+                  skillName = skillObject ? skillObject.name : '';
+                } else if (skill.skill) {
+                  if (typeof skill.skill === 'string') {
+                    const skillObject = options.find(s => s._id === skill.skill || s.name === skill.skill);
+                    skillName = skillObject ? skillObject.name : '';
+                  } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+                    const skillId = skill.skill.$oid;
+                    const skillObject = options.find(s => s._id === skillId);
+                    skillName = skillObject ? skillObject.name : '';
+                  }
+                }
+              }
+              if (!skillName) return null;
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-center justify-between p-3.5 mb-2 border transition-all duration-200 ${
+                    editingIndex?.type === type && editingIndex?.index === idx && !addMode.active
+                      ? `bg-${bgColor}-50/70 border-${bgColor}-300 shadow-sm ring-2 ring-${bgColor}-200` 
+                      : 'bg-white border-blue-100 hover:border-blue-200 hover:shadow-sm'
+                  } rounded-lg group`}
+                >
+                  {editingIndex?.type === type && editingIndex?.index === idx && !addMode.active ? (
+                    <div className="flex gap-3 items-center w-full">
+                      <select
+                        className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                        value={newSkill.language}
+                        onChange={e => {
+                          if (isLanguage) {
+                            const selected = languageOptions.find(opt => opt.language === e.target.value);
+                            if (selected) {
+                              setNewSkill({
+                                ...newSkill,
+                                language: selected.language,
+                                iso639_1: selected.iso639_1
+                              });
+                            } else {
+                              handleEditChange('language', e.target.value);
+                            }
                                               } else {
-                          // For skills, store the ObjectId
-                          const selectedSkill = options.find(opt => opt._id === e.target.value);
-                          if (selectedSkill) {
-                            setNewSkill({
-                              ...newSkill,
-                              language: selectedSkill._id // Store ObjectId
-                            });
+                            // For skills, store the ObjectId
+                            const selectedSkill = options.find(opt => opt._id === e.target.value);
+                            if (selectedSkill) {
+                              setNewSkill({
+                                ...newSkill,
+                                language: selectedSkill._id // Store ObjectId
+                              });
+                            }
                           }
-                        }
-                    }}
-                    disabled={isLoading}
-                  >
-                    <option value="">{isLoading ? 'Loading...' : (isLanguage ? 'Select language' : 'Select skill')}</option>
-                    {isLanguage ? (
-                      languageOptions.map(opt => (
-                        <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
-                          {opt.language}
-                        </option>
-                      ))
-                    ) : (
-                      options.map(opt => {
-                        // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
-                        const currentSkill = skills[editingIndex?.index ?? -1];
-                        const isCurrent = currentSkill && currentSkill.skill && typeof currentSkill.skill === 'object' && currentSkill.skill.$oid === opt._id;
-                        return (
-                          <option
-                            key={opt._id}
-                            value={opt._id}
-                            disabled={isDuplicate(opt._id, type, editingIndex?.index) && !isCurrent}
-                          >
-                            {opt.name}
-                          </option>
-                        );
-                      })
-                    )}
-                  </select>
-                  {isLanguage && (
-                    <select
-                      className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-                      value={newSkill.proficiency}
-                      onChange={e => handleEditChange('proficiency', e.target.value)}
-                    >
-                      <option value="">Select level</option>
-                      {LANGUAGE_LEVELS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                      }}
+                        disabled={isLoading}
+                      >
+                        <option value="">{isLoading ? 'Loading...' : (isLanguage ? 'Select language' : 'Select skill')}</option>
+                        {isLanguage ? (
+                          languageOptions.map(opt => (
+                            <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
+                              {opt.language}
+                            </option>
+                          ))
+                        ) : (
+                          options.map(opt => {
+                            // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
+                            const currentSkill = skills[editingIndex?.index ?? -1];
+                            const isCurrent = currentSkill && currentSkill.skill && typeof currentSkill.skill === 'object' && currentSkill.skill.$oid === opt._id;
+                            return (
+                              <option
+                                key={opt._id}
+                                value={opt._id}
+                                disabled={isDuplicate(opt._id, type, editingIndex?.index) && !isCurrent}
+                              >
+                                {opt.name}
+                              </option>
+                            );
+                          })
+                        )}
+                      </select>
+                      {isLanguage && (
+                        <select
+                          className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                          value={newSkill.proficiency}
+                          onChange={e => handleEditChange('proficiency', e.target.value)}
+                        >
+                          <option value="">Select level</option>
+                          {LANGUAGE_LEVELS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      )}
+                      {!isLanguage && (
+                        <select
+                          className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
+                          value={newSkill.level}
+                          onChange={e => handleEditChange('level', parseInt(e.target.value))}
+                        >
+                          {SKILL_LEVELS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      )}
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          className="px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-all duration-200 shadow-sm hover:shadow"
+                          onClick={handleEditSave}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow"
+                          onClick={handleEditCancel}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-gray-700 text-base flex-1">
+                        <span className="font-medium">{skillName}</span>
+                        {isLanguage && (
+                          <>
+                            <span className="mx-2 text-gray-400">-</span>
+                            <span className="text-blue-600 font-medium">{getLanguageLevelLabel(skill.proficiency)}</span>
+                          </>
+                        )}
+                        {!isLanguage && typeof skill === 'object' && skill.level && (
+                          <>
+                            <span className="mx-2 text-gray-400">-</span>
+                            <span className="text-blue-600 font-medium">{getLevelLabel(skill.level)}</span>
+                          </>
+                        )}
+                      </p>
+                      <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          className={`p-2 text-${iconColor}-600 hover:bg-${iconColor}-100 rounded-lg transition-all duration-200 hover:scale-110`}
+                          onClick={() => handleEdit(type, idx)}
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110"
+                          onClick={() => handleRemove(type, idx)}
+                          title="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </>
                   )}
-                  {!isLanguage && (
-                    <select
-                      className={`border border-${bgColor}-300 focus:border-${bgColor}-500 focus:ring-2 focus:ring-${bgColor}-200 rounded-lg px-3.5 py-2 text-gray-700 text-sm outline-none transition-all w-40 bg-white`}
-                      value={newSkill.level}
-                      onChange={e => handleEditChange('level', parseInt(e.target.value))}
-                    >
-                      {SKILL_LEVELS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  )}
-                  <div className="flex gap-2 ml-4">
-                    <button
-                      className="px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-all duration-200 shadow-sm hover:shadow"
-                      onClick={handleEditSave}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-all duration-200 shadow-sm hover:shadow"
-                      onClick={handleEditCancel}
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 </div>
-              ) : (
-                <>
-                  <p className="text-gray-700 text-base flex-1">
-                    <span className="font-medium">
-                      {isLanguage 
-                        ? skill.language 
-                        : (() => {
-                            // For skills, handle both ObjectId format and string format (for backward compatibility)
-                            let skillName = '';
-                            
-                            if (typeof skill === 'string') {
-                              // Handle case where skill is still a string (not yet migrated)
-                              skillName = skill;
-                            } else if (skill.skill) {
-                              if (typeof skill.skill === 'string') {
-                                // Handle case where skill.skill is still a string (not yet migrated)
-                                skillName = skill.skill;
-                              } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
-                                // Handle ObjectId format
-                                const skillId = skill.skill.$oid;
-                            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                            switch (type) {
-                              case 'professional':
-                                skillArray = professionalSkills;
-                                break;
-                              case 'technical':
-                                skillArray = technicalSkills;
-                                break;
-                              case 'soft':
-                                skillArray = softSkills;
-                                break;
-                              default:
-                                skillArray = [];
-                            }
-                            const skillObject = skillArray.find(s => s._id === skillId);
-                                skillName = skillObject ? skillObject.name : skillId;
-                              }
-                            }
-                            
-                            return skillName || 'Unknown Skill';
-                          })()}
-                    </span>
-                    {isLanguage && (
-                      <>
-                        <span className="mx-2 text-gray-400">-</span>
-                        <span className="text-blue-600 font-medium">{getLanguageLevelLabel(skill.proficiency)}</span>
-                      </>
-                    )}
-                    {!isLanguage && typeof skill === 'object' && skill.level && (
-                      <>
-                        <span className="mx-2 text-gray-400">-</span>
-                        <span className="text-blue-600 font-medium">{getLevelLabel(skill.level)}</span>
-                      </>
-                    )}
-                  </p>
-                  <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <button
-                      className={`p-2 text-${iconColor}-600 hover:bg-${iconColor}-100 rounded-lg transition-all duration-200 hover:scale-110`}
-                      onClick={() => handleEdit(type, idx)}
-                      title="Edit"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-all duration-200 hover:scale-110"
-                      onClick={() => handleRemove(type, idx)}
-                      title="Remove"
-                    >
-                      ×
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+              );
+            })}
         </div>
         {/* Add skill */}
         {!isLanguage && options.length === 0 && !isLoading && !hasError && (

@@ -48,6 +48,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     title: gig.title,
     description: gig.description,
     category: gig.category,
+    destination_zone: gig.destination_zone || "",
     logoUrl: gig.logoUrl, // Include the logo URL
     callTypes: gig.call_types || [],
     highlights: [],
@@ -67,6 +68,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
         }
       ],
       timeZones: gig.schedule_timezone || "",
+      time_zone: gig.schedule_timezone || "",
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
         daily: gig.minimum_hours_daily,
@@ -85,6 +87,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
         }
       ],
       timeZones: gig.schedule_timezone || "",
+      time_zone: gig.schedule_timezone || "",
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
         daily: gig.minimum_hours_daily,
@@ -192,6 +195,8 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       }
     },
     documentation: {
+      templates: {},
+      reference: {},
       product: gig.gig_documentation
         ?.filter((doc: any) => doc.doc_type === 'product')
         .map((doc: any) => ({
@@ -250,33 +255,34 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
           }}
           className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-200 p-6 cursor-pointer"
         >
-                  <div className="flex justify-between items-start">
-          <div className="flex items-start gap-4">
-            {/* Logo */}
-            {gig.logoUrl && (
-              <div className="flex-shrink-0">
-                <img 
-                  src={gig.logoUrl} 
-                  alt="Gig Logo" 
-                  className="w-12 h-12 rounded-lg border border-gray-200 bg-white object-contain"
-                />
-              </div>
-            )}
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{gig.title}</h2>
-                <p className="text-gray-600 line-clamp-2">{gig.description}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                  {gig.category}
-                </span>
-                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                  {gig.seniority_level}
-                </span>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                  {gig.team_size}
-                </span>
+          <div className="flex justify-between items-start">
+            <div className="flex items-start gap-4">
+              {/* Logo */}
+              {gig.logoUrl && (
+                <div className="flex-shrink-0">
+                  <img 
+                    src={gig.logoUrl} 
+                    alt="Gig Logo" 
+                    className="w-12 h-12 rounded-lg border border-gray-200 bg-white object-contain"
+                  />
+                </div>
+              )}
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">{gig.title}</h2>
+                  <p className="text-gray-600 line-clamp-2">{gig.description}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    {gig.category}
+                  </span>
+                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                    {gig.seniority_level}
+                  </span>
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    {gig.team_size}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="text-right">

@@ -43,6 +43,7 @@ interface BasicSectionProps {
   onAIAssist?: () => void;
   onSectionChange?: (sectionId: string) => void;
   currentSection: string;
+  logoUrl?: string; // Add logoUrl prop
 }
 
 /**
@@ -54,7 +55,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onChange, 
   errors, 
   onPrevious, 
-  onNext
+  onNext,
+  logoUrl // Add logoUrl to destructure
 }) => {
   useEffect(() => {
     if (!data.destinationZones) {
@@ -255,6 +257,32 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           Start by providing the basic information about the contact center role. Be specific and clear
           about the position's requirements and responsibilities.
         </InfoText>
+
+        {/* --- Logo Section --- */}
+        {logoUrl && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+            <div className="flex items-center justify-center mb-4">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">Job Logo</h3>
+                <p className="text-sm text-blue-700 mb-4">Generated logo for this position</p>
+                <div className="relative inline-block">
+                  <img
+                    src={logoUrl}
+                    alt="Job Logo"
+                    className="w-32 h-32 rounded-xl border-2 border-blue-300 bg-white object-contain shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
+                    title="Click to view larger"
+                    onClick={() => window.open(logoUrl, '_blank')}
+                  />
+                  <div className="absolute inset-0 bg-blue-600 bg-opacity-0 hover:bg-opacity-10 rounded-xl transition-all duration-200 flex items-center justify-center">
+                    <span className="text-blue-600 font-medium opacity-0 hover:opacity-100 transition-opacity duration-200">
+                      View
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* --- Position Details --- */}
         <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">

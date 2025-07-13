@@ -32,7 +32,7 @@ import type { GigSuggestion } from "../types";
 import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
-import { generateGigSuggestions, generateLogo } from "../lib/ai";
+import { generateGigSuggestions } from "../lib/ai";
 import { LogoModal } from "./LogoModal";
 import { LogoViewer } from "./LogoViewer";
 import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
@@ -982,20 +982,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setError(null);
         const result = await generateGigSuggestions(props.input);
         
-        // Génération du logo
-        let logo = null;
-        try {
-          logo = await generateLogo(result.title || props.input, result.description || "");
-        } catch (e) {
-          console.error('Error generating logo:', e);
-          logo = null;
-        }
+        // Set logoUrl from result if available, otherwise null
+        const logo = result.logoUrl || null;
         setLogoUrl(logo);
-        
-        // Ajouter le logoUrl aux suggestions
-        if (logo) {
-          result.logoUrl = logo;
-        }
         
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
@@ -3770,182 +3759,190 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {currentItems.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {currentItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  {editingSection === skillType && editingIndex === index ? (
-                    <div className="space-y-3">
-                      <select
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        autoFocus
-                      >
-                        <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
-                        {skillType === "languages" 
-                          ? LANGUAGES.map((lang) => (
-                              <option key={lang} value={lang}>
-                                {lang}
-                              </option>
-                            ))
-                          : skillType === "professional"
-                          ? professionalSkills.map((skill) => (
-                              <option key={skill._id} value={skill.name}>
-                                {skill.name}
-                              </option>
-                            ))
-                          : skillType === "technical"
-                          ? technicalSkills.map((skill) => (
-                              <option key={skill._id} value={skill.name}>
-                                {skill.name}
-                              </option>
-                            ))
-                          : softSkills.map((skill) => (
-                              <option key={skill._id} value={skill.name}>
-                                {skill.name}
-                              </option>
-                            ))
-                        }
-                      </select>
-                      {skillType === "languages" ? (
-                        <select
-                          value={item.proficiency || "B1"}
-                          onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {LANGUAGE_LEVELS.map((level) => (
-                            <option key={level.value} value={level.value}>
-                              {level.label}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <select
-                          value={item.level || 1}
-                          onChange={(e) => updateSkill(skillType, index, "level", parseInt(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {SKILL_LEVELS.map((level) => (
-                            <option key={level.value} value={level.value}>
-                              {level.label}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => {
-                            if (editValue.trim()) {
-                              updateSkill(skillType, index, skillType === "languages" ? "language" : "skill", editValue.trim());
-                              setEditingSection(null);
-                              setEditingIndex(null);
-                              setEditValue("");
+              {currentItems
+                .map((item, index) => {
+                  let skillName = '';
+                  if (skillType === "languages") {
+                    skillName = item.language;
+                  } else {
+                    let skillArray;
+                    switch (skillType) {
+                      case "soft":
+                        skillArray = softSkills;
+                        break;
+                      case "professional":
+                        skillArray = professionalSkills;
+                        break;
+                      case "technical":
+                        skillArray = technicalSkills;
+                        break;
+                      default:
+                        skillArray = [];
+                    }
+                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                    if (skillId) {
+                      const skillObject = skillArray.find(s => s._id === skillId);
+                      skillName = skillObject ? skillObject.name : '';
+                    } else if (item.skill && typeof item.skill === 'object' && item.skill.name) {
+                      skillName = item.skill.name;
+                    }
+                  }
+                  if (!skillName) return null;
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {editingSection === skillType && editingIndex === index ? (
+                        <div className="space-y-3">
+                          <select
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            autoFocus
+                          >
+                            <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
+                            {skillType === "languages" 
+                              ? LANGUAGES.map((lang) => (
+                                  <option key={lang} value={lang}>
+                                    {lang}
+                                  </option>
+                                ))
+                              : skillType === "professional"
+                              ? professionalSkills.map((skill) => (
+                                  <option key={skill._id} value={skill.name}>
+                                    {skill.name}
+                                  </option>
+                                ))
+                              : skillType === "technical"
+                              ? technicalSkills.map((skill) => (
+                                  <option key={skill._id} value={skill.name}>
+                                    {skill.name}
+                                  </option>
+                                ))
+                              : softSkills.map((skill) => (
+                                  <option key={skill._id} value={skill.name}>
+                                    {skill.name}
+                                  </option>
+                                ))
                             }
-                          }}
-                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h5 className="font-semibold text-gray-800">
-                          {skillType === "languages" ? item.language : (() => {
-                            // For skills, find the name by ObjectId
-                            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                            switch (skillType) {
-                              case "soft":
-                                skillArray = softSkills;
-                                break;
-                              case "professional":
-                                skillArray = professionalSkills;
-                                break;
-                              case "technical":
-                                skillArray = technicalSkills;
-                                break;
-                              default:
-                                skillArray = [];
-                            }
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            const skillObject = skillArray.find(s => s._id === skillId);
-                            return skillObject ? skillObject.name : skillId;
-                          })()}
-                        </h5>
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => {
-                              setEditingSection(skillType);
-                              setEditingIndex(index);
-                              if (skillType === "languages") {
-                                setEditValue(item.language);
-                              } else {
-                                // For skills, find the name by ObjectId
-                                let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                                switch (skillType) {
-                                  case "soft":
-                                    skillArray = softSkills;
-                                    break;
-                                  case "professional":
-                                    skillArray = professionalSkills;
-                                    break;
-                                  case "technical":
-                                    skillArray = technicalSkills;
-                                    break;
-                                  default:
-                                    skillArray = [];
+                          </select>
+                          {skillType === "languages" ? (
+                            <select
+                              value={item.proficiency || "B1"}
+                              onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              {LANGUAGE_LEVELS.map((level) => (
+                                <option key={level.value} value={level.value}>
+                                  {level.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <select
+                              value={item.level || 1}
+                              onChange={(e) => updateSkill(skillType, index, "level", parseInt(e.target.value))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              {SKILL_LEVELS.map((level) => (
+                                <option key={level.value} value={level.value}>
+                                  {level.label}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                if (editValue.trim()) {
+                                  updateSkill(skillType, index, skillType === "languages" ? "language" : "skill", editValue.trim());
+                                  setEditingSection(null);
+                                  setEditingIndex(null);
+                                  setEditValue("");
                                 }
-                                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                                const skillObject = skillArray.find(s => s._id === skillId);
-                                setEditValue(skillObject ? skillObject.name : skillId);
-                              }
-                            }}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => deleteSkill(skillType, index)}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                              }}
+                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={cancelEditing}
+                              className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">Level:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          skillType === "languages" 
-                            ? item.proficiency?.includes("C") 
-                              ? "bg-green-100 text-green-800"
-                              : item.proficiency?.includes("B") 
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-yellow-100 text-yellow-800"
-                            : item.level >= 4 
-                            ? "bg-purple-100 text-purple-800"
-                            : item.level >= 3 
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}>
-                          {skillType === "languages" 
-                            ? LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"
-                            : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
-                          }
-                        </span>
-                      </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-semibold text-gray-800">{skillName}</h5>
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() => {
+                                  setEditingSection(skillType);
+                                  setEditingIndex(index);
+                                  if (skillType === "languages") {
+                                    setEditValue(item.language);
+                                  } else {
+                                    let skillArray;
+                                    switch (skillType) {
+                                      case "soft":
+                                        skillArray = softSkills;
+                                        break;
+                                      case "professional":
+                                        skillArray = professionalSkills;
+                                        break;
+                                      case "technical":
+                                        skillArray = technicalSkills;
+                                        break;
+                                      default:
+                                        skillArray = [];
+                                    }
+                                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                                    const skillObject = skillArray.find(s => s._id === skillId);
+                                    setEditValue(skillObject ? skillObject.name : skillId);
+                                  }
+                                }}
+                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteSkill(skillType, index)}
+                                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-600">Level:</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              skillType === "languages" 
+                                ? item.proficiency?.includes("C") 
+                                  ? "bg-green-100 text-green-800"
+                                  : item.proficiency?.includes("B") 
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                                : item.level >= 4 
+                                ? "bg-purple-100 text-purple-800"
+                                : item.level >= 3 
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}>
+                              {skillType === "languages" 
+                                ? LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"
+                                : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                })}
             </div>
           )}
 
@@ -4784,14 +4781,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <Briefcase className="w-5 h-5" />
                 </span>
                 <h3 className="text-lg font-extrabold text-blue-900 tracking-tight">Basic Information</h3>
-                {logoUrl && (
-                  <img
-                    src={logoUrl}
-                    alt="Logo"
-                    className="w-10 h-10 ml-4 rounded border border-blue-200 bg-white object-contain shadow"
-                    title="Logo"
-                  />
-                )}
               </div>
               <div className="space-y-2">
                 <div>

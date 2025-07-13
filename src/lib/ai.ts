@@ -1996,6 +1996,18 @@ Rules:
           };
         }
         
+        // Generate logo for the job
+        let logoUrl = null;
+        try {
+          logoUrl = await generateLogo(parsedResult.title || description, parsedResult.description || "");
+        } catch (logoError) {
+          console.error('Error generating logo:', logoError);
+          logoUrl = null;
+        }
+        
+        // Add logoUrl to the result
+        parsedResult.logoUrl = logoUrl;
+        
         return parsedResult;
       } catch (parseError) {
         console.error('Failed to parse AI response:', content);
