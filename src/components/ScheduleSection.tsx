@@ -12,7 +12,7 @@ import {
   Calendar, 
   Loader2,
 } from "lucide-react";
-import { DaySchedule, GroupedSchedule, groupSchedules as groupSchedulesUtil } from "../lib/scheduleUtils";
+import { DaySchedule, GroupedSchedule } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchTimezonesByCountry } from "../lib/api";
 
 interface ScheduleSectionProps {
@@ -331,6 +331,7 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
 
   return (
     <div className="w-full bg-white py-6">
+      
       <div className="space-y-4">
         {/* Display normal groups */}
         {groupedSchedules.map((group, index) => (

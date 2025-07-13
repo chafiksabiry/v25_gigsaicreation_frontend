@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import { 
@@ -133,6 +133,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
 
   return (
     <div className="w-full bg-white p-0">
+      
       <div className="space-y-8">
         <InfoText>
           Define the complete commission structure including base rate, transaction commission,

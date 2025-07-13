@@ -4612,7 +4612,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (loading && !props.initialSuggestions) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="flex flex-col justify-center items-center h-screen from-slate-50 via-blue-50 to-indigo-50">
         <div className="text-center max-w-md">
           <div className="inline-block mb-8">
             <div className="flex items-center justify-center space-x-1 mb-6">
@@ -4641,13 +4641,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 X
               </span>
             </div>
-            
             {/* Professional loading bar */}
             <div className="relative h-1 w-48 mx-auto bg-gray-200 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-professional-loading"></div>
             </div>
           </div>
-          
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
               Processing Your Request
@@ -4655,7 +4653,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <p className="text-gray-600 animate-fade-in" style={{ animationDelay: '0.3s' }}>
               Our AI is analyzing your requirements and generating personalized suggestions...
             </p>
-            
             {/* Professional loading dots */}
             <div className="flex justify-center space-x-2 mt-6">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-professional-dots"></div>
@@ -4663,7 +4660,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <div className="w-2 h-2 bg-purple-500 rounded-full animate-professional-dots"></div>
             </div>
           </div>
-          
           <div className="mt-8">
             <button
               onClick={props.onBack}
@@ -4721,6 +4717,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     <div className="bg-gray-50 min-h-screen">
       <div className="w-full h-full px-4 py-8">
         <div className="w-full h-full">
+          {/* AI Mode Title with HARX Logo */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                AI-Powered Gig Creation
+              </h1>
+            </div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
+            </p>
+          </div>
+
           <div className="flex justify-between items-center mb-8">
             <button
               onClick={props.onBack}
@@ -4729,9 +4737,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <ArrowLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h1 className="text-3xl font-bold text-gray-800">
+            <h2 className="text-2xl font-bold text-gray-800">
               Review & Refine Suggestions
-            </h1>
+            </h2>
             <button
               onClick={handleConfirm}
               className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

@@ -252,6 +252,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   // Le rendu du composant
   return (
     <div className="w-full bg-white py-6">
+
+      
       <div className="space-y-8">
         <InfoText>
           Start by providing the basic information about the contact center role. Be specific and clear

@@ -1996,17 +1996,8 @@ Rules:
           };
         }
         
-        // Generate logo for the job
-        let logoUrl = null;
-        try {
-          logoUrl = await generateLogo(parsedResult.title || description, parsedResult.description || "");
-        } catch (logoError) {
-          console.error('Error generating logo:', logoError);
-          logoUrl = null;
-        }
-        
-        // Add logoUrl to the result
-        parsedResult.logoUrl = logoUrl;
+        // Logo generation removed from suggestions - will be handled in UI
+        parsedResult.logoUrl = null;
         
         return parsedResult;
       } catch (parseError) {

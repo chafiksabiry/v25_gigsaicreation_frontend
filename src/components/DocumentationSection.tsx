@@ -1,5 +1,4 @@
 import React, { useRef, useState } from "react";
-import { Cloudinary } from "cloudinary-core";
 import { InfoText } from "./InfoText";
 import {
   Trash2,
@@ -364,6 +363,7 @@ export function DocumentationSection({
 
   return (
     <div className="w-full bg-white py-6">
+      
       <div className="space-y-8">
         {uploadError && (
           <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">

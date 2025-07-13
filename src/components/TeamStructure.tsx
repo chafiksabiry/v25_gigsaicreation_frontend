@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2, Check, Globe, Users, Building2, ChevronRight, Briefcase, GraduationCap, ArrowLeft, ArrowRight, XCircle } from 'lucide-react';
+import { Plus, Trash2, Globe, Users, Building2, Briefcase, GraduationCap, ArrowLeft, ArrowRight, XCircle } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
 
@@ -9,14 +9,6 @@ interface TeamRoleOption {
   description: string;
 }
 
-interface TeamRole {
-  roleId: string;
-  count: number;
-  seniority: {
-    level: string;
-    yearsExperience: number;
-  };
-}
 
 // Type assertion pour predefinedOptions.team.roles
 const teamRoles = predefinedOptions.team.roles as TeamRoleOption[];
@@ -304,6 +296,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
   return (
     <div className="w-full bg-white">
+      
       <div className="space-y-8">
         {/* Team Size */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">

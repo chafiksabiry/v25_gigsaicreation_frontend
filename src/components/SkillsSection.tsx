@@ -905,6 +905,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   return (
     <div className="w-full bg-white p-0">
+      
       <div className="space-y-8">
         <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
           <InfoText>

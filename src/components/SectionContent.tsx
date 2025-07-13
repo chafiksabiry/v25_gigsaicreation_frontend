@@ -20,6 +20,7 @@ interface SectionContentProps {
   errors: { [key: string]: string[] };
   constants: any;
   onSectionChange?: (section: string) => void;
+  isAIMode?: boolean;
 }
 
 export function SectionContent({
@@ -28,6 +29,7 @@ export function SectionContent({
   onChange,
   errors,
   onSectionChange,
+  isAIMode = false,
 }: SectionContentProps) {
 
   // Log section data when component renders

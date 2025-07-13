@@ -394,19 +394,44 @@ const PrompAI: React.FC = () => {
 
   if (showSuggestions) {
     return (
-      <Suggestions
-        input={input}
-        onBack={() => setShowSuggestions(false)}
-        onConfirm={handleConfirmSuggestions}
-        initialSuggestions={confirmedSuggestions}
-      />
+      <div className="w-full h-full py-8 px-4 mx-auto max-w-5xl">
+        <Suggestions
+          input={input}
+          onBack={() => setShowSuggestions(false)}
+          onConfirm={handleConfirmSuggestions}
+          initialSuggestions={confirmedSuggestions}
+        />
+      </div>
     );
   }
 
   if (confirmedSuggestions || isManualMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="w-full h-full py-8 px-4">
+        <div className={
+          currentSection === 'review'
+            ? 'w-full h-full py-8 px-4'
+            : 'w-full h-full py-8 px-4 mx-auto max-w-5xl'
+        }>
+          {/* Titre global en haut */}
+          {confirmedSuggestions && (
+            <div className="w-full max-w-3xl mx-auto mb-8">
+              {currentSection === 'review' ? (
+                <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                  <div className="mb-2">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h1 className="text-2xl font-bold text-blue-700 mb-2">Final Review & Publication</h1>
+                  <p className="text-base text-gray-700 text-center max-w-xl">
+                    Review all the details of your gig before publishing. Make sure everything is accurate and complete. You can edit any section by clicking the "Edit" button next to each section.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          )}
+
           {/* Header with back button for manual mode */}
           {isManualMode && (
             <div className="mb-8">
@@ -420,9 +445,11 @@ const PrompAI: React.FC = () => {
                 Back to AI Assistant
               </button>
               <div className="text-center">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-                  Create Gig Manually
-                </h1>
+                <div className="flex items-center justify-center space-x-3 mb-3">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    Create Gig Manually
+                  </h1>
+                </div>
                 <p className="text-lg text-gray-600">Fill out the sections below to create your gig</p>
               </div>
             </div>
@@ -462,6 +489,7 @@ const PrompAI: React.FC = () => {
                 errors={{}}
                 constants={predefinedOptions}
                 onSectionChange={handleSectionChange}
+                isAIMode={!!confirmedSuggestions}
               />
             </div>
           </div>
@@ -472,11 +500,13 @@ const PrompAI: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="w-full h-full py-16 px-4">
+      <div className="w-full h-full py-16 px-4 mx-auto max-w-5xl">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
-            Create with AI Assistance
-          </h1>
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Create with AI Assistance
+            </h1>
+          </div>
           <p className="text-xl text-gray-600 w-full mx-auto">
             Describe your needs naturally, and let AI help structure your
             content

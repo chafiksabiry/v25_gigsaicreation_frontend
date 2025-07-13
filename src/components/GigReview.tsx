@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import {
-  AlertCircle,
   CheckCircle,
   DollarSign,
   Users,
-  Globe2,
   Brain,
   FileText,
   Star,
@@ -16,15 +14,11 @@ import {
   Laptop,
   Coins,
   Edit3,
-  AlertTriangle,
   Heart,
   MapPin,
   Building,
-  TrendingUp,
   Target,
   Zap,
-  Shield,
-  BookOpen,
   Languages,
   CheckSquare,
 } from "lucide-react";
@@ -300,13 +294,12 @@ export function GigReview({
   const destinationZoneName = getTimeZoneName(data.destination_zone);
 
   return (
-    <div className="flex-1 overflow-auto w-full h-full bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
       <div className="w-full h-full px-8 py-6 max-w-7xl mx-auto">
         
         {/* Page Header with Title and Description */}
         <div className="mb-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4">Final Review & Publication</h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Review all the details of your gig before publishing. Make sure everything is accurate and complete. 
               You can edit any section by clicking the "Edit" button next to each section.
@@ -319,15 +312,9 @@ export function GigReview({
                 onClick={onBack}
                 className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
               >
-                ← Back to Previous Step
+                ← Previous
               </button>
-              <button
-                onClick={() => onEdit('documentation')}
-                className="px-6 py-3 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#5a6fd8] hover:to-[#6a4190] text-white rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Back to Documentation
-              </button>
+
             </div>
             <button
               onClick={handlePublish}
@@ -349,44 +336,6 @@ export function GigReview({
           </div>
         </div>
 
-        {/* {renderValidationSummary()} */}
-
-        {/* Enhanced Key Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {renderMetricCard(
-            <DollarSign className="w-6 h-6 text-[#667eea]" />,
-            "Base Salary",
-            `${getCurrencySymbol()}${data?.commission?.baseAmount || "0"}`,
-            data?.commission?.base || "No base salary",
-            "bg-gradient-to-br from-[#667eea]/10 to-[#667eea]/20"
-          )}
-          
-          {renderMetricCard(
-            <Star className="w-6 h-6 text-[#764ba2]" />,
-            "Performance Bonus",
-            data?.commission?.bonus ? `${getCurrencySymbol()}${data?.commission?.bonusAmount || "0"}` : "N/A",
-            data?.commission?.bonus || "No bonus structure",
-            "bg-gradient-to-br from-[#764ba2]/10 to-[#764ba2]/20"
-          )}
-          
-          {renderMetricCard(
-            <Users className="w-6 h-6 text-[#f093fb]" />,
-            "Team Size",
-            String(data.team?.size || '0'),
-            "Team Members",
-            "bg-gradient-to-br from-[#f093fb]/10 to-[#f093fb]/20"
-          )}
-          
-          {renderMetricCard(
-            <Globe2 className="w-6 h-6 text-[#667eea]" />,
-            "Coverage",
-            data.schedule?.schedules && data.schedule.schedules.length > 0 ? 
-              `${groupSchedules(data.schedule.schedules).length} Time Slots` : "No schedule",
-            data.schedule?.schedules && data.schedule.schedules.length > 0 ? 
-              groupSchedules(data.schedule.schedules).map(g => `${g.hours.start}-${g.hours.end}`).join(", ") : "No schedule defined",
-            "bg-gradient-to-br from-[#667eea]/10 to-[#764ba2]/20"
-          )}
-        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -433,14 +382,14 @@ export function GigReview({
                       </div>
                       <p className="text-gray-700">{destinationZoneName}</p>
                       {/* Show selected schedule time zones if available */}
-                      {scheduleTimeZoneNames.length > 0 && (
+                      {/* {scheduleTimeZoneNames.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           <span className="text-xs text-gray-500">Schedule Time Zones:</span>
                           {scheduleTimeZoneNames.map((name, idx) => (
                             <span key={idx} className="px-2 py-1 bg-gradient-to-r from-[#764ba2]/20 to-[#764ba2]/30 text-[#764ba2] rounded text-xs font-medium border border-[#764ba2]/30">{name}</span>
                           ))}
                         </div>
-                      )}
+                      )} */}
                     </div>
                   )}
                   
@@ -599,7 +548,7 @@ export function GigReview({
                   )}
                 </div>
 
-                {data.schedule.timeZones && data.schedule.timeZones.length > 0 && (
+                {/* {data.schedule.timeZones && data.schedule.timeZones.length > 0 && (
                   <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
                     <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
                       <Globe2 className="w-6 h-6 text-[#764ba2]" />
@@ -616,7 +565,7 @@ export function GigReview({
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {data.schedule.flexibility && data.schedule.flexibility.length > 0 && (
                   <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
@@ -693,19 +642,6 @@ export function GigReview({
                     )}
                   </div>
                   
-                  <div className="bg-gradient-to-br from-[#764ba2]/5 to-[#f093fb]/5 rounded-lg p-4 border border-[#764ba2]/20">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="w-5 h-5 text-[#764ba2]" />
-                        <span className="text-sm font-semibold text-[#764ba2]">Documentation:</span>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${
-                        data.documentation ? 'bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] border-[#667eea]/30' : 'bg-gray-100 text-gray-500 border-gray-200'
-                      }`}>
-                        {data.documentation ? 'Available' : 'Not Available'}
-                      </span>
-                    </div>
-                  </div>
                 </div>
                 {/* Actual skill names for each category */}
                 <div className="space-y-4">
@@ -813,10 +749,14 @@ export function GigReview({
             )}
 
             {/* Enhanced Documentation */}
-            {data.documentation && renderEditableSection(
+            {data.documentation && (
+              (Array.isArray(data.documentation.product) && data.documentation.product.length > 0) ||
+              (Array.isArray(data.documentation.process) && data.documentation.process.length > 0) ||
+              (Array.isArray(data.documentation.training) && data.documentation.training.length > 0)
+            ) ? renderEditableSection(
               "Documentation",
               "documentation",
-              <FileText className="w-6 h-6 text-gray-600" />,
+              <FileText className="w-6 h-6 text-gray-600" />, 
               <div className="space-y-4">
                 <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-6 border border-[#667eea]/30">
                   <div className="flex items-center gap-3 mb-3">
@@ -826,26 +766,82 @@ export function GigReview({
                   <p className="text-gray-700 text-base">
                     All required documentation has been uploaded and verified successfully.
                   </p>
+                  {/* Liste des documents */}
+                  <div className="mt-6 space-y-4">
+                    {(['product', 'process', 'training'] as const).map((type) => {
+                      const docs = data.documentation[type as 'product' | 'process' | 'training'];
+                      if (!docs.length) return null;
+                      return (
+                        <div key={type}>
+                          <h4 className="text-sm font-medium text-gray-700 capitalize mb-2">{type}</h4>
+                          <ul className="space-y-2">
+                            {docs.map((doc, idx) => (
+                              <li key={idx}>
+                                {doc.url ? (
+                                  <a
+                                    href={doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    <span className="flex-1">{doc.name}</span>
+                                  </a>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <FileText className="w-4 h-4" />
+                                    <span className="flex-1">{doc.name}</span>
+                                  </div>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                
                 <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
                   <h4 className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-2">Documentation Status</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-[#667eea]" />
-                      <span className="text-gray-700">Identity verification</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-[#667eea]" />
-                      <span className="text-gray-700">Professional credentials</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-[#667eea]" />
-                      <span className="text-gray-700">Portfolio materials</span>
-                    </div>
+                    {Array.isArray(data.documentation.product) && data.documentation.product.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-[#667eea]" />
+                        <span className="text-gray-700">Identity verification</span>
+                      </div>
+                    )}
+                    {Array.isArray(data.documentation.process) && data.documentation.process.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-[#667eea]" />
+                        <span className="text-gray-700">Professional credentials</span>
+                      </div>
+                    )}
+                    {Array.isArray(data.documentation.training) && data.documentation.training.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-[#667eea]" />
+                        <span className="text-gray-700">Portfolio materials</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+            ) : (
+              renderEditableSection(
+                "Documentation",
+                "documentation",
+                <FileText className="w-6 h-6 text-gray-600" />,
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-6 border border-[#667eea]/30">
+                    <div className="flex items-center gap-3 mb-3">
+                      <FileText className="w-6 h-6 text-[#667eea]" />
+                      <span className="font-bold text-[#667eea] text-lg">No documentation uploaded yet.</span>
+                    </div>
+                    <p className="text-gray-700 text-base">
+                      Please upload at least one document to complete this section.
+                    </p>
+                  </div>
+                </div>
+              )
             )}
           </div>
         </div>
