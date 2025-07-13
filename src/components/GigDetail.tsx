@@ -62,15 +62,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-4">
             {/* Logo */}
-            {gig?.logoUrl && (
-              <div className="flex-shrink-0">
-                <img 
-                  src={gig.logoUrl} 
-                  alt="Gig Logo" 
-                  className="w-16 h-16 rounded-lg border-2 border-gray-200 bg-white object-contain shadow-sm"
-                />
-              </div>
-            )}
+            {/* Remove the logo rendering block that uses gig.logoUrl */}
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
               <div className="mt-2 flex flex-wrap gap-2">

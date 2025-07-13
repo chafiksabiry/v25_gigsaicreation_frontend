@@ -142,7 +142,6 @@ export function SectionContent({
             onSave={() => {}}
             onAIAssist={() => {}}
             currentSection={section}
-            logoUrl={initializedData.logoUrl}
           />
         );
 

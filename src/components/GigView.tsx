@@ -49,7 +49,6 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     description: gig.description,
     category: gig.category,
     destination_zone: gig.destination_zone || "",
-    logoUrl: gig.logoUrl, // Include the logo URL
     callTypes: gig.call_types || [],
     highlights: [],
     requirements: {
@@ -258,15 +257,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
           <div className="flex justify-between items-start">
             <div className="flex items-start gap-4">
               {/* Logo */}
-              {gig.logoUrl && (
-                <div className="flex-shrink-0">
-                  <img 
-                    src={gig.logoUrl} 
-                    alt="Gig Logo" 
-                    className="w-12 h-12 rounded-lg border border-gray-200 bg-white object-contain"
-                  />
-                </div>
-              )}
+              {/* Remove the logo rendering block that uses gig.logoUrl */}
               <div className="space-y-4">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-2">{gig.title}</h2>

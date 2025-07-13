@@ -1152,9 +1152,6 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const startTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.start || '09:00');
   const endTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.end || '17:00');
 
-  // Include logoUrl if available
-  const logoUrl = generatedData.logoUrl;
-
   // Function to expand day ranges into individual days
 
   // Generate schedule based on input or default to weekdays
@@ -1514,8 +1511,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
         frequency: generatedData.team?.reporting?.frequency || "Weekly"
       },
       collaboration: generatedData.team?.collaboration || []
-    },
-    logoUrl: logoUrl // Include the logo URL if available
+    }
   };
 }
 
@@ -1995,9 +1991,6 @@ Rules:
             technical: [{ skill: "CRM Software", level: 2 }]
           };
         }
-        
-        // Logo generation removed from suggestions - will be handled in UI
-        parsedResult.logoUrl = null;
         
         return parsedResult;
       } catch (parseError) {

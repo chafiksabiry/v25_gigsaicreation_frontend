@@ -33,8 +33,6 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { LogoModal } from "./LogoModal";
-import { LogoViewer } from "./LogoViewer";
 import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
 
 type ScheduleEntry = {
@@ -394,9 +392,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [territories, setTerritories] = useState<string[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
-  const [isLogoViewerOpen, setIsLogoViewerOpen] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
   const skillsLoadedRef = useRef(false);
@@ -981,10 +976,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setLoading(true);
         setError(null);
         const result = await generateGigSuggestions(props.input);
-        
-        // Set logoUrl from result if available, otherwise null
-        const logo = result.logoUrl || null;
-        setLogoUrl(logo);
         
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
@@ -2741,32 +2732,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   {suggestions.schedule.minimumHours?.monthly || 0}
                 </div>
                 <div className="text-xs text-gray-500">Monthly</div>
-                          </div>
+              </div>
           </div>
+                  </div>
         </div>
       </div>
-
-      {/* Logo Modal */}
-      <LogoModal
-        isOpen={isLogoModalOpen}
-        onClose={() => setIsLogoModalOpen(false)}
-        onLogoUpdate={(newLogoUrl) => setLogoUrl(newLogoUrl)}
-        currentLogoUrl={logoUrl}
-        jobTitle={suggestions?.title || suggestions?.jobTitles?.[0] || ''}
-        jobDescription={suggestions?.description || ''}
-      />
-
-      {/* Logo Viewer */}
-      {logoUrl && (
-        <LogoViewer
-          isOpen={isLogoViewerOpen}
-          onClose={() => setIsLogoViewerOpen(false)}
-          logoUrl={logoUrl}
-        />
-      )}
-    </div>
-  );
-};
+    );
+  };
 
   const renderTimezoneSection = () => {
     if (!suggestions?.schedule) return null;
@@ -4750,40 +4722,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
-            {/* Logo Section - Centered */}
-            <div className="flex justify-center mb-8">
-              <div className="relative">
-                {logoUrl ? (
-                  <>
-                    <img 
-                      src={logoUrl} 
-                      alt="Logo" 
-                      className="w-24 h-24 rounded-xl border-2 border-blue-200 bg-white object-contain shadow-lg cursor-pointer hover:shadow-xl transition-all duration-200" 
-                      onClick={() => setIsLogoViewerOpen(true)}
-                      title="Cliquez pour voir en grand"
-                    />
-                    <button
-                      onClick={() => setIsLogoModalOpen(true)}
-                      className="absolute -top-2 -right-2 p-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-sm"
-                      title="Modifier le logo"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setIsLogoModalOpen(true)}
-                    className="w-24 h-24 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center shadow-lg"
-                    title="Ajouter un logo"
-                  >
-                    <Plus className="w-8 h-8 text-blue-500" />
-                  </button>
-                )}
-              </div>
-            </div>
 
             {/* Basic Section */}
             <div className="p-3 rounded-2xl border-2 border-blue-200 bg-blue-50">
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  {/* No logo related state, logic, or JSX */}
+                </div>
+              </div>
+
               <div className="flex items-center mb-3">
                 <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white mr-2">
                   <Briefcase className="w-5 h-5" />

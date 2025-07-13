@@ -299,12 +299,6 @@ export function GigReview({
         
         {/* Page Header with Title and Description */}
         <div className="mb-8">
-          <div className="text-center mb-8">
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Review all the details of your gig before publishing. Make sure everything is accurate and complete. 
-              You can edit any section by clicking the "Edit" button next to each section.
-            </p>
-          </div>
           
           <div className="flex items-center justify-between mb-6">
             <div className="flex gap-3">

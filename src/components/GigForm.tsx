@@ -115,7 +115,6 @@ interface GigData {
   description: string;
   category: string;
   destination_zone: string;
-  logoUrl?: string; // URL du logo généré par DALL-E et uploadé sur Cloudinary
   callTypes: string[];
   highlights: any[];
   requirements: {
