@@ -3765,7 +3765,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   if (skillType === "languages") {
                     skillName = item.language;
                   } else {
-                    let skillArray;
+                    let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
                     switch (skillType) {
                       case "soft":
                         skillArray = softSkills;
@@ -3886,7 +3886,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   if (skillType === "languages") {
                                     setEditValue(item.language);
                                   } else {
-                                    let skillArray;
+                                    let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
                                     switch (skillType) {
                                       case "soft":
                                         skillArray = softSkills;
