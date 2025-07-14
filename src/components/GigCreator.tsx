@@ -52,7 +52,7 @@ const initialGigData: GigData = {
         end: "18:00"
       }
     }],
-    timeZones: [],
+    timeZones: [""],
     flexibility: [],
     minimumHours: {
       daily: 8,
@@ -62,19 +62,19 @@ const initialGigData: GigData = {
   },
   commission: {
     base: "",
-    baseAmount: "",
+    baseAmount: 0,
     bonus: "",
-    bonusAmount: "",
+    bonusAmount: 0,
     structure: "",
     currency: "",
     minimumVolume: {
-      amount: "",
+      amount: 0,
       period: "",
       unit: "",
     },
     transactionCommission: {
       type: "",
-      amount: "",
+      amount: 0,
     },
     kpis: [],
   },
@@ -93,9 +93,24 @@ const initialGigData: GigData = {
   },
   skills: {
     languages: [{ language: "English", proficiency: "C1", iso639_1: "en" }],
-    soft: [{ skill: "Creativity", level: 1 }, { skill: "Time Management", level: 1 }, { skill: "Client Communication", level: 1 }, { skill: "Attention to Detail", level: 1 }],
-    professional: [{ skill: "Brand Identity Design", level: 1 }, { skill: "Logo Design", level: 1 }, { skill: "Marketing Collateral Design", level: 1 }, { skill: "Portfolio Management", level: 1 }],
-    technical: [{ skill: "Adobe Illustrator", level: 1 }, { skill: "Adobe Photoshop", level: 1 }, { skill: "Typography", level: 1 }, { skill: "Color Theory", level: 1 }],
+    soft: [
+      { skill: { $oid: "000000000000000000000001" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000002" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000003" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000004" }, level: 1, details: "" }
+    ],
+    professional: [
+      { skill: { $oid: "000000000000000000000005" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000006" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000007" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000008" }, level: 1, details: "" }
+    ],
+    technical: [
+      { skill: { $oid: "000000000000000000000009" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000010" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000011" }, level: 1, details: "" },
+      { skill: { $oid: "000000000000000000000012" }, level: 1, details: "" }
+    ],
     certifications: []
   },
   seniority: {
@@ -152,15 +167,25 @@ const initialGigData: GigData = {
   equipment: {
     required: [],
     provided: [],
-  }
-};
-
-// Update the constants structure
-const constants = {
-  ...predefinedOptions,
-  metrics: {
-    ...predefinedOptions.metrics,
-    metricTypes: predefinedOptions.metrics.kpis
+  },
+  availability: {
+    schedule: [
+      {
+        day: "Monday",
+        hours: {
+          start: "09:00",
+          end: "18:00"
+        }
+      }
+    ],
+    timeZones: [""],
+    time_zone: "",
+    flexibility: [],
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    }
   }
 };
 
@@ -190,7 +215,7 @@ export function GigCreator({ children }: GigCreatorProps) {
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [skipValidation, setSkipValidation] = useState(true);
+  const [skipValidation, setSkipValidation] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
@@ -198,20 +223,60 @@ export function GigCreator({ children }: GigCreatorProps) {
   }>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  console.log('GigCreator - Initial state:', {
-    currentSection,
-    gigData,
-    validationErrors
-  });
-
   const handleGigDataChange = (newData: GigData) => {
-    console.log('handleGigDataChange - Previous data:', gigData);
-    console.log('handleGigDataChange - New data:', newData);
-    const updatedData = {
-      ...newData,
-      destinationZones: newData.destinationZones || []
-    };
-    console.log('handleGigDataChange - Updated data:', updatedData);
+    // Synchroniser les données entre schedule et availability
+    let updatedData = { ...newData, destinationZones: newData.destinationZones || [] };
+    
+    // Synchronize time zone selection between schedule and availability
+    const selectedTimeZone = newData.schedule?.time_zone || (Array.isArray(newData.schedule?.timeZones) ? newData.schedule.timeZones[0] : undefined);
+    
+    // Si les données de schedule ont changé, synchroniser avec availability
+    if (newData.schedule && newData.schedule.schedules) {
+      updatedData = {
+        ...updatedData,
+        schedule: {
+          ...updatedData.schedule,
+          time_zone: selectedTimeZone || "",
+          timeZones: selectedTimeZone ? [selectedTimeZone] : [],
+        },
+        availability: {
+          ...updatedData.availability,
+          schedule: newData.schedule.schedules.map(schedule => ({
+            day: schedule.day,
+            hours: schedule.hours
+          })),
+          time_zone: selectedTimeZone || "",
+          timeZones: selectedTimeZone ? [selectedTimeZone] : [],
+          flexibility: newData.schedule.flexibility || [],
+          minimumHours: newData.schedule.minimumHours || {}
+        }
+      };
+    }
+    
+    // Si les données de availability ont changé, synchroniser avec schedule
+    if (newData.availability && newData.availability.schedule) {
+      const availTimeZone = newData.availability.time_zone || (Array.isArray(newData.availability.timeZones) ? newData.availability.timeZones[0] : undefined);
+      updatedData = {
+        ...updatedData,
+        availability: {
+          ...updatedData.availability,
+          time_zone: availTimeZone || "",
+          timeZones: availTimeZone ? [availTimeZone] : [],
+        },
+        schedule: {
+          ...updatedData.schedule,
+          schedules: newData.availability.schedule.map(schedule => ({
+            day: schedule.day,
+            hours: schedule.hours
+          })),
+          time_zone: availTimeZone || "",
+          timeZones: availTimeZone ? [availTimeZone] : [],
+          flexibility: newData.availability.flexibility || [],
+          minimumHours: newData.availability.minimumHours || {}
+        }
+      };
+    }
+    
     setGigData(updatedData);
     const validation = validateGigData(updatedData);
     setValidationErrors(validation.errors);
@@ -239,9 +304,8 @@ export function GigCreator({ children }: GigCreatorProps) {
       };
 
       setGigData((prev) => {
-        const { availability, ...restOfPrev } = prev;
         const newGigData = {
-          ...restOfPrev,
+          ...prev,
           ...suggestions,
           schedule: suggestions.schedule ? {
             ...suggestions.schedule,
@@ -255,15 +319,13 @@ export function GigCreator({ children }: GigCreatorProps) {
           } : prev.schedule,
           skills: {
             ...prev.skills,
-            ...skills,
             soft: skills.soft || prev.skills.soft,
             languages: skills.languages || prev.skills.languages,
-            professional: skills.professional?.map(skill => ({ skill, level: 1 })) || prev.skills.professional,
-            technical: skills.technical?.map(skill => ({ skill, level: 1 })) || prev.skills.technical,
-            certifications: skills.certifications || prev.skills.certifications,
+            professional: skills.professional || prev.skills.professional,
+            technical: skills.technical || prev.skills.technical,
+            certifications: prev.skills.certifications,
           },
         };
-        console.log("Applied AI suggestions:", newGigData);
         return newGigData;
       });
       setShowAIDialog(false);
@@ -283,7 +345,6 @@ export function GigCreator({ children }: GigCreatorProps) {
       let companyId: string;
 
       // Vérifier si on est en mode standalone
-      const isStandalone = import.meta.env.VITE_STANDALONE === 'true';
 
       
 
@@ -320,12 +381,12 @@ export function GigCreator({ children }: GigCreatorProps) {
           }))
         },
         availability: {
-          schedule: [
+          schedule: gigData.availability?.schedule || [
             {
-              day: gigData.schedule?.day || "",
+              day: "Monday",
               hours: {
-                start: gigData.schedule?.hours?.start || "",
-                end: gigData.schedule?.hours?.end || ""
+                start: "09:00",
+                end: "18:00"
               }
             }
           ],
@@ -338,16 +399,16 @@ export function GigCreator({ children }: GigCreatorProps) {
           }
         },
         schedule: {
-          schedules: [
+          schedules: gigData.schedule?.schedules || [
             {
-              day: gigData.schedule?.day || "",
+              day: "Monday",
               hours: {
-                start: gigData.schedule?.hours?.start || "",
-                end: gigData.schedule?.hours?.end || ""
+                start: "09:00",
+                end: "18:00"
               }
             }
           ],
-          timeZones: gigData.schedule?.timeZones || [],
+          timeZones: gigData.schedule?.timeZones || "",
           flexibility: gigData.schedule?.flexibility || [],
           minimumHours: {
             daily: gigData.schedule?.minimumHours?.daily || 0,
@@ -516,7 +577,8 @@ export function GigCreator({ children }: GigCreatorProps) {
       <GigReview
         data={gigData}
         onEdit={(section) => {
-          setCurrentSection(section);
+          // Correction : si section === 'documentation', rediriger vers 'docs'
+          setCurrentSection(section === 'documentation' ? 'docs' : section);
           setIsReviewing(false);
         }}
         onSubmit={handleSubmit}
@@ -531,7 +593,7 @@ export function GigCreator({ children }: GigCreatorProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="w-full h-full py-8 px-4">
         <div className="bg-white rounded-xl shadow-xl">
           {children({
             data: gigData,

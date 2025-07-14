@@ -12,24 +12,17 @@ interface GigDetailProps {
 }
 
 export function GigDetail({ gig, onBack }: GigDetailProps) {
-  // Add debug logging at the very start
-  console.log('GigDetail component rendered with gig:', gig);
-  console.log('Commission structure:', gig?.commission);
 
-  const formatCurrency = (amount: string) => {
+  const formatCurrency = (amount: string | number) => {
     try {
-      console.log('formatCurrency called with amount:', amount);
-      console.log('Current commission state:', gig?.commission);
-      
       const currency = gig?.commission?.currency || 'USD';
-      console.log('Using currency:', currency);
+      const numericAmount = typeof amount === 'string' ? parseFloat(amount) || 0 : amount || 0;
       
       const formattedAmount = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: currency
-      }).format(amount || 0);
+      }).format(numericAmount);
       
-      console.log('Formatted amount:', formattedAmount);
       return formattedAmount;
     } catch (error) {
       console.error('Error in formatCurrency:', error);
@@ -38,13 +31,11 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
   };
 
   // Helper function to safely get commission amount
-  const getCommissionAmount = (amount: string) => {
-    console.log('Getting commission amount:', amount);
+  const getCommissionAmount = (amount: string | number) => {
     if (!amount) {
-      console.log('No amount provided, returning 0');
       return 0;
     }
-    return amount;
+    return typeof amount === 'string' ? parseFloat(amount) || 0 : amount;
   };
 
   // Helper function to format minimum volume
@@ -58,7 +49,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+    <div className="w-full h-full py-8 px-4">
       {/* Header */}
       <div className="mb-8">
         <button
@@ -69,18 +60,22 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           Back to Gigs
         </button>
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {gig?.category || 'Uncategorized'}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                {gig?.seniority_level || 'Not Specified'}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                {gig?.years_experience || '0'} Experience
-              </span>
+          <div className="flex items-start gap-4">
+            {/* Logo */}
+            {/* Remove the logo rendering block that uses gig.logoUrl */}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {gig?.category || 'Uncategorized'}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  {gig?.seniority_level || 'Not Specified'}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  {gig?.years_experience || '0'} Experience
+                </span>
+              </div>
             </div>
           </div>
           <div className="text-right">
@@ -151,9 +146,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                     <div className="text-sm text-gray-500">Amount</div>
                     <div className="text-lg font-semibold text-gray-900">
                       {(() => {
-                        console.log('Rendering base commission amount');
                         const baseAmount = gig?.commission?.baseAmount || "";
-                        console.log('Base amount value:', baseAmount);
                         return formatCurrency(getCommissionAmount(baseAmount));
                       })()}
                     </div>
@@ -187,9 +180,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                       <div className="text-sm text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900">
                         {(() => {
-                          console.log('Rendering bonus amount');
                           const bonusAmount = gig?.commission?.bonusAmount || 0;
-                          console.log('Bonus amount value:', bonusAmount);
                           return formatCurrency(getCommissionAmount(bonusAmount));
                         })()}
                       </div>

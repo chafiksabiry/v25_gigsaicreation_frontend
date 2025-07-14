@@ -5,12 +5,13 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+
 // TODO: Implement these functions with your preferred storage solution
-export async function createGig(gigData: Partial<Gig>) {
+export async function createGig() {
   throw new Error('Not implemented');
 }
 
-export async function updateGig(id: string, updates: Partial<Gig>) {
+export async function updateGig(_id: string, _updates: Partial<Gig>) {
   throw new Error('Not implemented');
 }
 
@@ -32,7 +33,7 @@ export async function getGigHistory(gigId: string) {
 
 export async function fetchCompanies() {
   try {
-    const response = await fetch('https://preprod-api-companysearchwizard.harx.ai/api/companies');
+    const response = await fetch('https://api-companysearchwizard.harx.ai/api/companies');
     if (!response.ok) {
       throw new Error('Failed to fetch companies');
     }
@@ -123,8 +124,6 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
 
     // Get companyId based on userId
     const companyId = Cookies.get('companyId') ?? "";
-    console.log('companyId', companyId);
-    
     // Corriger automatiquement les données de schedule
     const fixedGigData = fixScheduleData(gigData);
     
@@ -137,16 +136,43 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         iso639_1: lang.iso639_1
       })),
       soft: fixedGigData.skills.soft.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: (() => {
+          // Extract ObjectId string from { $oid: "..." } format
+          if (typeof skill.skill === 'string') {
+            return skill.skill; // Already a string
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            return skill.skill.$oid; // Extract the ObjectId string
+          }
+          return skill.skill; // Fallback
+        })(),
+        level: skill.level,
+        details: skill.details || ''
       })),
       professional: fixedGigData.skills.professional.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: (() => {
+          // Extract ObjectId string from { $oid: "..." } format
+          if (typeof skill.skill === 'string') {
+            return skill.skill; // Already a string
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            return skill.skill.$oid; // Extract the ObjectId string
+          }
+          return skill.skill; // Fallback
+        })(),
+        level: skill.level,
+        details: skill.details || ''
       })),
       technical: fixedGigData.skills.technical.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: (() => {
+          // Extract ObjectId string from { $oid: "..." } format
+          if (typeof skill.skill === 'string') {
+            return skill.skill; // Already a string
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            return skill.skill.$oid; // Extract the ObjectId string
+          }
+          return skill.skill; // Fallback
+        })(),
+        level: skill.level,
+        details: skill.details || ''
       })),
       certifications: fixedGigData.skills.certifications.map(cert => ({
         name: cert.name,
@@ -154,6 +180,19 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         provider: cert.provider
       }))
     };
+
+    // Log the formatted skills to ensure ObjectIds are extracted correctly
+    console.log('📤 Sending skills data to API:', formattedSkills);
+    console.log('🔍 Sample skill format check:');
+    if (formattedSkills.soft.length > 0) {
+      console.log('  Soft skill example:', formattedSkills.soft[0]);
+    }
+    if (formattedSkills.professional.length > 0) {
+      console.log('  Professional skill example:', formattedSkills.professional[0]);
+    }
+    if (formattedSkills.technical.length > 0) {
+      console.log('  Technical skill example:', formattedSkills.technical[0]);
+    }
 
     // Format schedule data to remove invalid ObjectId references
     const formattedSchedule = {
@@ -167,7 +206,13 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     // Format availability data
     const formattedAvailability = {
       ...fixedGigData.availability,
-      timeZone: fixedGigData.availability.timeZones?.[0] || 'UTC', // Use first timezone as default
+      time_zone: (() => {
+        const firstTimezone = fixedGigData.availability.timeZones?.[0];
+        if (typeof firstTimezone === 'string') {
+          return firstTimezone;
+        }
+        return fixedGigData.availability.time_zone || 'UTC';
+      })(),
       schedule: fixedGigData.availability.schedule.map(schedule => ({
         day: schedule.day, // Use 'day' (singular) instead of converting to array
         hours: schedule.hours
@@ -210,7 +255,6 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     
     try {
       const data = JSON.parse(responseText);
-      console.log('Parsed response data:', data);
       return { data, error: undefined };
     } catch (parseError) {
       console.error('Error parsing success response:', parseError);
@@ -236,5 +280,290 @@ export async function getGig(gigId: string | null) {
   } catch (error) {
     console.error('Error fetching gig:', error);
     return { data: null, error };
+  }
+}
+
+export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error }> {
+  try {
+    console.log('[fetchAllTimezones] Fetching all timezones from API...');
+    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const response = await fetch(`${timezoneApiUrl}/timezones`);
+    console.log('[fetchAllTimezones] Response received:', response);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch timezones: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('[fetchAllTimezones] JSON parsed:', result);
+    
+    if (!result.success) {
+      throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
+    }
+    
+    console.log('[fetchAllTimezones] Returning data:', result.data);
+    return { data: result.data || [], error: undefined };
+  } catch (error) {
+    console.error('Error fetching timezones:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
+    };
+  }
+}
+
+export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
+  try {
+    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch timezones for country ${countryCode}: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
+    }
+    
+    return { data: result.data || [], error: undefined };
+  } catch (error) {
+    console.error('Error fetching timezones:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
+    };
+  }
+}
+
+// Skills API functions
+export async function fetchSoftSkills() {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error('Error fetching soft skills:', error);
+    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export async function fetchTechnicalSkills() {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/technical`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error('Error fetching technical skills:', error);
+    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export async function fetchProfessionalSkills() {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data: data.data, error: null };
+  } catch (error) {
+    console.error('Error fetching professional skills:', error);
+    return { data: [], error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+// New functions to save skills to database
+export async function saveSkillToDatabase(skillData: {
+  name: string;
+  description: string;
+  category: 'soft' | 'technical' | 'professional';
+  level?: number;
+}): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${skillData.category}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: skillData.name,
+        description: skillData.description,
+        category: skillData.category,
+        level: skillData.level || 1
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to save skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error saving skill to database:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to save skill') 
+    };
+  }
+}
+
+export async function updateSkillInDatabase(
+  skillId: string, 
+  skillData: {
+    name?: string;
+    description?: string;
+    category?: 'soft' | 'technical' | 'professional';
+    level?: number;
+  }
+): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${skillId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(skillData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error updating skill in database:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to update skill') 
+    };
+  }
+}
+
+export async function deleteSkillFromDatabase(skillId: string): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/${skillId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to delete skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error deleting skill from database:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to delete skill') 
+    };
+  }
+}
+
+export async function getSkillById(skillId: string): Promise<{ data: any; error?: Error }> {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/id/${skillId}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get skill: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data, error: undefined };
+  } catch (error) {
+    console.error('Error getting skill by ID:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Failed to get skill') 
+    };
+  }
+}
+
+export async function searchSkillsByName(name: string, category?: 'soft' | 'technical' | 'professional'): Promise<{ data: any[]; error?: Error }> {
+  try {
+    const categoryParam = category ? `&category=${category}` : '';
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/search?name=${encodeURIComponent(name)}${categoryParam}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to search skills: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return { data: data.data || [], error: undefined };
+  } catch (error) {
+    console.error('Error searching skills:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to search skills') 
+    };
+  }
+}
+
+// Function to sync skills from external sources to database
+export async function syncSkillsToDatabase(skills: Array<{
+  name: string;
+  description: string;
+  category: 'soft' | 'technical' | 'professional';
+  source?: string;
+}>): Promise<{ data: any[]; error?: Error }> {
+  try {
+    const results = [];
+    
+    for (const skill of skills) {
+      try {
+        // Check if skill already exists
+        const searchResult = await searchSkillsByName(skill.name, skill.category);
+        
+        if (searchResult.data.length > 0) {
+          // Skill exists, update if needed
+          const existingSkill = searchResult.data[0];
+          if (existingSkill.description !== skill.description) {
+            const updateResult = await updateSkillInDatabase(existingSkill._id, {
+              description: skill.description
+            });
+            if (updateResult.data) {
+              results.push(updateResult.data);
+            }
+          } else {
+            results.push(existingSkill);
+          }
+        } else {
+          // Skill doesn't exist, create new one
+          const createResult = await saveSkillToDatabase(skill);
+          if (createResult.data) {
+            results.push(createResult.data);
+          }
+        }
+      } catch (skillError) {
+        console.error(`Error processing skill ${skill.name}:`, skillError);
+        // Continue with other skills even if one fails
+      }
+    }
+    
+    return { data: results, error: undefined };
+  } catch (error) {
+    console.error('Error syncing skills to database:', error);
+    return { 
+      data: [], 
+      error: error instanceof Error ? error : new Error('Failed to sync skills') 
+    };
   }
 }

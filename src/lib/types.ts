@@ -64,6 +64,7 @@ export interface ParsedGig {
       };
     }[];
     timeZones: string[];
+    timeZone?: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -205,6 +206,7 @@ export interface GigData {
       };
     }[];
     timeZones: string[];
+    timeZone?: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;

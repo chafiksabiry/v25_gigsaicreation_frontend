@@ -39,13 +39,14 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         benefits: gig.benefits || [],
         availability: {
           schedule: gig.schedule?.schedules?.map(schedule => ({
-            day: schedule.days?.[0] || "",
+            day: schedule.day?.[0] || "",
             hours: {
               start: schedule.hours?.start || "",
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: gig.schedule?.timeZones || [],
+          timeZones: Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones : (gig.schedule?.timeZones ? [gig.schedule.timeZones] : []),
+          time_zone: gig.schedule?.time_zone || (Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones[0] : ""),
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {
             daily: 0,
@@ -55,31 +56,31 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         },
         schedule: {
           schedules: gig.schedule?.schedules?.map(schedule => ({
-            days: schedule.days || [],
+            day: schedule.day || "",
             hours: {
               start: schedule.hours?.start || "",
               end: schedule.hours?.end || ""
             }
           })) || [],
-          timeZones: gig.schedule?.timeZones || [],
+          timeZones: Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones : (gig.schedule?.timeZones ? [gig.schedule.timeZones] : []),
           flexibility: gig.schedule?.flexibility || [],
           minimumHours: gig.schedule?.minimumHours || {},
         },
         commission: {
           base: gig.commission?.base || "",
-          baseAmount: gig.commission?.baseAmount || "",
+          baseAmount: gig.commission?.baseAmount || 0,
           bonus: gig.commission?.bonus || "",
-          bonusAmount: gig.commission?.bonusAmount || "",
+          bonusAmount: gig.commission?.bonusAmount || 0,
           structure: gig.commission?.structure || "",
           currency: gig.commission?.currency || "",
           minimumVolume: {
-            amount: gig.commission?.minimumVolume?.amount || "",
+            amount: gig.commission?.minimumVolume?.amount || 0,
             period: gig.commission?.minimumVolume?.period || "",
             unit: gig.commission?.minimumVolume?.unit || ""
           },
           transactionCommission: {
             type: gig.commission?.transactionCommission?.type || "",
-            amount: gig.commission?.transactionCommission?.amount || ""
+            amount: gig.commission?.transactionCommission?.amount || 0
           },
           kpis: gig.commission?.kpis || []
         },
@@ -100,15 +101,18 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           })) || [],
           soft: gig.skills?.soft.map(skill => ({
             skill: skill.skill,
-            level: skill.level
+            level: skill.level,
+            details: ""
           })) || [],
           professional: gig.skills?.professional.map(skill => ({
             skill: skill.skill,
-            level: skill.level
+            level: skill.level,
+            details: ""
           })) || [],
           technical: gig.skills?.technical.map(skill => ({
             skill: skill.skill,
-            level: skill.level
+            level: skill.level,
+            details: ""
           })) || [],
           certifications: gig.skills?.certifications || []
         },
@@ -191,7 +195,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full h-full">
       <h2 className="text-2xl font-bold mb-4">Confirm Gig Details</h2>
       
       <div className="space-y-4">

@@ -25,7 +25,7 @@ Description: ${description}
 Example response format: ["US", "CA", "UK", "DE"]`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
@@ -37,7 +37,7 @@ Example response format: ["US", "CA", "UK", "DE"]`;
         }
       ],
       temperature: 0.7,
-      max_tokens: 150,
+      max_tokens: 100,
     });
 
     const response = completion.choices[0].message.content;

@@ -26,6 +26,7 @@ export interface GigData {
       };
     }>;
     timeZones: string[];
+    time_zone: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -42,6 +43,7 @@ export interface GigData {
       };
     }>;
     timeZones: string[];
+    time_zone?: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -92,22 +94,25 @@ export interface GigData {
     qualificationCriteria: string[];
   };
   skills: {
-    languages: Array<{ 
-      language: string; 
-      proficiency: string;
-      iso639_1: string;
-    }>;
-    soft: Array<{
-      skill: string;
-      level: number;
-    }>;
     professional: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
     }>;
     technical: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
       level: number;
+      details: string; // Added details field to match backend
+    }>;
+    soft: Array<{
+      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
+      level: number;
+      details: string; // Added details field to match backend
+    }>;
+    languages: Array<{
+      language: string;
+      proficiency: string;
+      iso639_1: string;
     }>;
     certifications: Array<{
       name: string;
@@ -213,6 +218,7 @@ export interface GigSuggestion {
       };
     }>;
     timeZones: string[];
+    time_zone: string;
     flexibility: string[];
     minimumHours: {
       daily: number;
@@ -230,6 +236,7 @@ export interface GigSuggestion {
       _id?: { $oid: string };
     }>;
     timeZones: string[];
+    time_zone?: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -257,16 +264,16 @@ export interface GigSuggestion {
       iso639_1: string;
     }>;
     soft: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
     }>;
     professional: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
       details?: string;
     }>;
     technical: Array<{
-      skill: string;
+      skill: { $oid: string }; // MongoDB ObjectId format
       level: number;
       details?: string;
     }>;
