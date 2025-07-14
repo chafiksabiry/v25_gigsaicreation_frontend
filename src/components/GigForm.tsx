@@ -45,7 +45,12 @@ type GigFormData = {
       };
     }[];
     timeZones: string[];
-    flexibility: string;
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
   };
   commission: {
     base: string;
@@ -296,8 +301,8 @@ export function GigForm() {
               }
             }
           ],
-          timeZones: data.schedule?.timeZones || [],
-          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
+          timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
           minimumHours: {
             daily: undefined,
             weekly: undefined,
@@ -314,8 +319,8 @@ export function GigForm() {
               }
             }
           ],
-          timeZones: data.schedule?.timeZones || [],
-          flexibility: data.schedule?.flexibility ? [data.schedule.flexibility] : [],
+          timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
           minimumHours: {
             daily: undefined,
             weekly: undefined,
@@ -507,7 +512,7 @@ export function GigForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto py-8 px-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full py-8 px-4">
       <div className="space-y-8">
         {/* Basic Information */}
         <section className="bg-white rounded-lg shadow-md p-6">

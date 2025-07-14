@@ -43,7 +43,7 @@ export async function analyzeTitleAndGenerateDescription(title: string): Promise
   try {
     const result = await retryWithBackoff(async () => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
@@ -74,7 +74,7 @@ Return ONLY a valid JSON object with the following structure:
     "level": string (MUST be one of the available seniority levels),
     "yearsExperience": string
   },
-  "timeZone": string (MUST be one of the available time zones),
+  "timeZones": string[] (MUST be an array of time zones from the available options),
   "scheduleFlexibility": string[] (MUST be from available options),
   "destinationZone": string (MUST be one of the available zones),
   "skills": {
@@ -93,7 +93,7 @@ CRITICAL:
 - Each line should be a complete, meaningful sentence
 - The seniority level MUST exactly match one of the provided options
 - The category MUST be EXACTLY one of the provided options, no variations or new categories allowed
-- The time zone MUST be one of the provided options
+- The time zones MUST be an array of time zones from the provided options (we will use the first element as primary)
 - The schedule flexibility options MUST be from the provided list
 - The destination zone MUST be one of the provided options`
           },
@@ -103,7 +103,7 @@ CRITICAL:
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 500
       });
 
       const content = completion.choices[0].message.content;
@@ -125,9 +125,10 @@ CRITICAL:
           throw new Error('Invalid seniority level suggestion');
         }
 
-        // Validate time zone
-        if (!predefinedOptions.basic.timeZones.includes(parsed.timeZone)) {
-          throw new Error('Invalid time zone suggestion');
+        // Validate time zones
+        if (!Array.isArray(parsed.timeZones) || !parsed.timeZones.every((tz: string) => 
+          predefinedOptions.basic.timeZones.includes(tz))) {
+          throw new Error('Invalid time zones suggestion');
         }
 
         // Validate schedule flexibility
@@ -173,7 +174,7 @@ export async function generateSeniorityAndExperience(title: string, description:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -536,7 +537,7 @@ export async function generateCommissionAndActivity(title: string, description: 
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -826,7 +827,7 @@ export async function generateTeamAndTerritories(title: string, description: str
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -838,7 +839,7 @@ Available team roles:
 ${(predefinedOptions.team.roles as Array<{id: string; name: string; description: string}>).map(role => `- ${role.name} (${role.description})`).join('\n')}
 
 Available territories:
-${(predefinedOptions.team.territories as string[]).map(territory => `- ${territory}`).join('\n')}
+You can suggest any country or region name. Common examples include: United States, Canada, United Kingdom, France, Germany, Spain, Italy, Australia, Japan, China, India, Brazil, Mexico, South Africa, etc.
 
 Return ONLY a valid JSON object with the following structure:
 {
@@ -859,8 +860,8 @@ Return ONLY a valid JSON object with the following structure:
     }
   },
   "territories": {
-    "primary": string[] (MUST be from available territories),
-    "secondary": string[] (MUST be from available territories),
+    "primary": string[] (country or region names),
+    "secondary": string[] (country or region names),
     "coverage": [
       {
         "type": string (e.g., "Regional", "Global"),
@@ -886,7 +887,7 @@ Consider the following factors when determining team structure and territories:
           content: `Title: ${title}
 Description: ${description}
 
-Based on this job title and description, suggest appropriate team structure and territory assignments. The roles MUST be from the available options listed above, and territories MUST be from the available list.`
+Based on this job title and description, suggest appropriate team structure and territory assignments. The roles MUST be from the available options listed above, and territories can be any country or region names.`
         }
       ],
       temperature: 0.7,
@@ -911,13 +912,7 @@ Based on this job title and description, suggest appropriate team structure and 
       }
     });
 
-    // Validate territories
-    const allTerritories = [...result.territories.primary, ...result.territories.secondary];
-    allTerritories.forEach((territory: string) => {
-      if (!(predefinedOptions.team.territories as string[]).includes(territory)) {
-        throw new Error(`Invalid territory: ${territory}`);
-      }
-    });
+    // No territory validation needed since we now use API for territories
 
     return result;
   } catch (error) {
@@ -937,7 +932,7 @@ export async function analyzeCityAndGetCountry(city: string): Promise<string> {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -985,7 +980,7 @@ export async function generateSeniorityByCategory(
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -1158,28 +1153,6 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const endTime = convertTo24HourFormat(generatedData.schedule?.schedules?.[0]?.hours?.end || '17:00');
 
   // Function to expand day ranges into individual days
-  const expandDayRange = (dayRange: string): string[] => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    
-    // Check if the input contains any range indicators or multiple days
-    if (dayRange.toLowerCase().includes('to') || 
-        dayRange.includes('-') || 
-        dayRange.includes(',') || 
-        dayRange.includes('through') ||
-        dayRange.includes('&') ||
-        dayRange.includes('and')) {
-      throw new Error('Only single days are allowed. Please specify a single day (e.g., "Monday", "Tuesday", etc.).');
-    }
-    
-    // Validate that it's a valid day
-    const normalizedDay = dayRange.trim();
-    if (!days.includes(normalizedDay)) {
-      throw new Error(`Invalid day: ${dayRange}. Must be one of: ${days.join(', ')}`);
-    }
-    
-    // Return single day
-    return [normalizedDay];
-  };
 
   // Generate schedule based on input or default to weekdays
   let scheduleDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -1297,7 +1270,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     }; // Default to empty language and A1 level if invalid
   });
 
-  // Validate soft skills
+  // Validate soft skills - keep names for now, will be mapped to ObjectId later
   const validatedSoftSkills = (skills.soft || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
       return { skill: skill.trim(), level: 1 };
@@ -1308,7 +1281,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     return { skill: '', level: 1 };
   });
 
-  // Validate professional skills
+  // Validate professional skills - keep names for now, will be mapped to ObjectId later
   const validatedProfessionalSkills = (skills.professional || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
       return { skill: skill.trim(), level: 1 };
@@ -1319,7 +1292,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     return { skill: '', level: 1 };
   });
 
-  // Validate technical skills
+  // Validate technical skills - keep names for now, will be mapped to ObjectId later
   const validatedTechnicalSkills = (skills.technical || []).map((skill: string | any) => {
     if (typeof skill === 'string') {
       return { skill: skill.trim(), level: 1 };
@@ -1404,11 +1377,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     };
   });
 
-  // Validate team territories - ensure only predefined territories are used
-  const validTeamTerritories = predefinedOptions.team.territories;
-  const validatedTeamTerritories = (generatedData.team?.territories || []).filter(territory => 
-    validTeamTerritories.includes(territory)
-  );
+  // Use team territories as provided - no validation against predefined list since we now use API
+  const validatedTeamTerritories = generatedData.team?.territories || [];
 
   return {
     title: generatedData.jobTitles?.[0] || generatedData.title || '',
@@ -1416,6 +1386,11 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     category: validatedSectors[0] || '',
     highlights: generatedData.highlights || [],
     destinationZones: (generatedData.destinationZones || []).map(zone => {
+      // If it's "Global", replace with "France"
+      if (zone.toLowerCase() === 'global') {
+        return 'France';
+      }
+      
       // Convert continent names to appropriate country/region
       const continentMap: { [key: string]: string } = {
         'Europe': 'European Union',
@@ -1448,6 +1423,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     availability: {
       schedule: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
+      time_zone: generatedData.schedule?.timeZones?.[0] || '',
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
@@ -1458,6 +1434,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     schedule: {
       schedules: allSchedules,
       timeZones: generatedData.schedule?.timeZones || [],
+      time_zone: generatedData.schedule?.timeZones?.[0] || '',
       flexibility: generatedData.schedule?.flexibility || [],
       minimumHours: {
         daily: generatedData.schedule?.minimumHours?.daily || undefined,
@@ -1507,9 +1484,9 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     skills: {
       languages: validatedLanguages,
-      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1 })),
-      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
-      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
+      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
+      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
+      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
       certifications: generatedData.skills?.certifications || []
     },
     requirements: {
@@ -1544,9 +1521,9 @@ export async function generateSkills(title: string, description: string): Promis
     proficiency: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
     iso639_1: string;
   }>;
-  soft: string[];
-  professional: string[];
-  technical: string[];
+  soft: Array<{ skill: { $oid: string }; level: number; details: string }>;
+  professional: Array<{ skill: { $oid: string }; level: number; details: string }>;
+  technical: Array<{ skill: { $oid: string }; level: number; details: string }>;
 }> {
   if (!isValidApiKey(OPENAI_API_KEY)) {
     throw new Error('Please configure your OpenAI API key in the .env file');
@@ -1557,25 +1534,78 @@ export async function generateSkills(title: string, description: string): Promis
   }
 
   try {
+    // First, ensure all predefined skills exist in the database
+    const { syncPredefinedSkills, convertSkillNamesToObjectIds } = await import('./skillsManager');
+    await syncPredefinedSkills();
+
     const completion = await openai.chat.completions.create({
+      model: "gpt-4",
       messages: [
         {
           role: "system",
           content: `You are a job description expert. Generate skills for a "${title}" position.
-          For languages, use CEFR levels (A1, A2, B1, B2, C1, C2).
-          A1: Basic user
-          A2: Elementary user
-          B1: Intermediate user
-          B2: Upper intermediate user
-          C1: Advanced user
-          C2: Mastery user`
+          
+IMPORTANT: All responses MUST be in English only.
+
+For languages, use CEFR levels (A1, A2, B1, B2, C1, C2):
+- A1: Basic user
+- A2: Elementary user  
+- B1: Intermediate user
+- B2: Upper intermediate user
+- C1: Advanced user
+- C2: Mastery user
+
+Available soft skills (choose 5-8 most relevant):
+${predefinedOptions.skills.soft.map(skill => `- ${skill.skill}`).join('\n')}
+
+Available professional skills (choose 8-12 most relevant):
+${predefinedOptions.skills.professional.map(skill => `- ${skill.skill}`).join('\n')}
+
+Available technical skills (choose 6-10 most relevant):
+${predefinedOptions.skills.technical.map(skill => `- ${skill.skill}`).join('\n')}
+
+Available languages:
+${predefinedOptions.skills.languages.map(lang => `- ${lang.language}`).join('\n')}
+
+Return ONLY a valid JSON object with the following structure:
+{
+  "languages": [
+    {
+      "language": "string (from available languages)",
+      "proficiency": "string (A1, A2, B1, B2, C1, or C2)",
+      "iso639_1": "string (2-letter language code)"
+    }
+  ],
+  "soft": [
+    "string (from available soft skills list)"
+  ],
+  "professional": [
+    "string (from available professional skills list)"
+  ],
+  "technical": [
+    "string (from available technical skills list)"
+  ]
+}
+
+CRITICAL RULES:
+1. Only select skills from the provided lists - do not create new skills
+2. Choose skills that are most relevant to the specific job title and description
+3. For customer service roles, prioritize communication and empathy skills
+4. For technical support roles, prioritize troubleshooting and technical skills
+5. For sales roles, prioritize persuasion and relationship-building skills
+6. Select appropriate number of skills: 5-8 soft, 8-12 professional, 6-10 technical
+7. For languages, consider the target market and customer base
+8. All skill names must match exactly from the provided lists`
         },
         {
           role: "user",
-          content: `Generate skills for this position: ${description}`
+          content: `Generate skills for this position:
+Title: ${title}
+Description: ${description}
+
+Select the most relevant skills from the provided lists based on the job requirements and responsibilities.`
         }
       ],
-      model: "gpt-3.5-turbo",
       temperature: 0.7,
       max_tokens: 1000
     });
@@ -1596,12 +1626,59 @@ export async function generateSkills(title: string, description: string): Promis
       if (!validLanguages.includes(lang.language)) {
         throw new Error(`Invalid human language: ${lang.language}`);
       }
-      if (!validLevels.includes(lang.level)) {
-        throw new Error(`Invalid language level: ${lang.level}`);
+      if (!validLevels.includes(lang.proficiency)) {
+        throw new Error(`Invalid language level: ${lang.proficiency}`);
       }
     });
 
-    return result;
+    // Validate soft skills
+    const validSoftSkills = predefinedOptions.skills.soft.map(skill => skill.skill);
+    result.soft.forEach((skill: string) => {
+      if (!validSoftSkills.includes(skill)) {
+        throw new Error(`Invalid soft skill: ${skill}`);
+      }
+    });
+
+    // Validate professional skills
+    const validProfessionalSkills = predefinedOptions.skills.professional.map(skill => skill.skill);
+    result.professional.forEach((skill: string) => {
+      if (!validProfessionalSkills.includes(skill)) {
+        throw new Error(`Invalid professional skill: ${skill}`);
+      }
+    });
+
+    // Validate technical skills
+    const validTechnicalSkills = predefinedOptions.skills.technical.map(skill => skill.skill);
+    result.technical.forEach((skill: string) => {
+      if (!validTechnicalSkills.includes(skill)) {
+        throw new Error(`Invalid technical skill: ${skill}`);
+      }
+    });
+
+    // Convert skill names to ObjectIds
+    const softObjectIds = await convertSkillNamesToObjectIds(result.soft, 'soft');
+    const professionalObjectIds = await convertSkillNamesToObjectIds(result.professional, 'professional');
+    const technicalObjectIds = await convertSkillNamesToObjectIds(result.technical, 'technical');
+
+    // Return with ObjectIds and details
+    return {
+      languages: result.languages,
+      soft: softObjectIds.map((objId, index) => ({
+        skill: objId,
+        level: 3, // Default to Advanced level
+        details: `Generated for ${title} position`
+      })),
+      professional: professionalObjectIds.map((objId, index) => ({
+        skill: objId,
+        level: 3, // Default to Advanced level
+        details: `Generated for ${title} position`
+      })),
+      technical: technicalObjectIds.map((objId, index) => ({
+        skill: objId,
+        level: 3, // Default to Advanced level
+        details: `Generated for ${title} position`
+      }))
+    };
   } catch (error) {
     console.error('Error generating skills:', error);
     throw error;
@@ -1620,202 +1697,133 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
   try {
     const result = await retryWithBackoff(async () => {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant that helps create job listings. Analyze the user's description and generate a detailed gig suggestion.
+            content: `You are an AI assistant that creates job listings. Generate a JSON response with this structure:
 
-IMPORTANT: All responses MUST be in English only. Return ONLY a valid JSON object with the structure defined below.
-
-CRITICAL COMMISSION STRUCTURE RULES:
-1. The commission base type MUST be EXACTLY one of these TWO options only: "Fixed Salary" or "Base + Commission"
-2. The bonus type MUST ALWAYS be "Performance Bonus" (no other options allowed)
-3. The transaction commission type MUST ALWAYS be "Fixed Amount" (no other options allowed)
-4. The minimumVolume.unit MUST be EXACTLY one of these TWO options only: "Calls" or "Sales"
-5. The minimumVolume.period MUST be EXACTLY one of these THREE options only: "Daily", "Weekly", or "Monthly"
-6. ALL numerical values MUST be realistic and appropriate for the job type:
-   - For sales positions: baseAmount 0-5000, bonusAmount 50-500, transactionCommission.amount 10-100
-   - For service positions: baseAmount 2000-8000, bonusAmount 100-1000, transactionCommission.amount 5-50
-   - minimumVolume.amount should be realistic targets (e.g., 10-100 for daily, 50-500 for weekly, 200-2000 for monthly)
-   - For "Base + Commission" positions: baseAmount should be 0, bonusAmount should be 100-300
-   - For "Fixed Salary" positions: baseAmount should be 2000-8000, bonusAmount should be 50-200
-7. NEVER return empty strings or null values for numerical fields
-8. ALWAYS provide specific, realistic numbers based on the job description
-9. For sales roles, bonusAmount should typically be 100-300 for performance bonuses
-10. ALL numerical values MUST be returned as NUMBERS, not strings (e.g., 25 not "25")
-
-CRITICAL: When analyzing the job description, pay special attention to:
-- Specific monetary amounts mentioned (e.g., "25 € per appointment" → minimumVolume.amount: 25)
-- Commission amounts mentioned (e.g., "700 € per contract" → transactionCommission.amount: 700)
-- Performance targets mentioned (e.g., "daily targets" → period: "Daily")
-- Sales metrics mentioned (e.g., "per sale" → unit: "Sales")
-
-CRITICAL TEAM STRUCTURE RULES:
-1. The team structure MUST use ONLY the following available role IDs:
-${predefinedOptions.team.roles.map(role => `- ${role.id} (${role.name}): ${role.description}`).join('\n')}
-
-2. The territories MUST be from the following available options:
-${predefinedOptions.team.territories.join(', ')}
-
-3. Each role in the team structure MUST have:
-   - roleId: EXACTLY one of the available role IDs listed above
-   - count: number of positions for this role
-   - seniority: with level from predefinedOptions.basic.seniorityLevels and yearsExperience as number
-
-4. For sales positions, typically use: "agent", "senior_agent", "team_lead", or "representative"
-5. For management positions, typically use: "manager", "supervisor", or "team_lead"
-6. For support positions, typically use: "assistant", "coordinator", or "specialist"
-
-COMMISSION MAPPING RULES:
-- minimumVolume.amount = Amount per action/appointment (e.g., "25 € per appointment" → 25)
-- transactionCommission.amount = Amount per successful sale/contract (e.g., "900 € per contract" → 900)
-- bonusAmount = Performance bonus for exceeding targets (typically 100-300 for sales roles)
-
-${JSON.stringify(predefinedOptions, null, 2)}
-
-Return a JSON object with the following structure:
 {
   "title": "string",
-  "description": "string (detailed job description)",
-  "category": "string (from predefinedOptions.basic.categories)",
-  "highlights": "string[]",
-  "jobTitles": "string[]",
-  "deliverables": "string[]",
-  "sectors": "string[] (MUST be from predefinedOptions.sectors)",
-  "destinationZones": "string[] (from predefinedOptions.basic.destinationZones)",
-  "timeframes": "string[]",
+  "description": "string (5-8 lines)",
+  "category": "string (Sales, Customer Service, Technical Support, or Lead Generation)",
+  "highlights": ["string"],
+  "jobTitles": ["string"],
+  "deliverables": ["string"],
+  "sectors": ["string (MUST be from the predefined list)"],
+  "destinationZones": ["string"],
   "schedule": {
-    "schedules": [
-      {
-        "days": "string[] (e.g., [\"Monday\", \"Tuesday\"])",
-        "hours": {
-          "start": "string (HH:mm)",
-          "end": "string (HH:mm)"
-        }
-      }
-    ],
-    "timeZones": "string[] (from predefinedOptions.basic.timeZones)",
-    "flexibility": "string[] (from predefinedOptions.schedule.flexibility)",
-    "minimumHours": {
-      "daily": "number",
-      "weekly": "number",
-      "monthly": "number"
-    }
+    "schedules": [{"days": ["Monday", "Tuesday"], "hours": {"start": "09:00", "end": "17:00"}}],
+    "timeZones": ["string"],
+    "flexibility": ["string"],
+    "minimumHours": {"daily": 8, "weekly": 40, "monthly": 160}
   },
-  "requirements": {
-    "essential": "string[]",
-    "preferred": "string[]"
-  },
-  "benefits": [
-    {
-      "type": "string",
-      "description": "string"
-    }
-  ],
+  "requirements": {"essential": ["string"], "preferred": ["string"]},
   "skills": {
-    "languages": [
-      {
-        "language": "string",
-        "proficiency": "string (e.g., 'B2')",
-        "iso639_1": "string (e.g., 'en')"
-      }
-    ],
-    "soft": [
-      {
-        "skill": "string",
-        "level": "number"
-      }
-    ],
-    "professional": [
-      {
-        "skill": "string",
-        "level": "number"
-      }
-    ],
-    "technical": [
-      {
-        "skill": "string",
-        "level": "number"
-      }
-    ],
-    "certifications": [
-      {
-        "name": "string",
-        "required": "boolean"
-      }
-    ]
+    "languages": [{"language": "string", "proficiency": "B1", "iso639_1": "en"}],
+    "soft": [{"skill": "string", "level": 3}],
+    "professional": [{"skill": "string", "level": 3}],
+    "technical": [{"skill": "string", "level": 3}]
   },
-  "seniority": {
-    "level": "string (from predefinedOptions.basic.seniorityLevels)",
-    "yearsExperience": "number"
-  },
+  "seniority": {"level": "Mid-Level", "yearsExperience": 3},
   "team": {
-    "size": "number",
-    "structure": [
-      {
-        "roleId": "string (MUST be EXACTLY one of the available team role IDs)",
-        "count": "number",
-        "seniority": {
-          "level": "string (from predefinedOptions.basic.seniorityLevels)",
-          "yearsExperience": "number"
-        }
-      }
-    ],
-    "territories": "string[] (MUST be from predefinedOptions.team.territories)",
-    "reporting": {
-      "to": "string",
-      "frequency": "string"
-    },
-    "collaboration": "string[]"
+    "size": 1,
+    "structure": [{"roleId": "agent", "count": 1, "seniority": {"level": "Mid-Level", "yearsExperience": 3}}],
+    "territories": ["France"]
   },
   "commission": {
-    "options": [
-      {
-        "base": "string (MUST be EXACTLY one of: \"Fixed Salary\", \"Base + Commission\")",
-        "baseAmount": "number (MUST be a number, not a string)",
-        "bonus": "string (MUST ALWAYS be \"Performance Bonus\")",
-        "bonusAmount": "number (MUST be a number, not a string)",
-        "structure": "string",
-        "currency": "string",
-        "minimumVolume": {
-          "amount": "number (MUST be a number, not a string)",
-          "period": "string (MUST be EXACTLY one of: \"Daily\", \"Weekly\", \"Monthly\")",
-          "unit": "string (MUST be EXACTLY one of: \"Calls\", \"Sales\")"
-        },
-        "transactionCommission": {
-          "type": "string (MUST ALWAYS be \"Fixed Amount\")",
-          "amount": "number (MUST be a number, not a string)"
-        }
-      }
-    ]
+    "options": [{
+      "base": "Base + Commission",
+      "baseAmount": 0,
+      "bonus": "Performance Bonus",
+      "bonusAmount": 150,
+      "currency": "EUR",
+      "minimumVolume": {"amount": 25, "period": "Monthly", "unit": "Calls"},
+      "transactionCommission": {"type": "Fixed Amount", "amount": 50}
+    }]
   }
 }
 
-CRITICAL: All numerical values in the commission structure MUST be returned as numbers, not strings. For example:
-- "baseAmount": 0 (not "0")
-- "bonusAmount": 150 (not "150")
-- "minimumVolume.amount": 25 (not "25")
-- "transactionCommission.amount": 50 (not "50")
+Rules:
+- Use realistic numbers for commission
+- Choose relevant skills from common job requirements
+- Keep description concise but professional
+- Use standard time zones and working hours
+- IMPORTANT: For destinationZones, use specific country names (e.g., "France", "United States", "Germany") NOT "Global" or continents
+- Default destination zone should be "France" if no specific country is mentioned
+- CRITICAL: For sectors, you MUST ONLY use these exact sectors (no variations, no new sectors):
+  * Inbound Sales
+  * Outbound Sales
+  * Customer Service
+  * Technical Support
+  * Account Management
+  * Lead Generation
+  * Market Research
+  * Appointment Setting
+  * Order Processing
+  * Customer Retention
+  * Billing Support
+  * Product Support
+  * Help Desk
+  * Chat Support
+  * Email Support
+  * Social Media Support
+  * Survey Calls
+  * Welcome Calls
+  * Follow-up Calls
+  * Complaint Resolution
+  * Warranty Support
+  * Collections
+  * Dispatch Services
+  * Emergency Support
+  * Multilingual Support
+- CRITICAL: For schedule flexibility, you MUST ONLY use these exact options (no variations, no new options):
+  * Remote Work Available
+  * Flexible Hours
+  * Weekend Rotation
+  * Night Shift Available
+  * Split Shifts
+  * Part-Time Options
+  * Compressed Work Week
+  * Shift Swapping Allowed
+- CRITICAL: For skills, you MUST ONLY use skills from the predefined lists. Choose relevant skills based on the job description:
 
-IMPORTANT: When you see specific amounts in the job description like "25 € per appointment" or "700 € per contract", use those exact numbers in the commission structure.`
+  * Professional Skills (CRM & Ticketing): CRM System Proficiency, Ticket Management, Understanding of ticket priority levels
+  * Professional Skills (Call Center Operations): Call Dispositioning, Call Recording & QA Systems, Phone System Usage
+  * Professional Skills (Communication Channels): Email Support, Live Chat/Messenger, Social Media Messaging, Voice Support
+  * Professional Skills (Compliance & QA): Compliance Script Following, Data Protection Awareness, QA Framework Adherence
+  * Professional Skills (Documentation): Fast and Accurate Typing, Keyboard Shortcuts & Productivity, Knowledge Base Usage, Real-time Data Entry
+  * Professional Skills (Language & Culture): Formal/Informal Register Usage, Multilingual Abilities, Regional Expression Familiarity
+  * Professional Skills (Performance Metrics): Performance Metrics Understanding, Self-Performance Monitoring
+  * Professional Skills (Product Knowledge): Familiarity with standard operating procedures (SOPs), In-depth understanding of products/services, Knowledge of company policies
+  * Professional Skills (Reporting & Analysis): Basic Troubleshooting, Internal Documentation, Issue Pattern Recognition, Remote Support Tools, Reporting Tools Usage
+
+  * Technical Skills (CRM & Ticketing Systems): CRM Systems Daily Use, Ticket Operations, Ticketing Platforms
+  * Technical Skills (Collaboration Tools): Communication Tools Usage
+  * Technical Skills (Contact Center Software): Call Management Operations, Cloud-based Contact Center Software, VoIP Systems Understanding
+  * Technical Skills (Email Management): Email Automation, Email Template Adherence, Shared Inbox Usage
+  * Technical Skills (Knowledge Management): Information Retrieval, Knowledge Base Navigation, Search Function Usage
+  * Technical Skills (Live Chat Platforms): Chat Shortcuts & Responses, Chatbot Integration Understanding, Multi-Chat Management
+  * Technical Skills (Operating Systems & Office): Cloud Platform Usage, Office Suite Usage, Operating Systems Proficiency
+  * Technical Skills (Quality Assurance): Call Monitoring Systems
+  * Technical Skills (Technical Support): Bug Logging, Remote Desktop Tools, User Issue Diagnosis
+  * Technical Skills (Typing & Productivity): Fast Typing Skills, Keyboard Shortcuts
+
+  * Soft Skills (Adaptability): Adaptability, Cultural Sensitivity, Willingness to Learn
+  * Soft Skills (Collaboration): Conflict Resolution, Team Collaboration
+  * Soft Skills (Communication): Active Listening, Clear Articulation, Proper Tone & Language, Spelling & Grammar Accuracy
+  * Soft Skills (Customer Service): Ownership, Service Orientation
+  * Soft Skills (Emotional Intelligence): Empathy, Patience
+  * Soft Skills (Problem Solving): Analytical Thinking, Creativity, Decision-Making
+  * Soft Skills (Self-Management): Efficiency, Multitasking, Receptiveness to Feedback, Resilience, Self-Regulation`
           },
           {
             role: "user",
-            content: `Description: ${description}
-
-IMPORTANT: When generating the commission structure, ensure:
-1. Base type is either "Fixed Salary" or "Base + Commission"
-2. Bonus type is always "Performance Bonus"
-3. Transaction commission type is always "Fixed Amount"
-4. Unit is either "Calls" or "Sales"
-5. Period is one of "Daily", "Weekly", or "Monthly"
-6. ALL numerical values must be numbers, not strings
-7. Pay special attention to specific monetary amounts mentioned in the description and use them in the commission structure`
+            content: `Generate job listing for: ${description}`
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000
+        max_tokens: 1500
       });
 
       const content = completion.choices[0].message.content;
@@ -1826,99 +1834,162 @@ IMPORTANT: When generating the commission structure, ensure:
       try {
         const parsedResult = JSON.parse(content);
         
-        // Validate and fix commission structure
-        if (parsedResult.commission?.options) {
-          parsedResult.commission.options.forEach((option: any) => {
-            // Ensure all numerical values are numbers
-            if (typeof option.baseAmount === 'string') {
-              option.baseAmount = parseFloat(option.baseAmount) || 0;
+        // Validate sectors to ensure only predefined ones are used
+        if (parsedResult.sectors && parsedResult.sectors.length > 0) {
+          const validSectors = predefinedOptions.sectors;
+          const filteredSectors = parsedResult.sectors.filter((sector: string) => {
+            const isValid = validSectors.includes(sector);
+            if (!isValid) {
+              console.warn(`Invalid sector "${sector}" - not in allowed list`);
             }
-            if (typeof option.bonusAmount === 'string') {
-              option.bonusAmount = parseFloat(option.bonusAmount) || 0;
-            }
-            if (option.minimumVolume && typeof option.minimumVolume.amount === 'string') {
-              option.minimumVolume.amount = parseFloat(option.minimumVolume.amount) || 0;
-            }
-            if (option.transactionCommission && typeof option.transactionCommission.amount === 'string') {
-              option.transactionCommission.amount = parseFloat(option.transactionCommission.amount) || 0;
-            }
-            
-            // Ensure bonus type is always "Performance Bonus"
-            option.bonus = "Performance Bonus";
-            
-            // Ensure transaction commission type is always "Fixed Amount"
-            if (option.transactionCommission) {
-              option.transactionCommission.type = "Fixed Amount";
-            }
-            
-            // Validate unit and period
-            if (option.minimumVolume) {
-              const validUnits = ["Calls", "Sales"];
-              if (!validUnits.includes(option.minimumVolume.unit)) {
-                option.minimumVolume.unit = "Calls";
-              }
-              
-              const validPeriods = ["Daily", "Weekly", "Monthly"];
-              if (!validPeriods.includes(option.minimumVolume.period)) {
-                option.minimumVolume.period = "Monthly";
-              }
-            }
-            
-            // Fix common commission value inversions
-            // If minimumVolume.amount is very low (1-5) and transactionCommission.amount is also low (20-50),
-            // it might be an inversion. Check if the description contains specific amounts.
-            if (option.minimumVolume && option.transactionCommission) {
-              const minVol = option.minimumVolume.amount;
-              const transComm = option.transactionCommission.amount;
-              
-              // If both values are suspiciously low, they might be inverted
-              if (minVol <= 5 && transComm <= 50) {
-                // Look for specific amounts in the description that might indicate the correct values
-                const description = parsedResult.description || '';
-                
-                // Check for appointment amounts (should be minimumVolume.amount)
-                const appointmentMatch = description.match(/(\d+)\s*[€€]\s*per\s*(appointment|rendez-vous|meeting)/i);
-                if (appointmentMatch) {
-                  option.minimumVolume.amount = parseInt(appointmentMatch[1]);
-                }
-                
-                // Check for contract amounts (should be transactionCommission.amount)
-                const contractMatch = description.match(/(\d+)\s*[€€]\s*per\s*(contract|contrat|sale|vente)/i);
-                if (contractMatch) {
-                  option.transactionCommission.amount = parseInt(contractMatch[1]);
-                }
-              }
-              
-              // Additional check: if transactionCommission.amount is 0 but there are sale amounts mentioned
-              if (transComm === 0) {
-                const description = parsedResult.description || '';
-                
-                // Look for "X € per sale" patterns
-                const saleMatch = description.match(/(\d+)\s*[€€]\s*per\s*sale/i);
-                if (saleMatch) {
-                  option.transactionCommission.amount = parseInt(saleMatch[1]);
-                }
-                
-                // Look for "up to X €" patterns (common in sales descriptions)
-                const upToMatch = description.match(/up\s*to\s*(\d+)\s*[€€]/i);
-                if (upToMatch) {
-                  option.transactionCommission.amount = parseInt(upToMatch[1]);
-                }
-                
-                // Look for "X € / vente" patterns (French)
-                const venteMatch = description.match(/(\d+)\s*[€€]\s*\/\s*vente/i);
-                if (venteMatch) {
-                  option.transactionCommission.amount = parseInt(venteMatch[1]);
-                }
-                
-                // Look for "X € par vente" patterns (French)
-                const parVenteMatch = description.match(/(\d+)\s*[€€]\s*par\s*vente/i);
-                if (parVenteMatch) {
-                  option.transactionCommission.amount = parseInt(parVenteMatch[1]);
-                }
-              }
-            }
+            return isValid;
           });
+          parsedResult.sectors = filteredSectors;
+        }
+
+        // Validate flexibility options to ensure only predefined ones are used
+        if (parsedResult.schedule?.flexibility && parsedResult.schedule.flexibility.length > 0) {
+          const validFlexibilityOptions = [
+            "Remote Work Available",
+            "Flexible Hours", 
+            "Weekend Rotation",
+            "Night Shift Available",
+            "Split Shifts",
+            "Part-Time Options",
+            "Compressed Work Week",
+            "Shift Swapping Allowed"
+          ];
+          const filteredFlexibility = parsedResult.schedule.flexibility.filter((option: string) => {
+            const isValid = validFlexibilityOptions.includes(option);
+            if (!isValid) {
+              console.warn(`Invalid flexibility option "${option}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          parsedResult.schedule.flexibility = filteredFlexibility;
+        }
+
+        // Validate skills to ensure only predefined ones are used
+        if (parsedResult.skills) {
+          console.log('🎯 AI Generated Skills (before validation):', {
+            professional: parsedResult.skills.professional,
+            technical: parsedResult.skills.technical,
+            soft: parsedResult.skills.soft
+          });
+          // Define valid skills from API
+          const validProfessionalSkills = [
+            "CRM System Proficiency", "Ticket Management", "Understanding of ticket priority levels",
+            "Call Dispositioning", "Call Recording & QA Systems", "Phone System Usage",
+            "Email Support", "Live Chat/Messenger", "Social Media Messaging", "Voice Support",
+            "Compliance Script Following", "Data Protection Awareness", "QA Framework Adherence",
+            "Fast and Accurate Typing", "Keyboard Shortcuts & Productivity", "Knowledge Base Usage", "Real-time Data Entry",
+            "Formal/Informal Register Usage", "Multilingual Abilities", "Regional Expression Familiarity",
+            "Performance Metrics Understanding", "Self-Performance Monitoring",
+            "Familiarity with standard operating procedures (SOPs)", "In-depth understanding of products/services", "Knowledge of company policies",
+            "Basic Troubleshooting", "Internal Documentation", "Issue Pattern Recognition", "Remote Support Tools", "Reporting Tools Usage"
+          ];
+
+          const validTechnicalSkills = [
+            "CRM Systems Daily Use", "Ticket Operations", "Ticketing Platforms",
+            "Communication Tools Usage", "Call Management Operations", "Cloud-based Contact Center Software", "VoIP Systems Understanding",
+            "Email Automation", "Email Template Adherence", "Shared Inbox Usage",
+            "Information Retrieval", "Knowledge Base Navigation", "Search Function Usage",
+            "Chat Shortcuts & Responses", "Chatbot Integration Understanding", "Multi-Chat Management",
+            "Cloud Platform Usage", "Office Suite Usage", "Operating Systems Proficiency",
+            "Call Monitoring Systems", "Bug Logging", "Remote Desktop Tools", "User Issue Diagnosis",
+            "Fast Typing Skills", "Keyboard Shortcuts"
+          ];
+
+          const validSoftSkills = [
+            "Adaptability", "Cultural Sensitivity", "Willingness to Learn",
+            "Conflict Resolution", "Team Collaboration",
+            "Active Listening", "Clear Articulation", "Proper Tone & Language", "Spelling & Grammar Accuracy",
+            "Ownership", "Service Orientation",
+            "Empathy", "Patience",
+            "Analytical Thinking", "Creativity", "Decision-Making",
+            "Efficiency", "Multitasking", "Receptiveness to Feedback", "Resilience", "Self-Regulation"
+          ];
+
+          // Validate professional skills
+          if (parsedResult.skills.professional && parsedResult.skills.professional.length > 0) {
+            const filteredProfessional = parsedResult.skills.professional.filter((skill: any) => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              const isValid = validProfessionalSkills.includes(skillName);
+              if (!isValid) {
+                console.warn(`Invalid professional skill "${skillName}" - not in allowed list`);
+              }
+              return isValid;
+            });
+            parsedResult.skills.professional = filteredProfessional;
+          }
+
+          // Validate technical skills
+          if (parsedResult.skills.technical && parsedResult.skills.technical.length > 0) {
+            const filteredTechnical = parsedResult.skills.technical.filter((skill: any) => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              const isValid = validTechnicalSkills.includes(skillName);
+              if (!isValid) {
+                console.warn(`Invalid technical skill "${skillName}" - not in allowed list`);
+              }
+              return isValid;
+            });
+            parsedResult.skills.technical = filteredTechnical;
+          }
+
+          // Validate soft skills
+          if (parsedResult.skills.soft && parsedResult.skills.soft.length > 0) {
+            const filteredSoft = parsedResult.skills.soft.filter((skill: any) => {
+              const skillName = typeof skill === 'string' ? skill : skill.skill;
+              const isValid = validSoftSkills.includes(skillName);
+              if (!isValid) {
+                console.warn(`Invalid soft skill "${skillName}" - not in allowed list`);
+              }
+              return isValid;
+            });
+            parsedResult.skills.soft = filteredSoft;
+          }
+          
+          console.log('✅ AI Generated Skills (after validation):', {
+            professional: parsedResult.skills.professional,
+            technical: parsedResult.skills.technical,
+            soft: parsedResult.skills.soft
+          });
+        }
+
+        // Basic validation and defaults
+        if (!parsedResult.commission?.options) {
+          parsedResult.commission = {
+            options: [{
+              base: "Base + Commission",
+              baseAmount: 0,
+              bonus: "Performance Bonus",
+              bonusAmount: 150,
+              currency: "EUR",
+              minimumVolume: { amount: 25, period: "Monthly", unit: "Calls" },
+              transactionCommission: { type: "Fixed Amount", amount: 50 }
+            }]
+          };
+        }
+
+        if (!parsedResult.team) {
+          parsedResult.team = {
+            size: 1,
+            structure: [{
+              roleId: "agent",
+              count: 1,
+              seniority: { level: "Mid-Level", yearsExperience: 3 }
+            }],
+            territories: ["France"]
+          };
+        }
+
+        if (!parsedResult.skills) {
+          parsedResult.skills = {
+            languages: [{ language: "English", proficiency: "B1", iso639_1: "en" }],
+            soft: [{ skill: "Communication", level: 3 }],
+            professional: [{ skill: "Customer Service", level: 3 }],
+            technical: [{ skill: "CRM Software", level: 2 }]
+          };
         }
         
         return parsedResult;
@@ -1934,5 +2005,80 @@ IMPORTANT: When generating the commission structure, ensure:
       throw new Error(`AI suggestion failed: ${error.message}`);
     }
     throw new Error('AI suggestion failed');
+  }
+}
+
+export async function generateLogo(title: string, description: string): Promise<string> {
+  if (!isValidApiKey(OPENAI_API_KEY)) {
+    throw new Error('Please configure your OpenAI API key in the .env file');
+  }
+
+  if (!title) {
+    throw new Error('Title is required');
+  }
+
+  try {
+    // Use custom description if provided, otherwise use default prompt
+    const customPrompt = description.trim() 
+      ? `Create a modern, professional logo for a job position titled "${title}". ${description}. The logo should be:
+      - Clean and minimalist design
+      - Professional color scheme
+      - High quality, vector-style design
+      - No text, just the logo symbol
+      - White or transparent background
+      - Modern and contemporary style`
+      : `Create a modern, professional logo for a job position titled "${title}". The logo should be:
+      - Clean and minimalist design
+      - Professional color scheme (blues, grays, or corporate colors)
+      - Include subtle job-related elements (briefcase, people, or abstract business symbols)
+      - Suitable for a job listing platform
+      - High quality, vector-style design
+      - No text, just the logo symbol
+      - White or transparent background
+      - Modern and contemporary style`;
+
+    const completion = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: customPrompt,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+      style: "natural"
+    });
+
+    if (!completion.data || completion.data.length === 0) {
+      throw new Error('Failed to generate logo');
+    }
+
+    const dallEUrl = completion.data[0].url || '';
+    
+    // Use backend proxy to upload to Cloudinary (avoids CORS issues)
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003/api';
+      const response = await fetch(`${API_URL}/gigs/proxy/upload-dalle-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dallEUrl,
+          title
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Backend error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.data.url;
+    } catch (uploadError) {
+      console.warn('Failed to upload via backend proxy, returning original URL:', uploadError);
+      return dallEUrl;
+    }
+  } catch (error) {
+    console.error('Error generating logo:', error);
+    throw error;
   }
 }

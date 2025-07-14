@@ -1,5 +1,4 @@
 import React, { useRef, useState } from "react";
-import { Cloudinary } from "cloudinary-core";
 import { InfoText } from "./InfoText";
 import {
   Trash2,
@@ -65,6 +64,17 @@ export function DocumentationSection({
     process: data?.process || [],
     training: data?.training || [],
   };
+
+  // Log Documentation Section data
+  React.useEffect(() => {
+    console.log('=== DOCUMENTATION SECTION DATA ===');
+    console.log('Documentation Data:', {
+      product: data.product,
+      process: data.process,
+      training: data.training
+    });
+    console.log('========================');
+  }, [data]);
 
   const handleFileUpload = async (type: keyof typeof safeData, file: File) => {
     setUploadError(null);
@@ -352,83 +362,88 @@ export function DocumentationSection({
   };
 
   return (
-    <div className="space-y-8">
-      {uploadError && (
-        <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">
-          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-          <div className="space-y-1">
-            <p className="font-medium text-red-800">Upload Error</p>
-            <p className="text-sm text-red-600 whitespace-pre-line">
-              {uploadError}
-            </p>
+    <div className="w-full bg-white py-6">
+      
+      <div className="space-y-8">
+        {uploadError && (
+          <div className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border border-red-100 shadow-sm">
+            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="space-y-1">
+              <p className="font-medium text-red-800">Upload Error</p>
+              <p className="text-sm text-red-600 whitespace-pre-line">
+                {uploadError}
+              </p>
+            </div>
           </div>
+        )}
+
+        <InfoText className="bg-blue-50 border-blue-100 text-blue-800">
+          Upload and manage documentation for products, processes, and training
+          materials. Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX.
+        </InfoText>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          onChange={handleFileInputChange}
+        />
+
+        <div className="grid grid-cols-1 gap-6">
+          {renderDocumentList("product", "Product Documentation")}
+          {renderDocumentList("process", "Process Guides")}
+          {renderDocumentList("training", "Training Materials")}
         </div>
-      )}
 
-      <InfoText className="bg-blue-50 border-blue-100 text-blue-800">
-        Upload and manage documentation for products, processes, and training
-        materials. Supported formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX.
-      </InfoText>
-
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-        onChange={handleFileInputChange}
-      />
-
-      <div className="grid grid-cols-1 gap-6">
-        {renderDocumentList("product", "Product Documentation")}
-        {renderDocumentList("process", "Process Guides")}
-        {renderDocumentList("training", "Training Materials")}
-      </div>
-
-      {/* Summary */}
-      {Object.values(safeData).some((docs) => docs.length > 0) && (
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">
-            Documentation Summary
-          </h4>
-          <div className="space-y-2">
-            {Object.entries(safeData).map(
-              ([type, docs]) =>
-                docs.length > 0 && (
-                  <div key={type} className="flex items-center gap-2">
-                    {getDocTypeIcon(type as keyof typeof safeData)}
-                    <span className="text-sm text-gray-600">
-                      {docs.length} {type} document{docs.length > 1 ? "s" : ""}{" "}
-                      uploaded
-                    </span>
-                    <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
-                  </div>
-                )
-            )}
+        {/* Summary */}
+        {Object.values(safeData).some((docs) => docs.length > 0) && (
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">
+              Documentation Summary
+            </h4>
+            <div className="space-y-2">
+              {Object.entries(safeData).map(
+                ([type, docs]) =>
+                  docs.length > 0 && (
+                    <div key={type} className="flex items-center gap-2">
+                      {getDocTypeIcon(type as keyof typeof safeData)}
+                      <span className="text-sm text-gray-600">
+                        {docs.length} {type} document{docs.length > 1 ? "s" : ""}{" "}
+                        uploaded
+                      </span>
+                      <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
+                    </div>
+                  )
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-        <button
-          onClick={onPrevious}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Previous
-        </button>
-        <button
-          onClick={() => {
-            if (onReview) {
-              onReview();
-            } else {
-              console.error('onReview prop is not defined');
-            }
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Review Gig Details
-          <ArrowRight className="w-5 h-5" />
-        </button>
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onPrevious}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Previous
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              if (onReview) {
+                onReview();
+              } else {
+                console.error('onReview prop is not defined');
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Review Gig Details
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

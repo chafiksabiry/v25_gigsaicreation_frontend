@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React from "react";
+import { useEffect } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import { 
@@ -23,12 +24,26 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
       : '$';
   };
 
+  // Log Commission Section data
+  useEffect(() => {
+    console.log('=== COMMISSION SECTION DATA ===');
+    console.log('Commission Data:', {
+      commission: data.commission,
+      seniority: data.seniority
+    });
+    console.log('Commission Errors:', errors);
+    console.log('Commission Warnings:', warnings);
+    console.log('========================');
+  }, [data.commission, data.seniority, errors, warnings]);
+
   const handleBaseChange = (field: string, value: string | number) => {
     onChange({
       ...data,
       commission: {
         ...data.commission,
-        [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+        [field]: field === 'baseAmount'
+          ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+          : value, // pour les selects, garder la string
       },
     });
   };
@@ -40,7 +55,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         ...data.commission,
         minimumVolume: {
           ...data.commission?.minimumVolume,
-          [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+          [field]: field === 'amount'
+            ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+            : value, // pour unit et period, garder la string
         },
       },
     });
@@ -53,7 +70,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         ...data.commission,
         transactionCommission: {
           ...data.commission?.transactionCommission,
-          [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+          [field]: field === 'amount'
+            ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+            : value, // pour type, garder la string
         },
       },
     });
@@ -64,29 +83,18 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
       ...data,
       commission: {
         ...data.commission,
-        [field]: typeof value === 'string' ? parseFloat(value) || 0 : value,
+        [field]: field === 'bonusAmount'
+          ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
+          : value, // pour bonus, garder la string
       },
     });
   };
 
-  // Log commission data
-  console.log('Commission Data:', {
-    base: data?.commission?.base,
-    baseAmount: data?.commission?.baseAmount,
-    bonus: data?.commission?.bonus,
-    bonusAmount: data?.commission?.bonusAmount,
-    structure: data?.commission?.structure,
-    currency: data?.commission?.currency,
-    minimumVolume: data?.commission?.minimumVolume,
-    transactionCommission: data?.commission?.transactionCommission,
-    kpis: data?.commission?.kpis
-  });
 
   // Add new base type if it doesn't exist
   useEffect(() => {
     if (data?.commission?.base && !predefinedOptions.commission.baseTypes.includes(data.commission.base)) {
       predefinedOptions.commission.baseTypes.push(data.commission.base);
-      console.log(`Added new base type: ${data.commission.base}`);
     }
   }, [data?.commission?.base]);
 
@@ -94,7 +102,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   useEffect(() => {
     if (data?.commission?.bonus && !predefinedOptions.commission.bonusTypes.includes(data.commission.bonus)) {
       predefinedOptions.commission.bonusTypes.push(data.commission.bonus);
-      console.log(`Added new bonus type: ${data.commission.bonus}`);
     }
   }, [data?.commission?.bonus]);
 
@@ -102,7 +109,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   useEffect(() => {
     if (data?.commission?.minimumVolume?.unit && !predefinedOptions.commission.minimumVolumeUnits.includes(data.commission.minimumVolume.unit)) {
       predefinedOptions.commission.minimumVolumeUnits.push(data.commission.minimumVolume.unit);
-      console.log(`Added new unit type: ${data.commission.minimumVolume.unit}`);
     }
   }, [data?.commission?.minimumVolume?.unit]);
 
@@ -113,7 +119,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         predefinedOptions.commission.minimumVolumePeriods = [];
       }
       predefinedOptions.commission.minimumVolumePeriods.push(data.commission.minimumVolume.period);
-      console.log(`Added new period type: ${data.commission.minimumVolume.period}`);
     }
   }, [data?.commission?.minimumVolume?.period]);
 
@@ -124,118 +129,81 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         predefinedOptions.commission.transactionCommissionTypes = [];
       }
       predefinedOptions.commission.transactionCommissionTypes.push(data.commission.transactionCommission.type);
-      console.log(`Added new transaction commission type: ${data.commission.transactionCommission.type}`);
     }
   }, [data?.commission?.transactionCommission?.type]);
 
   return (
-    <div className="space-y-8">
-      <InfoText>
-        Define the complete commission structure including base rate, transaction commission,
-        and performance bonus. All components will be displayed together.
-      </InfoText>
+    <div className="w-full bg-white p-0">
+      
+      <div className="space-y-8">
+        <InfoText>
+          Define the complete commission structure including base rate, transaction commission,
+          and performance bonus. All components will be displayed together.
+        </InfoText>
 
-      {/* Currency Selection */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-green-100">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <DollarSign className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">Currency</h3>
-            <p className="text-sm text-gray-600">Select the payment currency</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {predefinedOptions.commission.currencies.map((currency) => (
-            <button
-              key={currency.code}
-              onClick={() => onChange({ 
-                ...data, 
-                commission: { 
-                  ...data.commission,
-                  currency: currency.code
-                } 
-              })}
-              className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200 ${
-                data?.commission?.currency === currency.code
-                  ? 'bg-green-100 text-green-700 border-2 border-green-300 shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-green-200 hover:shadow-sm'
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                data?.commission?.currency === currency.code
-                  ? 'bg-green-600 scale-110'
-                  : 'border-2 border-gray-300'
-              }`}>
-                {data?.commission?.currency === currency.code && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                )}
-              </div>
-              <div>
-                <span className="font-medium">{currency.symbol}</span>
-                <span className="text-sm text-gray-500 ml-2">{currency.name}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Base Commission */}
-      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 shadow-lg border border-blue-100">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-blue-100 rounded-xl">
-            <Coins className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-blue-900">Base Commission</h3>
-            <p className="text-base text-blue-700">Set the fixed base rate and requirements</p>
-          </div>
-        </div>
-        
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Base Amount</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                  {getCurrencySymbol()}
-                </span>
-                <input
-                  type="number"
-                  className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  placeholder="0.00"
-                  value={data?.commission?.baseAmount || ''}
-                  onChange={e => handleBaseChange('baseAmount', e.target.value)}
-                />
-              </div>
+        {/* Currency Selection */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-green-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <DollarSign className="w-5 h-5 text-green-600" />
             </div>
-            
-            <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Base Type</label>
-              <select
-                className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                value={data?.commission?.base || ''}
-                onChange={e => handleBaseChange('base', e.target.value)}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Currency</h3>
+              <p className="text-sm text-gray-600">Select the payment currency</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {predefinedOptions.commission.currencies.map((currency) => (
+              <button
+                key={currency.code}
+                onClick={() => onChange({ 
+                  ...data, 
+                  commission: { 
+                    ...data.commission,
+                    currency: currency.code
+                  } 
+                })}
+                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200 ${
+                  data?.commission?.currency === currency.code
+                    ? 'bg-green-100 text-green-700 border-2 border-green-300 shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-green-200 hover:shadow-sm'
+                }`}
               >
-                <option value="">Select type</option>
-                {predefinedOptions.commission.baseTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                  data?.commission?.currency === currency.code
+                    ? 'bg-green-600 scale-110'
+                    : 'border-2 border-gray-300'
+                }`}>
+                  {data?.commission?.currency === currency.code && (
+                    <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                  )}
+                </div>
+                <div>
+                  <span className="font-medium">{currency.symbol}</span>
+                  <span className="text-sm text-gray-500 ml-2">{currency.name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Base Commission */}
+        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 shadow-lg border border-blue-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Coins className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-blue-900">Base Commission</h3>
+              <p className="text-base text-blue-700">Set the fixed base rate and requirements</p>
             </div>
           </div>
-
-          {/* Minimum Volume Requirements */}
-          <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-6">
-              <Target className="w-5 h-5 text-blue-600" />
-              <h4 className="font-semibold text-gray-900 text-lg">Minimum Requirements</h4>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Target Amount</label>
+          
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Base Amount</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
                     {getCurrencySymbol()}
@@ -244,200 +212,241 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                     type="number"
                     className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     placeholder="0.00"
-                    value={data?.commission?.minimumVolume?.amount || ''}
-                    onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
+                    value={data?.commission?.baseAmount || ''}
+                    onChange={e => handleBaseChange('baseAmount', e.target.value)}
                   />
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Unit</label>
+              <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Base Type</label>
                 <select
                   className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  value={data?.commission?.minimumVolume?.unit || ''}
-                  onChange={e => handleMinimumVolumeChange('unit', e.target.value)}
+                  value={data?.commission?.base || ''}
+                  onChange={e => handleBaseChange('base', e.target.value)}
                 >
-                  <option value="">Select unit</option>
-                  {predefinedOptions.commission.minimumVolumeUnits.map((unit) => (
-                    <option key={unit} value={unit}>{unit}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Period</label>
-                <select
-                  className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  value={data?.commission?.minimumVolume?.period || ''}
-                  onChange={e => handleMinimumVolumeChange('period', e.target.value)}
-                >
-                  <option value="">Select period</option>
-                  {predefinedOptions.commission.minimumVolumePeriods?.map((period) => (
-                    <option key={period} value={period}>{period}</option>
+                  <option value="">Select type</option>
+                  {predefinedOptions.commission.baseTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Transaction Commission */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8 shadow-lg border border-purple-100">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-purple-100 rounded-xl">
-            <Calculator className="w-6 h-6 text-purple-600" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-purple-900">Transaction Commission</h3>
-            <p className="text-base text-purple-700">Define per-transaction rewards</p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl p-6 border border-purple-200 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Commission Type</label>
-            <select
-              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-              value={data?.commission?.transactionCommission?.type || ''}
-              onChange={e => handleTransactionChange('type', e.target.value)}
-            >
-              <option value="">Select type</option>
-              {predefinedOptions.commission.transactionCommissionTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 border border-purple-200 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Amount/Percentage</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                {data?.commission?.transactionCommission?.type === 'Percentage' ? '%' : getCurrencySymbol()}
-              </span>
-              <input
-                type="number"
-                className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                placeholder="0.00"
-                value={data?.commission?.transactionCommission?.amount || ''}
-                onChange={e => handleTransactionChange('amount', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Performance Bonus */}
-      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-8 shadow-lg border border-amber-100">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-amber-100 rounded-xl">
-            <Star className="w-6 h-6 text-amber-600" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-amber-900">Performance Bonus</h3>
-            <p className="text-base text-amber-700">Set additional performance-based rewards</p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl p-6 border border-amber-200 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Bonus Type</label>
-            <select
-              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-              value={data?.commission?.bonus || ''}
-              onChange={e => handleBonusChange('bonus', e.target.value)}
-            >
-              <option value="">Select bonus type</option>
-              {predefinedOptions.commission.bonusTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 border border-amber-200 shadow-sm">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Bonus Amount</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                {getCurrencySymbol()}
-              </span>
-              <input
-                type="number"
-                className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                placeholder="0.00"
-                value={data?.commission?.bonusAmount || ''}
-                onChange={e => handleBonusChange('bonusAmount', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Details */}
-      <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-200">
-        <label className="block text-lg font-semibold text-gray-800 mb-4">Additional Details</label>
-        <textarea
-          className="w-full min-h-[120px] rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-4 text-gray-700 transition-all resize-none"
-          placeholder="Add any additional details about the commission structure..."
-          value={data?.commission?.additionalDetails || ''}
-          onChange={e => onChange({
-            ...data,
-            commission: {
-              ...data.commission,
-              additionalDetails: e.target.value
-            }
-          })}
-        />
-      </div>
-
-      {/* Validation Messages */}
-      {((errors?.commission && errors.commission.length > 0) || (warnings?.commission && warnings.commission.length > 0)) && (
-        <div className="space-y-4">
-          {errors?.commission && errors.commission.length > 0 && (
-            <div className="flex items-start gap-3 p-6 bg-red-50 rounded-xl text-red-700 border border-red-200">
-              <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-lg">Please fix the following:</p>
-                <ul className="mt-2 text-sm list-disc list-inside space-y-1">
-                  {errors.commission.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
+            {/* Minimum Volume Requirements */}
+            <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <Target className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-gray-900 text-lg">Minimum Requirements</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Target Amount</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                      {getCurrencySymbol()}
+                    </span>
+                    <input
+                      type="number"
+                      className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="0.00"
+                      value={data?.commission?.minimumVolume?.amount || ''}
+                      onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Unit</label>
+                  <select
+                    className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    value={data?.commission?.minimumVolume?.unit || ''}
+                    onChange={e => handleMinimumVolumeChange('unit', e.target.value)}
+                  >
+                    <option value="">Select unit</option>
+                    {predefinedOptions.commission.minimumVolumeUnits.map((unit) => (
+                      <option key={unit} value={unit}>{unit}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Period</label>
+                  <select
+                    className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    value={data?.commission?.minimumVolume?.period || ''}
+                    onChange={e => handleMinimumVolumeChange('period', e.target.value)}
+                  >
+                    <option value="">Select period</option>
+                    {predefinedOptions.commission.minimumVolumePeriods?.map((period) => (
+                      <option key={period} value={period}>{period}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          {warnings?.commission && warnings.commission.length > 0 && (
-            <div className="flex items-start gap-3 p-6 bg-yellow-50 rounded-xl text-yellow-700 border border-yellow-200">
-              <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-lg">Recommendations:</p>
-                <ul className="mt-2 text-sm list-disc list-inside space-y-1">
-                  {warnings.commission.map((warning, index) => (
-                    <li key={index}>{warning}</li>
-                  ))}
-                </ul>
+        {/* Transaction Commission */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8 shadow-lg border border-purple-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <Calculator className="w-6 h-6 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-purple-900">Transaction Commission</h3>
+              <p className="text-base text-purple-700">Define per-transaction rewards</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-purple-200 shadow-sm">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Commission Type</label>
+              <select
+                className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                value={data?.commission?.transactionCommission?.type || ''}
+                onChange={e => handleTransactionChange('type', e.target.value)}
+              >
+                <option value="">Select type</option>
+                {predefinedOptions.commission.transactionCommissionTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 border border-purple-200 shadow-sm">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Amount/Percentage</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                  {data?.commission?.transactionCommission?.type === 'Percentage' ? '%' : getCurrencySymbol()}
+                </span>
+                <input
+                  type="number"
+                  className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  placeholder="0.00"
+                  value={data?.commission?.transactionCommission?.amount || ''}
+                  onChange={e => handleTransactionChange('amount', e.target.value)}
+                />
               </div>
             </div>
-          )}
+          </div>
         </div>
-      )}
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center mt-8 pt-8 border-t border-gray-200">
-        <button
-          onClick={onPrevious}
-          className="flex items-center gap-3 px-6 py-3 rounded-xl bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Previous
-        </button>
-        <button
-          onClick={onNext}
-          className="flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-        >
-          Next
-          <ArrowRight className="w-5 h-5" />
-        </button>
+        {/* Performance Bonus */}
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-8 shadow-lg border border-amber-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-3 bg-amber-100 rounded-xl">
+              <Star className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-amber-900">Performance Bonus</h3>
+              <p className="text-base text-amber-700">Set additional performance-based rewards</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-amber-200 shadow-sm">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Bonus Type</label>
+              <select
+                className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                value={data?.commission?.bonus || ''}
+                onChange={e => handleBonusChange('bonus', e.target.value)}
+              >
+                <option value="">Select bonus type</option>
+                {predefinedOptions.commission.bonusTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 border border-amber-200 shadow-sm">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Bonus Amount</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                  {getCurrencySymbol()}
+                </span>
+                <input
+                  type="number"
+                  className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  placeholder="0.00"
+                  value={data?.commission?.bonusAmount || ''}
+                  onChange={e => handleBonusChange('bonusAmount', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Details */}
+        <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-200">
+          <label className="block text-lg font-semibold text-gray-800 mb-4">Additional Details</label>
+          <textarea
+            className="w-full min-h-[120px] rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-4 text-gray-700 transition-all resize-none"
+            placeholder="Add any additional details about the commission structure..."
+            value={data?.commission?.additionalDetails || ''}
+            onChange={e => onChange({
+              ...data,
+              commission: {
+                ...data.commission,
+                additionalDetails: e.target.value
+              }
+            })}
+          />
+        </div>
+
+        {/* Validation Messages */}
+        {((errors?.commission && errors.commission.length > 0) || (warnings?.commission && warnings.commission.length > 0)) && (
+          <div className="space-y-4">
+            {errors?.commission && errors.commission.length > 0 && (
+              <div className="flex items-start gap-3 p-6 bg-red-50 rounded-xl text-red-700 border border-red-200">
+                <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold text-lg">Please fix the following:</p>
+                  <ul className="mt-2 text-sm list-disc list-inside space-y-1">
+                    {errors.commission.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {warnings?.commission && warnings.commission.length > 0 && (
+              <div className="flex items-start gap-3 p-6 bg-yellow-50 rounded-xl text-yellow-700 border border-yellow-200">
+                <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold text-lg">Recommendations:</p>
+                  <ul className="mt-2 text-sm list-disc list-inside space-y-1">
+                    {warnings.commission.map((warning, index) => (
+                      <li key={index}>{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between items-center mt-8 pt-8 border-t border-gray-200">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onPrevious}
+              className="flex items-center gap-3 px-6 py-3 rounded-xl bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Previous
+            </button>
+          </div>
+          <button
+            onClick={onNext}
+            className="flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+          >
+            Next
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ interface SectionContentProps {
   errors: { [key: string]: string[] };
   constants: any;
   onSectionChange?: (section: string) => void;
+  isAIMode?: boolean;
 }
 
 export function SectionContent({
@@ -28,8 +29,16 @@ export function SectionContent({
   onChange,
   errors,
   onSectionChange,
+  isAIMode = false,
 }: SectionContentProps) {
-  console.log('SectionContent - Initial data:', data);
+
+  // Log section data when component renders
+  React.useEffect(() => {
+    console.log(`=== SECTION: ${section.toUpperCase()} ===`);
+    console.log('Section Data:', data);
+    console.log('Section Errors:', errors);
+    console.log('========================');
+  }, [section, data, errors]);
 
   const cleanSchedules = (schedules: DaySchedule[]): DaySchedule[] => {
     if (!schedules || schedules.length === 0) {
@@ -61,17 +70,29 @@ export function SectionContent({
   // Ensure seniority object is properly initialized
   const initializedData = React.useMemo(() => ({
     ...data,
-    schedule: {
-      schedules: cleanSchedules(data.schedule?.schedules || []),
-      timeZones: data.schedule?.timeZones || [],
-      flexibility: data.schedule?.flexibility || [],
-      minimumHours: data.schedule?.minimumHours || {
-        daily: undefined,
-        weekly: undefined,
-        monthly: undefined,
+          schedule: {
+        schedules: cleanSchedules(data.schedule?.schedules || []),
+        time_zone: (() => {
+          if (data.schedule?.time_zone) {
+            return data.schedule.time_zone;
+          }
+          if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
+            const firstTimezone = data.schedule.timeZones[0];
+            if (typeof firstTimezone === 'string') {
+              return firstTimezone;
+            }
+          }
+          return "";
+        })(),
+        timeZones: data.schedule?.time_zone ? [data.schedule?.time_zone] : [],
+        flexibility: data.schedule?.flexibility || [],
+        minimumHours: data.schedule?.minimumHours || {
+          daily: undefined,
+          weekly: undefined,
+          monthly: undefined,
+        },
+        shifts: data.schedule?.shifts || []
       },
-      shifts: data.schedule?.shifts || []
-    },
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
@@ -99,11 +120,10 @@ export function SectionContent({
     }
   }), [data]);
 
-  console.log('SectionContent - Initialized data:', initializedData);
-
-
   const renderContent = () => {
-    switch (section) {
+    // Correction navigation : transformer 'documentation' en 'docs' si besoin
+    const effectiveSection = (section === 'documentation' ? 'docs' : section) as 'docs' | 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
+    switch (effectiveSection) {
       case "basic":
         return (
           <BasicSection
@@ -116,7 +136,10 @@ export function SectionContent({
             }}
             onChange={onChange}
             errors={errors}
-            onPrevious={() => onSectionChange?.('')}
+            onPrevious={() => {
+              // Si onSectionChange est appelé avec 'suggestions', cela indique qu'on veut revenir aux suggestions
+              onSectionChange?.('suggestions');
+            }}
             onNext={() => onSectionChange?.('schedule')}
             onSave={() => {}}
             onAIAssist={() => {}}
@@ -127,33 +150,63 @@ export function SectionContent({
       case "schedule":
         return (
           <ScheduleSection
-            data={initializedData.schedule ? {
-              schedules: initializedData.schedule.schedules || [],
-              timeZones: initializedData.schedule.timeZones as TimezoneCode[],
-              flexibility: initializedData.schedule.flexibility || [],
-              minimumHours: initializedData.schedule.minimumHours || {
+            data={data.schedule ? {
+              schedules: data.schedule.schedules || [],
+              time_zone: (() => {
+                // Priorité 1: time_zone direct depuis schedule
+                if (data.schedule?.time_zone) {
+                  console.log('🕐 Using time_zone from schedule:', data.schedule.time_zone);
+                  return data.schedule.time_zone;
+                }
+                // Priorité 2: premier élément de timeZones array
+                if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
+                  const firstTimezone = data.schedule.timeZones[0];
+                  if (typeof firstTimezone === 'string') {
+                    console.log('🕐 Using first timezone from timeZones array:', firstTimezone);
+                    return firstTimezone;
+                  }
+                }
+                // Priorité 3: timezone depuis availability (qui vient de Suggestions)
+                if (data.availability?.time_zone) {
+                  console.log('🕐 Using timezone from availability (Suggestions):', data.availability.time_zone);
+                  return data.availability.time_zone;
+                }
+                console.log('🕐 No timezone found, using empty string');
+                return "";
+              })(),
+              flexibility: data.schedule.flexibility || data.availability?.flexibility || [],
+              minimumHours: data.schedule.minimumHours || data.availability?.minimumHours || {
                 daily: undefined,
                 weekly: undefined,
                 monthly: undefined,
               }
             } : {
               schedules: [],
-              timeZones: [] as TimezoneCode[],
-              flexibility: [],
-              minimumHours: {
+              time_zone: data.availability?.time_zone || "",
+              flexibility: data.availability?.flexibility || [],
+              minimumHours: data.availability?.minimumHours || {
                 daily: undefined,
                 weekly: undefined,
                 monthly: undefined,
               }
             }}
+            destination_zone={data.destination_zone}
             onChange={(scheduleData) => onChange({
-              ...initializedData,
+              ...data,
               schedule: {
                 schedules: scheduleData.schedules,
-                timeZones: scheduleData.timeZones,
+                time_zone: scheduleData.time_zone || "",
+                timeZones: scheduleData.time_zone ? [scheduleData.time_zone] : [],
                 flexibility: scheduleData.flexibility,
                 minimumHours: scheduleData.minimumHours,
               },
+              availability: {
+                ...data.availability,
+                schedule: scheduleData.schedules,
+                time_zone: scheduleData.time_zone || "",
+                flexibility: scheduleData.flexibility,
+                minimumHours: scheduleData.minimumHours,
+              }
             })}
             onPrevious={() => onSectionChange?.('basic')}
             onNext={() => onSectionChange?.('commission')}
@@ -171,19 +224,19 @@ export function SectionContent({
               },
               commission: initializedData.commission || {
                 base: "",
-                baseAmount: "",
+                baseAmount: 0,
                 bonus: "",
-                bonusAmount: "",
+                bonusAmount: 0,
                 structure: "",
                 currency: "",
                 minimumVolume: {
-                  amount: "",
+                  amount: 0,
                   period: "",
                   unit: ""
                 },
                 transactionCommission: {
                   type: "",
-                  amount: ""
+                  amount: 0
                 },
                 kpis: []
               }
@@ -282,7 +335,6 @@ export function SectionContent({
         );
 
       case "docs":
-        console.log('SectionContent - Rendering DocumentationSection');
         return (
           <DocumentationSection
             data={initializedData.documentation}
@@ -297,7 +349,6 @@ export function SectionContent({
             onPrevious={() => onSectionChange?.('team')}
             onNext={() => {}}
             onReview={() => {
-              console.log('SectionContent - Calling onReview');
               onSectionChange?.('review');
             }}
             isLastSection={true}
@@ -315,19 +366,16 @@ export function SectionContent({
               }
             }}
             onEdit={(section) => {
-              console.log('SectionContent - onEdit - Setting section to:', section);
               onSectionChange?.(section);
-            }}
-            onSubmit={async () => {
-              console.log('SectionContent - onSubmit - Submitting gig');
-              // Handle submission here
             }}
             isSubmitting={false}
             onBack={() => {
-              console.log('SectionContent - onBack - Going back to docs section');
               onSectionChange?.('docs');
             }}
             skipValidation={false}
+            onSubmit={async () => {
+              console.log('Submitting gig data:', initializedData);
+            }}
           />
         );
 
@@ -335,11 +383,8 @@ export function SectionContent({
         return null;
     }
   };
-
-  console.log('SectionContent - About to render SectionGuidance for section:', section);
-  
   return (
-    <div className="space-y-6">
+    <div className="bg-white border border-gray-100/50 p-8">
       <SectionGuidance section={section} />
       {renderContent()}
     </div>

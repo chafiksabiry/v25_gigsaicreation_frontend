@@ -56,7 +56,7 @@ const gigSchema = new Schema({
         }
       }
     ],
-    timeZones: [String],
+    timeZones: String,
     flexibility: [String],
     minimumHours: {
       daily: Number,
