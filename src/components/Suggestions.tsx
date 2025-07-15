@@ -1520,6 +1520,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           console.warn(`Industry "${item}" is not in the allowed list. Skipping.`);
         }
         break;
+      case "activities":
+        // Validate that the activity is in the allowed list
+        if (predefinedOptions.activities.includes(item)) {
+          newSuggestions.activities = [...(newSuggestions.activities || []), item];
+        } else {
+          console.warn(`Activity "${item}" is not in the allowed list. Skipping.`);
+        }
+        break;
       case "sectors":
         // Validate that the sector is in the allowed list
         if (predefinedOptions.sectors.includes(item)) {
@@ -1604,6 +1612,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           console.warn(`Industry "${newValue}" is not in the allowed list. Skipping update.`);
         }
         break;
+      case "activities":
+        // Validate that the activity is in the allowed list
+        if (predefinedOptions.activities.includes(newValue)) {
+          newSuggestions.activities[index] = newValue;
+        } else {
+          console.warn(`Activity "${newValue}" is not in the allowed list. Skipping update.`);
+        }
+        break;
       case "sectors":
         // Validate that the sector is in the allowed list
         if (predefinedOptions.sectors.includes(newValue)) {
@@ -1681,6 +1697,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "industries":
         newSuggestions.industries = newSuggestions.industries.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "activities":
+        newSuggestions.activities = newSuggestions.activities.filter(
           (_, i) => i !== index
         );
         break;
@@ -1820,15 +1841,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           </div>
                         )}
                       </div>
-                    ) : section === "sectors" || section === "industries" ? (
+                    ) : section === "sectors" || section === "industries" || section === "activities" ? (
                       <select
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                         autoFocus
                       >
-                        <option value="">Select a {section === "sectors" ? "sector" : "industry"}...</option>
-                        {(section === "sectors" ? predefinedOptions.sectors : predefinedOptions.industries).filter((item: string) => !currentItems.includes(item)).map((item: string) => (
+                        <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
+                        {(section === "sectors" ? predefinedOptions.sectors : section === "industries" ? predefinedOptions.industries : predefinedOptions.activities).filter((item: string) => {
+                          // When editing, include the current item being edited
+                          if (editingIndex >= 0 && currentItems[editingIndex] === item) {
+                            return true;
+                          }
+                          // Otherwise, exclude items that are already selected
+                          return !currentItems.includes(item);
+                        }).map((item: string) => (
                           <option key={item} value={item}>
                             {item}
                           </option>
@@ -1952,15 +1980,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </div>
                 )}
               </div>
-            ) : section === "sectors" || section === "industries" ? (
+            ) : section === "sectors" || section === "industries" || section === "activities" ? (
               <select
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                 autoFocus
               >
-                <option value="">Select a {section === "sectors" ? "sector" : "industry"}...</option>
-                {(section === "sectors" ? predefinedOptions.sectors : predefinedOptions.industries).filter((item: string) => !currentItems.includes(item)).map(
+                <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
+                {(section === "sectors" ? predefinedOptions.sectors : section === "industries" ? predefinedOptions.industries : predefinedOptions.activities).filter((item: string) => {
+                  // When editing, include the current item being edited
+                  if (editingIndex >= 0 && currentItems[editingIndex] === item) {
+                    return true;
+                  }
+                  // Otherwise, exclude items that are already selected
+                  return !currentItems.includes(item);
+                }).map(
                   (item: string) => (
                     <option key={item} value={item}>
                       {item}
@@ -2773,6 +2808,266 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               ? 'Loading timezones from API...'
               : 'No timezones available'
           }
+        </p>
+      </div>
+    );
+  };
+
+  const renderDestinationZonesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.destinationZones) newSuggestions.destinationZones = [];
+      if (!newSuggestions.destinationZones.includes(value)) {
+        newSuggestions.destinationZones = [...newSuggestions.destinationZones, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveDestinationZone = (zone: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.destinationZones = newSuggestions.destinationZones.filter(z => z !== zone);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.destinationZones || [];
+    const available = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter(zone => !selected.includes(zone));
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-amber-200 bg-amber-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-amber-500 text-white font-bold mr-3">D</div>
+          <h4 className="text-xl font-bold text-amber-900">Destination Zones</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(zone => (
+            <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {zone}
+              <button
+                type="button"
+                onClick={() => handleRemoveDestinationZone(zone)}
+                className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-amber-300 bg-white text-amber-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 mb-2"
+          defaultValue=""
+          onChange={handleAddDestinationZone}
+        >
+          <option value="" disabled>Add destination zone...</option>
+          {available.map(zone => (
+            <option key={zone} value={zone}>{zone}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all target destination zones for this position
+        </p>
+      </div>
+    );
+  };
+
+  const renderSectorsSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddSector = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.sectors) newSuggestions.sectors = [];
+      if (!newSuggestions.sectors.includes(value)) {
+        newSuggestions.sectors = [...newSuggestions.sectors, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveSector = (sector: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.sectors = newSuggestions.sectors.filter(s => s !== sector);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.sectors || [];
+    const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-orange-200 bg-orange-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold mr-3">S</div>
+          <h4 className="text-xl font-bold text-orange-900">Sectors</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(sector => (
+            <span key={sector} className="flex items-center bg-orange-100 text-orange-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {sector}
+              <button
+                type="button"
+                onClick={() => handleRemoveSector(sector)}
+                className="ml-2 text-orange-600 hover:text-orange-800 rounded-full focus:outline-none focus:bg-orange-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2"
+          defaultValue=""
+          onChange={handleAddSector}
+        >
+          <option value="" disabled>Add sector...</option>
+          {available.map(sector => (
+            <option key={sector} value={sector}>{sector}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all relevant sectors for this position
+        </p>
+      </div>
+    );
+  };
+
+  const renderActivitiesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.activities) newSuggestions.activities = [];
+      if (!newSuggestions.activities.includes(value)) {
+        newSuggestions.activities = [...newSuggestions.activities, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveActivity = (activity: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.activities = newSuggestions.activities.filter(a => a !== activity);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.activities || [];
+    const available = predefinedOptions.activities.filter(activity => !selected.includes(activity));
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">A</div>
+          <h4 className="text-xl font-bold text-green-900">Activities</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(activity => (
+            <span key={activity} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {activity}
+              <button
+                type="button"
+                onClick={() => handleRemoveActivity(activity)}
+                className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+          defaultValue=""
+          onChange={handleAddActivity}
+        >
+          <option value="" disabled>Add activity...</option>
+          {available.map(activity => (
+            <option key={activity} value={activity}>{activity}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all relevant activities for this position
+        </p>
+      </div>
+    );
+  };
+
+  const renderIndustriesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.industries) newSuggestions.industries = [];
+      if (!newSuggestions.industries.includes(value)) {
+        newSuggestions.industries = [...newSuggestions.industries, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveIndustry = (industry: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.industries = newSuggestions.industries.filter(i => i !== industry);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.industries || [];
+    const available = predefinedOptions.industries.filter(industry => !selected.includes(industry));
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-indigo-200 bg-indigo-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold mr-3">I</div>
+          <h4 className="text-xl font-bold text-indigo-900">Industries</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(industry => (
+            <span key={industry} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {industry}
+              <button
+                type="button"
+                onClick={() => handleRemoveIndustry(industry)}
+                className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 mb-2"
+          defaultValue=""
+          onChange={handleAddIndustry}
+        >
+          <option value="" disabled>Add industry...</option>
+          {available.map(industry => (
+            <option key={industry} value={industry}>{industry}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all relevant industries for this position
         </p>
       </div>
     );
@@ -4677,8 +4972,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   )}
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Industries</h4>
-                  {renderEditableList("industries", suggestions.industries, "Industries")}
+                  {renderIndustriesSection()}
+                </div>
+                <div>
+                  {renderActivitiesSection()}
                 </div>
                 <div>
                   <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>
@@ -4689,19 +4986,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   )}
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Sectors</h4>
-                  {renderEditableList("sectors", suggestions.sectors, "Sectors")}
+                  {renderSectorsSection()}
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Destination Zones</h4>
-                  {(() => {
-                    console.log('🏢 Basic Info - Destination Zones:', suggestions.destinationZones);
-                    return renderEditableList(
-                      "destinationZones",
-                      suggestions.destinationZones,
-                      "Destination Zones"
-                    );
-                  })()}
+                  {renderDestinationZonesSection()}
                 </div>
                 <div>
                   {renderSenioritySection()}

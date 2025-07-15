@@ -136,6 +136,21 @@ export const predefinedOptions = {
     'Business Services (Legal, Consulting, Administrative, etc.)',
     'Survey Institutes'
   ],
+  activities: [
+    'Customer Service',
+    'Technical Support',
+    'Order Taking',
+    'Administrative Support',
+    'Complaints / Crisis Management',
+    'After-Sales Hotline',
+    'Telemarketing / Telesales',
+    'Appointment Scheduling',
+    'Customer Follow-Ups',
+    'Surveys & Polls',
+    'Telephone Debt Collection',
+    'Customer Loyalty / Upselling',
+    'Customer Onboarding'
+  ],
   availability: {
     schedule: [
       'Monday',

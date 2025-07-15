@@ -10,6 +10,7 @@ export interface GigData {
   callTypes: string[];
   highlights: string[];
   industries: string[];
+  activities: string[];
   requirements: {
     essential: string[];
     preferred: string[];
@@ -209,6 +210,7 @@ export interface GigSuggestion {
   deliverables: string[];
   sectors: string[];
   industries: string[];
+  activities: string[];
   destinationZones: string[];
   timeframes: string[];
   availability: {

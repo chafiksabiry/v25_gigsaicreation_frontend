@@ -58,6 +58,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onNext
 }) => {
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
+  const [selectedActivity, setSelectedActivity] = useState<string>('');
 
   useEffect(() => {
     if (!data.destinationZones) {
@@ -245,6 +246,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       title: data.title,
       category: data.category,
       industries: data.industries,
+      activities: data.activities,
       highlights: data.highlights,
       destinationZones: data.destinationZones,
       destination_zone: data.destination_zone,
@@ -439,6 +441,96 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             )}
           </div>
           {errors.industries && <p className="mt-2 text-sm text-red-600">{errors.industries.join(', ')}</p>}
+        </div>
+
+        {/* --- Activities --- */}
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Target className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Activities</h3>
+              <p className="text-sm text-gray-500">Select relevant activities for this position</p>
+            </div>
+          </div>
+          
+          {/* Affichage des activités sélectionnées */}
+          {(data.activities || []).length > 0 && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Selected Activities:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(data.activities || []).map((activity, index) => (
+                  <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
+                    {activity}
+                    <button
+                      onClick={() => {
+                        const currentActivities = data.activities || [];
+                        const updatedActivities = currentActivities.filter((_, i) => i !== index);
+                        onChange({ ...data, activities: updatedActivities });
+                      }}
+                      className="ml-1 text-green-500 hover:text-green-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sélecteur d'activité */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Add Activity</label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Target className="w-5 h-5 text-green-400" />
+                </span>
+                <select
+                  value={selectedActivity}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setSelectedActivity(value);
+                    if (value && value !== '') {
+                      const currentActivities = data.activities || [];
+                      if (!currentActivities.includes(value)) {
+                        const updatedActivities = [...currentActivities, value];
+                        onChange({ ...data, activities: updatedActivities });
+                        setSelectedActivity(''); // Reset after adding
+                      }
+                    }
+                  }}
+                  className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800 appearance-none transition-all"
+                >
+                  <option value="" className="text-gray-400">Select an activity</option>
+                  {predefinedOptions.activities
+                    .filter(activity => !(data.activities || []).includes(activity))
+                    .map(activity => (
+                      <option key={activity} value={activity} className="text-gray-800">{activity}</option>
+                    ))}
+                </select>
+              </div>
+              {(data.activities || []).length > 0 && (
+                <button
+                  onClick={() => {
+                    onChange({ ...data, activities: [] });
+                    setSelectedActivity('');
+                  }}
+                  className="px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+            {(data.activities || []).length === 0 && (
+              <p className="mt-2 text-sm text-gray-500">No activities selected yet</p>
+            )}
+          </div>
+          {errors.activities && <p className="mt-2 text-sm text-red-600">{errors.activities.join(', ')}</p>}
         </div>
 
         {/* --- Destination Zone --- */}
