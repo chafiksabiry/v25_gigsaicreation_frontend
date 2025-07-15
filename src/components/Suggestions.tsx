@@ -294,86 +294,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
   const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<CountryData[]>([]);
   const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredSections, setFilteredSections] = useState<string[]>([]);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
   const skillsLoadedRef = useRef(false);
 
-  // Search functionality
-  const handleSearch = (searchValue: string) => {
-    setSearchTerm(searchValue);
-    
-    if (!searchValue.trim()) {
-      setFilteredSections([]);
-      return;
-    }
 
-    const searchLower = searchValue.toLowerCase();
-    const sections = [];
-    
-    // Check each section for matches
-    if (suggestions?.jobTitles?.some(title => title.toLowerCase().includes(searchLower))) {
-      sections.push('jobTitles');
-    }
-    if (suggestions?.description?.toLowerCase().includes(searchLower)) {
-      sections.push('description');
-    }
-    if (suggestions?.highlights?.some(highlight => highlight.toLowerCase().includes(searchLower))) {
-      sections.push('highlights');
-    }
-    if (suggestions?.industries?.some(industry => industry.toLowerCase().includes(searchLower))) {
-      sections.push('industries');
-    }
-    if (suggestions?.activities?.some(activity => activity.toLowerCase().includes(searchLower))) {
-      sections.push('activities');
-    }
-    if (suggestions?.deliverables?.some(deliverable => deliverable.toLowerCase().includes(searchLower))) {
-      sections.push('deliverables');
-    }
-    if (suggestions?.sectors?.some(sector => sector.toLowerCase().includes(searchLower))) {
-      sections.push('sectors');
-    }
-    if (suggestions?.destinationZones?.some(zone => zone.toLowerCase().includes(searchLower))) {
-      sections.push('destinationZones');
-    }
-    if (suggestions?.schedule?.schedules?.some((schedule: any) => 
-      schedule.day.toLowerCase().includes(searchLower) || 
-      schedule.hours.start.includes(searchLower) || 
-      schedule.hours.end.includes(searchLower)
-    )) {
-      sections.push('schedule');
-    }
-    if (suggestions?.commission?.options?.some((commission: any) => 
-      commission.base.toLowerCase().includes(searchLower) || 
-      commission.bonus?.toLowerCase().includes(searchLower)
-    )) {
-      sections.push('commission');
-    }
-    if (suggestions?.skills?.soft?.some((skill: any) => 
-      skill.skill.toLowerCase().includes(searchLower)
-    ) || suggestions?.skills?.professional?.some((skill: any) => 
-      skill.skill.toLowerCase().includes(searchLower)
-    ) || suggestions?.skills?.technical?.some((skill: any) => 
-      skill.skill.toLowerCase().includes(searchLower)
-    )) {
-      sections.push('skills');
-    }
-    if (suggestions?.team?.structure?.some(role => {
-      const roleId = typeof role === 'string' ? role : role?.roleId;
-      return roleId?.toLowerCase().includes(searchLower);
-    })) {
-      sections.push('team');
-    }
-    
-    setFilteredSections(sections);
-  };
-
-  // Check if a section should be highlighted based on search
-  const isSectionHighlighted = (sectionName: string) => {
-    if (!searchTerm) return false;
-    return filteredSections.includes(sectionName);
-  };
 
   // Fetch all countries from API for destination zones
   useEffect(() => {
@@ -2972,6 +2897,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </span>
           ))}
         </div>
+        
         {/* Select pour ajouter */}
         <select
           className="w-full p-3 rounded-lg border border-amber-300 bg-white text-amber-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 mb-2"
@@ -2983,7 +2909,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
           </option>
           {availableCountries.map(({ code, name }) => (
-            <option key={code} value={name}>{name}</option>
+            <option key={code} value={name}>{name} ({code})</option>
           ))}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
@@ -5052,42 +4978,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </button>
           </div>
 
-          {/* Search Input */}
-          <div className="mb-6">
-            <div className="relative max-w-md mx-auto">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search in suggestions..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-            {searchTerm && (
-              <div className="mt-2 text-center">
-                <span className="text-sm text-gray-600">
-                  {filteredSections.length > 0 
-                    ? `Found matches in ${filteredSections.length} section${filteredSections.length > 1 ? 's' : ''}`
-                    : 'No matches found'
-                  }
-                </span>
-              </div>
-            )}
-          </div>
-
           <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
 
             {/* Basic Section */}
-            <div className={`p-3 rounded-2xl border-2 transition-all duration-300 ${
-              isSectionHighlighted('jobTitles') || isSectionHighlighted('description') || isSectionHighlighted('highlights') || 
-              isSectionHighlighted('industries') || isSectionHighlighted('activities') || isSectionHighlighted('deliverables') || 
-              isSectionHighlighted('sectors') || isSectionHighlighted('destinationZones') || isSectionHighlighted('seniority')
-                ? 'border-yellow-400 bg-yellow-50 shadow-lg' 
-                : 'border-blue-200 bg-blue-50'
-            }`}>
+            <div className="p-3 rounded-2xl border-2 border-blue-200 bg-blue-50">
               <div className="flex justify-center mb-8">
                 <div className="relative">
                   {/* No logo related state, logic, or JSX */}
@@ -5095,22 +4989,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </div>
 
               <div className="flex items-center mb-3">
-                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white mr-2 ${
-                  isSectionHighlighted('jobTitles') || isSectionHighlighted('description') || isSectionHighlighted('highlights') || 
-                  isSectionHighlighted('industries') || isSectionHighlighted('activities') || isSectionHighlighted('deliverables') || 
-                  isSectionHighlighted('sectors') || isSectionHighlighted('destinationZones') || isSectionHighlighted('seniority')
-                    ? 'bg-yellow-500' 
-                    : 'bg-blue-600'
-                }`}>
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white mr-2">
                   <Briefcase className="w-5 h-5" />
                 </span>
-                <h3 className={`text-lg font-extrabold tracking-tight ${
-                  isSectionHighlighted('jobTitles') || isSectionHighlighted('description') || isSectionHighlighted('highlights') || 
-                  isSectionHighlighted('industries') || isSectionHighlighted('activities') || isSectionHighlighted('deliverables') || 
-                  isSectionHighlighted('sectors') || isSectionHighlighted('destinationZones') || isSectionHighlighted('seniority')
-                    ? 'text-yellow-800' 
-                    : 'text-blue-900'
-                }`}>Basic Information</h3>
+                <h3 className="text-lg font-extrabold text-blue-900 tracking-tight">Basic Information</h3>
               </div>
               <div className="space-y-2">
                 <div>
@@ -5160,21 +5042,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </div>
 
             {/* Schedule Section */}
-            <div className={`p-6 rounded-lg border transition-all duration-300 ${
-              isSectionHighlighted('schedule')
-                ? 'border-yellow-400 bg-yellow-50 shadow-lg' 
-                : 'border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-6 flex items-center ${
-                isSectionHighlighted('schedule')
-                  ? 'text-yellow-800' 
-                  : 'text-blue-900'
-              }`}>
-                <Clock className={`w-7 h-7 mr-3 ${
-                  isSectionHighlighted('schedule')
-                    ? 'text-yellow-600' 
-                    : 'text-blue-700'
-                }`} />
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Clock className="w-7 h-7 mr-3 text-blue-700" />
                 Schedule
               </h3>
               {renderEditableSchedules()}
@@ -5184,63 +5054,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </div>
 
             {/* Commission Section */}
-            <div className={`p-6 rounded-lg border transition-all duration-300 ${
-              isSectionHighlighted('commission')
-                ? 'border-yellow-400 bg-yellow-50 shadow-lg' 
-                : 'border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-6 flex items-center ${
-                isSectionHighlighted('commission')
-                  ? 'text-yellow-800' 
-                  : 'text-blue-900'
-              }`}>
-                <DollarSign className={`w-7 h-7 mr-3 ${
-                  isSectionHighlighted('commission')
-                    ? 'text-yellow-600' 
-                    : 'text-blue-700'
-                }`} />
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
                 Commission
               </h3>
               {renderCommissionSection()}
             </div>
 
             {/* Skills Section */}
-            <div className={`p-6 rounded-lg border transition-all duration-300 ${
-              isSectionHighlighted('skills')
-                ? 'border-yellow-400 bg-yellow-50 shadow-lg' 
-                : 'border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-6 flex items-center ${
-                isSectionHighlighted('skills')
-                  ? 'text-yellow-800' 
-                  : 'text-blue-900'
-              }`}>
-                <Award className={`w-7 h-7 mr-3 ${
-                  isSectionHighlighted('skills')
-                    ? 'text-yellow-600' 
-                    : 'text-blue-700'
-                }`} />
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Award className="w-7 h-7 mr-3 text-blue-700" />
                 Skills
               </h3>
               {renderSkillsSection()}
             </div>
 
             {/* Team Section */}
-            <div className={`p-6 rounded-lg border transition-all duration-300 ${
-              isSectionHighlighted('team')
-                ? 'border-yellow-400 bg-yellow-50 shadow-lg' 
-                : 'border-gray-200'
-            }`}>
-              <h3 className={`text-2xl font-bold mb-6 flex items-center ${
-                isSectionHighlighted('team')
-                  ? 'text-yellow-800' 
-                  : 'text-blue-900'
-              }`}>
-                <Users className={`w-7 h-7 mr-3 ${
-                  isSectionHighlighted('team')
-                    ? 'text-yellow-600' 
-                    : 'text-blue-700'
-                }`} />
+            <div className="p-6 rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
+                <Users className="w-7 h-7 mr-3 text-blue-700" />
                 Team Structure
               </h3>
               {renderTeamSection()}
