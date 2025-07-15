@@ -291,9 +291,35 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [territories, setTerritories] = useState<string[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
+  const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<CountryData[]>([]);
+  const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
   const skillsLoadedRef = useRef(false);
+
+  // Fetch all countries from API for destination zones
+  useEffect(() => {
+    const fetchAllCountries = async () => {
+      setDestinationCountriesLoading(true);
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+        if (response.ok) {
+          const data: CountryData[] = await response.json();
+          // Sort countries alphabetically by common name
+          const sortedData = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+          setAllCountriesFromAPI(sortedData);
+        } else {
+          console.error('Failed to fetch countries from API');
+        }
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      } finally {
+        setDestinationCountriesLoading(false);
+      }
+    };
+
+    fetchAllCountries();
+  }, []);
 
   // Ensure all team roles have valid seniority structure
   const validateAndFixTeamStructure = () => {
@@ -2819,12 +2845,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
-      const newSuggestions = { ...suggestions };
-      if (!newSuggestions.destinationZones) newSuggestions.destinationZones = [];
-      if (!newSuggestions.destinationZones.includes(value)) {
-        newSuggestions.destinationZones = [...newSuggestions.destinationZones, value];
-        setSuggestions(newSuggestions);
-      }
+      
+      // Use the existing addItem logic for destination zones
+      addItem("destinationZones", value);
+      
       // Reset select
       e.target.value = '';
     };
@@ -2836,7 +2860,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.destinationZones || [];
-    const available = ['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].filter(zone => !selected.includes(zone));
+    
+    // Get all available countries from API, excluding already selected ones
+    const availableCountries = allCountriesFromAPI
+      .filter(country => !selected.includes(country.cca2))
+      .map(country => ({ 
+        code: country.cca2, 
+        name: country.name.common 
+      }));
 
     return (
       <div className="mb-8 p-6 rounded-xl border border-amber-200 bg-amber-50">
@@ -2848,7 +2879,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <div className="flex flex-wrap gap-2 mb-4">
           {selected.map(zone => (
             <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {zone}
+              <span>{getCountryName(zone)}</span>
+              <span className="ml-1 text-xs text-amber-600 bg-amber-200 px-1 rounded">
+                {zone}
+              </span>
               <button
                 type="button"
                 onClick={() => handleRemoveDestinationZone(zone)}
@@ -2865,14 +2899,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           className="w-full p-3 rounded-lg border border-amber-300 bg-white text-amber-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 mb-2"
           defaultValue=""
           onChange={handleAddDestinationZone}
+          disabled={destinationCountriesLoading}
         >
-          <option value="" disabled>Add destination zone...</option>
-          {available.map(zone => (
-            <option key={zone} value={zone}>{zone}</option>
+          <option value="" disabled>
+            {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
+          </option>
+          {availableCountries.map(({ code, name }) => (
+            <option key={code} value={name}>{name}</option>
           ))}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all target destination zones for this position
+          {destinationCountriesLoading 
+            ? 'Loading countries from API...' 
+            : `${availableCountries.length} countries available for selection`
+          }
         </p>
       </div>
     );
