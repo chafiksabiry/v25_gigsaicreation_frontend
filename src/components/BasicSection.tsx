@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import {
@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   GraduationCap,
   CheckCircle,
+  X,
 } from "lucide-react";
 import { GigData } from '../types';
 import i18n from 'i18n-iso-countries';
@@ -53,14 +54,22 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   data, 
   onChange, 
   errors, 
-  onPrevious, 
+  onPrevious,
   onNext
 }) => {
+  const [selectedIndustry, setSelectedIndustry] = useState<string>('');
+
   useEffect(() => {
     if (!data.destinationZones) {
       onChange({
         ...data,
         destinationZones: []
+      });
+    }
+    if (!data.industries) {
+      onChange({
+        ...data,
+        industries: []
       });
     }
   }, []);
@@ -235,6 +244,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     console.log('Basic Data:', {
       title: data.title,
       category: data.category,
+      industries: data.industries,
       highlights: data.highlights,
       destinationZones: data.destinationZones,
       destination_zone: data.destination_zone,
@@ -339,6 +349,96 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
           {/* Ancienne grille de boutons supprimée */}
           {errors.category && <p className="mt-2 text-sm text-red-600">{errors.category.join(', ')}</p>}
+        </div>
+
+        {/* --- Industries --- */}
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <Target className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Industries</h3>
+              <p className="text-sm text-gray-500">Select relevant industries for this position</p>
+            </div>
+          </div>
+          
+          {/* Affichage des industries sélectionnées */}
+          {(data.industries || []).length > 0 && (
+            <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-4 h-4 text-indigo-600" />
+                <span className="text-sm font-medium text-indigo-800">Selected Industries:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(data.industries || []).map((industry, index) => (
+                  <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full">
+                    {industry}
+                    <button
+                      onClick={() => {
+                        const currentIndustries = data.industries || [];
+                        const updatedIndustries = currentIndustries.filter((_, i) => i !== index);
+                        onChange({ ...data, industries: updatedIndustries });
+                      }}
+                      className="ml-1 text-indigo-500 hover:text-indigo-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sélecteur d'industrie */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Add Industry</label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Target className="w-5 h-5 text-indigo-400" />
+                </span>
+                <select
+                  value={selectedIndustry}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setSelectedIndustry(value);
+                    if (value && value !== '') {
+                      const currentIndustries = data.industries || [];
+                      if (!currentIndustries.includes(value)) {
+                        const updatedIndustries = [...currentIndustries, value];
+                        onChange({ ...data, industries: updatedIndustries });
+                        setSelectedIndustry(''); // Reset after adding
+                      }
+                    }
+                  }}
+                  className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 appearance-none transition-all"
+                >
+                  <option value="" className="text-gray-400">Select an industry</option>
+                  {predefinedOptions.industries
+                    .filter(industry => !(data.industries || []).includes(industry))
+                    .map(industry => (
+                      <option key={industry} value={industry} className="text-gray-800">{industry}</option>
+                    ))}
+                </select>
+              </div>
+              {(data.industries || []).length > 0 && (
+                <button
+                  onClick={() => {
+                    onChange({ ...data, industries: [] });
+                    setSelectedIndustry('');
+                  }}
+                  className="px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+            {(data.industries || []).length === 0 && (
+              <p className="mt-2 text-sm text-gray-500">No industries selected yet</p>
+            )}
+          </div>
+          {errors.industries && <p className="mt-2 text-sm text-red-600">{errors.industries.join(', ')}</p>}
         </div>
 
         {/* --- Destination Zone --- */}

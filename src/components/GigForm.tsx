@@ -117,6 +117,7 @@ interface GigData {
   destination_zone: string;
   callTypes: string[];
   highlights: any[];
+  industries: string[];
   requirements: {
     essential: any[];
     preferred: any[];
@@ -131,6 +132,7 @@ interface GigData {
       };
     }[];
     timeZones: string[];
+    time_zone: string;
     flexibility: string[];
     minimumHours: {
       daily?: number;
@@ -286,6 +288,7 @@ export function GigForm() {
         destination_zone: "",
         callTypes: data.callTypes,
         highlights: [],
+        industries: [],
         requirements: {
           essential: [],
           preferred: []

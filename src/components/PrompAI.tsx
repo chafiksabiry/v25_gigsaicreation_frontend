@@ -60,6 +60,7 @@ const PrompAI: React.FC = () => {
     title: "",
     description: "",
     category: "",
+    industries: [],
     availability: {
       schedule: [{
         day: "",
@@ -216,6 +217,16 @@ const PrompAI: React.FC = () => {
       // Préserver les suggestions confirmées pour pouvoir y revenir
       setShowSuggestions(true);
       setCurrentSection("basic");
+      
+      // Mettre à jour les suggestions confirmées avec les industries actuelles
+      if (confirmedSuggestions && gigData.industries) {
+        const updatedSuggestions = {
+          ...confirmedSuggestions,
+          industries: gigData.industries
+        };
+        setConfirmedSuggestions(updatedSuggestions);
+      }
+      
       // Préserver l'input original pour éviter la régénération
       if (confirmedSuggestions && !input.trim()) {
         // Si l'input est vide mais qu'on a des suggestions confirmées,
@@ -236,6 +247,8 @@ const PrompAI: React.FC = () => {
         ...newData,
         // Preserve destinationZones from suggestions if they exist
         destinationZones: confirmedSuggestions.destinationZones || newData.destinationZones,
+        // Allow industries to be modified - don't preserve from suggestions
+        // industries: confirmedSuggestions.industries || newData.industries,
         // If we have a destination_zone from suggestions, use it
         destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : '')
       };
@@ -278,6 +291,7 @@ const PrompAI: React.FC = () => {
       title: "",
       description: "",
       category: "",
+      industries: [],
       availability: {
         schedule: [{
           day: "",

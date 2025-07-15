@@ -34,6 +34,7 @@ import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
 import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
+import { predefinedOptions } from "../lib/guidance";
 
 type ScheduleEntry = {
   day: string;
@@ -147,109 +148,7 @@ const DESTINATION_ZONES: { [key: string]: string } = {
   "GF": "French Guiana",
 };
 
-interface PredefinedOptions {
-  leads: {
-    sources: string[];
-  };
-  team: {
-    roles: Array<{
-      id: string;
-      name: string;
-      description: string;
-    }>;
-    territories: string[];
-  };
-  basic: {
-    seniorityLevels: string[];
-  };
-  sectors: string[];
-}
 
-const predefinedOptions: PredefinedOptions = {
-  leads: {
-    sources: [
-      "LinkedIn",
-      "Email Marketing",
-      "Social Media",
-      "Referrals",
-      "Events",
-      "Cold Calling",
-      "Website",
-      "Other",
-    ],
-  },
-  team: {
-    roles: [
-      {
-        id: "manager",
-        name: "Manager",
-        description: "Team leader responsible for overall performance",
-      },
-      {
-        id: "senior",
-        name: "Senior",
-        description: "Experienced professional with leadership capabilities",
-      },
-      {
-        id: "mid",
-        name: "Mid-level",
-        description: "Professional with solid experience",
-      },
-      {
-        id: "junior",
-        name: "Junior",
-        description: "Entry-level professional",
-      },
-    ],
-    territories: [
-      "North America",
-      "Europe",
-      "Asia",
-      "South America",
-      "Africa",
-      "Oceania",
-    ],
-  },
-  basic: {
-    seniorityLevels: [
-      "Entry Level",
-      "Junior",
-      "Mid-Level",
-      "Senior",
-      "Team Lead",
-      "Supervisor",
-      "Manager",
-      "Director",
-    ],
-  },
-  sectors: [
-    "Inbound Sales",
-    "Outbound Sales",
-    "Customer Service",
-    "Technical Support",
-    "Account Management",
-    "Lead Generation",
-    "Market Research",
-    "Appointment Setting",
-    "Order Processing",
-    "Customer Retention",
-    "Billing Support",
-    "Product Support",
-    "Help Desk",
-    "Chat Support",
-    "Email Support",
-    "Social Media Support",
-    "Survey Calls",
-    "Welcome Calls",
-    "Follow-up Calls",
-    "Complaint Resolution",
-    "Warranty Support",
-    "Collections",
-    "Dispatch Services",
-    "Emergency Support",
-    "Multilingual Support",
-  ],
-};
 
 
 
@@ -1613,6 +1512,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           item,
         ];
         break;
+      case "industries":
+        // Validate that the industry is in the allowed list
+        if (predefinedOptions.industries.includes(item)) {
+          newSuggestions.industries = [...(newSuggestions.industries || []), item];
+        } else {
+          console.warn(`Industry "${item}" is not in the allowed list. Skipping.`);
+        }
+        break;
       case "sectors":
         // Validate that the sector is in the allowed list
         if (predefinedOptions.sectors.includes(item)) {
@@ -1689,6 +1596,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       case "deliverables":
         newSuggestions.deliverables[index] = newValue;
         break;
+      case "industries":
+        // Validate that the industry is in the allowed list
+        if (predefinedOptions.industries.includes(newValue)) {
+          newSuggestions.industries[index] = newValue;
+        } else {
+          console.warn(`Industry "${newValue}" is not in the allowed list. Skipping update.`);
+        }
+        break;
       case "sectors":
         // Validate that the sector is in the allowed list
         if (predefinedOptions.sectors.includes(newValue)) {
@@ -1761,6 +1676,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "deliverables":
         newSuggestions.deliverables = newSuggestions.deliverables.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "industries":
+        newSuggestions.industries = newSuggestions.industries.filter(
           (_, i) => i !== index
         );
         break;
@@ -1900,17 +1820,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           </div>
                         )}
                       </div>
-                    ) : section === "sectors" ? (
+                    ) : section === "sectors" || section === "industries" ? (
                       <select
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                         autoFocus
                       >
-                        <option value="">Select a sector...</option>
-                        {predefinedOptions.sectors.filter((sector) => !currentItems.includes(sector) || sector === items[index]).map((sector) => (
-                          <option key={sector} value={sector}>
-                            {sector}
+                        <option value="">Select a {section === "sectors" ? "sector" : "industry"}...</option>
+                        {(section === "sectors" ? predefinedOptions.sectors : predefinedOptions.industries).filter((item: string) => !currentItems.includes(item)).map((item: string) => (
+                          <option key={item} value={item}>
+                            {item}
                           </option>
                         ))}
                       </select>
@@ -2032,18 +1952,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </div>
                 )}
               </div>
-            ) : section === "sectors" ? (
+            ) : section === "sectors" || section === "industries" ? (
               <select
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                 autoFocus
               >
-                <option value="">Select a sector...</option>
-                {predefinedOptions.sectors.filter((sector) => !currentItems.includes(sector)).map(
-                  (sector) => (
-                    <option key={sector} value={sector}>
-                      {sector}
+                <option value="">Select a {section === "sectors" ? "sector" : "industry"}...</option>
+                {(section === "sectors" ? predefinedOptions.sectors : predefinedOptions.industries).filter((item: string) => !currentItems.includes(item)).map(
+                  (item: string) => (
+                    <option key={item} value={item}>
+                      {item}
                     </option>
                   )
                 )}
@@ -4755,6 +4675,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     suggestions.highlights,
                     "Highlights"
                   )}
+                </div>
+                <div>
+                  <h4 className="text-base font-semibold text-blue-800 mb-1">Industries</h4>
+                  {renderEditableList("industries", suggestions.industries, "Industries")}
                 </div>
                 <div>
                   <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>

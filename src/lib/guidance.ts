@@ -120,6 +120,22 @@ export const predefinedOptions = {
     'Emergency Support',
     'Multilingual Support'
   ],
+  industries: [
+    'Retail / e-Commerce',
+    'Telecom & Internet Providers',
+    'Banking & Fintech',
+    'Automotive',
+    'Health & Insurance',
+    'Hospitality / Tourism / Airlines',
+    'Insurance',
+    'Education & Training',
+    'SaaS B2B',
+    'Real Estate',
+    'Transport / Logistics',
+    'Events / Ticketing',
+    'Business Services (Legal, Consulting, Administrative, etc.)',
+    'Survey Institutes'
+  ],
   availability: {
     schedule: [
       'Monday',

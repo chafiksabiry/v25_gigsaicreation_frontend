@@ -39,6 +39,7 @@ const initialGigData: GigData = {
   destinationZones: [],
   callTypes: [],
   highlights: [],
+  industries: [],
   requirements: {
     essential: [],
     preferred: [],
