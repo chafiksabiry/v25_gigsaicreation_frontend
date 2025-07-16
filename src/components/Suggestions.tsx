@@ -2948,7 +2948,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
 
     return (
-      <div className="mb-8 p-6 rounded-xl border border-orange-200 bg-orange-50">
+      <div className="mb-8">
         <div className="flex items-center mb-4">
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold mr-3">S</div>
           <h4 className="text-xl font-bold text-orange-900">Sectors</h4>
@@ -3013,7 +3013,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const available = predefinedOptions.activities.filter(activity => !selected.includes(activity));
 
     return (
-      <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
+      <div className="mb-8">
         <div className="flex items-center mb-4">
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">A</div>
           <h4 className="text-xl font-bold text-green-900">Activities</h4>
@@ -3078,7 +3078,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const available = predefinedOptions.industries.filter(industry => !selected.includes(industry));
 
     return (
-      <div className="mb-8 p-6 rounded-xl border border-indigo-200 bg-indigo-50">
+      <div className="mb-8">
         <div className="flex items-center mb-4">
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold mr-3">I</div>
           <h4 className="text-xl font-bold text-indigo-900">Industries</h4>
