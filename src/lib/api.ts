@@ -258,6 +258,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       
       // Save gig ID to cookie after successful save
       if (data && data._id) {
+        // Option 1: Cookie (fallback)
         Cookies.set('lastGigId', data._id, {
           domain: '.harx.ai',  // 🔑 important pour le partage entre sous-domaines
           path: '/',
@@ -265,6 +266,32 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
           sameSite: 'None',    // obligatoire pour cross-domain
           expires: 7,          // 7 jours
         });
+        
+        // Option 2: postMessage pour communication cross-domain
+        try {
+          // Envoyer le message à toutes les fenêtres ouvertes
+          window.postMessage({
+            type: 'GIG_CREATED',
+            gigId: data._id,
+            timestamp: Date.now(),
+            source: 'v25-gigsai.harx.ai'
+          }, 'https://v25.harx.ai');
+          
+          // Envoyer aussi au parent si on est dans un iframe
+          if (window.parent !== window) {
+            window.parent.postMessage({
+              type: 'GIG_CREATED',
+              gigId: data._id,
+              timestamp: Date.now(),
+              source: 'v25-gigsai.harx.ai'
+            }, 'https://v25.harx.ai');
+          }
+          
+          console.log('📡 Gig ID sent via postMessage:', data._id);
+        } catch (error) {
+          console.warn('⚠️ postMessage failed, using cookie fallback:', error);
+        }
+        
         console.log('🍪 Gig ID saved to cookie:', data._id);
         console.log('📋 Full gig data:', data);
       }
