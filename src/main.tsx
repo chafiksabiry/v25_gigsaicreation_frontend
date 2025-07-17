@@ -29,6 +29,11 @@ function render(props: { container?: HTMLElement }) {
     root = createRoot(rootElement);
   }
 
+  const lastGigId = Cookies.get('lastGigId');
+  if (lastGigId) {
+    Cookies.set('lastGigId', lastGigId);
+  }
+
   root.render(
     <React.StrictMode>
       <App />
