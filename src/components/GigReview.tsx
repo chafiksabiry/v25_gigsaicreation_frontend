@@ -161,22 +161,36 @@ export function GigReview({
       
       await saveGigData(data);
       await onSubmit();
-      Swal.fire({
+      const result = await Swal.fire({
         title: "Success!",
         text: "Your gig has been published successfully.",
         icon: "success",
+        showCancelButton: true,
         confirmButtonText: "OK",
-      }).then(() => {
-        window.location.href = "/app11";
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#667eea",
+        cancelButtonColor: "#6b7280",
       });
+      
+      if (result.isConfirmed) {
+        window.location.href = "/app11";
+      }
     } catch (error) {
       console.error('Error publishing gig:', error);
-      Swal.fire({
+      const result = await Swal.fire({
         title: "Error!",
         text: error instanceof Error ? error.message : "An unknown error occurred.",
         icon: "error",
+        showCancelButton: true,
         confirmButtonText: "Try Again",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
       });
+      
+      if (result.isConfirmed) {
+        handlePublish(); // Retry publishing
+      }
     }
   };
 

@@ -175,22 +175,36 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
 
       await saveGigData(gigData);
       
-      await Swal.fire({
+      const result = await Swal.fire({
         title: "Success!",
         text: "Gig has been created successfully",
         icon: "success",
+        showCancelButton: true,
         confirmButtonText: "OK",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#667eea",
+        cancelButtonColor: "#6b7280",
       });
 
-      onConfirm();
+      if (result.isConfirmed) {
+        onConfirm();
+      }
     } catch (error) {
       console.error("Error saving gig:", error);
-      await Swal.fire({
+      const result = await Swal.fire({
         title: "Error!",
         text: error instanceof Error ? error.message : "Failed to save gig",
         icon: "error",
-        confirmButtonText: "OK",
+        showCancelButton: true,
+        confirmButtonText: "Try Again",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
       });
+      
+      if (result.isConfirmed) {
+        handleConfirm(); // Retry saving
+      }
     }
   };
 

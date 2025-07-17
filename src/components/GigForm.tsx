@@ -507,10 +507,21 @@ export function GigForm() {
       const docsResponse = await axios.post(`${API_URL}/gig_documentation`, docsPromises);
       if (!docsResponse.data) throw new Error('Failed to save documentation');
 
-      alert('Gig created successfully!');
+      const confirmed = window.confirm('Gig created successfully! Click OK to continue or Cancel to stay on this page.');
+      if (confirmed) {
+        // User clicked OK - could add navigation logic here if needed
+        console.log("User confirmed gig creation success");
+      } else {
+        // User clicked Cancel - stay on current page
+        console.log("User cancelled - staying on current page");
+      }
     } catch (error) {
       console.error('Error creating gig:', error);
-      alert('Error creating gig. Please try again.');
+      const retry = window.confirm('Error creating gig. Click OK to try again or Cancel to continue.');
+      if (retry) {
+        // Could add retry logic here
+        console.log("User wants to retry gig creation");
+      }
     }
   };
 

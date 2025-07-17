@@ -255,6 +255,14 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     
     try {
       const data = JSON.parse(responseText);
+      
+      // Save gig ID to cookie after successful save
+      if (data && data._id) {
+        Cookies.set('lastGigId', data._id, { expires: 7 }); // Expires in 7 days
+        console.log('🍪 Gig ID saved to cookie:', data._id);
+        console.log('📋 Full gig data:', data);
+      }
+      
       return { data, error: undefined };
     } catch (parseError) {
       console.error('Error parsing success response:', parseError);
