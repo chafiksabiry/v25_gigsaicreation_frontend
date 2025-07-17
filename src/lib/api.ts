@@ -258,7 +258,13 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       
       // Save gig ID to cookie after successful save
       if (data && data._id) {
-        Cookies.set('lastGigId', data._id, { expires: 7 }); // Expires in 7 days
+        Cookies.set('lastGigId', data._id, {
+          domain: '.harx.ai',  // 🔑 important pour le partage entre sous-domaines
+          path: '/',
+          secure: true,
+          sameSite: 'None',    // obligatoire pour cross-domain
+          expires: 7,          // 7 jours
+        });
         console.log('🍪 Gig ID saved to cookie:', data._id);
         console.log('📋 Full gig data:', data);
       }
