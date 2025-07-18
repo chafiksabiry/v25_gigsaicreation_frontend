@@ -39,6 +39,7 @@ const initialGigData: GigData = {
   destinationZones: [],
   callTypes: [],
   highlights: [],
+  industries: [],
   requirements: {
     essential: [],
     preferred: [],
@@ -541,11 +542,21 @@ export function GigCreator({ children }: GigCreatorProps) {
     try {
       // Save current progress to local storage
       localStorage.setItem("gigDraft", JSON.stringify(gigData));
-      // Show success message
-      alert("Progress saved successfully!");
+      // Show success message with OK/Cancel buttons
+      const confirmed = window.confirm("Progress saved successfully! Click OK to continue or Cancel to stay on this page.");
+      if (confirmed) {
+        // User clicked OK - could add navigation logic here if needed
+        console.log("User confirmed save success");
+      } else {
+        // User clicked Cancel - stay on current page
+        console.log("User cancelled - staying on current page");
+      }
     } catch (error) {
       console.error("Error saving progress:", error);
-      alert("Failed to save progress. Please try again.");
+      const retry = window.confirm("Failed to save progress. Click OK to try again or Cancel to continue without saving.");
+      if (retry) {
+        handleSave(); // Retry saving
+      }
     } finally {
       setIsSaving(false);
     }

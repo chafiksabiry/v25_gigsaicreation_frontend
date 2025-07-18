@@ -192,6 +192,7 @@ export interface GigData {
   destination_zone: string;
   callTypes: string[];
   highlights: string[];
+  industries: string[];
   requirements: {
     essential: string[];
     preferred: string[];
@@ -404,6 +405,7 @@ export interface GigSuggestion {
     }>;
   };
   sectors: string[];
+  industries: string[];
   activity: {
     options: Array<{
       type: string;

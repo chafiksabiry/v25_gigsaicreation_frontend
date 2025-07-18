@@ -26,6 +26,7 @@ import {
   Sunset,
   Moon,
   Calendar,
+  Search,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { GigSuggestion } from "../types";
@@ -34,6 +35,7 @@ import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
 import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
+import { predefinedOptions } from "../lib/guidance";
 
 type ScheduleEntry = {
   day: string;
@@ -147,109 +149,7 @@ const DESTINATION_ZONES: { [key: string]: string } = {
   "GF": "French Guiana",
 };
 
-interface PredefinedOptions {
-  leads: {
-    sources: string[];
-  };
-  team: {
-    roles: Array<{
-      id: string;
-      name: string;
-      description: string;
-    }>;
-    territories: string[];
-  };
-  basic: {
-    seniorityLevels: string[];
-  };
-  sectors: string[];
-}
 
-const predefinedOptions: PredefinedOptions = {
-  leads: {
-    sources: [
-      "LinkedIn",
-      "Email Marketing",
-      "Social Media",
-      "Referrals",
-      "Events",
-      "Cold Calling",
-      "Website",
-      "Other",
-    ],
-  },
-  team: {
-    roles: [
-      {
-        id: "manager",
-        name: "Manager",
-        description: "Team leader responsible for overall performance",
-      },
-      {
-        id: "senior",
-        name: "Senior",
-        description: "Experienced professional with leadership capabilities",
-      },
-      {
-        id: "mid",
-        name: "Mid-level",
-        description: "Professional with solid experience",
-      },
-      {
-        id: "junior",
-        name: "Junior",
-        description: "Entry-level professional",
-      },
-    ],
-    territories: [
-      "North America",
-      "Europe",
-      "Asia",
-      "South America",
-      "Africa",
-      "Oceania",
-    ],
-  },
-  basic: {
-    seniorityLevels: [
-      "Entry Level",
-      "Junior",
-      "Mid-Level",
-      "Senior",
-      "Team Lead",
-      "Supervisor",
-      "Manager",
-      "Director",
-    ],
-  },
-  sectors: [
-    "Inbound Sales",
-    "Outbound Sales",
-    "Customer Service",
-    "Technical Support",
-    "Account Management",
-    "Lead Generation",
-    "Market Research",
-    "Appointment Setting",
-    "Order Processing",
-    "Customer Retention",
-    "Billing Support",
-    "Product Support",
-    "Help Desk",
-    "Chat Support",
-    "Email Support",
-    "Social Media Support",
-    "Survey Calls",
-    "Welcome Calls",
-    "Follow-up Calls",
-    "Complaint Resolution",
-    "Warranty Support",
-    "Collections",
-    "Dispatch Services",
-    "Emergency Support",
-    "Multilingual Support",
-  ],
-};
 
 
 
@@ -392,9 +292,37 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [territories, setTerritories] = useState<string[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
+  const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<CountryData[]>([]);
+  const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
   const skillsLoadedRef = useRef(false);
+
+
+
+  // Fetch all countries from API for destination zones
+  useEffect(() => {
+    const fetchAllCountries = async () => {
+      setDestinationCountriesLoading(true);
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
+        if (response.ok) {
+          const data: CountryData[] = await response.json();
+          // Sort countries alphabetically by common name
+          const sortedData = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+          setAllCountriesFromAPI(sortedData);
+        } else {
+          console.error('Failed to fetch countries from API');
+        }
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      } finally {
+        setDestinationCountriesLoading(false);
+      }
+    };
+
+    fetchAllCountries();
+  }, []);
 
   // Ensure all team roles have valid seniority structure
   const validateAndFixTeamStructure = () => {
@@ -1613,6 +1541,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           item,
         ];
         break;
+      case "industries":
+        // Validate that the industry is in the allowed list
+        if (predefinedOptions.industries.includes(item)) {
+          newSuggestions.industries = [...(newSuggestions.industries || []), item];
+        } else {
+          console.warn(`Industry "${item}" is not in the allowed list. Skipping.`);
+        }
+        break;
+      case "activities":
+        // Validate that the activity is in the allowed list
+        if (predefinedOptions.activities.includes(item)) {
+          newSuggestions.activities = [...(newSuggestions.activities || []), item];
+        } else {
+          console.warn(`Activity "${item}" is not in the allowed list. Skipping.`);
+        }
+        break;
       case "sectors":
         // Validate that the sector is in the allowed list
         if (predefinedOptions.sectors.includes(item)) {
@@ -1689,6 +1633,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       case "deliverables":
         newSuggestions.deliverables[index] = newValue;
         break;
+      case "industries":
+        // Validate that the industry is in the allowed list
+        if (predefinedOptions.industries.includes(newValue)) {
+          newSuggestions.industries[index] = newValue;
+        } else {
+          console.warn(`Industry "${newValue}" is not in the allowed list. Skipping update.`);
+        }
+        break;
+      case "activities":
+        // Validate that the activity is in the allowed list
+        if (predefinedOptions.activities.includes(newValue)) {
+          newSuggestions.activities[index] = newValue;
+        } else {
+          console.warn(`Activity "${newValue}" is not in the allowed list. Skipping update.`);
+        }
+        break;
       case "sectors":
         // Validate that the sector is in the allowed list
         if (predefinedOptions.sectors.includes(newValue)) {
@@ -1761,6 +1721,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "deliverables":
         newSuggestions.deliverables = newSuggestions.deliverables.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "industries":
+        newSuggestions.industries = newSuggestions.industries.filter(
+          (_, i) => i !== index
+        );
+        break;
+      case "activities":
+        newSuggestions.activities = newSuggestions.activities.filter(
           (_, i) => i !== index
         );
         break;
@@ -1900,17 +1870,24 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           </div>
                         )}
                       </div>
-                    ) : section === "sectors" ? (
+                    ) : section === "sectors" || section === "industries" || section === "activities" ? (
                       <select
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                         autoFocus
                       >
-                        <option value="">Select a sector...</option>
-                        {predefinedOptions.sectors.filter((sector) => !currentItems.includes(sector) || sector === items[index]).map((sector) => (
-                          <option key={sector} value={sector}>
-                            {sector}
+                        <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
+                        {(section === "sectors" ? predefinedOptions.sectors : section === "industries" ? predefinedOptions.industries : predefinedOptions.activities).filter((item: string) => {
+                          // When editing, include the current item being edited
+                          if (editingIndex >= 0 && currentItems[editingIndex] === item) {
+                            return true;
+                          }
+                          // Otherwise, exclude items that are already selected
+                          return !currentItems.includes(item);
+                        }).map((item: string) => (
+                          <option key={item} value={item}>
+                            {item}
                           </option>
                         ))}
                       </select>
@@ -2032,18 +2009,25 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </div>
                 )}
               </div>
-            ) : section === "sectors" ? (
+            ) : section === "sectors" || section === "industries" || section === "activities" ? (
               <select
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
                 autoFocus
               >
-                <option value="">Select a sector...</option>
-                {predefinedOptions.sectors.filter((sector) => !currentItems.includes(sector)).map(
-                  (sector) => (
-                    <option key={sector} value={sector}>
-                      {sector}
+                <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
+                {(section === "sectors" ? predefinedOptions.sectors : section === "industries" ? predefinedOptions.industries : predefinedOptions.activities).filter((item: string) => {
+                  // When editing, include the current item being edited
+                  if (editingIndex >= 0 && currentItems[editingIndex] === item) {
+                    return true;
+                  }
+                  // Otherwise, exclude items that are already selected
+                  return !currentItems.includes(item);
+                }).map(
+                  (item: string) => (
+                    <option key={item} value={item}>
+                      {item}
                     </option>
                   )
                 )}
@@ -2853,6 +2837,281 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               ? 'Loading timezones from API...'
               : 'No timezones available'
           }
+        </p>
+      </div>
+    );
+  };
+
+  const renderDestinationZonesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      
+      // Use the existing addItem logic for destination zones
+      addItem("destinationZones", value);
+      
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveDestinationZone = (zone: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.destinationZones = newSuggestions.destinationZones.filter(z => z !== zone);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.destinationZones || [];
+    
+    // Get all available countries from API, excluding already selected ones
+    const availableCountries = allCountriesFromAPI
+      .filter(country => !selected.includes(country.cca2))
+      .map(country => ({ 
+        code: country.cca2, 
+        name: country.name.common 
+      }));
+
+    return (
+      <div className="mb-8 p-6 rounded-xl border border-amber-200 bg-amber-50">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-amber-500 text-white font-bold mr-3">D</div>
+          <h4 className="text-xl font-bold text-amber-900">Destination Zones</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(zone => (
+            <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              <span>{getCountryName(zone)}</span>
+              <span className="ml-1 text-xs text-amber-600 bg-amber-200 px-1 rounded">
+                {zone}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleRemoveDestinationZone(zone)}
+                className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-amber-300 bg-white text-amber-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 mb-2"
+          defaultValue=""
+          onChange={handleAddDestinationZone}
+          disabled={destinationCountriesLoading}
+        >
+          <option value="" disabled>
+            {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
+          </option>
+          {availableCountries.map(({ code, name }) => (
+            <option key={code} value={name}>{name} ({code})</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          {destinationCountriesLoading 
+            ? 'Loading countries from API...' 
+            : `${availableCountries.length} countries available for selection`
+          }
+        </p>
+      </div>
+    );
+  };
+
+  const renderSectorsSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddSector = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.sectors) newSuggestions.sectors = [];
+      if (!newSuggestions.sectors.includes(value)) {
+        newSuggestions.sectors = [...newSuggestions.sectors, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveSector = (sector: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.sectors = newSuggestions.sectors.filter(s => s !== sector);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.sectors || [];
+    const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold mr-3">S</div>
+          <h4 className="text-xl font-bold text-orange-900">Sectors</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(sector => (
+            <span key={sector} className="flex items-center bg-orange-100 text-orange-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {sector}
+              <button
+                type="button"
+                onClick={() => handleRemoveSector(sector)}
+                className="ml-2 text-orange-600 hover:text-orange-800 rounded-full focus:outline-none focus:bg-orange-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2"
+          defaultValue=""
+          onChange={handleAddSector}
+        >
+          <option value="" disabled>Add sector...</option>
+          {available.map(sector => (
+            <option key={sector} value={sector}>{sector}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all relevant sectors for this position
+        </p>
+      </div>
+    );
+  };
+
+  const renderActivitiesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.activities) newSuggestions.activities = [];
+      if (!newSuggestions.activities.includes(value)) {
+        newSuggestions.activities = [...newSuggestions.activities, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveActivity = (activity: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.activities = newSuggestions.activities.filter(a => a !== activity);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.activities || [];
+    const available = predefinedOptions.activities.filter(activity => !selected.includes(activity));
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">A</div>
+          <h4 className="text-xl font-bold text-green-900">Activities</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(activity => (
+            <span key={activity} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {activity}
+              <button
+                type="button"
+                onClick={() => handleRemoveActivity(activity)}
+                className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+          defaultValue=""
+          onChange={handleAddActivity}
+        >
+          <option value="" disabled>Add activity...</option>
+          {available.map(activity => (
+            <option key={activity} value={activity}>{activity}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all relevant activities for this position
+        </p>
+      </div>
+    );
+  };
+
+  const renderIndustriesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.industries) newSuggestions.industries = [];
+      if (!newSuggestions.industries.includes(value)) {
+        newSuggestions.industries = [...newSuggestions.industries, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveIndustry = (industry: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.industries = newSuggestions.industries.filter(i => i !== industry);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.industries || [];
+    const available = predefinedOptions.industries.filter(industry => !selected.includes(industry));
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold mr-3">I</div>
+          <h4 className="text-xl font-bold text-indigo-900">Industries</h4>
+        </div>
+        {/* Badges sélectionnés */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {selected.map(industry => (
+            <span key={industry} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {industry}
+              <button
+                type="button"
+                onClick={() => handleRemoveIndustry(industry)}
+                className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 mb-2"
+          defaultValue=""
+          onChange={handleAddIndustry}
+        >
+          <option value="" disabled>Add industry...</option>
+          {available.map(industry => (
+            <option key={industry} value={industry}>{industry}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all relevant industries for this position
         </p>
       </div>
     );
@@ -4757,6 +5016,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   )}
                 </div>
                 <div>
+                  {renderIndustriesSection()}
+                </div>
+                <div>
+                  {renderActivitiesSection()}
+                </div>
+                <div>
                   <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>
                   {renderEditableList(
                     "deliverables",
@@ -4765,19 +5030,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   )}
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Sectors</h4>
-                  {renderEditableList("sectors", suggestions.sectors, "Sectors")}
+                  {renderSectorsSection()}
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Destination Zones</h4>
-                  {(() => {
-                    console.log('🏢 Basic Info - Destination Zones:', suggestions.destinationZones);
-                    return renderEditableList(
-                      "destinationZones",
-                      suggestions.destinationZones,
-                      "Destination Zones"
-                    );
-                  })()}
+                  {renderDestinationZonesSection()}
                 </div>
                 <div>
                   {renderSenioritySection()}

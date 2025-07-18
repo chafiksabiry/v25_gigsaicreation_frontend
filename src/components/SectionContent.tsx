@@ -12,6 +12,9 @@ import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
 import { TimezoneCode } from "../lib/ai";
 import { DaySchedule } from "../lib/scheduleUtils";
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
+import { setLastGigId } from '../lib/postMessageHandler';
 
 interface SectionContentProps {
   section: string;
@@ -330,7 +333,7 @@ export function SectionContent({
             errors={errors}
             onPrevious={() => onSectionChange?.('skills')}
             onNext={() => onSectionChange?.('docs')}
-            currentSection={section}
+            currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs'}
           />
         );
 
@@ -375,6 +378,25 @@ export function SectionContent({
             skipValidation={false}
             onSubmit={async () => {
               console.log('Submitting gig data:', initializedData);
+              
+              try {
+                // Save gig data to API
+                const result = await saveGigData(initializedData);
+                
+                if (result.error) {
+                  console.error('Error saving gig:', result.error);
+                  return;
+                }
+                
+                if (result.data && result.data._id) {
+                  // Save lastGigId using the utility function
+                  setLastGigId(result.data._id);
+                  
+                  console.log('✅ Gig saved successfully with ID:', result.data._id);
+                }
+              } catch (error) {
+                console.error('Error in gig submission:', error);
+              }
             }}
           />
         );
