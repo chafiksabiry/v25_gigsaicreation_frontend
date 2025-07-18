@@ -120,6 +120,37 @@ export const predefinedOptions = {
     'Emergency Support',
     'Multilingual Support'
   ],
+  industries: [
+    'Retail / e-Commerce',
+    'Telecom & Internet Providers',
+    'Banking & Fintech',
+    'Automotive',
+    'Health & Insurance',
+    'Hospitality / Tourism / Airlines',
+    'Insurance',
+    'Education & Training',
+    'SaaS B2B',
+    'Real Estate',
+    'Transport / Logistics',
+    'Events / Ticketing',
+    'Business Services (Legal, Consulting, Administrative, etc.)',
+    'Survey Institutes'
+  ],
+  activities: [
+    'Customer Service',
+    'Technical Support',
+    'Order Taking',
+    'Administrative Support',
+    'Complaints / Crisis Management',
+    'After-Sales Hotline',
+    'Telemarketing / Telesales',
+    'Appointment Scheduling',
+    'Customer Follow-Ups',
+    'Surveys & Polls',
+    'Telephone Debt Collection',
+    'Customer Loyalty / Upselling',
+    'Customer Onboarding'
+  ],
   availability: {
     schedule: [
       'Monday',

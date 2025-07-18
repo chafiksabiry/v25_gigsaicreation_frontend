@@ -1385,6 +1385,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     description: generatedData.description || '',
     category: validatedSectors[0] || '',
     highlights: generatedData.highlights || [],
+    industries: generatedData.industries || [],
+    activities: generatedData.activities || [],
     destinationZones: (generatedData.destinationZones || []).map(zone => {
       // If it's "Global", replace with "France"
       if (zone.toLowerCase() === 'global') {
@@ -1701,7 +1703,11 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant that creates job listings. Generate a JSON response with this structure:
+            content: `You are an AI assistant that creates job listings. 
+
+CRITICAL: You must return ONLY a valid JSON object. Do not include any explanatory text, markdown formatting, or comments. The response must be parseable JSON only.
+
+Generate a JSON response with this structure:
 
 {
   "title": "string",
@@ -1711,6 +1717,8 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
   "jobTitles": ["string"],
   "deliverables": ["string"],
   "sectors": ["string (MUST be from the predefined list)"],
+  "industries": ["string (MUST be from the predefined list)"],
+  "activities": ["string (MUST be from the predefined list)"],
   "destinationZones": ["string"],
   "schedule": {
     "schedules": [{"days": ["Monday", "Tuesday"], "hours": {"start": "09:00", "end": "17:00"}}],
@@ -1751,6 +1759,18 @@ Rules:
 - Use standard time zones and working hours
 - IMPORTANT: For destinationZones, use specific country names (e.g., "France", "United States", "Germany") NOT "Global" or continents
 - Default destination zone should be "France" if no specific country is mentioned
+- CRITICAL: For activities, carefully analyze the job description and select the most relevant activities:
+  * If the job involves selling products/services → include "Telemarketing / Telesales", "Customer Loyalty / Upselling"
+  * If the job involves customer support → include "Customer Service", "Technical Support"
+  * If the job involves appointment booking → include "Appointment Scheduling"
+  * If the job involves order management → include "Order Taking"
+  * If the job involves customer onboarding → include "Customer Onboarding"
+  * If the job involves follow-up calls → include "Customer Follow-Ups"
+  * If the job involves surveys → include "Surveys & Polls"
+  * If the job involves collections → include "Telephone Debt Collection"
+  * If the job involves crisis management → include "Complaints / Crisis Management"
+  * If the job involves after-sales → include "After-Sales Hotline"
+  * If the job involves administrative tasks → include "Administrative Support"
 - CRITICAL: For sectors, you MUST ONLY use these exact sectors (no variations, no new sectors):
   * Inbound Sales
   * Outbound Sales
@@ -1777,6 +1797,35 @@ Rules:
   * Dispatch Services
   * Emergency Support
   * Multilingual Support
+- CRITICAL: For industries, you MUST ONLY use these exact industries (no variations, no new industries):
+  * Retail / e-Commerce
+  * Télécom & Fournisseurs d'accès
+  * Banques & Fintech
+  * Automobile
+  * Santé & Mutuelles
+  * Hôtellerie / Tourisme / aérien
+  * Assurance
+  * Éducation & Formation
+  * SaaS B2B
+  * Immobilier
+  * Transport / Logistique
+  * Événementiel / Billetterie
+  * Services aux entreprises (juridiques, consulting, administratif …)
+  * Instituts de sondage
+- CRITICAL: For activities, you MUST ONLY use these exact activities (no variations, no new activities):
+  * Customer Service
+  * Technical Support
+  * Order Taking
+  * Administrative Support
+  * Complaints / Crisis Management
+  * After-Sales Hotline
+  * Telemarketing / Telesales
+  * Appointment Scheduling
+  * Customer Follow-Ups
+  * Surveys & Polls
+  * Telephone Debt Collection
+  * Customer Loyalty / Upselling
+  * Customer Onboarding
 - CRITICAL: For schedule flexibility, you MUST ONLY use these exact options (no variations, no new options):
   * Remote Work Available
   * Flexible Hours
@@ -1819,7 +1868,9 @@ Rules:
           },
           {
             role: "user",
-            content: `Generate job listing for: ${description}`
+            content: `Generate job listing for: ${description}
+
+CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, markdown formatting, or additional comments before or after the JSON. The response must be parseable JSON only.`
           }
         ],
         temperature: 0.7,
@@ -1832,7 +1883,32 @@ Rules:
       }
 
       try {
-        const parsedResult = JSON.parse(content);
+        // Try to extract JSON from the response if it contains extra text
+        let jsonContent = content.trim();
+        
+        // If the response contains markdown code blocks, extract the JSON from them
+        if (jsonContent.includes('```json')) {
+          const jsonMatch = jsonContent.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            jsonContent = jsonMatch[1].trim();
+          }
+        } else if (jsonContent.includes('```')) {
+          // Handle code blocks without language specification
+          const jsonMatch = jsonContent.match(/```\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            jsonContent = jsonMatch[1].trim();
+          }
+        }
+        
+        // Try to find JSON object in the content
+        if (!jsonContent.startsWith('{')) {
+          const jsonMatch = jsonContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            jsonContent = jsonMatch[0];
+          }
+        }
+        
+        const parsedResult = JSON.parse(jsonContent);
         
         // Validate sectors to ensure only predefined ones are used
         if (parsedResult.sectors && parsedResult.sectors.length > 0) {
@@ -1845,6 +1921,32 @@ Rules:
             return isValid;
           });
           parsedResult.sectors = filteredSectors;
+        }
+
+        // Validate industries to ensure only predefined ones are used
+        if (parsedResult.industries && parsedResult.industries.length > 0) {
+          const validIndustries = predefinedOptions.industries;
+          const filteredIndustries = parsedResult.industries.filter((industry: string) => {
+            const isValid = validIndustries.includes(industry);
+            if (!isValid) {
+              console.warn(`Invalid industry "${industry}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          parsedResult.industries = filteredIndustries;
+        }
+
+        // Validate activities to ensure only predefined ones are used
+        if (parsedResult.activities && parsedResult.activities.length > 0) {
+          const validActivities = predefinedOptions.activities;
+          const filteredActivities = parsedResult.activities.filter((activity: string) => {
+            const isValid = validActivities.includes(activity);
+            if (!isValid) {
+              console.warn(`Invalid activity "${activity}" - not in allowed list`);
+            }
+            return isValid;
+          });
+          parsedResult.activities = filteredActivities;
         }
 
         // Validate flexibility options to ensure only predefined ones are used
@@ -1995,7 +2097,8 @@ Rules:
         return parsedResult;
       } catch (parseError) {
         console.error('Failed to parse AI response:', content);
-        throw new Error('Failed to parse AI suggestions');
+        console.error('Parse error:', parseError);
+        throw new Error(`Failed to parse AI suggestions. The AI returned invalid JSON. Please try again.`);
       }
     });
 

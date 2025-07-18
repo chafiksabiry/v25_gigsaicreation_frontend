@@ -95,7 +95,8 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
   };
 
   const handleDeleteSkill = async (skillId: string, category: 'soft' | 'technical' | 'professional') => {
-    if (!confirm('Are you sure you want to delete this skill?')) {
+    const confirmed = window.confirm('Are you sure you want to delete this skill? Click OK to delete or Cancel to keep it.');
+    if (!confirmed) {
       return;
     }
 

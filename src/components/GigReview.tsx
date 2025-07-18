@@ -161,22 +161,36 @@ export function GigReview({
       
       await saveGigData(data);
       await onSubmit();
-      Swal.fire({
+      const result = await Swal.fire({
         title: "Success!",
         text: "Your gig has been published successfully.",
         icon: "success",
+        showCancelButton: true,
         confirmButtonText: "OK",
-      }).then(() => {
-        window.location.href = "/app11";
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#667eea",
+        cancelButtonColor: "#6b7280",
       });
+      
+      if (result.isConfirmed) {
+        window.location.href = "/app11";
+      }
     } catch (error) {
       console.error('Error publishing gig:', error);
-      Swal.fire({
+      const result = await Swal.fire({
         title: "Error!",
         text: error instanceof Error ? error.message : "An unknown error occurred.",
         icon: "error",
+        showCancelButton: true,
         confirmButtonText: "Try Again",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
       });
+      
+      if (result.isConfirmed) {
+        handlePublish(); // Retry publishing
+      }
     }
   };
 
@@ -364,6 +378,30 @@ export function GigReview({
                       </span>
                     )}
                   </div>
+
+                  {/* Industries Section */}
+                  {data?.industries && data.industries.length > 0 && (
+                    <div className="mb-6">
+                      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-indigo-100 rounded-lg">
+                            <Target className="w-5 h-5 text-indigo-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-medium text-indigo-900">Industries</h3>
+                            <p className="text-sm text-indigo-700">Relevant industries for this position</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {data.industries.map((industry, index) => (
+                            <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
+                              {industry}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Additional Details Grid */}
