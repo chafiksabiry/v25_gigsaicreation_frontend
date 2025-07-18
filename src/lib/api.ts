@@ -258,29 +258,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       
               // Save gig ID to localStorage after successful save
         if (data && data._id) {
-          try {
-            localStorage.setItem('lastGigId', data._id);
-            console.log('💾 Gig ID saved to localStorage:', data._id);
-          } catch (error) {
-            console.warn('⚠️ localStorage failed:', error);
-          }
-
-          try {
-            // Envoyer le message au parent
-            window.parent.postMessage(
-              {
-                type: "LAST_GIG",
-                data: data,
-              },
-              "https://v25.harx.ai" // très important pour la sécurité
-            );
-            
-            console.log('📡 Gig data sent via postMessage:', data._id);
-          } catch (error) {
-            console.warn('⚠️ postMessage failed:', error);
-          }
-          
-          console.log('📋 Full gig data:', data);
+          localStorage.setItem('lastGigId', data._id);
         }
       
       return { data, error: undefined };
