@@ -2,6 +2,7 @@ import type { Gig, GigHistory } from './types';
 import { GigData } from '../types';
 import Cookies from 'js-cookie';
 import axios from 'axios';
+import { setLastGigId } from './postMessageHandler';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -256,10 +257,10 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     try {
       const data = JSON.parse(responseText);
       
-              // Save gig ID to localStorage after successful save
-        if (data && data._id) {
-          localStorage.setItem('lastGigId', data._id);
-        }
+      // Save gig ID using the new utility function
+      if (data && data._id) {
+        setLastGigId(data._id);
+      }
       
       return { data, error: undefined };
     } catch (parseError) {

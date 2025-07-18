@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { usePostMessageHandler, requestLastGigId } from '../lib/postMessageHandler';
+import { usePostMessageHandler, requestLastGigId, getLastGigId } from '../lib/postMessageHandler';
 import Cookies from 'js-cookie';
 
 export const PostMessageExample: React.FC = () => {
@@ -15,21 +15,8 @@ export const PostMessageExample: React.FC = () => {
     }
   });
 
-  // Fonction pour récupérer le Gig ID (priorité: postMessage > localStorage)
-  const getLastGigId = (): string | null => {
-    // 1. Essayer postMessage (le plus récent)
-    if (lastGigId) {
-      return lastGigId;
-    }
-    
-    // 2. Essayer localStorage
-    const fromLocalStorage = localStorage.getItem('lastGigId');
-    if (fromLocalStorage) {
-      return fromLocalStorage;
-    }
-    
-    return null;
-  };
+  // Use the new utility function to get the current Gig ID
+  const currentGigId = getLastGigId() || lastGigId;
 
   // Demander le dernier Gig ID au chargement
   useEffect(() => {
@@ -40,8 +27,6 @@ export const PostMessageExample: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
-
-  const currentGigId = getLastGigId();
 
   return (
     <div className="p-4 border rounded-lg bg-gray-50">
@@ -85,9 +70,19 @@ export const PostMessageExample: React.FC = () => {
         <div className="text-sm text-gray-600">
           <p>📋 Sources de données (par ordre de priorité):</p>
           <ol className="list-decimal list-inside ml-4">
+            <li>Cookies (persistant, 30 jours)</li>
+            <li>localStorage (persistant, migration automatique)</li>
             <li>PostMessage (temps réel)</li>
-            <li>localStorage (persistant)</li>
           </ol>
+        </div>
+        
+        <div className="bg-blue-50 p-3 rounded border">
+          <h4 className="font-semibold mb-2">🔧 Utilisation des fonctions cookies:</h4>
+          <div className="text-xs space-y-1">
+            <p><code>import { getLastGigId, setLastGigId } from '../lib/postMessageHandler'</code></p>
+            <p><code>const gigId = getLastGigId(); // Récupère depuis cookies > localStorage</code></p>
+            <p><code>setLastGigId('new-gig-id'); // Sauvegarde dans cookies + localStorage</code></p>
+          </div>
         </div>
       </div>
     </div>
