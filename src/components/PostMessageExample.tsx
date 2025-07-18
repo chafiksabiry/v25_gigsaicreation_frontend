@@ -7,9 +7,6 @@ export const PostMessageExample: React.FC = () => {
     onGigCreated: (gigId) => {
       console.log('🎉 Nouveau gig créé reçu:', gigId);
       
-      // Optionnel: sauvegarder dans localStorage comme backup
-      localStorage.setItem('lastGigId', gigId);
-      
       // Envoyer une confirmation
       sendConfirmation(gigId);
       
@@ -18,7 +15,7 @@ export const PostMessageExample: React.FC = () => {
     }
   });
 
-  // Fonction pour récupérer le Gig ID (priorité: postMessage > localStorage > cookie)
+  // Fonction pour récupérer le Gig ID (priorité: postMessage > localStorage)
   const getLastGigId = (): string | null => {
     // 1. Essayer postMessage (le plus récent)
     if (lastGigId) {
@@ -29,12 +26,6 @@ export const PostMessageExample: React.FC = () => {
     const fromLocalStorage = localStorage.getItem('lastGigId');
     if (fromLocalStorage) {
       return fromLocalStorage;
-    }
-    
-    // 3. Essayer cookie (fallback)
-    const fromCookie = Cookies.get('lastGigId');
-    if (fromCookie) {
-      return fromCookie;
     }
     
     return null;
@@ -96,7 +87,6 @@ export const PostMessageExample: React.FC = () => {
           <ol className="list-decimal list-inside ml-4">
             <li>PostMessage (temps réel)</li>
             <li>localStorage (persistant)</li>
-            <li>Cookie (fallback)</li>
           </ol>
         </div>
       </div>

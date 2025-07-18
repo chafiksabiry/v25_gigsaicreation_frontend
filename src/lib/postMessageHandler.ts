@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 
 interface GigMessage {
-  type: 'GIG_CREATED' | 'LAST_GIG_ID_RESPONSE';
-  gigId: string;
-  timestamp: number;
-  source: string;
+  type: 'LAST_GIG' | 'LAST_GIG_ID_RESPONSE';
+  data?: any;
+  gigId?: string;
+  timestamp?: number;
+  source?: string;
 }
 
 interface PostMessageHandlerOptions {
@@ -34,18 +35,18 @@ export const usePostMessageHandler = (options: PostMessageHandlerOptions = {}) =
         return;
       }
 
-      const { type, gigId, timestamp, source } = event.data;
+      const { type, data, gigId, timestamp, source } = event.data;
 
-      // Traiter les messages de type GIG_CREATED
-      if (type === 'GIG_CREATED' && gigId) {
-        console.log('📨 Message reçu:', { type, gigId, source, timestamp });
+      // Traiter les messages de type LAST_GIG
+      if (type === 'LAST_GIG' && data && data._id) {
+        console.log('📨 Message reçu:', { type, gigId: data._id, source, timestamp });
         
-        setLastGigId(gigId);
+        setLastGigId(data._id);
         setLastMessage(event.data);
         
         // Appeler le callback si fourni
         if (onGigCreated) {
-          onGigCreated(gigId);
+          onGigCreated(data._id);
         }
       }
       

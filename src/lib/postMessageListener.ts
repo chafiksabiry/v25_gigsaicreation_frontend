@@ -29,8 +29,8 @@ export const setupPostMessageListener = (options: PostMessageListenerOptions = {
         handleRequestLastGigId(event);
         break;
         
-      case 'GIG_RECEIVED':
-        handleGigReceived(event);
+      case 'LAST_GIG':
+        handleLastGig(event);
         break;
         
       default:
@@ -39,8 +39,8 @@ export const setupPostMessageListener = (options: PostMessageListenerOptions = {
   };
 
   const handleRequestLastGigId = (event: MessageEvent) => {
-    // Récupérer le dernier Gig ID depuis le cookie
-    const lastGigId = Cookies.get('lastGigId');
+    // Récupérer le dernier Gig ID depuis localStorage
+    const lastGigId = localStorage.getItem('lastGigId');
     
     if (lastGigId) {
       // Envoyer la réponse
@@ -63,6 +63,24 @@ export const setupPostMessageListener = (options: PostMessageListenerOptions = {
       
       console.log('📤 Aucun Gig ID trouvé');
     }
+  };
+
+  const handleLastGig = (event: MessageEvent) => {
+    const { data } = event.data;
+    console.log('✅ Dernier gig reçu:', data);
+    
+    // Sauvegarder dans localStorage
+    if (data && data._id) {
+      try {
+        localStorage.setItem('lastGigId', data._id);
+        console.log('💾 Gig ID saved to localStorage:', data._id);
+      } catch (error) {
+        console.warn('⚠️ localStorage failed:', error);
+      }
+    }
+    
+    // Vous pouvez ajouter ici la logique pour traiter le gig reçu
+    // Par exemple: mettre à jour l'UI, rediriger, etc.
   };
 
   const handleGigReceived = (event: MessageEvent) => {
