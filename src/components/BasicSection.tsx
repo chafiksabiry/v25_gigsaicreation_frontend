@@ -17,6 +17,7 @@ import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
 import { countryToAlpha2, alpha2ToCountry } from '../lib/countryCodes';
+// import { GigStatusSelector } from './GigStatusSelector';
 
 // Enregistrement des langues pour la traduction des noms de pays
 i18n.registerLocale(fr);

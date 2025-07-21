@@ -40,6 +40,7 @@ const initialGigData: GigData = {
   callTypes: [],
   highlights: [],
   industries: [],
+  status: 'to_activate',
   requirements: {
     essential: [],
     preferred: [],

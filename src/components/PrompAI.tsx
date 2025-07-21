@@ -62,6 +62,7 @@ const PrompAI: React.FC = () => {
     category: "",
     industries: [],
     activities: [],
+    status: 'to_activate',
     availability: {
       schedule: [{
         day: "",

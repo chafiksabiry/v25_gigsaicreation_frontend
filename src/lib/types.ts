@@ -31,7 +31,7 @@ export interface ParsedGig {
   timeline: string;
   type: string;
   description: string;
-  status?: 'draft' | 'pending_review' | 'published' | 'closed';
+  status?: 'to_activate' | 'active' | 'inactive' | 'archived';
   destination_zone?: string;
   seniority?: {
     level: string;
@@ -143,7 +143,7 @@ export interface Gig {
     currency: string;
     frequency?: string;
   };
-  status: 'draft' | 'pending_review' | 'published' | 'closed';
+  status: 'to_activate' | 'active' | 'inactive' | 'archived';
   created_at: string;
   updated_at: string;
 }

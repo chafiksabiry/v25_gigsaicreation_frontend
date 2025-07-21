@@ -11,6 +11,7 @@ export interface GigData {
   highlights: string[];
   industries: string[];
   activities: string[];
+  status?: 'to_activate' | 'active' | 'inactive' | 'archived';
   requirements: {
     essential: string[];
     preferred: string[];

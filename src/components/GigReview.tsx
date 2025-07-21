@@ -28,6 +28,7 @@ import { validateGigData } from "../lib/validation";
 import { saveGigData } from '../lib/api';
 import { groupSchedules } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchCompanies } from '../lib/api';
+// import { GigStatusBadge } from './GigStatusBadge';
 
 interface GigReviewProps {
   data: GigData;
@@ -377,6 +378,7 @@ export function GigReview({
                         {data.seniority.yearsExperience} Years Experience
                       </span>
                     )}
+                    {/* Gig Status display removed */}
                   </div>
 
                   {/* Industries Section */}
