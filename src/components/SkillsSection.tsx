@@ -345,7 +345,10 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     if (type === 'languages') {
       const languageSkill = skill as { language: string; proficiency: string; iso639_1: string };
       // For languages, get the name from the ID
-      const languageName = getLanguageNameById(languageSkill.language) || languageSkill.language;
+      let languageName = languageSkill.language; // Default to ID
+      if (!languagesLoading) {
+        languageName = getLanguageNameById(languageSkill.language) || languageSkill.language;
+      }
       setNewSkill({
         language: languageName,
         proficiency: languageSkill.proficiency,
@@ -399,7 +402,10 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     if (editingIndex.type === 'languages') {
       const languageSkill = currentSkill as { language: string; proficiency: string; iso639_1: string };
       // For languages, compare by name (since we're editing with names)
-      const currentLanguageName = getLanguageNameById(languageSkill.language) || languageSkill.language;
+      let currentLanguageName = languageSkill.language; // Default to ID
+      if (!languagesLoading) {
+        currentLanguageName = getLanguageNameById(languageSkill.language) || languageSkill.language;
+      }
       nameChanged = currentLanguageName !== newSkill.language;
     } else {
       // Handle skills - support both ObjectId format and string format
@@ -642,7 +648,11 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
               let skillName = '';
               if (isLanguage) {
                 // For languages, get the name from the ID
-                skillName = getLanguageNameById(skill.language) || skill.language;
+                if (languagesLoading) {
+                  skillName = 'Loading...';
+                } else {
+                  skillName = getLanguageNameById(skill.language) || skill.language;
+                }
               } else {
                 if (typeof skill === 'string') {
                   // Handle string skill (ID or name)

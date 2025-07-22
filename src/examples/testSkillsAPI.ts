@@ -2,8 +2,8 @@
 import { 
   loadSoftSkills, 
   loadProfessionalSkills, 
-  loadTechnicalSkills,
-  getSoftSkillOptions, 
+  loadTechnicalSkills, 
+  getSoftSkillOptions,
   getProfessionalSkillOptions, 
   getTechnicalSkillOptions,
   getSoftSkillNameById,
@@ -68,9 +68,9 @@ export async function testCompleteSkillsAPI() {
     const testProfessionalSkillId = professionalSkills[0]._id;
     const testTechnicalSkillId = technicalSkills[0]._id;
     
-    const softSkillName = getSoftSkillNameById(testSoftSkillId);
+      const softSkillName = getSoftSkillNameById(testSoftSkillId);
     const professionalSkillName = getProfessionalSkillNameById(testProfessionalSkillId);
-    const technicalSkillName = getTechnicalSkillNameById(testTechnicalSkillId);
+      const technicalSkillName = getTechnicalSkillNameById(testTechnicalSkillId);
     
     console.log(`✅ ID to name conversion results:`);
     console.log(`  - Soft Skill ID "${testSoftSkillId}" -> Name: "${softSkillName}"`);
@@ -83,7 +83,7 @@ export async function testCompleteSkillsAPI() {
     const testProfessionalSkillNames = professionalSkills.slice(0, 3).map(s => s.name);
     const testTechnicalSkillNames = technicalSkills.slice(0, 3).map(s => s.name);
     
-    const softSkillIds = convertSoftSkillNamesToIds(testSoftSkillNames);
+      const softSkillIds = convertSoftSkillNamesToIds(testSoftSkillNames);
     const professionalSkillIds = convertProfessionalSkillNamesToIds(testProfessionalSkillNames);
     const technicalSkillIds = convertTechnicalSkillNamesToIds(testTechnicalSkillNames);
     
@@ -147,7 +147,7 @@ export async function testCompleteSkillsAPI() {
         technical: { id: testTechnicalSkillId, name: technicalSkillName }
       }
     };
-
+    
   } catch (error) {
     console.error('❌ Error testing skills API:', error);
     return {
