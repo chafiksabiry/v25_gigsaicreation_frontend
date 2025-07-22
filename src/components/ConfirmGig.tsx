@@ -1,114 +1,251 @@
 import React from "react";
 import Swal from "sweetalert2";
 import { CheckCircle, AlertCircle } from "lucide-react";
-import type { ParsedGig } from "../lib/types";
+import type { GigData } from "../types";
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
 
 interface ConfirmGigProps {
-  gig: ParsedGig;
+  gig: GigData;
   onConfirm: () => void;
-  onEdit: () => void;
+  onCancel: () => void;
 }
 
-export function ConfirmGig({ gig, onConfirm, onEdit }: ConfirmGigProps) {
+export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel }) => {
   const handleConfirm = async () => {
     try {
-      const response = await fetch("http://localhost:5004/api/gigs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(gig),
-      });
+      let userId: string;
+      let companyId: string;
 
-      const data = await response.json();
+      companyId = Cookies.get('companyId') || "";
+      userId = Cookies.get('userId') || "";
 
-      if (!response.ok) {
-        throw new Error(data.message || "Échec de la publication du gig");
+      if (!userId || !companyId) {
+        throw new Error("User ID or Company ID not found in cookies");
       }
 
-      // 🎉 Afficher une notification de succès
-      Swal.fire({
-        title: "Succès!",
-        text: "Votre gig a été publié avec succès.",
+      const gigData: GigData = {
+        ...gig,
+        userId: Cookies.get('userId') || "",
+        companyId: Cookies.get('companyId') || "",
+        category: gig.category || "",
+        destination_zone: gig.destination_zone || "",
+        callTypes: gig.callTypes || [],
+        highlights: gig.highlights || [],
+        requirements: {
+          essential: gig.requirements?.essential || [],
+          preferred: gig.requirements?.preferred || []
+        },
+        benefits: gig.benefits || [],
+        availability: {
+          schedule: gig.schedule?.schedules?.map(schedule => ({
+            day: schedule.day?.[0] || "",
+            hours: {
+              start: schedule.hours?.start || "",
+              end: schedule.hours?.end || ""
+            }
+          })) || [],
+          timeZones: Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones : (gig.schedule?.timeZones ? [gig.schedule.timeZones] : []),
+          time_zone: gig.schedule?.time_zone || (Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones[0] : ""),
+          flexibility: gig.schedule?.flexibility || [],
+          minimumHours: gig.schedule?.minimumHours || {
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+          }
+        },
+        schedule: {
+          schedules: gig.schedule?.schedules?.map(schedule => ({
+            day: schedule.day || "",
+            hours: {
+              start: schedule.hours?.start || "",
+              end: schedule.hours?.end || ""
+            }
+          })) || [],
+          timeZones: Array.isArray(gig.schedule?.timeZones) ? gig.schedule.timeZones : (gig.schedule?.timeZones ? [gig.schedule.timeZones] : []),
+          flexibility: gig.schedule?.flexibility || [],
+          minimumHours: gig.schedule?.minimumHours || {},
+        },
+        commission: {
+          base: gig.commission?.base || "",
+          baseAmount: gig.commission?.baseAmount || 0,
+          bonus: gig.commission?.bonus || "",
+          bonusAmount: gig.commission?.bonusAmount || 0,
+          structure: gig.commission?.structure || "",
+          currency: gig.commission?.currency || "",
+          minimumVolume: {
+            amount: gig.commission?.minimumVolume?.amount || 0,
+            period: gig.commission?.minimumVolume?.period || "",
+            unit: gig.commission?.minimumVolume?.unit || ""
+          },
+          transactionCommission: {
+            type: gig.commission?.transactionCommission?.type || "",
+            amount: gig.commission?.transactionCommission?.amount || 0
+          },
+          kpis: gig.commission?.kpis || []
+        },
+        leads: {
+          types: gig.leads?.types || [],
+          sources: gig.leads?.sources || [],
+          distribution: {
+            method: gig.leads?.distribution?.method || "",
+            rules: gig.leads?.distribution?.rules || []
+          },
+          qualificationCriteria: gig.leads?.qualificationCriteria || []
+        },
+        skills: {
+          languages: gig.skills?.languages.map(lang => ({ 
+            language: lang.language, 
+            proficiency: lang.proficiency,
+            iso639_1: lang.iso639_1 
+          })) || [],
+          soft: gig.skills?.soft.map(skill => ({
+            skill: skill.skill,
+            level: skill.level,
+            details: ""
+          })) || [],
+          professional: gig.skills?.professional.map(skill => ({
+            skill: skill.skill,
+            level: skill.level,
+            details: ""
+          })) || [],
+          technical: gig.skills?.technical.map(skill => ({
+            skill: skill.skill,
+            level: skill.level,
+            details: ""
+          })) || [],
+          certifications: gig.skills?.certifications || []
+        },
+        seniority: {
+          level: gig.seniority?.level || "",
+          yearsExperience: typeof gig.seniority?.yearsExperience === 'string' ? parseInt(gig.seniority.yearsExperience) || 0 : gig.seniority?.yearsExperience || 0
+        },
+        team: {
+          size: gig.team?.size || 0,
+          structure: gig.team?.structure || [],
+          territories: gig.team?.territories || [],
+          reporting: {
+            to: gig.team?.reporting?.to || "",
+            frequency: gig.team?.reporting?.frequency || ""
+          },
+          collaboration: gig.team?.collaboration || []
+        },
+        documentation: {
+          product: gig.documentation?.product || [],
+          process: gig.documentation?.process || [],
+          training: gig.documentation?.training || [],
+          reference: gig.documentation?.reference || [],
+          templates: gig.documentation?.templates || []
+        },
+        tools: {
+          provided: gig.tools?.provided || [],
+          required: gig.tools?.required || []
+        },
+        training: {
+          initial: {
+            duration: gig.training?.initial?.duration || "",
+            format: gig.training?.initial?.format || "",
+            topics: gig.training?.initial?.topics || []
+          },
+          ongoing: {
+            frequency: gig.training?.ongoing?.frequency || "",
+            format: gig.training?.ongoing?.format || "",
+            topics: gig.training?.ongoing?.topics || []
+          },
+          support: gig.training?.support || []
+        },
+        metrics: {
+          kpis: gig.metrics?.kpis || [],
+          targets: gig.metrics?.targets || {},
+          reporting: {
+            frequency: gig.metrics?.reporting?.frequency || "",
+            metrics: gig.metrics?.reporting?.metrics || []
+          }
+        },
+        compliance: {
+          requirements: gig.compliance?.requirements || [],
+          certifications: gig.compliance?.certifications || [],
+          policies: gig.compliance?.policies || []
+        },
+        equipment: {
+          required: gig.equipment?.required || [],
+          provided: gig.equipment?.provided || []
+        }
+      };
+
+      await saveGigData(gigData);
+      
+      const result = await Swal.fire({
+        title: "Success!",
+        text: "Gig has been created successfully",
         icon: "success",
+        showCancelButton: true,
         confirmButtonText: "OK",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#667eea",
+        cancelButtonColor: "#6b7280",
       });
 
-      onConfirm(); // Indiquer que l'opération a réussi
-    } catch (error: any) {
-      console.error("Erreur lors de la confirmation du gig:", error);
-
-      // ❌ Afficher une notification d'erreur
-      Swal.fire({
-        title: "Erreur!",
-        text: error.message || "Une erreur s'est produite.",
+      if (result.isConfirmed) {
+        onConfirm();
+      }
+    } catch (error) {
+      console.error("Error saving gig:", error);
+      const result = await Swal.fire({
+        title: "Error!",
+        text: error instanceof Error ? error.message : "Failed to save gig",
         icon: "error",
-        confirmButtonText: "OK",
+        showCancelButton: true,
+        confirmButtonText: "Try Again",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#dc2626",
+        cancelButtonColor: "#6b7280",
       });
+      
+      if (result.isConfirmed) {
+        handleConfirm(); // Retry saving
+      }
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-blue-400 mr-2" />
-          <p className="text-sm text-blue-700">
-            Veuillez vérifier les détails de votre gig avant de le publier.
-          </p>
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full h-full">
+      <h2 className="text-2xl font-bold mb-4">Confirm Gig Details</h2>
+      
+      <div className="space-y-4">
+        <div className="flex items-start">
+          <CheckCircle className="h-6 w-6 text-green-500 mr-2 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold">{gig.title}</h3>
+            <p className="text-gray-600">{gig.description}</p>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
+        <div className="flex items-start">
+          <AlertCircle className="h-6 w-6 text-yellow-500 mr-2 flex-shrink-0" />
           <div>
-            <label className="text-sm font-medium text-gray-500">Titre</label>
-            <p className="text-lg font-medium text-gray-900">{gig.title}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">
-              Quantité
-            </label>
-            <p className="text-lg font-medium text-gray-900">
-              {gig.quantity} actions
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Durée</label>
-            <p className="text-lg font-medium text-gray-900">{gig.timeline}</p>
-          </div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Type</label>
-            <p className="text-lg font-medium text-gray-900">{gig.type}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">
-              Description
-            </label>
-            <p className="text-lg font-medium text-gray-900">
-              {gig.description}
+            <h3 className="font-semibold">Please Review</h3>
+            <p className="text-gray-600">
+              Please review all the details above. Once confirmed, the gig will be created and published.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end space-x-4 mt-8">
+      <div className="mt-6 flex justify-end space-x-4">
         <button
-          onClick={onEdit}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          onClick={onCancel}
+          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
         >
-          Modifier
+          Cancel
         </button>
         <button
           onClick={handleConfirm}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Confirmer & Publier
+          Confirm & Create
         </button>
       </div>
     </div>
   );
-}
+};

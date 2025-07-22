@@ -28,11 +28,12 @@ export interface Database {
           commission_bonus_amount: string | null
           commission_currency: string | null
           commission_structure: string | null
-          team_size: string
+          team_size: number
           team_structure: Json
           team_territories: string[]
           prerequisites: string[]
           call_types: string[]
+          status: 'to_activate' | 'active' | 'inactive' | 'archived'
           created_at: string
           updated_at: string
         }
@@ -54,11 +55,12 @@ export interface Database {
           commission_bonus_amount?: string | null
           commission_currency?: string | null
           commission_structure?: string | null
-          team_size: string
+          team_size: number
           team_structure: Json
           team_territories: string[]
           prerequisites: string[]
           call_types: string[]
+          status?: 'to_activate' | 'active' | 'inactive' | 'archived'
           created_at?: string
           updated_at?: string
         }

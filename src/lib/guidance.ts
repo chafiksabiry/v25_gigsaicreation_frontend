@@ -1,91 +1,153 @@
+export const aiPrompts = {
+  basic: {
+    title: "Basic Information Assistant",
+    description: "Get AI suggestions for your gig's basic information"
+  },
+  schedule: {
+    title: "Schedule Assistant",
+    description: "Get AI suggestions for scheduling and time management"
+  },
+  commission: {
+    title: "Commission Assistant",
+    description: "Get AI suggestions for commission structure"
+  },
+  leads: {
+    title: "Leads Assistant",
+    description: "Get AI suggestions for lead management"
+  },
+  skills: {
+    title: "Skills Assistant",
+    description: "Get AI suggestions for required skills"
+  },
+  team: {
+    title: "Team Assistant",
+    description: "Get AI suggestions for team structure"
+  },
+  docs: {
+    title: "Documentation Assistant",
+    description: "Get AI suggestions for documentation"
+  }
+};
+
 export const predefinedOptions = {
   basic: {
     categories: [
-      "Customer Service",
-      "Technical Support",
-      "Sales",
-      "Collections",
-      "Back Office",
-      "Quality Assurance",
-      "Training",
-      "Management",
-      "Other"
+      'Inbound Sales',
+      'Outbound Sales',
+      'Customer Service',
+      'Technical Support',
+      'Account Management',
+      'Lead Generation',
+      'Market Research',
+      'Appointment Setting',
+      'Order Processing',
+      'Customer Retention',
+      'Billing Support',
+      'Product Support',
+      'Help Desk',
+      'Chat Support',
+      'Email Support',
+      'Social Media Support',
+      'Survey Calls',
+      'Welcome Calls',
+      'Follow-up Calls',
+      'Complaint Resolution',
+      'Warranty Support',
+      'Collections',
+      'Dispatch Services',
+      'Emergency Support',
+      'Multilingual Support'
     ],
     seniorityLevels: [
-      "Entry Level",
-      "Junior",
-      "Mid Level",
-      "Senior",
-      "Lead",
-      "Manager",
-      "Director"
-    ],
-    scheduleDays: [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday"
+      'Entry Level',
+      'Junior',
+      'Mid-Level',
+      'Senior',
+      'Team Lead',
+      'Supervisor',
+      'Manager',
+      'Director'
     ],
     timeZones: [
-      "New York (EST/EDT)",
-      "Chicago (CST/CDT)",
-      "Denver (MST/MDT)",
-      "Los Angeles (PST/PDT)",
-      "London (GMT/BST)",
-      "Paris (CET/CEST)",
-      "Dubai (GST)",
-      "Singapore (SGT)",
-      "Tokyo (JST)",
-      "Sydney (AEST/AEDT)"
+      'New York (EST/EDT)',
+      'Chicago (CST/CDT)',
+      'Denver (MST/MDT)',
+      'Los Angeles (PST/PDT)',
+      'London (GMT/BST)',
+      'Paris (CET/CEST)',
+      'Dubai (GST)',
+      'Singapore (SGT)',
+      'Tokyo (JST)',
+      'Sydney (AEST/AEDT)'
     ],
-    scheduleFlexibility: [
-      "Remote Work Available",
-      "Flexible Hours",
-      "Weekend Rotation",
-      "Night Shift Available",
-      "Split Shifts",
-      "Part-Time Options",
-      "Compressed Work Week",
-      "Shift Swapping Allowed"
-    ],
-    workingHours: [
-      "9:00 AM - 5:00 PM",
-      "8:00 AM - 4:00 PM",
-      "10:00 AM - 6:00 PM",
-      "12:00 PM - 8:00 PM",
-      "2:00 PM - 10:00 PM",
-      "10:00 PM - 6:00 AM",
-      "Flexible"
+    destinationZones: [
+      'France',
+      'United States',
+      'United Kingdom',
+      'Germany',
+      'Spain',
+      'Italy',
+      'Canada',
+      'Australia',
+      'Morocco',
+      'Turkey'
     ]
   },
-  schedule: {
-    scheduleTypes: [
-      'Full-Time',
-      'Part-Time',
-      'Flexible',
-      'Shift Work',
-      'Rotating Shifts',
-      'On-Call',
-      'Seasonal',
-      'Temporary'
+  sectors: [
+    'Inbound Sales',
+    'Outbound Sales',
+    'Customer Service',
+    'Technical Support',
+    'Account Management',
+    'Lead Generation',
+    'Market Research',
+    'Appointment Setting',
+    'Order Processing',
+    'Customer Retention',
+    'Billing Support',
+    'Product Support',
+    'Help Desk',
+    'Chat Support',
+    'Email Support',
+    'Social Media Support',
+    'Survey Calls',
+    'Welcome Calls',
+    'Follow-up Calls',
+    'Complaint Resolution',
+    'Warranty Support',
+    'Collections',
+    'Dispatch Services',
+    'Emergency Support',
+    'Multilingual Support'
+  ],
+  // Industries and activities are now loaded dynamically from API
+  // See src/lib/activitiesIndustries.ts for data loading
+  industries: [],
+  activities: [],
+  availability: {
+    schedule: [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ],
+    timeZones: [
+      'New York (EST/EDT)',
+      'Chicago (CST/CDT)',
+      'Denver (MST/MDT)',
+      'Los Angeles (PST/PDT)',
+      'London (GMT/BST)',
+      'Paris (CET/CEST)',
+      'Dubai (GST)',
+      'Singapore (SGT)',
+      'Tokyo (JST)',
+      'Sydney (AEST/AEDT)'
     ]
   },
   commission: {
-    currencies: [
-      { code: 'USD', symbol: '$', name: 'US Dollar' },
-      { code: 'EUR', symbol: '€', name: 'Euro' },
-      { code: 'GBP', symbol: '£', name: 'British Pound' },
-      { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-      { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-      { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
-      { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
-      { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-      { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-      { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' }
-    ],
     baseTypes: [
       'Fixed Salary',
       'Base + Commission',
@@ -95,174 +157,154 @@ export const predefinedOptions = {
     ],
     bonusTypes: [
       'Performance Bonus',
+      'Sales Bonus',
+      'Project Completion',
+      'Team Achievement',
       'Quarterly Bonus',
-      'Annual Bonus',
-      'Team Bonus',
-      'Signing Bonus',
-      'Retention Bonus',
-      'Holiday Bonus'
-    ]
-  },
-  leads: {
-    sources: [
-      'Website Inquiries',
-      'Social Media',
-      'Email Campaigns',
-      'Trade Shows',
-      'Referrals',
-      'Cold Calling',
-      'Partner Network',
-      'Online Advertising',
-      'Content Marketing',
-      'Direct Mail',
-      'Industry Events',
-      'Customer Recommendations',
-      'LinkedIn Outreach',
-      'Webinars',
-      'Free Trials'
+      'Annual Bonus'
     ],
-    leadTypes: [
-      'Hot Leads',
-      'Warm Leads',
-      'Cold Leads',
-      'Qualified Leads',
-      'Unqualified Leads',
-      'Marketing Qualified Leads',
-      'Sales Qualified Leads',
-      'Product Qualified Leads'
-    ]
-  },
-  team: {
-    roles: [
-      { id: 'agent', name: 'Sales Agent', description: 'Handles direct sales and customer interactions' },
-      { id: 'lead', name: 'Team Lead', description: 'Supervises and coaches a team of agents' },
-      { id: 'supervisor', name: 'Supervisor', description: 'Oversees multiple teams and operations' },
-      { id: 'manager', name: 'Manager', description: 'Manages department strategy and performance' },
-      { id: 'trainer', name: 'Training Specialist', description: 'Conducts training and development programs' },
-      { id: 'qa', name: 'Quality Analyst', description: 'Monitors and evaluates call quality' },
-      { id: 'support', name: 'Support Specialist', description: 'Provides technical and process support' },
-      { id: 'coordinator', name: 'Team Coordinator', description: 'Handles scheduling and administrative tasks' },
-      { id: 'coach', name: 'Performance Coach', description: 'Provides one-on-one coaching and development' },
-      { id: 'specialist', name: 'Product Specialist', description: 'Subject matter expert for complex inquiries' }
+    currencies: [
+      { code: 'USD', name: 'US Dollar', symbol: '$' },
+      { code: 'EUR', name: 'Euro', symbol: '€' },
+      { code: 'GBP', name: 'British Pound', symbol: '£' },
+      { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+      { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+      { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+      { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
+      { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+      { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+      { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' }
     ],
-    territories: [
-      'United States',
-      'Canada',
-      'United Kingdom',
-      'Germany',
-      'France',
-      'Spain',
-      'Italy',
-      'Netherlands',
-      'Sweden',
-      'Norway',
-      'Denmark',
-      'Finland',
-      'Ireland',
-      'Belgium',
-      'Switzerland',
-      'Austria',
-      'Portugal',
-      'Greece',
-      'Poland',
-      'Czech Republic',
-      'Hungary',
-      'Romania',
-      'Bulgaria',
-      'Australia',
-      'New Zealand',
-      'Japan',
-      'South Korea',
-      'Singapore',
-      'Malaysia',
-      'Thailand',
-      'Indonesia',
-      'Philippines',
-      'Vietnam',
-      'India',
-      'China',
-      'Hong Kong',
-      'Taiwan',
-      'Brazil',
-      'Mexico',
-      'Argentina',
-      'Chile',
-      'Colombia',
-      'Peru',
-      'South Africa',
-      'United Arab Emirates',
-      'Saudi Arabia',
-      'Israel',
-      'Turkey',
-      'Egypt',
-      'Morocco',
-      'Nigeria'
+    minimumVolumeUnits: [
+      'Calls',
+      'Conversions',
+      'Sales'
+    ],
+    minimumVolumePeriods: [
+      'Daily',
+      'Weekly',
+      'Monthly'
+    ],
+    transactionCommissionTypes: [
+      'Fixed Amount',
+      'Percentage',
+      'Conversion'
     ]
   },
   skills: {
-    languages: [
-      { name: 'English' },
-      { name: 'Spanish' },
-      { name: 'French' },
-      { name: 'German' },
-      { name: 'Chinese' },
-      { name: 'Japanese' },
-      { name: 'Arabic' },
-      { name: 'Portuguese' },
-      { name: 'Russian' }
+    // Skills are now loaded from API endpoints
+    // See: /api/skills/soft, /api/skills/professional, /api/skills/technical
+    skillLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+  },
+  team: {
+    roles: [
+      {
+        id: 'team_lead',
+        name: 'Team Lead',
+        description: 'Manages team performance and provides guidance'
+      },
+      {
+        id: 'senior_agent',
+        name: 'Senior Agent',
+        description: 'Experienced agent with advanced skills and mentoring capabilities'
+      },
+      {
+        id: 'agent',
+        name: 'Agent',
+        description: 'Handles customer interactions and core responsibilities'
+      },
+      {
+        id: 'junior_agent',
+        name: 'Junior Agent',
+        description: 'Entry-level agent with basic responsibilities and learning focus'
+      },
+      {
+        id: 'supervisor',
+        name: 'Supervisor',
+        description: 'Oversees operations and ensures quality standards'
+      },
+      {
+        id: 'manager',
+        name: 'Manager',
+        description: 'Strategic planning and team development'
+      },
+      {
+        id: 'coordinator',
+        name: 'Coordinator',
+        description: 'Coordinates activities and communication'
+      },
+      {
+        id: 'specialist',
+        name: 'Specialist',
+        description: 'Expert in specific areas or processes'
+      },
+      {
+        id: 'consultant',
+        name: 'Consultant',
+        description: 'Provides expert advice and strategic guidance'
+      },
+      {
+        id: 'representative',
+        name: 'Representative',
+        description: 'Represents the company in customer interactions'
+      },
+      {
+        id: 'associate',
+        name: 'Associate',
+        description: 'Supports team operations and projects'
+      },
+      {
+        id: 'assistant',
+        name: 'Assistant',
+        description: 'Provides support and administrative tasks'
+      },
+      {
+        id: 'trainee',
+        name: 'Trainee',
+        description: 'Learning role with structured training program'
+      },
+      {
+        id: 'intern',
+        name: 'Intern',
+        description: 'Student or recent graduate gaining practical experience'
+      }
     ],
-    technical: [
-      'CRM Systems',
-      'Help Desk Software',
-      'Live Chat Tools',
-      'Ticketing Systems',
-      'Remote Support Tools',
-      'Knowledge Base Management',
-      'Call Center Software',
-      'Quality Monitoring Tools',
-      'Workforce Management Systems'
-    ],
-    soft: [
-      'Customer Service',
-      'Problem Solving',
-      'Active Listening',
-      'Empathy',
-      'Conflict Resolution',
-      'Time Management',
-      'Communication',
-      'Teamwork',
-      'Adaptability',
-      'Stress Management'
-    ],
-    skillLevels: [
-      'Basic',
-      'Conversational',
-      'Professional',
-      'Native/Bilingual'
+    territories: [
+      'North America',
+      'Europe',
+      'Asia Pacific',
+      'Latin America',
+      'Middle East',
+      'Africa',
+      'United States',
+      'Canada',
+      'United Kingdom',
+      'France',
+      'Germany',
+      'Spain',
+      'Italy',
+      'Australia',
+      'Japan',
+      'China',
+      'India',
+      'Brazil',
+      'Mexico',
+      'South Africa'
     ]
   },
-  documentation: {
-    documentTypes: [
-      'Product Manuals',
-      'Process Guides',
-      'Training Materials',
-      'Compliance Documents',
-      'Quality Standards',
-      'Performance Metrics',
-      'Script Templates',
-      'Call Guidelines'
-    ]
+  leads: {
+    sources: []
   },
-  metrics: {
-    kpis: [
-      'Conversion Rate',
-      'Average Handle Time',
-      'First Call Resolution',
-      'Customer Satisfaction',
-      'Sales Revenue',
-      'Lead Quality',
-      'Response Time',
-      'Call Quality Score'
+  schedule: {
+    flexibility: [
+      "Remote Work Available",
+      "Flexible Hours",
+      "Weekend Rotation",
+      "Night Shift Available",
+      "Split Shifts",
+      "Part-Time Options",
+      "Compressed Work Week",
+      "Shift Swapping Allowed"
     ]
   }
 };
@@ -281,6 +323,22 @@ export const sectionGuidance = {
       'Be specific about the role category to attract the right candidates',
       'Match seniority level with experience requirements',
       'Consider both minimum and preferred experience levels'
+    ]
+  },
+  availability: {
+    title: 'Availability',
+    steps: [
+      'Select working days',
+      'Define working hours',
+      'Specify time zones',
+      'Set minimum hour requirements',
+      'Choose flexibility options'
+    ],
+    tips: [
+      'Consider multiple time zones for global coverage',
+      'Be clear about shift patterns and rotations',
+      'Include any flexibility in scheduling',
+      'Specify both core hours and flexible time slots'
     ]
   },
   schedule: {

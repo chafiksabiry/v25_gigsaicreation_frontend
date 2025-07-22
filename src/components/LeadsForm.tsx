@@ -40,8 +40,10 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ onSave, predefinedSources, skipVa
     
     const totalPercentage = leads.reduce((sum, lead) => sum + lead.percentage, 0);
     if (totalPercentage !== 100) {
-      alert('Total percentage must equal 100%');
-      return false;
+      const confirmed = window.confirm('Total percentage must equal 100%. Click OK to continue editing or Cancel to ignore this warning.');
+      if (!confirmed) {
+        return false;
+      }
     }
     return true;
   };

@@ -21,8 +21,8 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
   const hasWarnings = Object.keys(validation.warnings).length > 0;
 
   const getCurrencySymbol = () => {
-    return data.commission.currency ? 
-      predefinedOptions.commission.currencies.find(c => c.code === data.commission.currency)?.symbol || '$'
+    return data?.commission?.currency ? 
+      predefinedOptions.commission.currencies.find(c => c.code === data?.commission?.currency)?.symbol || '$'
       : '$';
   };
 
@@ -125,9 +125,9 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 <h3 className="font-medium">Base Commission</h3>
               </div>
               <div className="text-2xl font-bold text-blue-900">
-                {getCurrencySymbol()}{data.commission.baseAmount || '0'}
+                {getCurrencySymbol()}{data?.commission?.baseAmount || '0'}
               </div>
-              <p className="text-sm text-blue-600 mt-1">{data.commission.base}</p>
+              <p className="text-sm text-blue-600 mt-1">{data?.commission?.base || 'No base commission'}</p>
             </div>
 
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
@@ -145,9 +145,9 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 <h3 className="font-medium">Performance Bonus</h3>
               </div>
               <div className="text-2xl font-bold text-green-900">
-                {data.commission.bonus ? `${getCurrencySymbol()}${data.commission.bonusAmount}` : 'N/A'}
+                {data?.commission?.bonus ? `${getCurrencySymbol()}${data?.commission?.bonusAmount || '0'}` : 'N/A'}
               </div>
-              <p className="text-sm text-green-600 mt-1">{data.commission.bonus || 'No bonus structure'}</p>
+              <p className="text-sm text-green-600 mt-1">{data?.commission?.bonus || 'No bonus structure'}</p>
             </div>
 
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
@@ -155,7 +155,11 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 <Clock className="w-5 h-5" />
                 <h3 className="font-medium">Schedule</h3>
               </div>
-              <div className="text-lg font-bold text-orange-900">{data.schedule?.hours}</div>
+              <div className="text-lg font-bold text-orange-900">
+                {data.schedule?.schedules?.[0]?.hours
+                  ? `${data.schedule.schedules[0].hours.start} - ${data.schedule.schedules[0].hours.end}`
+                  : 'Not specified'}
+              </div>
               <p className="text-sm text-orange-600 mt-1">{data.schedule?.timeZones?.join(', ')}</p>
             </div>
           </div>
@@ -175,9 +179,9 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                   <h4 className="font-medium text-green-800 mb-3">Base Commission</h4>
                   <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-green-100">
                     <div>
-                      <div className="text-sm text-gray-600">{data.commission.base}</div>
+                      <div className="text-sm text-gray-600">{data?.commission?.base}</div>
                       <div className="text-2xl font-bold text-gray-900 mt-1">
-                        {getCurrencySymbol()}{data.commission.baseAmount || '0'}
+                        {getCurrencySymbol()}{data?.commission?.baseAmount || '0'}
                       </div>
                     </div>
                     <ArrowRight className="w-5 h-5 text-green-600" />
@@ -185,14 +189,14 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 </div>
 
                 {/* Performance Bonus */}
-                {data.commission.bonus && (
+                {data?.commission?.bonus && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
                     <h4 className="font-medium text-blue-800 mb-3">Performance Bonus</h4>
                     <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-blue-100">
                       <div>
-                        <div className="text-sm text-gray-600">{data.commission.bonus}</div>
+                        <div className="text-sm text-gray-600">{data?.commission?.bonus}</div>
                         <div className="text-2xl font-bold text-gray-900 mt-1">
-                          {getCurrencySymbol()}{data.commission.bonusAmount || '0'}
+                          {getCurrencySymbol()}{data?.commission?.bonusAmount || '0'}
                         </div>
                       </div>
                       <Star className="w-5 h-5 text-blue-600" />
@@ -201,17 +205,17 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 )}
 
                 {/* Additional Details */}
-                {data.commission.structure && (
+                {data?.commission?.structure && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Additional Details</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{data.commission.structure}</p>
+                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.structure}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Lead Distribution */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            {/* <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Target className="w-6 h-6 text-orange-600" />
                 <h3 className="text-xl font-semibold text-gray-900">Lead Distribution</h3>
@@ -241,7 +245,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                   </div>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* Sidebar */}
@@ -261,8 +265,8 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                     <div className="space-y-2">
                       {data.skills.languages.map((lang, index) => (
                         <div key={index} className="flex items-center justify-between bg-purple-50 px-3 py-2 rounded-lg">
-                          <span className="text-purple-900">{lang.name}</span>
-                          <span className="text-sm text-purple-700">{lang.level}</span>
+                          <span className="text-purple-900">{lang.language}</span>
+                          <span className="text-sm text-purple-700">{lang.proficiency}</span>
                         </div>
                       ))}
                     </div>
@@ -276,7 +280,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                     <div className="flex flex-wrap gap-2">
                       {data.skills.professional.map((skill, index) => (
                         <span key={index} className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                          {skill}
+                          {skill.skill} (Level {skill.level})
                         </span>
                       ))}
                     </div>
@@ -300,7 +304,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                       <div key={type}>
                         <h4 className="text-sm font-medium text-gray-700 capitalize mb-2">{type}</h4>
                         <ul className="space-y-2">
-                          {docs.map((doc, index) => (
+                          {docs.map((doc: { name: string; url: string }, index: number) => (
                             <li key={index}>
                               <a
                                 href={doc.url}

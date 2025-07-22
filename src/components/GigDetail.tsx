@@ -12,15 +12,44 @@ interface GigDetailProps {
 }
 
 export function GigDetail({ gig, onBack }: GigDetailProps) {
-  const formatCurrency = (amount: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: gig.commission_currency || 'USD'
-    }).format(Number(amount));
+
+  const formatCurrency = (amount: string | number) => {
+    try {
+      const currency = gig?.commission?.currency || 'USD';
+      const numericAmount = typeof amount === 'string' ? parseFloat(amount) || 0 : amount || 0;
+      
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency
+      }).format(numericAmount);
+      
+      return formattedAmount;
+    } catch (error) {
+      console.error('Error in formatCurrency:', error);
+      return '$0.00';
+    }
+  };
+
+  // Helper function to safely get commission amount
+  const getCommissionAmount = (amount: string | number) => {
+    if (!amount) {
+      return 0;
+    }
+    return typeof amount === 'string' ? parseFloat(amount) || 0 : amount;
+  };
+
+  // Helper function to format minimum volume
+  const formatMinimumVolume = () => {
+    if (!gig?.commission?.minimumVolume) return 'Not specified';
+    
+    const { amount, unit, period } = gig.commission.minimumVolume;
+    if (!amount || !unit || !period) return 'Not specified';
+    
+    return `${amount} ${unit} per ${period}`;
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+    <div className="w-full h-full py-8 px-4">
       {/* Header */}
       <div className="mb-8">
         <button
@@ -31,23 +60,27 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           Back to Gigs
         </button>
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{gig.title}</h1>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {gig.category}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                {gig.seniority_level}
-              </span>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                {gig.years_experience} Experience
-              </span>
+          <div className="flex items-start gap-4">
+            {/* Logo */}
+            {/* Remove the logo rendering block that uses gig.logoUrl */}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  {gig?.category || 'Uncategorized'}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                  {gig?.seniority_level || 'Not Specified'}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  {gig?.years_experience || '0'} Experience
+                </span>
+              </div>
             </div>
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-500">Team Size</div>
-            <div className="text-xl font-semibold text-gray-900">{gig.team_size}</div>
+            <div className="text-xl font-semibold text-gray-900">{gig?.team_size || '0'}</div>
           </div>
         </div>
       </div>
@@ -58,7 +91,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           {/* Description */}
           <section className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{gig.description}</p>
+            <p className="text-gray-700 whitespace-pre-wrap">{gig?.description || 'No description provided.'}</p>
           </section>
 
           {/* Schedule */}
@@ -71,28 +104,28 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Working Days</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {gig.schedule_days.map((day: string) => (
+                  {gig?.schedule_days?.map((day: string) => (
                     <span key={day} className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
                       {day}
                     </span>
-                  ))}
+                  )) || <span className="text-gray-500">No working days specified</span>}
                 </div>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Working Hours</h3>
                 <div className="mt-2 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-gray-400" />
-                  <span className="text-gray-900">{gig.schedule_hours}</span>
+                  <span className="text-gray-900">{gig?.schedule_hours || 'Not specified'}</span>
                 </div>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Time Zones</h3>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {gig.schedule_timezone.map((zone: string) => (
+                  {gig?.schedule_timezone?.map((zone: string) => (
                     <span key={zone} className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
                       {zone}
                     </span>
-                  ))}
+                  )) || <span className="text-gray-500">No time zones specified</span>}
                 </div>
               </div>
             </div>
@@ -112,37 +145,56 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                   <div>
                     <div className="text-sm text-gray-500">Amount</div>
                     <div className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(gig.commission_base_amount)}
+                      {(() => {
+                        const baseAmount = gig?.commission?.baseAmount || "";
+                        return formatCurrency(getCommissionAmount(baseAmount));
+                      })()}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Type</div>
-                    <div className="text-gray-900">{gig.commission_base}</div>
+                    <div className="text-gray-900">{gig?.commission?.base || 'Not specified'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Minimum Volume */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-3">Minimum Volume</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-500">Requirements</div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {formatMinimumVolume()}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Performance Bonus */}
-              {gig.commission_bonus && (
+              {gig?.commission?.bonus && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h3 className="font-medium text-gray-900 mb-3">Performance Bonus</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm text-gray-500">Amount</div>
                       <div className="text-lg font-semibold text-gray-900">
-                        {formatCurrency(gig.commission_bonus_amount)}
+                        {(() => {
+                          const bonusAmount = gig?.commission?.bonusAmount || 0;
+                          return formatCurrency(getCommissionAmount(bonusAmount));
+                        })()}
                       </div>
                     </div>
                     <div>
                       <div className="text-sm text-gray-500">Type</div>
-                      <div className="text-gray-900">{gig.commission_bonus}</div>
+                      <div className="text-gray-900">{gig?.commission?.bonus}</div>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Additional Details */}
-              {gig.commission_structure && (
+              {gig?.commission_structure && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">Additional Details</h3>
                   <p className="text-gray-700 whitespace-pre-wrap">{gig.commission_structure}</p>
@@ -152,32 +204,30 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           </section>
 
           {/* Lead Distribution */}
-          {gig.gig_leads && gig.gig_leads.length > 0 && (
+          {/* {gig?.gig_leads && gig?.gig_leads?.length > 0 && (
             <section className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Target className="w-6 h-6 text-orange-600" />
                 <h2 className="text-xl font-semibold text-gray-900">Lead Distribution</h2>
               </div>
               <div className="space-y-6">
-                {/* Lead Types */}
                 <div className="grid grid-cols-3 gap-4">
-                  {gig.gig_leads.map((lead: any) => (
-                    <div key={lead.lead_type} className="bg-gray-50 rounded-lg p-4">
+                  {gig?.gig_leads?.map((lead: any) => (
+                    <div key={lead?.lead_type} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-medium text-gray-900 capitalize">{lead.lead_type} Leads</h3>
-                        <span className="text-sm font-semibold text-blue-600">{lead.percentage}%</span>
+                        <h3 className="font-medium text-gray-900 capitalize">{lead?.lead_type} Leads</h3>
+                        <span className="text-sm font-semibold text-blue-600">{lead?.percentage}%</span>
                       </div>
-                      <p className="text-sm text-gray-600">{lead.description}</p>
+                      <p className="text-sm text-gray-600">{lead?.description}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Lead Sources */}
-                {gig.gig_leads[0].sources && gig.gig_leads[0].sources.length > 0 && (
+                {gig?.gig_leads?.[0]?.sources && gig?.gig_leads?.[0]?.sources?.length > 0 && (
                   <div>
                     <h3 className="font-medium text-gray-900 mb-3">Lead Sources</h3>
                     <div className="flex flex-wrap gap-2">
-                      {gig.gig_leads[0].sources.map((source: string) => (
+                      {gig?.gig_leads?.[0]?.sources?.map((source: string) => (
                         <span key={source} className="px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800">
                           {source}
                         </span>
@@ -187,7 +237,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                 )}
               </div>
             </section>
-          )}
+          )} */}
 
           {/* Team Structure */}
           <section className="bg-white rounded-lg shadow-sm p-6">
@@ -200,7 +250,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-3">Team Roles</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {gig.team_structure.map((role: any, index: number) => (
+                  {gig?.team_structure?.map((role: any, index: number) => (
                     <div key={index} className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
                       <Building2 className="w-5 h-5 text-gray-400 mt-1" />
                       <div>
@@ -215,7 +265,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-3">Coverage Areas</h3>
                 <div className="flex flex-wrap gap-2">
-                  {gig.team_territories.map((territory: string, index: number) => (
+                  {gig?.team_territories?.map((territory: string, index: number) => (
                     <span key={index} className="px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
                       {territory}
                     </span>
@@ -236,21 +286,21 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                 <Phone className="w-5 h-5 text-gray-400" />
                 <div>
                   <div className="text-sm font-medium text-gray-900">Call Types</div>
-                  <div className="text-sm text-gray-500">{gig.call_types.join(', ')}</div>
+                  <div className="text-sm text-gray-500">{gig?.call_types?.join(', ') || 'Not specified'}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Target className="w-5 h-5 text-gray-400" />
                 <div>
                   <div className="text-sm font-medium text-gray-900">Experience Required</div>
-                  <div className="text-sm text-gray-500">{gig.years_experience}</div>
+                  <div className="text-sm text-gray-500">{gig?.years_experience || 'Not specified'}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Skills */}
-          {gig.gig_skills && gig.gig_skills.length > 0 && (
+          {gig?.gig_skills && gig?.gig_skills?.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Brain className="w-5 h-5 text-indigo-600" />
@@ -261,13 +311,13 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Languages</h4>
                   <div className="space-y-2">
-                    {gig.gig_skills
-                      .filter((skill: any) => skill.category === 'language')
-                      .map((skill: any, index: number) => (
+                    {gig?.gig_skills
+                      ?.filter((skill: any) => skill?.category === 'language')
+                      ?.map((skill: any, index: number) => (
                         <div key={index} className="flex items-center gap-2">
                           <Languages className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{skill.name}</span>
-                          <span className="text-sm text-gray-500">({skill.level})</span>
+                          <span className="text-sm text-gray-900">{skill?.name}</span>
+                          <span className="text-sm text-gray-500">({skill?.level})</span>
                         </div>
                       ))}
                   </div>
@@ -277,11 +327,11 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Professional Skills</h4>
                   <div className="flex flex-wrap gap-2">
-                    {gig.gig_skills
-                      .filter((skill: any) => skill.category === 'professional')
-                      .map((skill: any, index: number) => (
+                    {gig?.gig_skills
+                      ?.filter((skill: any) => skill?.category === 'professional')
+                      ?.map((skill: any, index: number) => (
                         <span key={index} className="px-2 py-1 text-sm bg-gray-100 text-gray-700 rounded">
-                          {skill.name}
+                          {skill?.name}
                         </span>
                       ))}
                   </div>
@@ -291,11 +341,11 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Technical Skills</h4>
                   <div className="flex flex-wrap gap-2">
-                    {gig.gig_skills
-                      .filter((skill: any) => skill.category === 'technical')
-                      .map((skill: any, index: number) => (
+                    {gig?.gig_skills
+                      ?.filter((skill: any) => skill?.category === 'technical')
+                      ?.map((skill: any, index: number) => (
                         <span key={index} className="px-2 py-1 text-sm bg-gray-100 text-gray-700 rounded">
-                          {skill.name}
+                          {skill?.name}
                         </span>
                       ))}
                   </div>
@@ -305,7 +355,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           )}
 
           {/* Documentation */}
-          {gig.gig_documentation && gig.gig_documentation.length > 0 && (
+          {gig?.gig_documentation && gig?.gig_documentation?.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
                 <FileText className="w-5 h-5 text-gray-600" />
@@ -313,29 +363,29 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
               </div>
               <div className="space-y-4">
                 {['product', 'process', 'training'].map((type) => {
-                  const docs = gig.gig_documentation.filter((doc: any) => doc.doc_type === type);
-                  if (docs.length === 0) return null;
+                  const docs = gig?.gig_documentation?.filter((doc: any) => doc?.doc_type === type);
+                  if (!docs?.length) return null;
                   return (
                     <div key={type}>
                       <h4 className="text-sm font-medium text-gray-500 capitalize mb-2">{type}</h4>
                       <ul className="space-y-2">
-                        {docs.map((doc: any, index: number) => (
+                        {docs?.map((doc: any, index: number) => (
                           <li key={index}>
-                            {doc.url ? (
+                            {doc?.url ? (
                               <a
-                                href={doc.url}
+                                href={doc?.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
                               >
                                 <FileText className="w-4 h-4" />
-                                <span>{doc.name}</span>
+                                <span>{doc?.name}</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             ) : (
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <FileText className="w-4 h-4" />
-                                <span>{doc.name}</span>
+                                <span>{doc?.name}</span>
                               </div>
                             )}
                           </li>
