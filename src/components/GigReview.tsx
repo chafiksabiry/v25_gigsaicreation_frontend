@@ -150,21 +150,42 @@ export function GigReview({
     return companyMap[id] || id;
   };
   // Helper to get skill name by id
-  const getSkillName = (id: string, category: 'soft' | 'professional' | 'technical') => {
+  const getSkillName = (skill: any, category: 'soft' | 'professional' | 'technical') => {
+    // Handle both string and { $oid: string } formats
+    let skillId: string;
+    if (typeof skill === 'string') {
+      skillId = skill;
+    } else if (skill && typeof skill === 'object' && skill.$oid) {
+      skillId = skill.$oid;
+    } else {
+      return 'Unknown Skill';
+    }
+
     let arr: any[] = [];
     if (category === 'soft') arr = softSkills;
     if (category === 'professional') arr = professionalSkills;
     if (category === 'technical') arr = technicalSkills;
-    const found = arr.find((s) => s._id === id);
-    return found ? found.name : id;
+    const found = arr.find((s) => s._id === skillId);
+    return found ? found.name : skillId;
   };
 
   // Helper to get language name by id
-  const getLanguageName = (id: string) => {
+  const getLanguageName = (language: any) => {
     if (languagesLoading) {
       return 'Loading...';
     }
-    return getLanguageNameById(id) || id;
+    
+    // Handle both string and { $oid: string } formats
+    let languageId: string;
+    if (typeof language === 'string') {
+      languageId = language;
+    } else if (language && typeof language === 'object' && language.$oid) {
+      languageId = language.$oid;
+    } else {
+      return 'Unknown Language';
+    }
+    
+    return getLanguageNameById(languageId) || languageId;
   };
 
   const getCurrencySymbol = () => {
