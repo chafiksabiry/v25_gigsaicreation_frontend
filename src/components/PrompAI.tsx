@@ -49,19 +49,12 @@ const PrompAI: React.FC = () => {
       preferred: []
     },
     benefits: [],
-    tools: {
-      provided: [],
-      required: []
-    },
-    equipment: {
-      provided: [],
-      required: []
-    },
     title: "",
     description: "",
     category: "",
     industries: [],
     activities: [],
+    activity: { options: [] },
     status: 'to_activate',
     availability: {
       schedule: [{
@@ -121,10 +114,9 @@ const PrompAI: React.FC = () => {
         proficiency: "B1",
         iso639_1: "fr"
       }],
-      soft: [{ skill: { $oid: "softSkillOid" }, level: 1, details: "" }],
-      professional: [{ skill: { $oid: "professionalSkillOid" }, level: 1, details: "" }],
-      technical: [{ skill: { $oid: "technicalSkillOid" }, level: 1, details: "" }],
-      certifications: []
+      soft: [{ skill: "softSkillOid", level: 1 }],
+      professional: [{ skill: "professionalSkillOid", level: 1 }],
+      technical: [{ skill: "technicalSkillOid", level: 1 }]
     },
     seniority: {
 
@@ -141,38 +133,12 @@ const PrompAI: React.FC = () => {
       },
       collaboration: []
     },
-    training: {
-      initial: {
-        duration: "",
-        format: "",
-        topics: []
-      },
-      ongoing: {
-        frequency: "",
-        format: "",
-        topics: []
-      },
-      support: []
-    },
-    metrics: {
-      kpis: [],
-      targets: {},
-      reporting: {
-        frequency: "",
-        metrics: []
-      }
-    },
     documentation: {
       templates: null,
       reference: null,
       product: [],
       process: [],
       training: []
-    },
-    compliance: {
-      requirements: [],
-      certifications: [],
-      policies: []
     }
   });
 
@@ -268,148 +234,6 @@ const PrompAI: React.FC = () => {
     setCurrentSection("basic");
   };
 
-  const handleBackToSuggestions = () => {
-    setConfirmedSuggestions(null);
-    setShowSuggestions(true);
-    setCurrentSection("basic");
-    setGigData({
-      userId: Cookies.get('userId') || "",
-      companyId: Cookies.get('companyId') || "",
-      destination_zone: "",
-      destinationZones: [],
-      callTypes: [],
-      highlights: [],
-      requirements: {
-        essential: [],
-        preferred: []
-      },
-      benefits: [],
-      tools: {
-        provided: [],
-        required: []
-      },
-      equipment: {
-        provided: [],
-        required: []
-      },
-      title: "",
-      description: "",
-      category: "",
-      industries: [],
-      activities: [],
-      availability: {
-        schedule: [{
-          day: "",
-          hours: {
-            start: "",
-            end: ""
-          }
-        }],
-        timeZones: [],
-        time_zone: "",
-        flexibility: [],
-        minimumHours: {},
-      },
-      schedule: {
-        schedules: [{
-          day: "",
-          hours: {
-            start: "",
-            end: ""
-          }
-        }],
-        timeZones: [],
-        flexibility: [],
-        minimumHours: {},
-      },
-      commission: {
-        base: "",
-        baseAmount: 0,
-        bonus: "",
-        bonusAmount: 0,
-        structure: "",
-        currency: "",
-        minimumVolume: {
-          amount: 0,
-          period: "",
-          unit: ""
-        },
-        transactionCommission: {
-          type: "",
-          amount: 0
-        },
-        kpis: []
-      },
-      leads: {
-        types: [],
-        sources: [],
-        distribution: {
-          method: "",
-          rules: []
-        },
-        qualificationCriteria: []
-      },
-      skills: {
-        languages: [{
-          language: "French",
-          proficiency: "B1",
-          iso639_1: "fr"
-        }],
-        soft: [{ skill: { $oid: "softSkillOid" }, level: 1, details: "" }],
-        professional: [{ skill: { $oid: "professionalSkillOid" }, level: 1, details: "" }],
-        technical: [{ skill: { $oid: "technicalSkillOid" }, level: 1, details: "" }],
-        certifications: []
-      },
-      seniority: {
-
-        level: "",
-        yearsExperience: 0
-      },
-      team: {
-        size: 0,
-        structure: [],
-        territories: [],
-        reporting: {
-          to: "",
-          frequency: ""
-        },
-        collaboration: []
-      },
-      training: {
-        initial: {
-          duration: "",
-          format: "",
-          topics: []
-        },
-        ongoing: {
-          frequency: "",
-          format: "",
-          topics: []
-        },
-        support: []
-      },
-      metrics: {
-        kpis: [],
-        targets: {},
-        reporting: {
-          frequency: "",
-          metrics: []
-        }
-      },
-      documentation: {
-        templates: null,
-        reference: null,
-        product: [],
-        process: [],
-        training: []
-      },
-      compliance: {
-        requirements: [],
-        certifications: [],
-        policies: []
-      }
-    });
-  };
 
   if (showSuggestions) {
     return (

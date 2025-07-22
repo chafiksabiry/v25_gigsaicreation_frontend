@@ -33,7 +33,9 @@ import {
   loadActivities, 
   loadIndustries, 
   getActivityNameById,
-  getIndustryNameById
+  getIndustryNameById,
+  loadLanguages,
+  getLanguageNameById
 } from '../lib/activitiesIndustries';
 
 interface GigReviewProps {
@@ -62,18 +64,20 @@ export function GigReview({
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
 
   // State for timezones and companies
   const [timezoneMap, setTimezoneMap] = useState<{ [key: string]: string }>({});
   const [companyMap, setCompanyMap] = useState<{ [key: string]: string }>({});
 
-  // Load skills from API
+  // Load skills and languages from API
   useEffect(() => {
-    const fetchSkills = async () => {
+    const fetchSkillsAndLanguages = async () => {
       try {
         setSkillsLoading(true);
+        setLanguagesLoading(true);
         
-        // Fetch all skills categories
+        // Fetch all skills categories and languages
         const [softResponse, professionalResponse, technicalResponse] = await Promise.all([
           fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`),
           fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`),
@@ -94,14 +98,18 @@ export function GigReview({
           const technicalData = await technicalResponse.json();
           setTechnicalSkills(technicalData.data || []);
         }
+
+        // Load languages using the utility function
+        await loadLanguages();
       } catch (error) {
-        console.error('Error fetching skills:', error);
+        console.error('Error fetching skills and languages:', error);
       } finally {
         setSkillsLoading(false);
+        setLanguagesLoading(false);
       }
     };
 
-    fetchSkills();
+    fetchSkillsAndLanguages();
   }, []);
 
   // Fetch all timezones and companies on mount
@@ -149,6 +157,14 @@ export function GigReview({
     if (category === 'technical') arr = technicalSkills;
     const found = arr.find((s) => s._id === id);
     return found ? found.name : id;
+  };
+
+  // Helper to get language name by id
+  const getLanguageName = (id: string) => {
+    if (languagesLoading) {
+      return 'Loading...';
+    }
+    return getLanguageNameById(id) || id;
   };
 
   const getCurrencySymbol = () => {
@@ -676,7 +692,7 @@ export function GigReview({
                       <div className="flex flex-wrap gap-2 mt-2">
                         {data.skills.languages.map((lang, index) => (
                           <span key={index} className="px-2 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded text-xs font-medium border border-[#667eea]/30">
-                            {lang.language} ({lang.proficiency})
+                            {getLanguageName(lang.language)} ({lang.proficiency})
                           </span>
                         ))}
                       </div>
@@ -693,7 +709,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.technical.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
-                            {s.skill}
+                            {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'technical')}
                           </li>
                         ))}
                       </ul>
@@ -706,7 +722,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.professional.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#764ba2]/10 rounded text-sm">
-                            {s.skill}
+                            {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'professional')}
                           </li>
                         ))}
                       </ul>
@@ -719,7 +735,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.soft.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#f093fb]/10 rounded text-sm">
-                            {s.skill}
+                            {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'soft')}
                           </li>
                         ))}
                       </ul>
