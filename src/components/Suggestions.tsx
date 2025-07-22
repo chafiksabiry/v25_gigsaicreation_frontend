@@ -36,6 +36,20 @@ import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
 import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
+import { 
+  loadActivities, 
+  loadIndustries, 
+  loadLanguages,
+  getActivityOptions, 
+  getIndustryOptions,
+  getLanguageOptions,
+  getActivityNameById,
+  getIndustryNameById,
+  getLanguageNameById,
+  convertActivityNamesToIds,
+  convertIndustryNamesToIds,
+  convertLanguageNamesToIds
+} from '../lib/activitiesIndustries';
 
 type ScheduleEntry = {
   day: string;
@@ -172,48 +186,7 @@ const SKILL_LEVELS = [
   { value: 5, label: "Master" },
 ];
 
-const LANGUAGES = [
-  "English",
-  "French",
-  "Spanish",
-  "German",
-  "Italian",
-  "Portuguese",
-  "Dutch",
-  "Russian",
-  "Chinese (Mandarin)",
-  "Japanese",
-  "Korean",
-  "Arabic",
-  "Hindi",
-  "Turkish",
-  "Polish",
-  "Swedish",
-  "Norwegian",
-  "Danish",
-  "Finnish",
-  "Greek",
-  "Hebrew",
-  "Thai",
-  "Vietnamese",
-  "Indonesian",
-  "Malay",
-  "Filipino",
-  "Urdu",
-  "Bengali",
-  "Persian",
-  "Czech",
-  "Hungarian",
-  "Romanian",
-  "Bulgarian",
-  "Croatian",
-  "Serbian",
-  "Slovak",
-  "Slovenian",
-  "Estonian",
-  "Latvian",
-  "Lithuanian",
-];
+
 
 const BONUS_TYPES = ["Performance Bonus", "Team Bonus"];
 
@@ -297,8 +270,77 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
   const skillsLoadedRef = useRef(false);
+  const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
+  const [industries, setIndustries] = useState<Array<{ value: string; label: string }>>([]);
+  const [languages, setLanguages] = useState<Array<{ value: string; label: string; code: string }>>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+  const [industriesLoading, setIndustriesLoading] = useState(true);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
 
 
+
+  // Load activities, industries, and languages from external API
+  useEffect(() => {
+    const loadActivitiesIndustriesAndLanguages = async () => {
+      console.log('🔄 Suggestions: Loading activities, industries, and languages from external API...');
+      
+      try {
+        setActivitiesLoading(true);
+        setIndustriesLoading(true);
+        setLanguagesLoading(true);
+        
+        console.log('📋 Suggestions: Starting to load activities...');
+        const activitiesData = await loadActivities();
+        console.log('✅ Suggestions: Activities loaded:', activitiesData.length);
+        
+        console.log('🏭 Suggestions: Starting to load industries...');
+        const industriesData = await loadIndustries();
+        console.log('✅ Suggestions: Industries loaded:', industriesData.length);
+        
+        console.log('🌐 Suggestions: Starting to load languages...');
+        const languagesData = await loadLanguages();
+        console.log('✅ Suggestions: Languages loaded:', languagesData.length);
+        
+        // Get options for UI components
+        const activityOptions = getActivityOptions();
+        const industryOptions = getIndustryOptions();
+        const languageOptions = getLanguageOptions();
+        
+        console.log('🎯 Suggestions: Activity options generated:', activityOptions.length);
+        console.log('🎯 Suggestions: Industry options generated:', industryOptions.length);
+        console.log('🎯 Suggestions: Language options generated:', languageOptions.length);
+        
+        // Log sample data for debugging
+        if (activityOptions.length > 0) {
+          console.log('📋 Suggestions: Sample activities:', activityOptions.slice(0, 3));
+        }
+        if (industryOptions.length > 0) {
+          console.log('🏭 Suggestions: Sample industries:', industryOptions.slice(0, 3));
+        }
+        if (languageOptions.length > 0) {
+          console.log('🌐 Suggestions: Sample languages:', languageOptions.slice(0, 3));
+        }
+        
+        setActivities(activityOptions);
+        setIndustries(industryOptions);
+        setLanguages(languageOptions);
+        setIsDataLoaded(true);
+        
+        console.log('✅ Suggestions: All data loaded successfully');
+        
+      } catch (error) {
+        console.error('❌ Suggestions: Error loading activities, industries, and languages:', error);
+        alert(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your internet connection and try again.`);
+      } finally {
+        setActivitiesLoading(false);
+        setIndustriesLoading(false);
+        setLanguagesLoading(false);
+      }
+    };
+
+    loadActivitiesIndustriesAndLanguages();
+  }, []);
 
   // Fetch all countries from API for destination zones
   useEffect(() => {
@@ -1542,19 +1584,33 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         ];
         break;
       case "industries":
-        // Validate that the industry is in the allowed list
-        if (predefinedOptions.industries.includes(item)) {
-          newSuggestions.industries = [...(newSuggestions.industries || []), item];
+        // Convert industry name to ID
+        const industryId = industries.find(i => i.label === item)?.value;
+        if (industryId) {
+          newSuggestions.industries = [...(newSuggestions.industries || []), industryId];
         } else {
-          console.warn(`Industry "${item}" is not in the allowed list. Skipping.`);
+          console.warn(`Industry "${item}" not found in available options. Skipping.`);
         }
         break;
       case "activities":
-        // Validate that the activity is in the allowed list
-        if (predefinedOptions.activities.includes(item)) {
-          newSuggestions.activities = [...(newSuggestions.activities || []), item];
+        // Convert activity name to ID
+        const activityId = activities.find(a => a.label === item)?.value;
+        if (activityId) {
+          newSuggestions.activities = [...(newSuggestions.activities || []), activityId];
         } else {
-          console.warn(`Activity "${item}" is not in the allowed list. Skipping.`);
+          console.warn(`Activity "${item}" not found in available options. Skipping.`);
+        }
+        break;
+      case "languages":
+        // Convert language name to ID
+        const languageId = languages.find(l => l.label === item)?.value;
+        if (languageId) {
+          newSuggestions.skills.languages = [
+            ...(newSuggestions.skills.languages || []),
+            { language: languageId, proficiency: 'B1', iso639_1: 'en' }
+          ];
+        } else {
+          console.warn(`Language "${item}" not found in available options. Skipping.`);
         }
         break;
       case "sectors":
@@ -1634,19 +1690,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.deliverables[index] = newValue;
         break;
       case "industries":
-        // Validate that the industry is in the allowed list
-        if (predefinedOptions.industries.includes(newValue)) {
-          newSuggestions.industries[index] = newValue;
+        // Convert industry name to ID
+        const industryId = industries.find(i => i.label === newValue)?.value;
+        if (industryId) {
+          newSuggestions.industries[index] = industryId;
         } else {
-          console.warn(`Industry "${newValue}" is not in the allowed list. Skipping update.`);
+          console.warn(`Industry "${newValue}" not found in available options. Skipping update.`);
         }
         break;
       case "activities":
-        // Validate that the activity is in the allowed list
-        if (predefinedOptions.activities.includes(newValue)) {
-          newSuggestions.activities[index] = newValue;
+        // Convert activity name to ID
+        const activityId = activities.find(a => a.label === newValue)?.value;
+        if (activityId) {
+          newSuggestions.activities[index] = activityId;
         } else {
-          console.warn(`Activity "${newValue}" is not in the allowed list. Skipping update.`);
+          console.warn(`Activity "${newValue}" not found in available options. Skipping update.`);
         }
         break;
       case "sectors":
@@ -2990,27 +3048,47 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderActivitiesSection = () => {
     if (!suggestions) return null;
 
+    console.log('🎯 renderActivitiesSection - Debug Info:');
+    console.log('  - activities state:', activities);
+    console.log('  - activitiesLoading:', activitiesLoading);
+    console.log('  - isDataLoaded:', isDataLoaded);
+    console.log('  - suggestions.activities:', suggestions.activities);
+
     const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
+      console.log('➕ Adding activity:', value);
+      
+      // Find the activity by label and get its ID
+      const selectedActivity = activities.find(activity => activity.label === value);
+      if (!selectedActivity) {
+        console.error('❌ Activity not found:', value);
+        return;
+      }
+      
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.activities) newSuggestions.activities = [];
-      if (!newSuggestions.activities.includes(value)) {
-        newSuggestions.activities = [...newSuggestions.activities, value];
+      if (!newSuggestions.activities.includes(selectedActivity.value)) {
+        newSuggestions.activities = [...newSuggestions.activities, selectedActivity.value];
         setSuggestions(newSuggestions);
+        console.log('✅ Activity added with ID:', selectedActivity.value);
       }
       // Reset select
       e.target.value = '';
     };
 
     const handleRemoveActivity = (activity: string) => {
+      console.log('➖ Removing activity:', activity);
       const newSuggestions = { ...suggestions };
       newSuggestions.activities = newSuggestions.activities.filter(a => a !== activity);
       setSuggestions(newSuggestions);
     };
 
     const selected = suggestions.activities || [];
-    const available = predefinedOptions.activities.filter(activity => !selected.includes(activity));
+    const available = activities.filter(activity => !selected.includes(activity.value));
+    
+    console.log('  - selected activities:', selected);
+    console.log('  - available activities:', available.length);
 
     return (
       <div className="mb-8">
@@ -3020,12 +3098,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
         {/* Badges sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(activity => (
-            <span key={activity} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {activity}
+          {selected.map(activityId => (
+            <span key={activityId} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {getActivityNameById(activityId)}
               <button
                 type="button"
-                onClick={() => handleRemoveActivity(activity)}
+                onClick={() => handleRemoveActivity(activityId)}
                 className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
                 title="Remove"
               >
@@ -3035,19 +3113,31 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           ))}
         </div>
         {/* Select pour ajouter */}
-        <select
-          className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
-          defaultValue=""
-          onChange={handleAddActivity}
-        >
-          <option value="" disabled>Add activity...</option>
-          {available.map(activity => (
-            <option key={activity} value={activity}>{activity}</option>
-          ))}
-        </select>
+        {activitiesLoading ? (
+          <div className="w-full p-3 rounded-lg border border-green-300 bg-gray-50 text-gray-500 text-center">
+            <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+            Loading activities from API...
+          </div>
+        ) : (
+          <select
+            className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+            defaultValue=""
+            onChange={handleAddActivity}
+          >
+            <option value="" disabled>Add activity...</option>
+            {available.map(activity => (
+              <option key={activity.value} value={activity.label}>{activity.label}</option>
+            ))}
+          </select>
+        )}
         <p className="text-xs text-gray-500 italic text-center mt-2">
           Select all relevant activities for this position
         </p>
+        {!activitiesLoading && activities.length === 0 && (
+          <p className="text-xs text-red-500 italic text-center mt-2">
+            ⚠️ No activities available. Please check API connection.
+          </p>
+        )}
       </div>
     );
   };
@@ -3055,27 +3145,47 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderIndustriesSection = () => {
     if (!suggestions) return null;
 
+    console.log('🏭 renderIndustriesSection - Debug Info:');
+    console.log('  - industries state:', industries);
+    console.log('  - industriesLoading:', industriesLoading);
+    console.log('  - isDataLoaded:', isDataLoaded);
+    console.log('  - suggestions.industries:', suggestions.industries);
+
     const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
+      console.log('➕ Adding industry:', value);
+      
+      // Find the industry by label and get its ID
+      const selectedIndustry = industries.find(industry => industry.label === value);
+      if (!selectedIndustry) {
+        console.error('❌ Industry not found:', value);
+        return;
+      }
+      
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.industries) newSuggestions.industries = [];
-      if (!newSuggestions.industries.includes(value)) {
-        newSuggestions.industries = [...newSuggestions.industries, value];
+      if (!newSuggestions.industries.includes(selectedIndustry.value)) {
+        newSuggestions.industries = [...newSuggestions.industries, selectedIndustry.value];
         setSuggestions(newSuggestions);
+        console.log('✅ Industry added with ID:', selectedIndustry.value);
       }
       // Reset select
       e.target.value = '';
     };
 
     const handleRemoveIndustry = (industry: string) => {
+      console.log('➖ Removing industry:', industry);
       const newSuggestions = { ...suggestions };
       newSuggestions.industries = newSuggestions.industries.filter(i => i !== industry);
       setSuggestions(newSuggestions);
     };
 
     const selected = suggestions.industries || [];
-    const available = predefinedOptions.industries.filter(industry => !selected.includes(industry));
+    const available = industries.filter(industry => !selected.includes(industry.value));
+    
+    console.log('  - selected industries:', selected);
+    console.log('  - available industries:', available.length);
 
     return (
       <div className="mb-8">
@@ -3085,12 +3195,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
         {/* Badges sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(industry => (
-            <span key={industry} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {industry}
+          {selected.map(industryId => (
+            <span key={industryId} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              {getIndustryNameById(industryId)}
               <button
                 type="button"
-                onClick={() => handleRemoveIndustry(industry)}
+                onClick={() => handleRemoveIndustry(industryId)}
                 className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
                 title="Remove"
               >
@@ -3100,19 +3210,31 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           ))}
         </div>
         {/* Select pour ajouter */}
-        <select
-          className="w-full p-3 rounded-lg border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 mb-2"
-          defaultValue=""
-          onChange={handleAddIndustry}
-        >
-          <option value="" disabled>Add industry...</option>
-          {available.map(industry => (
-            <option key={industry} value={industry}>{industry}</option>
-          ))}
-        </select>
+        {industriesLoading ? (
+          <div className="w-full p-3 rounded-lg border border-indigo-300 bg-gray-50 text-gray-500 text-center">
+            <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+            Loading industries from API...
+          </div>
+        ) : (
+          <select
+            className="w-full p-3 rounded-lg border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 mb-2"
+            defaultValue=""
+            onChange={handleAddIndustry}
+          >
+            <option value="" disabled>Add industry...</option>
+            {available.map(industry => (
+              <option key={industry.value} value={industry.label}>{industry.label}</option>
+            ))}
+          </select>
+        )}
         <p className="text-xs text-gray-500 italic text-center mt-2">
           Select all relevant industries for this position
         </p>
+        {!industriesLoading && industries.length === 0 && (
+          <p className="text-xs text-red-500 italic text-center mt-2">
+            ⚠️ No industries available. Please check API connection.
+          </p>
+        )}
       </div>
     );
   };
@@ -3925,7 +4047,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       const getSkillOptions = (skillType: string) => {
         switch (skillType) {
           case "languages":
-            return LANGUAGES.filter(lang => !currentItems.some(item => item.language === lang));
+            return languages
+              .filter(lang => !currentItems.some(item => item.language === lang.value))
+              .map(lang => ({ id: lang.value, name: lang.label }));
           case "professional":
             return professionalSkills
               .filter(skill => !currentItems.some(item => {
@@ -3966,13 +4090,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">{title}</h4>
-                {skillType !== "languages" && (
-                  <p className="text-sm text-gray-600">
-                    {skillType === "professional" && `${professionalSkills.length} available`}
-                    {skillType === "technical" && `${technicalSkills.length} available`}
-                    {skillType === "soft" && `${softSkills.length} available`}
-                  </p>
-                )}
+                <p className="text-sm text-gray-600">
+                  {skillType === "languages" && `${languages.length} available`}
+                  {skillType === "professional" && `${professionalSkills.length} available`}
+                  {skillType === "technical" && `${technicalSkills.length} available`}
+                  {skillType === "soft" && `${softSkills.length} available`}
+                </p>
               </div>
             </div>
             <button
@@ -3994,7 +4117,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 .map((item, index) => {
                   let skillName = '';
                   if (skillType === "languages") {
-                    skillName = item.language;
+                    skillName = getLanguageNameById(item.language);
                   } else {
                     let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
                     switch (skillType) {
@@ -4034,9 +4157,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           >
                             <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
                             {skillType === "languages" 
-                              ? LANGUAGES.map((lang) => (
-                                  <option key={lang} value={lang}>
-                                    {lang}
+                              ? languages.map((lang) => (
+                                  <option key={lang.value} value={lang.label}>
+                                    {lang.label}
                                   </option>
                                 ))
                               : skillType === "professional"
@@ -4194,9 +4317,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   >
                     <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
                     {skillType === "languages" 
-                      ? (skillOptions as string[]).map((option) => (
-                          <option key={option} value={option}>
-                            {option}
+                      ? skillOptions.map((option: any) => (
+                          <option key={option.id} value={option.name}>
+                            {option.name}
                           </option>
                         ))
                       : skillType === "professional"

@@ -29,6 +29,12 @@ import { saveGigData } from '../lib/api';
 import { groupSchedules } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchCompanies } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
+import { 
+  loadActivities, 
+  loadIndustries, 
+  getActivityNameById,
+  getIndustryNameById
+} from '../lib/activitiesIndustries';
 
 interface GigReviewProps {
   data: GigData;
@@ -397,7 +403,7 @@ export function GigReview({
                         <div className="flex flex-wrap gap-2">
                           {data.industries.map((industry, index) => (
                             <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
-                              {industry}
+                              {getIndustryNameById(industry)}
                             </span>
                           ))}
                         </div>
@@ -649,8 +655,8 @@ export function GigReview({
                   </div>
                   <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-4 text-center border border-[#667eea]/30">
                     <Award className="w-8 h-8 text-[#667eea] mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.certifications?.length || 0}</div>
-                    <div className="text-sm text-gray-600 font-semibold">Certifications</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.technical?.length || 0}</div>
+                    <div className="text-sm text-gray-600 font-semibold">Technical Skills</div>
                   </div>
                 </div>
                 
@@ -686,7 +692,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.technical.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
-                            {getSkillName(typeof s.skill === 'string' ? s.skill : s.skill?.$oid, 'technical')}
+                            {s.skill}
                           </li>
                         ))}
                       </ul>
@@ -699,7 +705,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.professional.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#764ba2]/10 rounded text-sm">
-                            {getSkillName(typeof s.skill === 'string' ? s.skill : s.skill?.$oid, 'professional')}
+                            {s.skill}
                           </li>
                         ))}
                       </ul>
@@ -712,25 +718,13 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.soft.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#f093fb]/10 rounded text-sm">
-                            {getSkillName(typeof s.skill === 'string' ? s.skill : s.skill?.$oid, 'soft')}
+                            {s.skill}
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
-                  {/* Certifications */}
-                  {data.skills?.certifications && data.skills.certifications.length > 0 && (
-                    <div>
-                      <div className="font-semibold text-[#667eea] mb-1">Certifications:</div>
-                      <ul className="flex flex-wrap gap-2">
-                        {data.skills.certifications.map((c, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
-                            {typeof c === 'string' ? c : c.name}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {/* Certifications section removed - no longer part of skills structure */}
                 </div>
               </div>
             )}
