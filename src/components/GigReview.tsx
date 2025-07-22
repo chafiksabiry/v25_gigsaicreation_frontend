@@ -166,8 +166,9 @@ export function GigReview({
     try {
       console.log('🚀 Publishing gig with skills data:', data.skills);
       
-      await saveGigData(data);
+      // Let onSubmit handle the saving (it already calls saveGigData)
       await onSubmit();
+      
       const result = await Swal.fire({
         title: "Success!",
         text: "Your gig has been published successfully.",
