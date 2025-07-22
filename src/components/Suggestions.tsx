@@ -1841,7 +1841,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       setEditValue(currentValue);
       }
     } else if (currentValue && typeof currentValue === "object") {
-      setEditValue(currentValue.skill || currentValue.language || "");
+      // Handle skill objects with $oid
+      if (currentValue.skill) {
+        if (typeof currentValue.skill === 'string') {
+          setEditValue(currentValue.skill);
+        } else if (currentValue.skill && typeof currentValue.skill === 'object' && currentValue.skill.$oid) {
+          setEditValue(currentValue.skill.$oid);
+        } else {
+          setEditValue("");
+        }
+      } else if (currentValue.language) {
+        setEditValue(currentValue.language);
+      } else {
+        setEditValue("");
+      }
     } else {
       setEditValue("");
     }
