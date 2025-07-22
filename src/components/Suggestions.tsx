@@ -3959,7 +3959,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       switch (skillType) {
         case "languages":
           if (field === "language") {
-            newSuggestions.skills.languages[index].language = value as string;
+            // Find the language by ID to get the code
+            const selectedLanguage = languages.find(l => l.value === value);
+            if (selectedLanguage) {
+              newSuggestions.skills.languages[index].language = selectedLanguage.value; // Store ID
+              newSuggestions.skills.languages[index].iso639_1 = selectedLanguage.code; // Update code
+            } else {
+              console.warn(`Language with ID "${value}" not found. Skipping update.`);
+              return;
+            }
           } else if (field === "proficiency") {
             newSuggestions.skills.languages[index].proficiency = value as string;
           }
@@ -4158,7 +4166,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
                             {skillType === "languages" 
                               ? languages.map((lang) => (
-                                  <option key={lang.value} value={lang.label}>
+                                  <option key={lang.value} value={lang.value}>
                                     {lang.label}
                                   </option>
                                 ))
@@ -4238,7 +4246,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   setEditingSection(skillType);
                                   setEditingIndex(index);
                                   if (skillType === "languages") {
-                                    setEditValue(item.language);
+                                    // Find the language name by ID for display
+                                    const languageObj = languages.find(l => l.value === item.language);
+                                    setEditValue(languageObj ? languageObj.value : item.language);
                                   } else {
                                     let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
                                     switch (skillType) {
