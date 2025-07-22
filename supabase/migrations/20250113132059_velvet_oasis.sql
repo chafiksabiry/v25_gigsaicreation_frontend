@@ -9,11 +9,12 @@
   2. Notes
     - All new columns are nullable to maintain backward compatibility
     - Currency codes follow ISO 4217 standard
+    - Amount fields are stored as numeric values
 */
 
 ALTER TABLE gigs
-  ADD COLUMN IF NOT EXISTS commission_base_amount text,
-  ADD COLUMN IF NOT EXISTS commission_bonus_amount text,
+  ADD COLUMN IF NOT EXISTS commission_base_amount numeric,
+  ADD COLUMN IF NOT EXISTS commission_bonus_amount numeric,
   ADD COLUMN IF NOT EXISTS commission_currency text;
 
 -- Add check constraint for valid currencies

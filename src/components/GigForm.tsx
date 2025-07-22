@@ -1,25 +1,62 @@
 import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { supabase } from '../lib/supabase';
+import { saveGigData } from '../lib/api';
 import { 
   Calendar, Clock, DollarSign, Users, Globe2, 
   Brain, Briefcase, FileText, Building2
 } from 'lucide-react';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import type { ParsedGig } from '../lib/types';
+
+interface GigFormProps {
+  gig: ParsedGig;
+  onSave: (updatedGig: ParsedGig) => void;
+  onCancel: () => void;
+}
 
 type GigFormData = {
   title: string;
   description: string;
   category: string;
   callTypes: string[];
-  schedule: {
-    days: string[];
-    hours: string;
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
     timeZones: string[];
-    flexibility: string;
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
+  schedule: {
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
   };
   commission: {
     base: string;
+    baseAmount: string;
     bonus: string;
+    bonusAmount: string;
     structure: string;
   };
   leads: {
@@ -31,26 +68,210 @@ type GigFormData = {
     sources: string[];
   };
   skills: {
-    languages: { name: string; level: string; }[];
-    soft: string[];
-    professional: string[];
+    languages: { 
+      language: string; 
+      proficiency: string; 
+      iso639_1: string;
+      _id?: { $oid: string };
+    }[];
+    soft: {
+      skill: string;
+      level: number;
+    }[];
+    professional: {
+      skill: string;
+      level: number;
+    }[];
+    technical: {
+      skill: string;
+      level: number;
+    }[];
+    certifications: string[];
     industry: string[];
   };
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
   team: {
-    size: string;
+    size: number;
     structure: string[];
     territories: string[];
   };
   prerequisites: string[];
   documentation: {
+    templates: {};
+    reference: {};
     product: string[];
-    sales: string[];
+    process: string[];
+    training: string[];
   };
 };
+
+interface GigData {
+  companyId: string;
+  userId: string;
+  title: string;
+  description: string;
+  category: string;
+  destination_zone: string;
+  callTypes: string[];
+  highlights: any[];
+  industries: string[];
+  requirements: {
+    essential: any[];
+    preferred: any[];
+  };
+  benefits: any[];
+  availability: {
+    schedule: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    time_zone: string;
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
+  schedule: {
+    schedules: {
+      day: string;
+      hours: {
+        start: string;
+        end: string;
+      };
+    }[];
+    timeZones: string[];
+    flexibility: string[];
+    minimumHours: {
+      daily?: number;
+      weekly?: number;
+      monthly?: number;
+    };
+  };
+  commission: {
+    base: string;
+    baseAmount: string;
+    bonus: string;
+    bonusAmount: string;
+    structure: string;
+    currency: string;
+    minimumVolume: {
+      amount: string;
+      period: string;
+      unit: string;
+    };
+    transactionCommission: {
+      type: string;
+      amount: string;
+    };
+    kpis: any[];
+  };
+  leads: {
+    types: {
+      type: string;
+      percentage: number;
+      description: string;
+    }[];
+    sources: string[];
+    distribution: {
+      method: string;
+      rules: any[];
+    };
+    qualificationCriteria: any[];
+  };
+  skills: {
+    languages: {
+      language: string;
+      proficiency: string;
+      iso639_1: string;
+    }[];
+    soft: {
+      skill: string;
+      level: number;
+    }[];
+    professional: {
+      skill: string;
+      level: number;
+    }[];
+    technical: {
+      skill: string;
+      level: number;
+    }[];
+    certifications: string[];
+  };
+  seniority: {
+    level: string;
+    yearsExperience: number;
+  };
+  team: {
+    size: number;
+    structure: {
+      roleId: string;
+      count: number;
+      seniority: {
+        level: string;
+        yearsExperience: number;
+      };
+    }[];
+    territories: string[];
+    reporting: {
+      to: string;
+      frequency: string;
+    };
+    collaboration: any[];
+  };
+  documentation: {
+    templates: Record<string, any>;
+    reference: Record<string, any>;
+    product: { name: string; url: string; }[];
+    process: { name: string; url: string; }[];
+    training: { name: string; url: string; }[];
+  };
+  tools: {
+    provided: any[];
+    required: any[];
+  };
+  training: {
+    initial: {
+      duration: string;
+      format: string;
+      topics: any[];
+    };
+    ongoing: {
+      frequency: string;
+      format: string;
+      topics: any[];
+    };
+    support: any[];
+  };
+  metrics: {
+    kpis: any[];
+    targets: Record<string, any>;
+    reporting: {
+      frequency: string;
+      metrics: any[];
+    };
+  };
+  compliance: {
+    requirements: any[];
+    certifications: any[];
+    policies: any[];
+  };
+  equipment: {
+    required: any[];
+    provided: any[];
+  };
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export function GigForm() {
   const { register, control, handleSubmit, formState: { errors } } = useForm<GigFormData>();
@@ -58,29 +279,166 @@ export function GigForm() {
   const onSubmit = async (data: GigFormData) => {
     try {
       // Insert main gig data
-      const { data: gig, error: gigError } = await supabase
-        .from('gigs')
-        .insert({
-          title: data.title,
-          description: data.description,
-          category: data.category,
-          call_types: data.callTypes,
-          schedule_days: data.schedule.days,
-          schedule_hours: data.schedule.hours,
-          schedule_timezone: data.schedule.timeZones,
-          schedule_flexibility: data.schedule.flexibility,
-          commission_base: data.commission.base,
-          commission_bonus: data.commission.bonus,
-          commission_structure: data.commission.structure,
-          seniority_level: data.seniority.level,
-          years_experience: data.seniority.yearsExperience,
-          team_size: data.team.size,
-          team_structure: data.team.structure,
-          team_territories: data.team.territories,
-          prerequisites: data.prerequisites
-        })
-        .select()
-        .single();
+      const gigData: GigData = {
+        companyId: Cookies.get('companyId') || "",
+        userId: Cookies.get('userId') || "",
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        destination_zone: "",
+        callTypes: data.callTypes,
+        highlights: [],
+        industries: [],
+        status: 'to_activate',
+        requirements: {
+          essential: [],
+          preferred: []
+        },
+        benefits: [],
+        availability: {
+          schedule: data.schedule?.schedules || [
+            {
+              day: "",
+              hours: {
+                start: "",
+                end: ""
+              }
+            }
+          ],
+          timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
+          minimumHours: {
+            daily: undefined,
+            weekly: undefined,
+            monthly: undefined
+          }
+        },
+        schedule: {
+          schedules: data.schedule?.schedules || [
+            {
+              day: "",
+              hours: {
+                start: "",
+                end: ""
+              }
+            }
+          ],
+          timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
+          minimumHours: {
+            daily: undefined,
+            weekly: undefined,
+            monthly: undefined
+          }
+        },
+        commission: {
+          base: data.commission.base,
+          baseAmount: data.commission.baseAmount,
+          bonus: data.commission.bonus,
+          bonusAmount: data.commission.bonusAmount,
+          structure: data.commission.structure,
+          currency: "USD",
+          minimumVolume: {
+            amount: "",
+            period: "",
+            unit: ""
+          },
+          transactionCommission: {
+            type: "",
+            amount: ""
+          },
+          kpis: []
+        },
+        leads: {
+          types: data.leads.types,
+          sources: data.leads.sources,
+          distribution: {
+            method: "",
+            rules: []
+          },
+          qualificationCriteria: []
+        },
+        skills: {
+          languages: data.skills.languages,
+          soft: data.skills.soft.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          professional: data.skills.professional.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          technical: data.skills.technical.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          certifications: []
+        },
+        seniority: {
+          level: data.seniority.level,
+          yearsExperience: data.seniority.yearsExperience,
+        },
+        team: {
+          size: data.team?.size || 0,
+          structure: (data.team?.structure || []).map(role => ({
+            roleId: role,
+            count: 1,
+            seniority: {
+              level: "",
+              yearsExperience: 0
+            }
+          })),
+          territories: data.team?.territories || [],
+          reporting: {
+            to: "",
+            frequency: ""
+          },
+          collaboration: []
+        },
+        documentation: {
+          templates: {},
+          reference: {},
+          product: (data.documentation?.product || []).map(name => ({ name, url: "" })),
+          process: (data.documentation?.process || []).map(name => ({ name, url: "" })),
+          training: (data.documentation?.training || []).map(name => ({ name, url: "" }))
+        },
+        tools: {
+          provided: [],
+          required: []
+        },
+        training: {
+          initial: {
+            duration: "",
+            format: "",
+            topics: []
+          },
+          ongoing: {
+            frequency: "",
+            format: "",
+            topics: []
+          },
+          support: []
+        },
+        metrics: {
+          kpis: [],
+          targets: {},
+          reporting: {
+            frequency: "",
+            metrics: []
+          }
+        },
+        compliance: {
+          requirements: [],
+          certifications: [],
+          policies: []
+        },
+        equipment: {
+          required: [],
+          provided: []
+        }
+      };
+
+      const { data: gig, error: gigError } = await saveGigData(gigData);
 
       if (gigError) throw gigError;
 
@@ -89,8 +447,9 @@ export function GigForm() {
         ...data.skills.languages.map(lang => ({
           gig_id: gig.id,
           category: 'language',
-          name: lang.name,
-          level: lang.level
+          language: lang.language,
+          proficiency: lang.proficiency,
+          iso639_1: lang.iso639_1
         })),
         ...data.skills.soft.map(skill => ({
           gig_id: gig.id,
@@ -109,54 +468,66 @@ export function GigForm() {
         }))
       ];
 
-      const { error: skillsError } = await supabase
-        .from('gig_skills')
-        .insert(skillsPromises);
-
-      if (skillsError) throw skillsError;
+      const skillsResponse = await axios.post(`${API_URL}/gig_skills`, skillsPromises);
+      if (!skillsResponse.data) throw new Error('Failed to save skills');
 
       // Insert leads
-      const { error: leadsError } = await supabase
-        .from('gig_leads')
-        .insert(data.leads.types.map(lead => ({
-          gig_id: gig.id,
+      const leadsResponse = await axios.post(`${API_URL}/gig_leads`, {
+        gig_id: gig.id,
+        leads: data.leads.types.map(lead => ({
           lead_type: lead.type,
           percentage: lead.percentage,
           description: lead.description,
           sources: data.leads.sources
-        })));
-
-      if (leadsError) throw leadsError;
+        }))
+      });
+      if (!leadsResponse.data) throw new Error('Failed to save leads');
 
       // Insert documentation
       const docsPromises = [
-        ...data.documentation.product.map(doc => ({
+        ...(data.documentation?.product || []).map(doc => ({
           gig_id: gig.id,
-          doc_type: 'product',
-          name: doc
+          type: 'product',
+          name: doc,
+          url: ""
         })),
-        ...data.documentation.sales.map(doc => ({
+        ...(data.documentation?.process || []).map(doc => ({
           gig_id: gig.id,
-          doc_type: 'sales',
-          name: doc
+          type: 'process',
+          name: doc,
+          url: ""
+        })),
+        ...(data.documentation?.training || []).map(doc => ({
+          gig_id: gig.id,
+          type: 'training',
+          name: doc,
+          url: ""
         }))
       ];
 
-      const { error: docsError } = await supabase
-        .from('gig_documentation')
-        .insert(docsPromises);
+      const docsResponse = await axios.post(`${API_URL}/gig_documentation`, docsPromises);
+      if (!docsResponse.data) throw new Error('Failed to save documentation');
 
-      if (docsError) throw docsError;
-
-      alert('Gig created successfully!');
+      const confirmed = window.confirm('Gig created successfully! Click OK to continue or Cancel to stay on this page.');
+      if (confirmed) {
+        // User clicked OK - could add navigation logic here if needed
+        console.log("User confirmed gig creation success");
+      } else {
+        // User clicked Cancel - stay on current page
+        console.log("User cancelled - staying on current page");
+      }
     } catch (error) {
       console.error('Error creating gig:', error);
-      alert('Error creating gig. Please try again.');
+      const retry = window.confirm('Error creating gig. Click OK to try again or Cancel to continue.');
+      if (retry) {
+        // Could add retry logic here
+        console.log("User wants to retry gig creation");
+      }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto py-8 px-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full py-8 px-4">
       <div className="space-y-8">
         {/* Basic Information */}
         <section className="bg-white rounded-lg shadow-md p-6">
@@ -192,8 +563,8 @@ export function GigForm() {
               <label className="block text-sm font-medium text-gray-700">Working Hours</label>
               <input
                 type="text"
-                {...register('schedule.hours', { required: true })}
-                placeholder="e.g., 9:00 AM - 6:00 PM EST"
+                {...register('schedule.schedules.0.hours.start', { required: true })}
+                placeholder="e.g., 08h00 - 17h00 EST"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>

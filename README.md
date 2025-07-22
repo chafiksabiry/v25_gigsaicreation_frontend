@@ -1,12 +1,90 @@
 # V25_GigsManualCreation_Frontend
 
+A React-based frontend application for creating and managing gigs with AI assistance and timezone support.
 
+## Features
 
-## Getting started
+- Gig creation and management
+- AI-powered suggestions and assistance
+- Timezone support with country-based filtering
+- Real-time validation and guidance
+- Modern UI with Tailwind CSS
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Environment Variables
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The application uses the following environment variables:
+
+- `VITE_API_URL`: Main API endpoint for gigs
+- `VITE_REP_URL`: Timezone API endpoint (defaults to `https://api-repcreationwizard.harx.ai/api`)
+- `VITE_SUPABASE_URL`: Supabase database URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `VITE_CLOUDINARY_CLOUD_NAME`: Cloudinary cloud name
+- `VITE_CLOUDINARY_API_KEY`: Cloudinary API key
+- `VITE_CLOUDINARY_API_SECRET`: Cloudinary API secret
+- `VITE_API_URL_ONBOARDING`: Onboarding API endpoint
+- `VITE_STANDALONE`: Standalone mode flag
+- `VITE_USER_ID`: Default user ID
+- `VITE_COMPANY_ID`: Default company ID
+
+## Getting Started
+
+## Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd v25_gigsaicreation_frontend
+```
+
+2. Create a `.env` file with your environment variables (see Environment Variables section above)
+
+3. Run with Docker Compose:
+```bash
+docker-compose up --build
+```
+
+The application will be available at `http://localhost:5179`
+
+### Using Docker directly
+
+1. Build the Docker image:
+```bash
+docker build -t gigs-frontend .
+```
+
+2. Run the container:
+```bash
+docker run -p 5179:5179 gigs-frontend
+```
+
+## Development
+
+For local development without Docker:
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Create a `.env` file with your environment variables
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+## API Endpoints
+
+### Timezone API
+
+The application uses the following timezone API endpoints:
+
+- `GET /api/timezones` - Fetch all available timezones
+- `GET /api/timezones/country/:countryCode` - Fetch timezones for a specific country
+
+These endpoints are provided by `https://api-repcreationwizard.harx.ai/api` and can be configured via the `VITE_REP_URL` environment variable.
 
 ## Add your files
 

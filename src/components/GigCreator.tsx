@@ -8,67 +8,75 @@ import {
   Globe2,
   DollarSign,
   Users,
-  Target,
-  ArrowRight,
 } from "lucide-react";
 import { GigReview } from "./GigReview";
-import { ValidationMessage } from "./ValidationMessage";
-import { analyzeTitleAndGenerateDescription } from "../lib/ai";
+import { analyzeTitleAndGenerateDescription, generateSkills } from "../lib/ai";
 import { validateGigData } from "../lib/validation";
 import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { AIDialog } from "./AIDialog";
-import { supabase } from "../lib/supabase";
-import BasicSection from './BasicSection';
-import { SectionContent } from './SectionContent';
+import Cookies from 'js-cookie';
+import { saveGigData } from '../lib/api';
+import axios from 'axios';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
   { id: "schedule", label: "Schedule", icon: Globe2 },
   { id: "commission", label: "Commission", icon: DollarSign },
-  { id: "leads", label: "Leads", icon: Target },
+  // { id: "leads", label: "Leads", icon: Target },
   { id: "skills", label: "Skills", icon: Brain },
   { id: "team", label: "Team", icon: Users },
   { id: "docs", label: "Documentation", icon: FileText },
 ];
 
 const initialGigData: GigData = {
+  userId: Cookies.get('userId') || "",
+  companyId: Cookies.get('companyId') || "",
   title: "",
   description: "",
   category: "",
+  destination_zone: "",
+  destinationZones: [],
   callTypes: [],
   highlights: [],
+  industries: [],
+  status: 'to_activate',
   requirements: {
     essential: [],
     preferred: [],
   },
   benefits: [],
   schedule: {
-    days: ([] as unknown) as string[],
-    hours: "",
-    timeZones: [],
+    schedules: [{
+      day: "Monday",
+      hours: {
+        start: "09:00",
+        end: "18:00"
+      }
+    }],
+    timeZones: [""],
     flexibility: [],
     minimumHours: {
-      daily: undefined,
-      weekly: undefined,
-      monthly: undefined,
+      daily: 8,
+      weekly: 40,
+      monthly: 160
     },
   },
   commission: {
     base: "",
-    baseAmount: "",
+    baseAmount: 0,
     bonus: "",
-    bonusAmount: "",
+    bonusAmount: 0,
     structure: "",
     currency: "",
     minimumVolume: {
-      amount: "",
+      amount: 0,
       period: "",
       unit: "",
     },
     transactionCommission: {
       type: "",
-      amount: "",
+      amount: 0,
     },
     kpis: [],
   },
@@ -89,15 +97,14 @@ const initialGigData: GigData = {
     languages: [],
     soft: [],
     professional: [],
-    technical: [],
-    certifications: [],
+    technical: []
   },
   seniority: {
     level: "",
-    yearsExperience: "",
+    yearsExperience: 0,
   },
   team: {
-    size: "",
+    size: 0,
     structure: [],
     territories: [],
     reporting: {
@@ -132,6 +139,8 @@ const initialGigData: GigData = {
     },
   },
   documentation: {
+    templates: {},
+    reference: {},
     product: [],
     process: [],
     training: [],
@@ -145,14 +154,24 @@ const initialGigData: GigData = {
     required: [],
     provided: [],
   },
-};
-
-// Update the constants structure
-const constants = {
-  ...predefinedOptions,
-  metrics: {
-    ...predefinedOptions.metrics,
-    metricTypes: predefinedOptions.metrics.kpis
+  availability: {
+    schedule: [
+      {
+        day: "Monday",
+        hours: {
+          start: "09:00",
+          end: "18:00"
+        }
+      }
+    ],
+    timeZones: [""],
+    time_zone: "",
+    flexibility: [],
+    minimumHours: {
+      daily: 8,
+      weekly: 40,
+      monthly: 160
+    }
   }
 };
 
@@ -171,13 +190,18 @@ interface GigCreatorProps {
   }) => React.ReactNode;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 export function GigCreator({ children }: GigCreatorProps) {
   const [currentSection, setCurrentSection] = useState(sections[0].id);
-  const [gigData, setGigData] = useState<GigData>(initialGigData);
+  const [gigData, setGigData] = useState<GigData>({
+    ...initialGigData,
+    destinationZones: []
+  });
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [skipValidation, setSkipValidation] = useState(true);
+  const [skipValidation, setSkipValidation] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
@@ -185,20 +209,62 @@ export function GigCreator({ children }: GigCreatorProps) {
   }>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const validation = validateGigData(gigData);
-  const currentSectionHasErrors = Object.keys(validation.errors).some(
-    (key) => key === currentSection
-  );
-  const currentSectionHasWarnings = Object.keys(validation.warnings).some(
-    (key) => key === currentSection
-  );
-  const isLastSection = currentSection === sections[sections.length - 1].id;
-
   const handleGigDataChange = (newData: GigData) => {
-    console.log('GigCreator - handleGigDataChange - Current data:', gigData);
-    console.log('GigCreator - handleGigDataChange - New data:', newData);
-    setGigData(newData);
-    const validation = validateGigData(newData);
+    // Synchroniser les données entre schedule et availability
+    let updatedData = { ...newData, destinationZones: newData.destinationZones || [] };
+    
+    // Synchronize time zone selection between schedule and availability
+    const selectedTimeZone = newData.schedule?.time_zone || (Array.isArray(newData.schedule?.timeZones) ? newData.schedule.timeZones[0] : undefined);
+    
+    // Si les données de schedule ont changé, synchroniser avec availability
+    if (newData.schedule && newData.schedule.schedules) {
+      updatedData = {
+        ...updatedData,
+        schedule: {
+          ...updatedData.schedule,
+          time_zone: selectedTimeZone || "",
+          timeZones: selectedTimeZone ? [selectedTimeZone] : [],
+        },
+        availability: {
+          ...updatedData.availability,
+          schedule: newData.schedule.schedules.map(schedule => ({
+            day: schedule.day,
+            hours: schedule.hours
+          })),
+          time_zone: selectedTimeZone || "",
+          timeZones: selectedTimeZone ? [selectedTimeZone] : [],
+          flexibility: newData.schedule.flexibility || [],
+          minimumHours: newData.schedule.minimumHours || {}
+        }
+      };
+    }
+    
+    // Si les données de availability ont changé, synchroniser avec schedule
+    if (newData.availability && newData.availability.schedule) {
+      const availTimeZone = newData.availability.time_zone || (Array.isArray(newData.availability.timeZones) ? newData.availability.timeZones[0] : undefined);
+      updatedData = {
+        ...updatedData,
+        availability: {
+          ...updatedData.availability,
+          time_zone: availTimeZone || "",
+          timeZones: availTimeZone ? [availTimeZone] : [],
+        },
+        schedule: {
+          ...updatedData.schedule,
+          schedules: newData.availability.schedule.map(schedule => ({
+            day: schedule.day,
+            hours: schedule.hours
+          })),
+          time_zone: availTimeZone || "",
+          timeZones: availTimeZone ? [availTimeZone] : [],
+          flexibility: newData.availability.flexibility || [],
+          minimumHours: newData.availability.minimumHours || {}
+        }
+      };
+    }
+    
+    setGigData(updatedData);
+    const validation = validateGigData(updatedData);
     setValidationErrors(validation.errors);
   };
 
@@ -210,13 +276,44 @@ export function GigCreator({ children }: GigCreatorProps) {
 
     setAnalyzing(true);
     try {
-      const suggestions = await analyzeTitleAndGenerateDescription(
-        gigData.title
-      );
-      setGigData((prev) => ({
-        ...prev,
-        ...suggestions,
-      }));
+      const [suggestions, skills] = await Promise.all([
+        analyzeTitleAndGenerateDescription(gigData.title),
+        generateSkills(gigData.title, gigData.description || "")
+      ]);
+      
+      const formatTime = (time: string | undefined) => {
+        if (!time) return "00:00";
+        const parts = time.split(':');
+        const h = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        return `${h}:${m}`;
+      };
+
+      setGigData((prev) => {
+        const newGigData = {
+          ...prev,
+          ...suggestions,
+          schedule: suggestions.schedule ? {
+            ...suggestions.schedule,
+            schedules: suggestions.schedule.schedules.map(s => ({
+              ...s,
+              hours: {
+                start: formatTime(s.hours.start),
+                end: formatTime(s.hours.end)
+              }
+            }))
+          } : prev.schedule,
+          skills: {
+            ...prev.skills,
+            soft: skills.soft || prev.skills.soft,
+            languages: skills.languages || prev.skills.languages,
+            professional: skills.professional || prev.skills.professional,
+            technical: skills.technical || prev.skills.technical,
+            certifications: prev.skills.certifications,
+          },
+        };
+        return newGigData;
+      });
       setShowAIDialog(false);
     } catch (error: any) {
       setValidationErrors({ ai: [error.message] });
@@ -230,41 +327,123 @@ export function GigCreator({ children }: GigCreatorProps) {
     setSubmitError(null);
 
     try {
-      const { data, error } = await supabase
-        .from("gigs")
-        .insert({
-          title: gigData.title,
-          description: gigData.description,
-          category: gigData.category,
-          seniority_level: gigData.seniority.level,
-          years_experience: gigData.seniority.yearsExperience,
-          schedule_days: gigData.schedule.days,
-          schedule_hours: gigData.schedule.hours,
-          schedule_timezone: gigData.schedule.timeZones,
-          schedule_flexibility: gigData.schedule.flexibility.join(", "),
-          commission_base: gigData.commission.base,
-          commission_base_amount: gigData.commission.baseAmount,
-          commission_bonus: gigData.commission.bonus,
-          commission_bonus_amount: gigData.commission.bonusAmount,
-          commission_currency: gigData.commission.currency,
-          commission_structure: gigData.commission.structure,
-          commission_minimum_volume_amount: gigData.commission.minimumVolume.amount,
-          commission_minimum_volume_period: gigData.commission.minimumVolume.period,
-          commission_minimum_volume_unit: gigData.commission.minimumVolume.unit,
-          commission_transaction_type: gigData.commission.transactionCommission.type,
-          commission_transaction_amount: gigData.commission.transactionCommission.amount,
-          team_size: gigData.team.size,
-          team_structure: gigData.team.structure,
-          team_territories: gigData.team.territories,
-          prerequisites: [],
-          call_types: gigData.callTypes,
-        })
-        .select()
-        .single();
+      let userId: string;
+      let companyId: string;
 
-      if (error) throw error;
+      // Vérifier si on est en mode standalone
 
-      if (data) {
+      
+
+      companyId = Cookies.get('companyId') || "";
+      userId = Cookies.get('userId') || "";
+
+      const gigDataToSave = {
+        title: gigData.title,
+        description: gigData.description,
+        category: gigData.category,
+        userId: userId,
+        companyId: companyId,
+        seniority: {
+          level: gigData.seniority.level,
+          yearsExperience: gigData.seniority.yearsExperience
+        },
+        skills: {
+          professional: gigData.skills.professional.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          languages: gigData.skills.languages.map(lang => ({
+            language: lang.language,
+            proficiency: lang.proficiency,
+            iso639_1: lang.iso639_1
+          })),
+          technical: gigData.skills.technical.map(skill => ({
+            skill: skill.skill,
+            level: skill.level
+          })),
+          soft: gigData.skills.soft.map(skill => ({ 
+            skill: skill.skill,
+            level: skill.level
+          }))
+        },
+        availability: {
+          schedule: gigData.availability?.schedule || [
+            {
+              day: "Monday",
+              hours: {
+                start: "09:00",
+                end: "18:00"
+              }
+            }
+          ],
+          timeZones: gigData.availability?.timeZones || [],
+          flexibility: gigData.availability?.flexibility || [],
+          minimumHours: gigData.availability?.minimumHours || {
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+          }
+        },
+        schedule: {
+          schedules: gigData.schedule?.schedules || [
+            {
+              day: "Monday",
+              hours: {
+                start: "09:00",
+                end: "18:00"
+              }
+            }
+          ],
+          timeZones: gigData.schedule?.timeZones || "",
+          flexibility: gigData.schedule?.flexibility || [],
+          minimumHours: {
+            daily: gigData.schedule?.minimumHours?.daily || 0,
+            weekly: gigData.schedule?.minimumHours?.weekly || 0,
+            monthly: gigData.schedule?.minimumHours?.monthly || 0
+          }
+        },
+        commission: {
+          base: gigData.commission.base,
+          baseAmount: gigData.commission.baseAmount,
+          bonus: gigData.commission.bonus,
+          bonusAmount: gigData.commission.bonusAmount,
+          currency: gigData.commission.currency,
+          minimumVolume: {
+            amount: gigData.commission.minimumVolume.amount,
+            period: gigData.commission.minimumVolume.period,
+            unit: gigData.commission.minimumVolume.unit
+          },
+          transactionCommission: {
+            type: gigData.commission.transactionCommission.type,
+            amount: gigData.commission.transactionCommission.amount
+          }
+        },
+        leads: {
+          types: gigData.leads.types,
+          sources: gigData.leads.sources
+        },
+        team: {
+          size: gigData.team?.size || 0,
+          structure: gigData.team?.structure || [],
+          territories: gigData.team?.territories || []
+        },
+        documentation: {
+          training: gigData.documentation.training,
+          product: gigData.documentation.product,
+          process: gigData.documentation.process
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+
+      const { data: gig, error: gigError } = await saveGigData(gigDataToSave);
+      
+      if (gigError) {
+        throw new Error(gigError.message);
+      }
+
+      if (gig) {
         // Insert skills
         if (
           gigData.skills.languages.length > 0 ||
@@ -273,61 +452,56 @@ export function GigCreator({ children }: GigCreatorProps) {
         ) {
           const skillsToInsert = [
             ...gigData.skills.languages.map((lang) => ({
-              gig_id: data.id,
+              gig_id: gig.id,
               category: "language",
-              name: lang.name,
-              level: lang.level,
+              language: lang.language,
+              proficiency: lang.proficiency,
+              iso639_1: lang.iso639_1
             })),
             ...gigData.skills.professional.map((skill) => ({
-              gig_id: data.id,
+              gig_id: gig.id,
               category: "professional",
               name: skill,
             })),
             ...gigData.skills.technical.map((skill) => ({
-              gig_id: data.id,
+              gig_id: gig.id,
               category: "technical",
               name: skill,
             })),
           ];
 
-          const { error: skillsError } = await supabase
-            .from("gig_skills")
-            .insert(skillsToInsert);
-
-          if (skillsError) throw skillsError;
+          await axios.post(`${API_URL}/gig_skills`, { skills: skillsToInsert });
         }
 
         // Insert leads
         if (gigData.leads.types.some((lead) => lead.percentage > 0)) {
-          const { error: leadsError } = await supabase.from("gig_leads").insert(
-            gigData.leads.types.map((lead) => ({
-              gig_id: data.id,
+          await axios.post(`${API_URL}/gig_leads`, {
+            gig_id: gig.id,
+            leads: gigData.leads.types.map((lead) => ({
               lead_type: lead.type,
               percentage: lead.percentage,
               description: lead.description,
               sources: gigData.leads.sources,
-            }))
-          );
-
-          if (leadsError) throw leadsError;
+            })),
+          });
         }
 
         // Insert documentation
         const docsToInsert = [
           ...gigData.documentation.product.map((doc) => ({
-            gig_id: data.id,
+            gig_id: gig.id,
             doc_type: "product",
             name: doc.name,
             url: doc.url,
           })),
           ...gigData.documentation.process.map((doc) => ({
-            gig_id: data.id,
+            gig_id: gig.id,
             doc_type: "process",
             name: doc.name,
             url: doc.url,
           })),
           ...gigData.documentation.training.map((doc) => ({
-            gig_id: data.id,
+            gig_id: gig.id,
             doc_type: "training",
             name: doc.name,
             url: doc.url,
@@ -335,11 +509,7 @@ export function GigCreator({ children }: GigCreatorProps) {
         ];
 
         if (docsToInsert.length > 0) {
-          const { error: docsError } = await supabase
-            .from("gig_documentation")
-            .insert(docsToInsert);
-
-          if (docsError) throw docsError;
+          await axios.post(`${API_URL}/gig_documentation`, { docs: docsToInsert });
         }
 
         // Reset form
@@ -360,22 +530,31 @@ export function GigCreator({ children }: GigCreatorProps) {
     try {
       // Save current progress to local storage
       localStorage.setItem("gigDraft", JSON.stringify(gigData));
-      // Show success message
-      alert("Progress saved successfully!");
+      // Show success message with OK/Cancel buttons
+      const confirmed = window.confirm("Progress saved successfully! Click OK to continue or Cancel to stay on this page.");
+      if (confirmed) {
+        // User clicked OK - could add navigation logic here if needed
+        console.log("User confirmed save success");
+      } else {
+        // User clicked Cancel - stay on current page
+        console.log("User cancelled - staying on current page");
+      }
     } catch (error) {
       console.error("Error saving progress:", error);
-      alert("Failed to save progress. Please try again.");
+      const retry = window.confirm("Failed to save progress. Click OK to try again or Cancel to continue without saving.");
+      if (retry) {
+        handleSave(); // Retry saving
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleNext = () => {
-    console.log('GigCreator - handleNext - Current section:', currentSection);
+
     const currentIndex = sections.findIndex(s => s.id === currentSection);
     if (currentIndex < sections.length - 1) {
       const nextSection = sections[currentIndex + 1].id;
-      console.log('GigCreator - handleNext - Moving to section:', nextSection);
       setCurrentSection(nextSection);
     }
   };
@@ -389,24 +568,21 @@ export function GigCreator({ children }: GigCreatorProps) {
   };
 
   const handleReview = () => {
-    console.log('GigCreator - handleReview - Setting isReviewing to true');
     setIsReviewing(true);
   };
 
   if (isReviewing) {
-    console.log('GigCreator - Rendering GigReview component');
     return (
       <GigReview
         data={gigData}
         onEdit={(section) => {
-          console.log('GigCreator - onEdit - Setting section to:', section);
-          setCurrentSection(section);
+          // Correction : si section === 'documentation', rediriger vers 'docs'
+          setCurrentSection(section === 'documentation' ? 'docs' : section);
           setIsReviewing(false);
         }}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         onBack={() => {
-          console.log('GigCreator - onBack - Setting isReviewing to false');
           setIsReviewing(false);
         }}
         skipValidation={skipValidation}
@@ -416,7 +592,7 @@ export function GigCreator({ children }: GigCreatorProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="w-full h-full py-8 px-4">
         <div className="bg-white rounded-xl shadow-xl">
           {children({
             data: gigData,

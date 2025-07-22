@@ -5,8 +5,13 @@ export interface Profile {
   avatar_url: string | null;
   title: string | null;
   bio: string | null;
-  skills: string[];
-  languages: Language[];
+  skills: {
+    languages: Language[];
+    professional: Skill[];
+    technical: Skill[];
+    soft: Skill[];
+  };
+  
   rating: number;
   total_reviews: number;
   created_at: string;
@@ -15,7 +20,13 @@ export interface Profile {
 
 export interface Language {
   language: string;
-  proficiency: 'basic' | 'conversational' | 'fluent' | 'native';
+  proficiency: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  iso639_1: string;
+}
+
+export interface Skill {
+  skill: string;
+  level: number;
 }
 
 export interface ParsedGig {
@@ -24,7 +35,7 @@ export interface ParsedGig {
   timeline: string;
   type: string;
   description: string;
-  status?: 'draft' | 'pending_review' | 'published' | 'closed';
+  status?: 'to_activate' | 'active' | 'inactive' | 'archived';
 }
 
 export interface Gig {
@@ -41,11 +52,11 @@ export interface Gig {
   kpis: any[];
   compensation: {
     type: string;
-    amount: number;
+    amount: string;
     currency: string;
     frequency?: string;
   };
-  status: 'draft' | 'pending_review' | 'published' | 'closed';
+  status: 'to_activate' | 'active' | 'inactive' | 'archived';
   created_at: string;
   updated_at: string;
 }

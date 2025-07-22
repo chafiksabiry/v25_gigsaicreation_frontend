@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getGig } from '../lib/api';
 import { GigDetails } from './GigDetails';
 import { Loader2 } from 'lucide-react';
 import { GigData } from '../types';
@@ -9,7 +9,7 @@ interface GigViewProps {
   onSelectGig: (id: string) => void;
 }
 
-export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
+const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
   const [gigs, setGigs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGig, setSelectedGig] = useState<GigData | null>(null);
@@ -17,21 +17,14 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
   useEffect(() => {
     async function loadGigs() {
       try {
-        const { data, error } = await supabase
-          .from('gigs')
-          .select(`
-            *,
-            gig_skills (*),
-            gig_documentation (*),
-            gig_leads (*)
-          `);
+        const { data, error } = await getGig(selectedGigId);
 
         if (error) throw error;
         
         if (data) {
           setGigs(data);
           if (selectedGigId) {
-            const selected = data.find(g => g.id === selectedGigId);
+            const selected = data.find((g: { id: string }) => g.id === selectedGigId);
             if (selected) {
               const transformedData = transformGigData(selected);
               setSelectedGig(transformedData);
@@ -50,20 +43,52 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
 
   // Transform database gig data to GigData format
   const transformGigData = (gig: any): GigData => ({
+    userId: gig.userId,
+    companyId: gig.companyId,
     title: gig.title,
     description: gig.description,
     category: gig.category,
+    destination_zone: gig.destination_zone || "",
     callTypes: gig.call_types || [],
     highlights: [],
+    industries: gig.industries || [],
+    status: gig.status || 'to_activate',
     requirements: {
       essential: [],
       preferred: []
     },
     benefits: [],
+    availability: {
+      schedule: gig.schedule_schedules || [
+        {
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }
+      ],
+      timeZones: gig.schedule_timezone || "",
+      time_zone: gig.schedule_timezone || "",
+      flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
+      minimumHours: {
+        daily: gig.minimum_hours_daily,
+        weekly: gig.minimum_hours_weekly,
+        monthly: gig.minimum_hours_monthly
+      }
+    },
     schedule: {
-      days: gig.schedule_days || [],
-      hours: gig.schedule_hours || '',
-      timeZones: gig.schedule_timezone || [],
+      schedules: gig.schedule_schedules || [
+        {
+          day: "",
+          hours: {
+            start: "",
+            end: ""
+          }
+        }
+      ],
+      timeZones: gig.schedule_timezone || "",
+      time_zone: gig.schedule_timezone || "",
       flexibility: gig.schedule_flexibility ? [gig.schedule_flexibility] : [],
       minimumHours: {
         daily: gig.minimum_hours_daily,
@@ -72,7 +97,7 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
       }
     },
     commission: {
-      base: gig.commission_base || '',
+      base: gig.commission_base || 'Fixed Salary',
       baseAmount: gig.commission_base_amount || '',
       bonus: gig.commission_bonus || '',
       bonusAmount: gig.commission_bonus_amount || '',
@@ -107,26 +132,36 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
       languages: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'language')
         .map((skill: any) => ({
-          name: skill.name,
-          level: skill.level
+          language: skill.language,
+          proficiency: skill.proficiency,
+          iso639_1: skill.iso639_1
         })) || [],
       soft: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'soft')
-        .map((skill: any) => skill.name) || [],
+        .map((skill: any) => ({
+          skill: skill.skill,
+          level: skill.level,
+        })) || [],
       professional: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'professional')
-        .map((skill: any) => skill.name) || [],
+        .map((skill: any) => ({
+          skill: skill.skill,
+          level: skill.level,
+        })) || [],
       technical: gig.gig_skills
         ?.filter((skill: any) => skill.category === 'technical')
-        .map((skill: any) => skill.name) || [],
+        .map((skill: any) => ({
+          skill: skill.skill,
+          level: skill.level,
+        })) || [],
       certifications: []
     },
     seniority: {
       level: gig.seniority_level || '',
-      yearsExperience: gig.years_experience || ''
+      yearsExperience: gig.years_experience || 0,
     },
     team: {
-      size: gig.team_size || '',
+      size: gig.team_size || 0,
       structure: gig.team_structure || [],
       territories: gig.team_territories || [],
       reporting: {
@@ -161,6 +196,8 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
       }
     },
     documentation: {
+      templates: {},
+      reference: {},
       product: gig.gig_documentation
         ?.filter((doc: any) => doc.doc_type === 'product')
         .map((doc: any) => ({
@@ -203,9 +240,6 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
     return (
       <GigDetails 
         data={selectedGig}
-        onApply={() => {
-          console.log('Applying for gig:', selectedGigId);
-        }}
       />
     );
   }
@@ -223,21 +257,25 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
           className="bg-white shadow-sm hover:shadow-md transition-shadow rounded-xl border border-gray-200 p-6 cursor-pointer"
         >
           <div className="flex justify-between items-start">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">{gig.title}</h2>
-                <p className="text-gray-600 line-clamp-2">{gig.description}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                  {gig.category}
-                </span>
-                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                  {gig.seniority_level}
-                </span>
-                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                  {gig.team_size}
-                </span>
+            <div className="flex items-start gap-4">
+              {/* Logo */}
+              {/* Remove the logo rendering block that uses gig.logoUrl */}
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">{gig.title}</h2>
+                  <p className="text-gray-600 line-clamp-2">{gig.description}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    {gig.category}
+                  </span>
+                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                    {gig.seniority_level}
+                  </span>
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    {gig.team_size}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="text-right">
@@ -256,4 +294,6 @@ export function GigView({ selectedGigId, onSelectGig }: GigViewProps) {
       ))}
     </div>
   );
-}
+};
+
+export default GigView;

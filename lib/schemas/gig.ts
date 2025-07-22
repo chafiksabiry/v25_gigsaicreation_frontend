@@ -1,6 +1,10 @@
-import mongoose from 'mongoose';
+import { Schema } from 'mongoose';
 
-const gigSchema = new mongoose.Schema({
+const gigSchema = new Schema({
+  userId: {
+    type: String,
+    required: true
+  },
   companyId: {
     type: String,
     required: true
@@ -21,11 +25,62 @@ const gigSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  availability: {
+    schedule: [
+      {
+        day: String,
+        hours: {
+          start: String,
+          end: String
+        },
+      }
+    ],
+    timeZone: {
+      type: String,
+      required: true
+    },
+    flexibility: [String],
+    minimumHours: {
+      daily: Number,
+      weekly: Number,
+      monthly: Number
+    }
+  },
+  schedule: {
+    schedules: [
+      {
+        day: String,
+        hours: {
+          start: String,
+          end: String
+        }
+      }
+    ],
+    timeZones: String,
+    flexibility: [String],
+    minimumHours: {
+      daily: Number,
+      weekly: Number,
+      monthly: Number
+    }
+  },
   requiredSkills: [{
     type: String
   }],
+  
   preferredLanguages: [{
-    type: String
+    language: {
+      type: String,
+      required: true
+    },
+    proficiency: {
+      type: String,
+      required: true
+    },
+    iso639_1: {
+      type: String,
+      required: true
+    }
   }],
   requiredExperience: {
     type: Number,
@@ -65,8 +120,8 @@ const gigSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'pending_review', 'published', 'closed'],
-    default: 'draft'
+    enum: ['to_activate', 'active', 'inactive', 'archived'],
+    default: 'to_activate'
   },
   requirements: [{
     type: String
@@ -82,7 +137,7 @@ const gigSchema = new mongoose.Schema({
   },
   team: {
     size: {
-      type: String,
+      type: Number,
       required: true
     },
     roles: [{
@@ -97,7 +152,7 @@ const gigSchema = new mongoose.Schema({
       required: true
     },
     baseAmount: {
-      type: Number,
+      type: String,
       required: true
     },
     currency: {
