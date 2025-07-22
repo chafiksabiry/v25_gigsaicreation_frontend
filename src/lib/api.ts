@@ -34,7 +34,7 @@ export async function getGigHistory(gigId: string) {
 
 export async function fetchCompanies() {
   try {
-    const response = await fetch('https://api-companysearchwizard.harx.ai/api/companies');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/companies`);
     if (!response.ok) {
       throw new Error('Failed to fetch companies');
     }
@@ -585,7 +585,7 @@ interface ApiResponse<T> {
 
 export async function fetchActivities(): Promise<{ data: Activity[]; error?: Error }> {
   try {
-    const response = await fetch('https://api-repcreationwizard.harx.ai/api/activities');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/activities`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -602,7 +602,7 @@ export async function fetchActivities(): Promise<{ data: Activity[]; error?: Err
 
 export async function fetchIndustries(): Promise<{ data: Industry[]; error?: Error }> {
   try {
-    const response = await fetch('https://api-repcreationwizard.harx.ai/api/industries');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/industries`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -619,7 +619,7 @@ export async function fetchIndustries(): Promise<{ data: Industry[]; error?: Err
 
 export async function fetchLanguages(): Promise<{ data: Language[]; error?: Error }> {
   try {
-    const response = await fetch('https://api-repcreationwizard.harx.ai/api/languages');
+    const response = await fetch(`${import.meta.env.VITE_REP_URL}/languages`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
