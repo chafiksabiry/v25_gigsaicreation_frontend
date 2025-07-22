@@ -3898,12 +3898,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       switch (skillType) {
         case "languages":
-          newSuggestions.skills.languages.push({
-            language: skill,
-            proficiency: LANGUAGE_LEVELS[level - 1]?.value || "B1",
-            iso639_1: "en",
-          });
-          console.log(`✅ Added language: ${skill}`);
+          // Find the language by ID to get the code
+          const selectedLanguage = languages.find(l => l.value === skill);
+          if (selectedLanguage) {
+            newSuggestions.skills.languages.push({
+              language: selectedLanguage.value, // Store ID
+              proficiency: LANGUAGE_LEVELS[level - 1]?.value || "B1",
+              iso639_1: selectedLanguage.code, // Use correct code
+            });
+            console.log(`✅ Added language: ${selectedLanguage.label} (${selectedLanguage.code})`);
+          } else {
+            console.warn(`Language with ID "${skill}" not found. Skipping addition.`);
+            return; // Exit early without adding the skill
+          }
           break;
         case "soft":
         case "professional":
@@ -4328,7 +4335,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
                     {skillType === "languages" 
                       ? skillOptions.map((option: any) => (
-                          <option key={option.id} value={option.name}>
+                          <option key={option.id} value={option.id}>
                             {option.name}
                           </option>
                         ))
@@ -4400,6 +4407,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         if (skillType === "languages") {
                           const level = 2; // Default to B1 for languages (index 2)
                           addSkill(skillType, editValue.trim(), level);
+                          setEditValue("");
+                          setEditingSection(null);
+                          setEditingIndex(null);
                         } else {
                           // For skills, editValue should already be the ObjectId
                           // Verify that the skill exists in the database before adding
