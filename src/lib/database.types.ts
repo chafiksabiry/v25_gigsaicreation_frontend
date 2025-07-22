@@ -33,6 +33,7 @@ export interface Database {
           team_territories: string[]
           prerequisites: string[]
           call_types: string[]
+          status: 'to_activate' | 'active' | 'inactive' | 'archived'
           created_at: string
           updated_at: string
         }
@@ -59,6 +60,7 @@ export interface Database {
           team_territories: string[]
           prerequisites: string[]
           call_types: string[]
+          status?: 'to_activate' | 'active' | 'inactive' | 'archived'
           created_at?: string
           updated_at?: string
         }

@@ -1,3 +1,36 @@
+// New interfaces for API data
+export interface Activity {
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  isActive: boolean;
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Industry {
+  _id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Language {
+  _id: string;
+  code: string;
+  name: string;
+  nativeName: string;
+  __v: number;
+  createdAt: string;
+  lastUpdated: string;
+  updatedAt: string;
+}
+
 export interface GigData {
   userId: string;
   companyId: string;
@@ -9,8 +42,9 @@ export interface GigData {
   destinationZones?: string[];
   callTypes: string[];
   highlights: string[];
-  industries: string[];
-  activities: string[];
+  industries: string[]; // Array of industry IDs
+  activities: string[]; // Array of activity IDs
+  status?: 'to_activate' | 'active' | 'inactive' | 'archived';
   requirements: {
     essential: string[];
     preferred: string[];
@@ -75,7 +109,6 @@ export interface GigData {
       amount: number;
     };
     kpis: {
-      metric: string;
       target: string;
       reward: string;
     }[];
@@ -96,36 +129,27 @@ export interface GigData {
     qualificationCriteria: string[];
   };
   skills: {
-    professional: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
-      level: number;
-      details: string; // Added details field to match backend
-    }>;
-    technical: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
-      level: number;
-      details: string; // Added details field to match backend
-    }>;
-    soft: Array<{
-      skill: { $oid: string }; // MongoDB ObjectId format for mongoose.Types.ObjectId
-      level: number;
-      details: string; // Added details field to match backend
-    }>;
     languages: Array<{
-      language: string;
+      language: string; // Language ID
       proficiency: string;
       iso639_1: string;
     }>;
-    certifications: Array<{
-      name: string;
-      required: boolean;
-      provider?: string;
+    soft: Array<{
+      skill: string;
+      level: number;
+    }>;
+    professional: Array<{
+      skill: string;
+      level: number;
+    }>;
+    technical: Array<{
+      skill: string;
+      level: number;
     }>;
   };
   seniority: {
     level: string;
     yearsExperience: number;
-    aiGenerated?: boolean;
   };
   team: {
     size: number;
@@ -144,38 +168,45 @@ export interface GigData {
     };
     collaboration: string[];
   };
-  tools: {
-    provided: Array<{
-      name: string;
-      type: string;
-      description?: string;
-    }>;
-    required: Array<{
-      name: string;
-      type: string;
-      description?: string;
+  commission: {
+    options: Array<{
+      base: string;
+      baseAmount: number;
+      bonus?: string;
+      bonusAmount?: number;
+      structure?: string;
+      currency: string;
+      minimumVolume: {
+        amount: number;
+        period: string;
+        unit: string;
+      };
+      transactionCommission: {
+        type: string;
+        amount: number;
+      };
     }>;
   };
-  training: {
-    initial: {
-      duration: string;
-      format: string;
-      topics: string[];
-    };
-    ongoing: {
-      frequency: string;
-      format: string;
-      topics: string[];
-    };
-    support: string[];
+  activity: {
+    options: Array<{
+      type: string;
+      description: string;
+      requirements: string[];
+    }>;
   };
-  metrics: {
-    kpis: string[];
-    targets: { [key: string]: string };
-    reporting: {
-      frequency: string;
-      metrics: string[];
+  leads: {
+    types: Array<{
+      type: 'hot' | 'warm' | 'cold';
+      percentage: number;
+      description: string;
+      conversionRate?: number;
+    }>;
+    sources: string[];
+    distribution: {
+      method: string;
+      rules: string[];
     };
+    qualificationCriteria: string[];
   };
   documentation: {
     templates: any;
@@ -183,21 +214,6 @@ export interface GigData {
     product: Array<{ name: string; url: string }>;
     process: Array<{ name: string; url: string }>;
     training: Array<{ name: string; url: string }>;
-  };
-  compliance: {
-    requirements: string[];
-    certifications: string[];
-    policies: string[];
-  };
-  equipment: {
-    required: Array<{
-      type: string;
-      specifications: string[];
-    }>;
-    provided: Array<{
-      type: string;
-      specifications: string[];
-    }>;
   };
 }
 

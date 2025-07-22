@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { InfoText } from './InfoText';
 import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
+import { 
+  loadLanguages, 
+  getLanguageOptions, 
+  getLanguageNameById,
+  getLanguageCodeById,
+  loadSoftSkills,
+  loadTechnicalSkills,
+  loadProfessionalSkills,
+  getSoftSkillOptions,
+  getTechnicalSkillOptions,
+  getProfessionalSkillOptions,
+  getSoftSkillNameById,
+  getTechnicalSkillNameById,
+  getProfessionalSkillNameById,
+  getSoftSkillById,
+  getTechnicalSkillById,
+  getProfessionalSkillById
+} from '../lib/activitiesIndustries';
 
 interface SkillsSectionProps {
   data: {
@@ -55,49 +73,7 @@ const SKILL_LEVELS = [
   { value: 5, label: "Master" },
 ];
 
-// Languages from Suggestions.tsx
-const LANGUAGES = [
-  "English",
-  "French",
-  "Spanish",
-  "German",
-  "Italian",
-  "Portuguese",
-  "Dutch",
-  "Russian",
-  "Chinese (Mandarin)",
-  "Japanese",
-  "Korean",
-  "Arabic",
-  "Hindi",
-  "Turkish",
-  "Polish",
-  "Swedish",
-  "Norwegian",
-  "Danish",
-  "Finnish",
-  "Greek",
-  "Hebrew",
-  "Thai",
-  "Vietnamese",
-  "Indonesian",
-  "Malay",
-  "Filipino",
-  "Urdu",
-  "Bengali",
-  "Persian",
-  "Czech",
-  "Hungarian",
-  "Romanian",
-  "Bulgarian",
-  "Croatian",
-  "Serbian",
-  "Slovak",
-  "Slovenian",
-  "Estonian",
-  "Latvian",
-  "Lithuanian",
-];
+
 
 // Skills will be loaded from APIs
 
@@ -106,6 +82,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [languages, setLanguages] = useState<Array<{ value: string; label: string; code: string }>>([]);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
   const [loadingSkills, setLoadingSkills] = useState({
     professional: false,
     soft: false,
@@ -126,53 +104,59 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     certifications: (data?.certifications || [])
   };
 
-  // Load skills from APIs
+  // Load skills and languages from APIs
   useEffect(() => {
-    const fetchSkills = async () => {
+    const fetchSkillsAndLanguages = async () => {
       try {
-        // Fetch professional skills
+        // Load languages from API
+        console.log('🔄 SkillsSection: Loading languages from API...');
+        setLanguagesLoading(true);
+        const languagesData = await loadLanguages();
+        console.log('✅ SkillsSection: Languages loaded:', languagesData.length);
+        
+        const languageOptions = getLanguageOptions();
+        console.log('🌐 SkillsSection: Language options generated:', languageOptions.length);
+        if (languageOptions.length > 0) {
+          console.log('🌐 SkillsSection: Sample language options:', languageOptions.slice(0, 3));
+        }
+        setLanguages(languageOptions);
+        setLanguagesLoading(false);
+
+        // Load professional skills from API
+        console.log('🔄 SkillsSection: Loading professional skills from API...');
         setLoadingSkills(prev => ({ ...prev, professional: true }));
         setErrorSkills(prev => ({ ...prev, professional: false }));
-        const professionalResponse = await fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`);
-        if (professionalResponse.ok) {
-          const professionalData = await professionalResponse.json();
-          setProfessionalSkills(professionalData.data || []);
-        } else {
-          setErrorSkills(prev => ({ ...prev, professional: true }));
-        }
+        const professionalSkillsData = await loadProfessionalSkills();
+        console.log('✅ SkillsSection: Professional skills loaded:', professionalSkillsData.length);
+        setProfessionalSkills(professionalSkillsData);
         setLoadingSkills(prev => ({ ...prev, professional: false }));
 
-        // Fetch soft skills
+        // Load soft skills from API
+        console.log('🔄 SkillsSection: Loading soft skills from API...');
         setLoadingSkills(prev => ({ ...prev, soft: true }));
         setErrorSkills(prev => ({ ...prev, soft: false }));
-        const softResponse = await fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`);
-        if (softResponse.ok) {
-          const softData = await softResponse.json();
-          setSoftSkills(softData.data || []);
-        } else {
-          setErrorSkills(prev => ({ ...prev, soft: true }));
-        }
+        const softSkillsData = await loadSoftSkills();
+        console.log('✅ SkillsSection: Soft skills loaded:', softSkillsData.length);
+        setSoftSkills(softSkillsData);
         setLoadingSkills(prev => ({ ...prev, soft: false }));
 
-        // Fetch technical skills
+        // Load technical skills from API
+        console.log('🔄 SkillsSection: Loading technical skills from API...');
         setLoadingSkills(prev => ({ ...prev, technical: true }));
         setErrorSkills(prev => ({ ...prev, technical: false }));
-        const technicalResponse = await fetch(`${import.meta.env.VITE_REP_URL}/skills/technical`);
-        if (technicalResponse.ok) {
-          const technicalData = await technicalResponse.json();
-          setTechnicalSkills(technicalData.data || []);
-        } else {
-          setErrorSkills(prev => ({ ...prev, technical: true }));
-        }
+        const technicalSkillsData = await loadTechnicalSkills();
+        console.log('✅ SkillsSection: Technical skills loaded:', technicalSkillsData.length);
+        setTechnicalSkills(technicalSkillsData);
         setLoadingSkills(prev => ({ ...prev, technical: false }));
       } catch (error) {
-        console.error('Error fetching skills:', error);
+        console.error('Error fetching skills and languages:', error);
+        setLanguagesLoading(false);
         setLoadingSkills({ professional: false, soft: false, technical: false });
         setErrorSkills({ professional: true, soft: true, technical: true });
       }
     };
 
-    fetchSkills();
+    fetchSkillsAndLanguages();
   }, []);
 
   // Migrate skills to ObjectId format if needed
@@ -186,28 +170,41 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         const migratedSkills = skillArray.map((skill: any) => {
           // Helper function to find skill by name
           const findSkillByName = (skillName: string, skillType: string) => {
-            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-            switch (skillType) {
-              case 'soft': skillArray = softSkills; break;
-              case 'professional': skillArray = professionalSkills; break;
-              case 'technical': skillArray = technicalSkills; break;
-              default: skillArray = [];
-            }
+            let found;
             
-            // Try exact match first
-            let found = skillArray.find(s => s.name === skillName);
-            
-            // If not found, try case-insensitive match
-            if (!found) {
-              found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
-            }
-            
-            // If still not found, try partial match
-            if (!found) {
-              found = skillArray.find(s => 
-                s.name.toLowerCase().includes(skillName.toLowerCase()) ||
-                skillName.toLowerCase().includes(s.name.toLowerCase())
-              );
+            if (skillType === 'soft') {
+              found = softSkills.find(s => s.name === skillName);
+              if (!found) {
+                found = softSkills.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+              }
+              if (!found) {
+                found = softSkills.find(s => 
+                  s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                  skillName.toLowerCase().includes(s.name.toLowerCase())
+                );
+              }
+            } else if (skillType === 'professional') {
+              found = professionalSkills.find(s => s.name === skillName);
+              if (!found) {
+                found = professionalSkills.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+              }
+              if (!found) {
+                found = professionalSkills.find(s => 
+                  s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                  skillName.toLowerCase().includes(s.name.toLowerCase())
+                );
+              }
+            } else if (skillType === 'technical') {
+              found = technicalSkills.find(s => s.name === skillName);
+              if (!found) {
+                found = technicalSkills.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+              }
+              if (!found) {
+                found = technicalSkills.find(s => 
+                  s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                  skillName.toLowerCase().includes(s.name.toLowerCase())
+                );
+              }
             }
             
             return found;
@@ -292,54 +289,11 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
   const [newSkill, setNewSkill] = useState({ language: '', proficiency: '', iso639_1: '', level: 1 });
   const [addMode, setAddMode] = useState<{ type: string; active: boolean }>({ type: '', active: false });
 
-  // Language options with ISO codes
-  const languageOptions = LANGUAGES.map(lang => {
-    // Map common languages to ISO codes
-    const isoMap: { [key: string]: string } = {
-      'English': 'en',
-      'French': 'fr',
-      'Spanish': 'es',
-      'German': 'de',
-      'Italian': 'it',
-      'Portuguese': 'pt',
-      'Dutch': 'nl',
-      'Russian': 'ru',
-      'Chinese (Mandarin)': 'zh',
-      'Japanese': 'ja',
-      'Korean': 'ko',
-      'Arabic': 'ar',
-      'Hindi': 'hi',
-      'Turkish': 'tr',
-      'Polish': 'pl',
-      'Swedish': 'sv',
-      'Norwegian': 'no',
-      'Danish': 'da',
-      'Finnish': 'fi',
-      'Greek': 'el',
-      'Hebrew': 'he',
-      'Thai': 'th',
-      'Vietnamese': 'vi',
-      'Indonesian': 'id',
-      'Malay': 'ms',
-      'Filipino': 'fil',
-      'Urdu': 'ur',
-      'Bengali': 'bn',
-      'Persian': 'fa',
-      'Czech': 'cs',
-      'Hungarian': 'hu',
-      'Romanian': 'ro',
-      'Bulgarian': 'bg',
-      'Croatian': 'hr',
-      'Serbian': 'sr',
-      'Slovak': 'sk',
-      'Slovenian': 'sl',
-      'Estonian': 'et',
-      'Latvian': 'lv',
-      'Lithuanian': 'lt'
-    };
+  // Language options from API
+  const languageOptions = languages.map((lang: { value: string; label: string; code: string }) => {
     return {
-      language: lang,
-      iso639_1: isoMap[lang] || 'en'
+      language: lang.label,
+      iso639_1: lang.code
     };
   });
 
@@ -360,6 +314,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     return skills.some((s: any, i: number) => {
       if (excludeIndex !== undefined && i === excludeIndex) return false;
       if (type === 'languages') {
+        // For languages, compare by language ID
         return s.language === name;
       } else {
         // For skills, handle both ObjectId format and string format
@@ -389,8 +344,13 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     const skill = safeData[type as keyof typeof safeData][idx];
     if (type === 'languages') {
       const languageSkill = skill as { language: string; proficiency: string; iso639_1: string };
+      // For languages, get the name from the ID
+      let languageName = languageSkill.language; // Default to ID
+      if (!languagesLoading) {
+        languageName = getLanguageNameById(languageSkill.language) || languageSkill.language;
+      }
       setNewSkill({
-        language: languageSkill.language,
+        language: languageName,
         proficiency: languageSkill.proficiency,
         iso639_1: languageSkill.iso639_1,
         level: 1
@@ -441,7 +401,12 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     
     if (editingIndex.type === 'languages') {
       const languageSkill = currentSkill as { language: string; proficiency: string; iso639_1: string };
-      nameChanged = languageSkill.language !== newSkill.language;
+      // For languages, compare by name (since we're editing with names)
+      let currentLanguageName = languageSkill.language; // Default to ID
+      if (!languagesLoading) {
+        currentLanguageName = getLanguageNameById(languageSkill.language) || languageSkill.language;
+      }
+      nameChanged = currentLanguageName !== newSkill.language;
     } else {
       // Handle skills - support both ObjectId format and string format
       let currentSkillId = '';
@@ -463,16 +428,28 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     
     const updated = [...safeData[editingIndex.type as keyof typeof safeData]];
     if (editingIndex.type === 'languages') {
-      updated[editingIndex.index] = {
-        language: newSkill.language,
-        proficiency: newSkill.proficiency,
-        iso639_1: newSkill.iso639_1
-      };
+      // For languages, find the language ID from the name
+      const selectedLanguage = languages.find(l => l.label === newSkill.language);
+      if (selectedLanguage) {
+        updated[editingIndex.index] = {
+          language: selectedLanguage.value, // Store the ID
+          proficiency: newSkill.proficiency,
+          iso639_1: selectedLanguage.code
+        };
+      } else {
+        console.warn(`Language "${newSkill.language}" not found in available options. Skipping update.`);
+        return;
+      }
     } else {
       // For skills, we need to find the skill object to get both ID and name
-      const skillOptions = editingIndex.type === 'professional' ? professionalSkills : 
-                          editingIndex.type === 'technical' ? technicalSkills : softSkills;
-      const selectedSkill = skillOptions.find(s => s._id === newSkill.language);
+      let selectedSkill;
+      if (editingIndex.type === 'professional') {
+        selectedSkill = getProfessionalSkillById(newSkill.language);
+      } else if (editingIndex.type === 'technical') {
+        selectedSkill = getTechnicalSkillById(newSkill.language);
+      } else if (editingIndex.type === 'soft') {
+        selectedSkill = getSoftSkillById(newSkill.language);
+      }
       
       if (selectedSkill) {
         updated[editingIndex.index] = {
@@ -507,16 +484,28 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
     let updated;
     if (addMode.type === 'languages') {
-      updated = [...safeData.languages, {
-        language: newSkill.language,
-        proficiency: newSkill.proficiency,
-        iso639_1: newSkill.iso639_1
-      }];
+      // For languages, find the language ID from the name
+      const selectedLanguage = languages.find(l => l.label === newSkill.language);
+      if (selectedLanguage) {
+        updated = [...safeData.languages, {
+          language: selectedLanguage.value, // Store the ID
+          proficiency: newSkill.proficiency,
+          iso639_1: selectedLanguage.code
+        }];
+      } else {
+        console.warn(`Language "${newSkill.language}" not found in available options. Skipping.`);
+        return;
+      }
     } else {
       // For skills, we need to find the skill object to get both ID and name
-      const skillOptions = addMode.type === 'professional' ? professionalSkills : 
-                          addMode.type === 'technical' ? technicalSkills : softSkills;
-      const selectedSkill = skillOptions.find(s => s._id === newSkill.language);
+      let selectedSkill;
+      if (addMode.type === 'professional') {
+        selectedSkill = getProfessionalSkillById(newSkill.language);
+      } else if (addMode.type === 'technical') {
+        selectedSkill = getTechnicalSkillById(newSkill.language);
+      } else if (addMode.type === 'soft') {
+        selectedSkill = getSoftSkillById(newSkill.language);
+      }
       
       if (selectedSkill) {
         updated = [...safeData[addMode.type as keyof typeof safeData], {
@@ -554,22 +543,44 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     let hasError = false;
     
     if (isLanguage) {
-      // For languages, we still use the static LANGUAGES array
-      options = LANGUAGES.map(lang => ({ _id: lang, name: lang, description: '', category: 'language' }));
+      // For languages, use the API data
+      options = languages.map((lang: { value: string; label: string; code: string }) => ({ 
+        _id: lang.value, 
+        name: lang.label, 
+        description: '', 
+        category: 'language' 
+      }));
+      isLoading = languagesLoading;
+      hasError = false; // Languages don't have error state for now
     } else {
       switch (type) {
         case 'professional':
-          options = professionalSkills;
+          options = getProfessionalSkillOptions().map(opt => ({ 
+            _id: opt.value, 
+            name: opt.label, 
+            description: '', 
+            category: opt.category 
+          }));
           isLoading = loadingSkills.professional;
           hasError = errorSkills.professional;
           break;
         case 'technical':
-          options = technicalSkills;
+          options = getTechnicalSkillOptions().map(opt => ({ 
+            _id: opt.value, 
+            name: opt.label, 
+            description: '', 
+            category: opt.category 
+          }));
           isLoading = loadingSkills.technical;
           hasError = errorSkills.technical;
           break;
         case 'soft':
-          options = softSkills;
+          options = getSoftSkillOptions().map(opt => ({ 
+            _id: opt.value, 
+            name: opt.label, 
+            description: '', 
+            category: opt.category 
+          }));
           isLoading = loadingSkills.soft;
           hasError = errorSkills.soft;
           break;
@@ -636,19 +647,42 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
             .map((skill, idx) => {
               let skillName = '';
               if (isLanguage) {
-                skillName = skill.language;
+                // For languages, get the name from the ID
+                if (languagesLoading) {
+                  skillName = 'Loading...';
+                } else {
+                  skillName = getLanguageNameById(skill.language) || skill.language;
+                }
               } else {
                 if (typeof skill === 'string') {
-                  const skillObject = options.find(s => s._id === skill || s.name === skill);
-                  skillName = skillObject ? skillObject.name : '';
+                  // Handle string skill (ID or name)
+                  if (type === 'soft') {
+                    skillName = getSoftSkillNameById(skill);
+                  } else if (type === 'technical') {
+                    skillName = getTechnicalSkillNameById(skill);
+                  } else if (type === 'professional') {
+                    skillName = getProfessionalSkillNameById(skill);
+                  }
                 } else if (skill.skill) {
                   if (typeof skill.skill === 'string') {
-                    const skillObject = options.find(s => s._id === skill.skill || s.name === skill.skill);
-                    skillName = skillObject ? skillObject.name : '';
+                    // Handle skill.skill as string (ID or name)
+                    if (type === 'soft') {
+                      skillName = getSoftSkillNameById(skill.skill);
+                    } else if (type === 'technical') {
+                      skillName = getTechnicalSkillNameById(skill.skill);
+                    } else if (type === 'professional') {
+                      skillName = getProfessionalSkillNameById(skill.skill);
+                    }
                   } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+                    // Handle ObjectId format
                     const skillId = skill.skill.$oid;
-                    const skillObject = options.find(s => s._id === skillId);
-                    skillName = skillObject ? skillObject.name : '';
+                    if (type === 'soft') {
+                      skillName = getSoftSkillNameById(skillId);
+                    } else if (type === 'technical') {
+                      skillName = getTechnicalSkillNameById(skillId);
+                    } else if (type === 'professional') {
+                      skillName = getProfessionalSkillNameById(skillId);
+                    }
                   }
                 }
               }
@@ -694,13 +728,13 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                       >
                         <option value="">{isLoading ? 'Loading...' : (isLanguage ? 'Select language' : 'Select skill')}</option>
                         {isLanguage ? (
-                          languageOptions.map(opt => (
+                          languageOptions.map((opt: { language: string; iso639_1: string }) => (
                             <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type, editingIndex.index)}>
                               {opt.language}
                             </option>
                           ))
                         ) : (
-                          options.map(opt => {
+                          options.map((opt: { _id: string; name: string; description: string; category: string }) => {
                             // Ne disable que si c'est un doublon ET que ce n'est pas la valeur actuelle
                             const currentSkill = skills[editingIndex?.index ?? -1];
                             const isCurrent = currentSkill && currentSkill.skill && typeof currentSkill.skill === 'object' && currentSkill.skill.$oid === opt._id;
@@ -831,13 +865,13 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
             >
               <option value="">{isLoading ? 'Loading...' : (isLanguage ? 'Select language' : 'Select skill')}</option>
               {isLanguage ? (
-                languageOptions.map(opt => (
+                languageOptions.map((opt: { language: string; iso639_1: string }) => (
                   <option key={opt.iso639_1} value={opt.language} disabled={isDuplicate(opt.language, type)}>
                     {opt.language}
                   </option>
                 ))
               ) : (
-                options.map(opt => {
+                options.map((opt: { _id: string; name: string; description: string; category: string }) => {
                   // Ne disable que si c'est un doublon
                   return (
                     <option
@@ -1022,28 +1056,41 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                       const migratedSkills = skillArray.map((skill: any) => {
                         // Helper function to find skill by name
                         const findSkillByName = (skillName: string, skillType: string) => {
-                          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                          switch (skillType) {
-                            case 'soft': skillArray = softSkills; break;
-                            case 'professional': skillArray = professionalSkills; break;
-                            case 'technical': skillArray = technicalSkills; break;
-                            default: skillArray = [];
-                          }
+                          let found;
                           
-                          // Try exact match first
-                          let found = skillArray.find(s => s.name === skillName);
-                          
-                          // If not found, try case-insensitive match
-                          if (!found) {
-                            found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
-                          }
-                          
-                          // If still not found, try partial match
-                          if (!found) {
-                            found = skillArray.find(s => 
-                              s.name.toLowerCase().includes(skillName.toLowerCase()) ||
-                              skillName.toLowerCase().includes(s.name.toLowerCase())
-                            );
+                          if (skillType === 'soft') {
+                            found = softSkills.find(s => s.name === skillName);
+                            if (!found) {
+                              found = softSkills.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+                            }
+                            if (!found) {
+                              found = softSkills.find(s => 
+                                s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                                skillName.toLowerCase().includes(s.name.toLowerCase())
+                              );
+                            }
+                          } else if (skillType === 'professional') {
+                            found = professionalSkills.find(s => s.name === skillName);
+                            if (!found) {
+                              found = professionalSkills.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+                            }
+                            if (!found) {
+                              found = professionalSkills.find(s => 
+                                s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                                skillName.toLowerCase().includes(s.name.toLowerCase())
+                              );
+                            }
+                          } else if (skillType === 'technical') {
+                            found = technicalSkills.find(s => s.name === skillName);
+                            if (!found) {
+                              found = technicalSkills.find(s => s.name.toLowerCase() === skillName.toLowerCase());
+                            }
+                            if (!found) {
+                              found = technicalSkills.find(s => 
+                                s.name.toLowerCase().includes(skillName.toLowerCase()) ||
+                                skillName.toLowerCase().includes(s.name.toLowerCase())
+                              );
+                            }
                           }
                           
                           return found;

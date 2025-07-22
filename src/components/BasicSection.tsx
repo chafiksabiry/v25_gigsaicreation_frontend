@@ -17,6 +17,15 @@ import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
 import { countryToAlpha2, alpha2ToCountry } from '../lib/countryCodes';
+// import { GigStatusSelector } from './GigStatusSelector';
+import { 
+  loadActivities, 
+  loadIndustries, 
+  getActivityOptions, 
+  getIndustryOptions,
+  getActivityNameById,
+  getIndustryNameById
+} from '../lib/activitiesIndustries';
 
 // Enregistrement des langues pour la traduction des noms de pays
 i18n.registerLocale(fr);
@@ -59,6 +68,59 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 }) => {
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedActivity, setSelectedActivity] = useState<string>('');
+  const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
+  const [industries, setIndustries] = useState<Array<{ value: string; label: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  // Load activities and industries data from external API ONLY
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        console.log('🔄 Loading activities and industries from external API...');
+        
+        // Load data from external API with error handling
+        const [activitiesData, industriesData] = await Promise.all([
+          loadActivities().catch(error => {
+            console.error('❌ Failed to load activities from API:', error);
+            throw new Error(`Cannot load activities: ${error.message}`);
+          }),
+          loadIndustries().catch(error => {
+            console.error('❌ Failed to load industries from API:', error);
+            throw new Error(`Cannot load industries: ${error.message}`);
+          })
+        ]);
+        
+        const activityOptions = getActivityOptions();
+        const industryOptions = getIndustryOptions();
+        
+        console.log('📊 Loaded activities from API:', activityOptions.length);
+        console.log('📊 Loaded industries from API:', industryOptions.length);
+        
+        // Validate that we have data
+        if (activityOptions.length === 0) {
+          throw new Error('No activities available from external API');
+        }
+        if (industryOptions.length === 0) {
+          throw new Error('No industries available from external API');
+        }
+        
+        setActivities(activityOptions);
+        setIndustries(industryOptions);
+        setIsDataLoaded(true);
+        console.log('✅ Successfully loaded all data from external API');
+      } catch (error) {
+        console.error('❌ Critical error loading data from API:', error);
+        // Show user-friendly error message
+        alert(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your internet connection and try again.`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (!data.destinationZones) {
@@ -71,6 +133,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       onChange({
         ...data,
         industries: []
+      });
+    }
+    if (!data.activities) {
+      onChange({
+        ...data,
+        activities: []
       });
     }
   }, []);
@@ -373,9 +441,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <span className="text-sm font-medium text-indigo-800">Selected Industries:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(data.industries || []).map((industry, index) => (
+                {(data.industries || []).map((industryId, index) => (
                   <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full">
-                    {industry}
+                    {getIndustryNameById(industryId)}
                     <button
                       onClick={() => {
                         const currentIndustries = data.industries || [];
@@ -394,7 +462,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
           {/* Sélecteur d'industrie */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Add Industry</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Add Industry
+              {isLoading && <span className="ml-2 text-xs text-gray-500">(Loading...)</span>}
+              {!isLoading && <span className="ml-2 text-xs text-blue-500">({industries.length} available)</span>}
+            </label>
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -416,11 +488,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                   }}
                   className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 appearance-none transition-all"
                 >
-                  <option value="" className="text-gray-400">Select an industry</option>
-                  {predefinedOptions.industries
-                    .filter(industry => !(data.industries || []).includes(industry))
+                  <option value="" className="text-gray-400">
+                    {isLoading ? 'Loading industries...' : 'Select an industry'}
+                  </option>
+                  {!isLoading && industries
+                    .filter(industry => !(data.industries || []).includes(industry.value))
                     .map(industry => (
-                      <option key={industry} value={industry} className="text-gray-800">{industry}</option>
+                      <option key={industry.value} value={industry.value} className="text-gray-800">{industry.label}</option>
                     ))}
                 </select>
               </div>
@@ -436,8 +510,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 </button>
               )}
             </div>
-            {(data.industries || []).length === 0 && (
+            {(data.industries || []).length === 0 && !isLoading && (
               <p className="mt-2 text-sm text-gray-500">No industries selected yet</p>
+            )}
+            {isLoading && (
+              <p className="mt-2 text-sm text-blue-500">Loading industries from API...</p>
             )}
           </div>
           {errors.industries && <p className="mt-2 text-sm text-red-600">{errors.industries.join(', ')}</p>}
@@ -463,9 +540,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <span className="text-sm font-medium text-green-800">Selected Activities:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(data.activities || []).map((activity, index) => (
+                {(data.activities || []).map((activityId, index) => (
                   <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
-                    {activity}
+                    {getActivityNameById(activityId)}
                     <button
                       onClick={() => {
                         const currentActivities = data.activities || [];
@@ -484,7 +561,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
           {/* Sélecteur d'activité */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Add Activity</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Add Activity
+              {isLoading && <span className="ml-2 text-xs text-gray-500">(Loading...)</span>}
+              {!isLoading && <span className="ml-2 text-xs text-blue-500">({activities.length} available)</span>}
+            </label>
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -506,11 +587,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                   }}
                   className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800 appearance-none transition-all"
                 >
-                  <option value="" className="text-gray-400">Select an activity</option>
-                  {predefinedOptions.activities
-                    .filter(activity => !(data.activities || []).includes(activity))
+                  <option value="" className="text-gray-400">
+                    {isLoading ? 'Loading activities...' : 'Select an activity'}
+                  </option>
+                  {!isLoading && activities
+                    .filter(activity => !(data.activities || []).includes(activity.value))
                     .map(activity => (
-                      <option key={activity} value={activity} className="text-gray-800">{activity}</option>
+                      <option key={activity.value} value={activity.value} className="text-gray-800">{activity.label}</option>
                     ))}
                 </select>
               </div>
@@ -526,8 +609,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 </button>
               )}
             </div>
-            {(data.activities || []).length === 0 && (
+            {(data.activities || []).length === 0 && !isLoading && (
               <p className="mt-2 text-sm text-gray-500">No activities selected yet</p>
+            )}
+            {isLoading && (
+              <p className="mt-2 text-sm text-blue-500">Loading activities from API...</p>
             )}
           </div>
           {errors.activities && <p className="mt-2 text-sm text-red-600">{errors.activities.join(', ')}</p>}

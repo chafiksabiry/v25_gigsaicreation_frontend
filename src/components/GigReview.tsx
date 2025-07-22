@@ -28,6 +28,15 @@ import { validateGigData } from "../lib/validation";
 import { saveGigData } from '../lib/api';
 import { groupSchedules } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchCompanies } from '../lib/api';
+// import { GigStatusBadge } from './GigStatusBadge';
+import { 
+  loadActivities, 
+  loadIndustries, 
+  getActivityNameById,
+  getIndustryNameById,
+  loadLanguages,
+  getLanguageNameById
+} from '../lib/activitiesIndustries';
 
 interface GigReviewProps {
   data: GigData;
@@ -55,18 +64,20 @@ export function GigReview({
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
 
   // State for timezones and companies
   const [timezoneMap, setTimezoneMap] = useState<{ [key: string]: string }>({});
   const [companyMap, setCompanyMap] = useState<{ [key: string]: string }>({});
 
-  // Load skills from API
+  // Load skills and languages from API
   useEffect(() => {
-    const fetchSkills = async () => {
+    const fetchSkillsAndLanguages = async () => {
       try {
         setSkillsLoading(true);
+        setLanguagesLoading(true);
         
-        // Fetch all skills categories
+        // Fetch all skills categories and languages
         const [softResponse, professionalResponse, technicalResponse] = await Promise.all([
           fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`),
           fetch(`${import.meta.env.VITE_REP_URL}/skills/professional`),
@@ -87,14 +98,18 @@ export function GigReview({
           const technicalData = await technicalResponse.json();
           setTechnicalSkills(technicalData.data || []);
         }
+
+        // Load languages using the utility function
+        await loadLanguages();
       } catch (error) {
-        console.error('Error fetching skills:', error);
+        console.error('Error fetching skills and languages:', error);
       } finally {
         setSkillsLoading(false);
+        setLanguagesLoading(false);
       }
     };
 
-    fetchSkills();
+    fetchSkillsAndLanguages();
   }, []);
 
   // Fetch all timezones and companies on mount
@@ -135,13 +150,42 @@ export function GigReview({
     return companyMap[id] || id;
   };
   // Helper to get skill name by id
-  const getSkillName = (id: string, category: 'soft' | 'professional' | 'technical') => {
+  const getSkillName = (skill: any, category: 'soft' | 'professional' | 'technical') => {
+    // Handle both string and { $oid: string } formats
+    let skillId: string;
+    if (typeof skill === 'string') {
+      skillId = skill;
+    } else if (skill && typeof skill === 'object' && skill.$oid) {
+      skillId = skill.$oid;
+    } else {
+      return 'Unknown Skill';
+    }
+
     let arr: any[] = [];
     if (category === 'soft') arr = softSkills;
     if (category === 'professional') arr = professionalSkills;
     if (category === 'technical') arr = technicalSkills;
-    const found = arr.find((s) => s._id === id);
-    return found ? found.name : id;
+    const found = arr.find((s) => s._id === skillId);
+    return found ? found.name : skillId;
+  };
+
+  // Helper to get language name by id
+  const getLanguageName = (language: any) => {
+    if (languagesLoading) {
+      return 'Loading...';
+    }
+    
+    // Handle both string and { $oid: string } formats
+    let languageId: string;
+    if (typeof language === 'string') {
+      languageId = language;
+    } else if (language && typeof language === 'object' && language.$oid) {
+      languageId = language.$oid;
+    } else {
+      return 'Unknown Language';
+    }
+    
+    return getLanguageNameById(languageId) || languageId;
   };
 
   const getCurrencySymbol = () => {
@@ -159,8 +203,9 @@ export function GigReview({
     try {
       console.log('🚀 Publishing gig with skills data:', data.skills);
       
-      await saveGigData(data);
+      // Let onSubmit handle the saving (it already calls saveGigData)
       await onSubmit();
+      
       const result = await Swal.fire({
         title: "Success!",
         text: "Your gig has been published successfully.",
@@ -377,6 +422,7 @@ export function GigReview({
                         {data.seniority.yearsExperience} Years Experience
                       </span>
                     )}
+                    {/* Gig Status display removed */}
                   </div>
 
                   {/* Industries Section */}
@@ -395,7 +441,7 @@ export function GigReview({
                         <div className="flex flex-wrap gap-2">
                           {data.industries.map((industry, index) => (
                             <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
-                              {industry}
+                              {getIndustryNameById(industry)}
                             </span>
                           ))}
                         </div>
@@ -647,8 +693,8 @@ export function GigReview({
                   </div>
                   <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-4 text-center border border-[#667eea]/30">
                     <Award className="w-8 h-8 text-[#667eea] mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.certifications?.length || 0}</div>
-                    <div className="text-sm text-gray-600 font-semibold">Certifications</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.technical?.length || 0}</div>
+                    <div className="text-sm text-gray-600 font-semibold">Technical Skills</div>
                   </div>
                 </div>
                 
@@ -667,7 +713,7 @@ export function GigReview({
                       <div className="flex flex-wrap gap-2 mt-2">
                         {data.skills.languages.map((lang, index) => (
                           <span key={index} className="px-2 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded text-xs font-medium border border-[#667eea]/30">
-                            {lang.language} ({lang.proficiency})
+                            {getLanguageName(lang.language)} ({lang.proficiency})
                           </span>
                         ))}
                       </div>
@@ -684,7 +730,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.technical.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
-                            {getSkillName(typeof s.skill === 'string' ? s.skill : s.skill?.$oid, 'technical')}
+                            {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'technical')}
                           </li>
                         ))}
                       </ul>
@@ -697,7 +743,7 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.professional.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#764ba2]/10 rounded text-sm">
-                            {getSkillName(typeof s.skill === 'string' ? s.skill : s.skill?.$oid, 'professional')}
+                            {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'professional')}
                           </li>
                         ))}
                       </ul>
@@ -710,25 +756,13 @@ export function GigReview({
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.soft.map((s, i) => (
                           <li key={i} className="px-3 py-1 bg-[#f093fb]/10 rounded text-sm">
-                            {getSkillName(typeof s.skill === 'string' ? s.skill : s.skill?.$oid, 'soft')}
+                            {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'soft')}
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
-                  {/* Certifications */}
-                  {data.skills?.certifications && data.skills.certifications.length > 0 && (
-                    <div>
-                      <div className="font-semibold text-[#667eea] mb-1">Certifications:</div>
-                      <ul className="flex flex-wrap gap-2">
-                        {data.skills.certifications.map((c, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
-                            {typeof c === 'string' ? c : c.name}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {/* Certifications section removed - no longer part of skills structure */}
                 </div>
               </div>
             )}

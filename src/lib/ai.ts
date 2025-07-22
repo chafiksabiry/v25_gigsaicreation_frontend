@@ -1,6 +1,26 @@
 import OpenAI from 'openai';
 import { GigData, GigSuggestion } from '../types';
 import { predefinedOptions } from './guidance';
+import { 
+  loadActivities, 
+  loadIndustries, 
+  loadLanguages,
+  loadSoftSkills,
+  loadProfessionalSkills,
+  loadTechnicalSkills,
+  convertActivityNamesToIds, 
+  convertIndustryNamesToIds,
+  convertLanguageNamesToIds,
+  convertSoftSkillNamesToIds,
+  convertProfessionalSkillNamesToIds,
+  convertTechnicalSkillNamesToIds,
+  getActivityOptions,
+  getIndustryOptions,
+  getLanguageOptions,
+  getSoftSkillOptions,
+  getProfessionalSkillOptions,
+  getTechnicalSkillOptions
+} from './activitiesIndustries';
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 const openai = new OpenAI({
@@ -1486,24 +1506,15 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     },
     skills: {
       languages: validatedLanguages,
-      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
-      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
-      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1, details: 'Generated skill' })),
-      certifications: generatedData.skills?.certifications || []
+      soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1 })),
+      professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
+      technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1 }))
     },
     requirements: {
       essential: generatedData.requirements?.essential || [],
       preferred: generatedData.requirements?.preferred || []
     },
     benefits: generatedData.benefits || [],
-    metrics: {
-      kpis: [],
-      targets: {},
-      reporting: {
-        frequency: '',
-        metrics: []
-      }
-    },
     team: {
       size: generatedData.team?.size || 0,
       structure: validatedTeamStructure,
@@ -1536,9 +1547,31 @@ export async function generateSkills(title: string, description: string): Promis
   }
 
   try {
-    // First, ensure all predefined skills exist in the database
-    const { syncPredefinedSkills, convertSkillNamesToObjectIds } = await import('./skillsManager');
-    await syncPredefinedSkills();
+    // Load languages and skills from API
+    const [languages, softSkills, professionalSkills, technicalSkills] = await Promise.all([
+      loadLanguages(),
+      loadSoftSkills(),
+      loadProfessionalSkills(),
+      loadTechnicalSkills()
+    ]);
+
+    if (languages.length === 0) {
+      throw new Error('No languages available from external API. Please check API connection.');
+    }
+
+    if (softSkills.length === 0 || professionalSkills.length === 0 || technicalSkills.length === 0) {
+      throw new Error('No skills available from external API. Please check API connection.');
+    }
+    
+    const languageOptions = getLanguageOptions();
+    const softSkillOptions = getSoftSkillOptions();
+    const professionalSkillOptions = getProfessionalSkillOptions();
+    const technicalSkillOptions = getTechnicalSkillOptions();
+    
+    const languageNames = languageOptions.map(opt => opt.label);
+    const softSkillNames = softSkillOptions.map(opt => opt.label);
+    const professionalSkillNames = professionalSkillOptions.map(opt => opt.label);
+    const technicalSkillNames = technicalSkillOptions.map(opt => opt.label);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -1558,16 +1591,16 @@ For languages, use CEFR levels (A1, A2, B1, B2, C1, C2):
 - C2: Mastery user
 
 Available soft skills (choose 5-8 most relevant):
-${predefinedOptions.skills.soft.map(skill => `- ${skill.skill}`).join('\n')}
+${softSkillNames.map(name => `- ${name}`).join('\n')}
 
 Available professional skills (choose 8-12 most relevant):
-${predefinedOptions.skills.professional.map(skill => `- ${skill.skill}`).join('\n')}
+${professionalSkillNames.map(name => `- ${name}`).join('\n')}
 
 Available technical skills (choose 6-10 most relevant):
-${predefinedOptions.skills.technical.map(skill => `- ${skill.skill}`).join('\n')}
+${technicalSkillNames.map(name => `- ${name}`).join('\n')}
 
 Available languages:
-${predefinedOptions.skills.languages.map(lang => `- ${lang.language}`).join('\n')}
+${languageNames.map(name => `- ${name}`).join('\n')}
 
 Return ONLY a valid JSON object with the following structure:
 {
@@ -1620,7 +1653,7 @@ Select the most relevant skills from the provided lists based on the job require
     const result = JSON.parse(content);
     
     // Validate languages
-    const validLanguages = predefinedOptions.skills.languages.map(lang => lang.language);
+    const validLanguages = languageNames;
     const validLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
     
     result.languages.forEach((lang: any) => {
@@ -1634,52 +1667,43 @@ Select the most relevant skills from the provided lists based on the job require
     });
 
     // Validate soft skills
-    const validSoftSkills = predefinedOptions.skills.soft.map(skill => skill.skill);
     result.soft.forEach((skill: string) => {
-      if (!validSoftSkills.includes(skill)) {
+      if (!softSkillNames.includes(skill)) {
         throw new Error(`Invalid soft skill: ${skill}`);
       }
     });
 
     // Validate professional skills
-    const validProfessionalSkills = predefinedOptions.skills.professional.map(skill => skill.skill);
     result.professional.forEach((skill: string) => {
-      if (!validProfessionalSkills.includes(skill)) {
+      if (!professionalSkillNames.includes(skill)) {
         throw new Error(`Invalid professional skill: ${skill}`);
       }
     });
 
     // Validate technical skills
-    const validTechnicalSkills = predefinedOptions.skills.technical.map(skill => skill.skill);
     result.technical.forEach((skill: string) => {
-      if (!validTechnicalSkills.includes(skill)) {
+      if (!technicalSkillNames.includes(skill)) {
         throw new Error(`Invalid technical skill: ${skill}`);
       }
     });
 
     // Convert skill names to ObjectIds
-    const softObjectIds = await convertSkillNamesToObjectIds(result.soft, 'soft');
-    const professionalObjectIds = await convertSkillNamesToObjectIds(result.professional, 'professional');
-    const technicalObjectIds = await convertSkillNamesToObjectIds(result.technical, 'technical');
+    const softSkillIds = convertSoftSkillNamesToIds(result.soft || []);
+    const professionalSkillIds = convertProfessionalSkillNamesToIds(result.professional || []);
+    const technicalSkillIds = convertTechnicalSkillNamesToIds(result.technical || []);
 
-    // Return with ObjectIds and details
+    // Convert language names to IDs
+    const languageIds = convertLanguageNamesToIds(result.languages?.map((l: any) => l.language) || []);
+
     return {
-      languages: result.languages,
-      soft: softObjectIds.map((objId, index) => ({
-        skill: objId,
-        level: 3, // Default to Advanced level
-        details: `Generated for ${title} position`
-      })),
-      professional: professionalObjectIds.map((objId, index) => ({
-        skill: objId,
-        level: 3, // Default to Advanced level
-        details: `Generated for ${title} position`
-      })),
-      technical: technicalObjectIds.map((objId, index) => ({
-        skill: objId,
-        level: 3, // Default to Advanced level
-        details: `Generated for ${title} position`
-      }))
+      languages: result.languages?.map((lang: any, index: number) => ({
+        language: languageIds[index] || lang.language,
+        proficiency: lang.proficiency || 'B1',
+        iso639_1: lang.iso639_1 || 'en'
+      })) || [],
+      soft: softSkillIds.map((id: string) => ({ skill: { $oid: id }, level: 1, details: '' })),
+      professional: professionalSkillIds.map((id: string) => ({ skill: { $oid: id }, level: 1, details: '' })),
+      technical: technicalSkillIds.map((id: string) => ({ skill: { $oid: id }, level: 1, details: '' }))
     };
   } catch (error) {
     console.error('Error generating skills:', error);
@@ -1695,6 +1719,56 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
   if (!description) {
     throw new Error('Description is required');
   }
+
+  // Load activities, industries, languages, and skills data from external API ONLY
+  const [activities, industries, languages, softSkills, professionalSkills, technicalSkills] = await Promise.all([
+    loadActivities(),
+    loadIndustries(),
+    loadLanguages(),
+    loadSoftSkills(),
+    loadProfessionalSkills(),
+    loadTechnicalSkills()
+  ]);
+
+  // Validate that we have data from the API
+  if (activities.length === 0) {
+    throw new Error('No activities available from external API. Please check API connection.');
+  }
+  
+  if (industries.length === 0) {
+    throw new Error('No industries available from external API. Please check API connection.');
+  }
+
+  if (languages.length === 0) {
+    throw new Error('No languages available from external API. Please check API connection.');
+  }
+
+  if (softSkills.length === 0 || professionalSkills.length === 0 || technicalSkills.length === 0) {
+    throw new Error('No skills available from external API. Please check API connection.');
+  }
+
+  const activityOptions = getActivityOptions();
+  const industryOptions = getIndustryOptions();
+  const languageOptions = getLanguageOptions();
+  const softSkillOptions = getSoftSkillOptions();
+  const professionalSkillOptions = getProfessionalSkillOptions();
+  const technicalSkillOptions = getTechnicalSkillOptions();
+
+  // Create lists for OpenAI prompt from dynamic data only
+  const activityNames = activityOptions.map(opt => opt.label);
+  const industryNames = industryOptions.map(opt => opt.label);
+  const languageNames = languageOptions.map(opt => opt.label);
+  const softSkillNames = softSkillOptions.map(opt => opt.label);
+  const professionalSkillNames = professionalSkillOptions.map(opt => opt.label);
+  const technicalSkillNames = technicalSkillOptions.map(opt => opt.label);
+
+  console.log('📊 Using dynamic data from API:');
+  console.log(`  - Activities: ${activityNames.length} loaded`);
+  console.log(`  - Industries: ${industryNames.length} loaded`);
+  console.log(`  - Languages: ${languageNames.length} loaded`);
+  console.log(`  - Soft Skills: ${softSkillNames.length} loaded`);
+  console.log(`  - Professional Skills: ${professionalSkillNames.length} loaded`);
+  console.log(`  - Technical Skills: ${technicalSkillNames.length} loaded`);
 
   try {
     const result = await retryWithBackoff(async () => {
@@ -1759,18 +1833,12 @@ Rules:
 - Use standard time zones and working hours
 - IMPORTANT: For destinationZones, use specific country names (e.g., "France", "United States", "Germany") NOT "Global" or continents
 - Default destination zone should be "France" if no specific country is mentioned
-- CRITICAL: For activities, carefully analyze the job description and select the most relevant activities:
-  * If the job involves selling products/services → include "Telemarketing / Telesales", "Customer Loyalty / Upselling"
-  * If the job involves customer support → include "Customer Service", "Technical Support"
-  * If the job involves appointment booking → include "Appointment Scheduling"
-  * If the job involves order management → include "Order Taking"
-  * If the job involves customer onboarding → include "Customer Onboarding"
-  * If the job involves follow-up calls → include "Customer Follow-Ups"
-  * If the job involves surveys → include "Surveys & Polls"
-  * If the job involves collections → include "Telephone Debt Collection"
-  * If the job involves crisis management → include "Complaints / Crisis Management"
-  * If the job involves after-sales → include "After-Sales Hotline"
-  * If the job involves administrative tasks → include "Administrative Support"
+- CRITICAL: For activities, you MUST ONLY use these exact activities (no variations, no new activities):
+${activityNames.map(name => `  * ${name}`).join('\n')}
+- CRITICAL: For industries, you MUST ONLY use these exact industries (no variations, no new industries):
+${industryNames.map(name => `  * ${name}`).join('\n')}
+- CRITICAL: For languages, you MUST ONLY use these exact languages (no variations, no new languages):
+${languageNames.map(name => `  * ${name}`).join('\n')}
 - CRITICAL: For sectors, you MUST ONLY use these exact sectors (no variations, no new sectors):
   * Inbound Sales
   * Outbound Sales
@@ -1797,35 +1865,6 @@ Rules:
   * Dispatch Services
   * Emergency Support
   * Multilingual Support
-- CRITICAL: For industries, you MUST ONLY use these exact industries (no variations, no new industries):
-  * Retail / e-Commerce
-  * Télécom & Fournisseurs d'accès
-  * Banques & Fintech
-  * Automobile
-  * Santé & Mutuelles
-  * Hôtellerie / Tourisme / aérien
-  * Assurance
-  * Éducation & Formation
-  * SaaS B2B
-  * Immobilier
-  * Transport / Logistique
-  * Événementiel / Billetterie
-  * Services aux entreprises (juridiques, consulting, administratif …)
-  * Instituts de sondage
-- CRITICAL: For activities, you MUST ONLY use these exact activities (no variations, no new activities):
-  * Customer Service
-  * Technical Support
-  * Order Taking
-  * Administrative Support
-  * Complaints / Crisis Management
-  * After-Sales Hotline
-  * Telemarketing / Telesales
-  * Appointment Scheduling
-  * Customer Follow-Ups
-  * Surveys & Polls
-  * Telephone Debt Collection
-  * Customer Loyalty / Upselling
-  * Customer Onboarding
 - CRITICAL: For schedule flexibility, you MUST ONLY use these exact options (no variations, no new options):
   * Remote Work Available
   * Flexible Hours
@@ -1835,36 +1874,12 @@ Rules:
   * Part-Time Options
   * Compressed Work Week
   * Shift Swapping Allowed
-- CRITICAL: For skills, you MUST ONLY use skills from the predefined lists. Choose relevant skills based on the job description:
-
-  * Professional Skills (CRM & Ticketing): CRM System Proficiency, Ticket Management, Understanding of ticket priority levels
-  * Professional Skills (Call Center Operations): Call Dispositioning, Call Recording & QA Systems, Phone System Usage
-  * Professional Skills (Communication Channels): Email Support, Live Chat/Messenger, Social Media Messaging, Voice Support
-  * Professional Skills (Compliance & QA): Compliance Script Following, Data Protection Awareness, QA Framework Adherence
-  * Professional Skills (Documentation): Fast and Accurate Typing, Keyboard Shortcuts & Productivity, Knowledge Base Usage, Real-time Data Entry
-  * Professional Skills (Language & Culture): Formal/Informal Register Usage, Multilingual Abilities, Regional Expression Familiarity
-  * Professional Skills (Performance Metrics): Performance Metrics Understanding, Self-Performance Monitoring
-  * Professional Skills (Product Knowledge): Familiarity with standard operating procedures (SOPs), In-depth understanding of products/services, Knowledge of company policies
-  * Professional Skills (Reporting & Analysis): Basic Troubleshooting, Internal Documentation, Issue Pattern Recognition, Remote Support Tools, Reporting Tools Usage
-
-  * Technical Skills (CRM & Ticketing Systems): CRM Systems Daily Use, Ticket Operations, Ticketing Platforms
-  * Technical Skills (Collaboration Tools): Communication Tools Usage
-  * Technical Skills (Contact Center Software): Call Management Operations, Cloud-based Contact Center Software, VoIP Systems Understanding
-  * Technical Skills (Email Management): Email Automation, Email Template Adherence, Shared Inbox Usage
-  * Technical Skills (Knowledge Management): Information Retrieval, Knowledge Base Navigation, Search Function Usage
-  * Technical Skills (Live Chat Platforms): Chat Shortcuts & Responses, Chatbot Integration Understanding, Multi-Chat Management
-  * Technical Skills (Operating Systems & Office): Cloud Platform Usage, Office Suite Usage, Operating Systems Proficiency
-  * Technical Skills (Quality Assurance): Call Monitoring Systems
-  * Technical Skills (Technical Support): Bug Logging, Remote Desktop Tools, User Issue Diagnosis
-  * Technical Skills (Typing & Productivity): Fast Typing Skills, Keyboard Shortcuts
-
-  * Soft Skills (Adaptability): Adaptability, Cultural Sensitivity, Willingness to Learn
-  * Soft Skills (Collaboration): Conflict Resolution, Team Collaboration
-  * Soft Skills (Communication): Active Listening, Clear Articulation, Proper Tone & Language, Spelling & Grammar Accuracy
-  * Soft Skills (Customer Service): Ownership, Service Orientation
-  * Soft Skills (Emotional Intelligence): Empathy, Patience
-  * Soft Skills (Problem Solving): Analytical Thinking, Creativity, Decision-Making
-  * Soft Skills (Self-Management): Efficiency, Multitasking, Receptiveness to Feedback, Resilience, Self-Regulation`
+- CRITICAL: For soft skills, you MUST ONLY use these exact skills (no variations, no new skills):
+${softSkillNames.map(name => `  * ${name}`).join('\n')}
+- CRITICAL: For professional skills, you MUST ONLY use these exact skills (no variations, no new skills):
+${professionalSkillNames.map(name => `  * ${name}`).join('\n')}
+- CRITICAL: For technical skills, you MUST ONLY use these exact skills (no variations, no new skills):
+${technicalSkillNames.map(name => `  * ${name}`).join('\n')}`
           },
           {
             role: "user",
@@ -1923,30 +1938,26 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
           parsedResult.sectors = filteredSectors;
         }
 
-        // Validate industries to ensure only predefined ones are used
+        // Convert industry names to IDs
         if (parsedResult.industries && parsedResult.industries.length > 0) {
-          const validIndustries = predefinedOptions.industries;
-          const filteredIndustries = parsedResult.industries.filter((industry: string) => {
-            const isValid = validIndustries.includes(industry);
-            if (!isValid) {
-              console.warn(`Invalid industry "${industry}" - not in allowed list`);
-            }
-            return isValid;
-          });
-          parsedResult.industries = filteredIndustries;
+          const industryIds = convertIndustryNamesToIds(parsedResult.industries);
+          parsedResult.industries = industryIds;
         }
 
-        // Validate activities to ensure only predefined ones are used
+        // Convert activity names to IDs
         if (parsedResult.activities && parsedResult.activities.length > 0) {
-          const validActivities = predefinedOptions.activities;
-          const filteredActivities = parsedResult.activities.filter((activity: string) => {
-            const isValid = validActivities.includes(activity);
-            if (!isValid) {
-              console.warn(`Invalid activity "${activity}" - not in allowed list`);
-            }
-            return isValid;
-          });
-          parsedResult.activities = filteredActivities;
+          const activityIds = convertActivityNamesToIds(parsedResult.activities);
+          parsedResult.activities = activityIds;
+        }
+
+        // Convert language names to IDs
+        if (parsedResult.skills?.languages && parsedResult.skills.languages.length > 0) {
+          const languageNames = parsedResult.skills.languages.map((lang: any) => lang.language);
+          const languageIds = convertLanguageNamesToIds(languageNames);
+          parsedResult.skills.languages = parsedResult.skills.languages.map((lang: any, index: number) => ({
+            ...lang,
+            language: languageIds[index] || lang.language
+          }));
         }
 
         // Validate flexibility options to ensure only predefined ones are used
@@ -1971,84 +1982,60 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
           parsedResult.schedule.flexibility = filteredFlexibility;
         }
 
-        // Validate skills to ensure only predefined ones are used
+        // Validate and convert skills to use API data
         if (parsedResult.skills) {
           console.log('🎯 AI Generated Skills (before validation):', {
             professional: parsedResult.skills.professional,
             technical: parsedResult.skills.technical,
             soft: parsedResult.skills.soft
           });
-          // Define valid skills from API
-          const validProfessionalSkills = [
-            "CRM System Proficiency", "Ticket Management", "Understanding of ticket priority levels",
-            "Call Dispositioning", "Call Recording & QA Systems", "Phone System Usage",
-            "Email Support", "Live Chat/Messenger", "Social Media Messaging", "Voice Support",
-            "Compliance Script Following", "Data Protection Awareness", "QA Framework Adherence",
-            "Fast and Accurate Typing", "Keyboard Shortcuts & Productivity", "Knowledge Base Usage", "Real-time Data Entry",
-            "Formal/Informal Register Usage", "Multilingual Abilities", "Regional Expression Familiarity",
-            "Performance Metrics Understanding", "Self-Performance Monitoring",
-            "Familiarity with standard operating procedures (SOPs)", "In-depth understanding of products/services", "Knowledge of company policies",
-            "Basic Troubleshooting", "Internal Documentation", "Issue Pattern Recognition", "Remote Support Tools", "Reporting Tools Usage"
-          ];
 
-          const validTechnicalSkills = [
-            "CRM Systems Daily Use", "Ticket Operations", "Ticketing Platforms",
-            "Communication Tools Usage", "Call Management Operations", "Cloud-based Contact Center Software", "VoIP Systems Understanding",
-            "Email Automation", "Email Template Adherence", "Shared Inbox Usage",
-            "Information Retrieval", "Knowledge Base Navigation", "Search Function Usage",
-            "Chat Shortcuts & Responses", "Chatbot Integration Understanding", "Multi-Chat Management",
-            "Cloud Platform Usage", "Office Suite Usage", "Operating Systems Proficiency",
-            "Call Monitoring Systems", "Bug Logging", "Remote Desktop Tools", "User Issue Diagnosis",
-            "Fast Typing Skills", "Keyboard Shortcuts"
-          ];
-
-          const validSoftSkills = [
-            "Adaptability", "Cultural Sensitivity", "Willingness to Learn",
-            "Conflict Resolution", "Team Collaboration",
-            "Active Listening", "Clear Articulation", "Proper Tone & Language", "Spelling & Grammar Accuracy",
-            "Ownership", "Service Orientation",
-            "Empathy", "Patience",
-            "Analytical Thinking", "Creativity", "Decision-Making",
-            "Efficiency", "Multitasking", "Receptiveness to Feedback", "Resilience", "Self-Regulation"
-          ];
-
-          // Validate professional skills
+          // Convert professional skills
           if (parsedResult.skills.professional && parsedResult.skills.professional.length > 0) {
-            const filteredProfessional = parsedResult.skills.professional.filter((skill: any) => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              const isValid = validProfessionalSkills.includes(skillName);
-              if (!isValid) {
-                console.warn(`Invalid professional skill "${skillName}" - not in allowed list`);
-              }
-              return isValid;
-            });
-            parsedResult.skills.professional = filteredProfessional;
+            const professionalSkillNames = parsedResult.skills.professional.map((skill: any) => 
+              typeof skill === 'string' ? skill : skill.skill
+            );
+            const professionalSkillIds = convertProfessionalSkillNamesToIds(professionalSkillNames);
+            parsedResult.skills.professional = professionalSkillIds.map((id: string, index: number) => ({
+              skill: id,
+              level: 3
+            }));
           }
 
-          // Validate technical skills
+          // Convert technical skills
           if (parsedResult.skills.technical && parsedResult.skills.technical.length > 0) {
-            const filteredTechnical = parsedResult.skills.technical.filter((skill: any) => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              const isValid = validTechnicalSkills.includes(skillName);
-              if (!isValid) {
-                console.warn(`Invalid technical skill "${skillName}" - not in allowed list`);
-              }
-              return isValid;
-            });
-            parsedResult.skills.technical = filteredTechnical;
+            const technicalSkillNames = parsedResult.skills.technical.map((skill: any) => 
+              typeof skill === 'string' ? skill : skill.skill
+            );
+            const technicalSkillIds = convertTechnicalSkillNamesToIds(technicalSkillNames);
+            parsedResult.skills.technical = technicalSkillIds.map((id: string, index: number) => ({
+              skill: id,
+              level: 3
+            }));
           }
 
-          // Validate soft skills
+          // Convert soft skills
           if (parsedResult.skills.soft && parsedResult.skills.soft.length > 0) {
-            const filteredSoft = parsedResult.skills.soft.filter((skill: any) => {
-              const skillName = typeof skill === 'string' ? skill : skill.skill;
-              const isValid = validSoftSkills.includes(skillName);
-              if (!isValid) {
-                console.warn(`Invalid soft skill "${skillName}" - not in allowed list`);
-              }
-              return isValid;
-            });
-            parsedResult.skills.soft = filteredSoft;
+            const softSkillNames = parsedResult.skills.soft.map((skill: any) => 
+              typeof skill === 'string' ? skill : skill.skill
+            );
+            const softSkillIds = convertSoftSkillNamesToIds(softSkillNames);
+            parsedResult.skills.soft = softSkillIds.map((id: string, index: number) => ({
+              skill: id,
+              level: 3
+            }));
+          }
+
+          // Convert soft skills
+          if (parsedResult.skills.soft && parsedResult.skills.soft.length > 0) {
+            const softSkillNames = parsedResult.skills.soft.map((skill: any) => 
+              typeof skill === 'string' ? skill : skill.skill
+            );
+            const softSkillIds = convertSoftSkillNamesToIds(softSkillNames);
+            parsedResult.skills.soft = softSkillIds.map((id: string, index: number) => ({
+              skill: id,
+              level: 3
+            }));
           }
           
           console.log('✅ AI Generated Skills (after validation):', {

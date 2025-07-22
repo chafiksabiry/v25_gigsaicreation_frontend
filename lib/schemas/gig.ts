@@ -120,8 +120,8 @@ const gigSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'pending_review', 'published', 'closed'],
-    default: 'draft'
+    enum: ['to_activate', 'active', 'inactive', 'archived'],
+    default: 'to_activate'
   },
   requirements: [{
     type: String
