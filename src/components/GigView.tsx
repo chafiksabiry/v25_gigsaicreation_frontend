@@ -52,6 +52,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     callTypes: gig.call_types || [],
     highlights: [],
     industries: gig.industries || [],
+    status: gig.status || 'to_activate',
     requirements: {
       essential: [],
       preferred: []

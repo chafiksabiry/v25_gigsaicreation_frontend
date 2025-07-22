@@ -289,6 +289,7 @@ export function GigForm() {
         callTypes: data.callTypes,
         highlights: [],
         industries: [],
+        status: 'to_activate',
         requirements: {
           essential: [],
           preferred: []

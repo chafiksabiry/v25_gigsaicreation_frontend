@@ -17,15 +17,15 @@ export async function updateGig(_id: string, _updates: Partial<Gig>) {
 }
 
 export async function submitForReview(id: string) {
-  return updateGig(id, { status: 'pending_review' });
+  return updateGig(id, { status: 'active' as any });
 }
 
 export async function publishGig(id: string) {
-  return updateGig(id, { status: 'published' });
+  return updateGig(id, { status: 'active' as any });
 }
 
 export async function closeGig(id: string) {
-  return updateGig(id, { status: 'closed' });
+  return updateGig(id, { status: 'archived' as any });
 }
 
 export async function getGigHistory(gigId: string) {
@@ -137,48 +137,16 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         iso639_1: lang.iso639_1
       })),
       soft: fixedGigData.skills.soft.map(skill => ({
-        skill: (() => {
-          // Extract ObjectId string from { $oid: "..." } format
-          if (typeof skill.skill === 'string') {
-            return skill.skill; // Already a string
-          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
-            return skill.skill.$oid; // Extract the ObjectId string
-          }
-          return skill.skill; // Fallback
-        })(),
-        level: skill.level,
-        details: skill.details || ''
+        skill: skill.skill,
+        level: skill.level
       })),
       professional: fixedGigData.skills.professional.map(skill => ({
-        skill: (() => {
-          // Extract ObjectId string from { $oid: "..." } format
-          if (typeof skill.skill === 'string') {
-            return skill.skill; // Already a string
-          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
-            return skill.skill.$oid; // Extract the ObjectId string
-          }
-          return skill.skill; // Fallback
-        })(),
-        level: skill.level,
-        details: skill.details || ''
+        skill: skill.skill,
+        level: skill.level
       })),
       technical: fixedGigData.skills.technical.map(skill => ({
-        skill: (() => {
-          // Extract ObjectId string from { $oid: "..." } format
-          if (typeof skill.skill === 'string') {
-            return skill.skill; // Already a string
-          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
-            return skill.skill.$oid; // Extract the ObjectId string
-          }
-          return skill.skill; // Fallback
-        })(),
-        level: skill.level,
-        details: skill.details || ''
-      })),
-      certifications: fixedGigData.skills.certifications.map(cert => ({
-        name: cert.name,
-        required: cert.required,
-        provider: cert.provider
+        skill: skill.skill,
+        level: skill.level
       }))
     };
 
@@ -572,5 +540,96 @@ export async function syncSkillsToDatabase(skills: Array<{
       data: [], 
       error: error instanceof Error ? error : new Error('Failed to sync skills') 
     };
+  }
+}
+
+// Interfaces for API responses
+interface Activity {
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  isActive: boolean;
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Industry {
+  _id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Language {
+  _id: string;
+  code: string;
+  name: string;
+  nativeName: string;
+  __v: number;
+  createdAt: string;
+  lastUpdated: string;
+  updatedAt: string;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: any;
+  message: string;
+}
+
+export async function fetchActivities(): Promise<{ data: Activity[]; error?: Error }> {
+  try {
+    const response = await fetch('https://api-repcreationwizard.harx.ai/api/activities');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result: ApiResponse<Activity> = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch activities');
+    }
+    return { data: result.data };
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+    return { data: [], error: error as Error };
+  }
+}
+
+export async function fetchIndustries(): Promise<{ data: Industry[]; error?: Error }> {
+  try {
+    const response = await fetch('https://api-repcreationwizard.harx.ai/api/industries');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result: ApiResponse<Industry> = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch industries');
+    }
+    return { data: result.data };
+  } catch (error) {
+    console.error('Error fetching industries:', error);
+    return { data: [], error: error as Error };
+  }
+}
+
+export async function fetchLanguages(): Promise<{ data: Language[]; error?: Error }> {
+  try {
+    const response = await fetch('https://api-repcreationwizard.harx.ai/api/languages');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result: ApiResponse<Language> = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch languages');
+    }
+    return { data: result.data };
+  } catch (error) {
+    console.error('Error fetching languages:', error);
+    return { data: [], error: error as Error };
   }
 }

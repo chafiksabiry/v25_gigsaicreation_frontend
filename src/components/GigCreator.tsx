@@ -40,6 +40,7 @@ const initialGigData: GigData = {
   callTypes: [],
   highlights: [],
   industries: [],
+  status: 'to_activate',
   requirements: {
     essential: [],
     preferred: [],
@@ -93,26 +94,10 @@ const initialGigData: GigData = {
     qualificationCriteria: [],
   },
   skills: {
-    languages: [{ language: "English", proficiency: "C1", iso639_1: "en" }],
-    soft: [
-      { skill: { $oid: "000000000000000000000001" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000002" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000003" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000004" }, level: 1, details: "" }
-    ],
-    professional: [
-      { skill: { $oid: "000000000000000000000005" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000006" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000007" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000008" }, level: 1, details: "" }
-    ],
-    technical: [
-      { skill: { $oid: "000000000000000000000009" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000010" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000011" }, level: 1, details: "" },
-      { skill: { $oid: "000000000000000000000012" }, level: 1, details: "" }
-    ],
-    certifications: []
+    languages: [],
+    soft: [],
+    professional: [],
+    technical: []
   },
   seniority: {
     level: "",
@@ -452,8 +437,11 @@ export function GigCreator({ children }: GigCreatorProps) {
       };
 
 
-      const response = await axios.post(`${API_URL}/gigs`, gigDataToSave);
-      const gig = response.data;
+      const { data: gig, error: gigError } = await saveGigData(gigDataToSave);
+      
+      if (gigError) {
+        throw new Error(gigError.message);
+      }
 
       if (gig) {
         // Insert skills
