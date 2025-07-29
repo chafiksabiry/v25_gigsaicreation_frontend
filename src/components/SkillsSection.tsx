@@ -566,6 +566,40 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     const isEditing = editingIndex?.type === type;
     const isAdding = addMode.type === type && addMode.active;
     
+    // Filter out invalid skills (Unknown Language, Unknown Skill, etc.)
+    const validSkills = skills.filter((skill: any) => {
+      if (isLanguage) {
+        // For languages, check if the language name is valid
+        if (languagesLoading) return true; // Keep during loading
+        const languageName = getLanguageNameById(skill.language);
+        return languageName && languageName !== 'Unknown Language';
+      } else {
+        // For other skills, check if the skill name is valid
+        let skillName = '';
+        if (typeof skill === 'string') {
+          if (type === 'soft') skillName = getSoftSkillNameById(skill);
+          else if (type === 'technical') skillName = getTechnicalSkillNameById(skill);
+          else if (type === 'professional') skillName = getProfessionalSkillNameById(skill);
+        } else if (skill.skill) {
+          if (typeof skill.skill === 'string') {
+            if (type === 'soft') skillName = getSoftSkillNameById(skill.skill);
+            else if (type === 'technical') skillName = getTechnicalSkillNameById(skill.skill);
+            else if (type === 'professional') skillName = getProfessionalSkillNameById(skill.skill);
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            if (type === 'soft') skillName = getSoftSkillNameById(skill.skill.$oid);
+            else if (type === 'technical') skillName = getTechnicalSkillNameById(skill.skill.$oid);
+            else if (type === 'professional') skillName = getProfessionalSkillNameById(skill.skill.$oid);
+          }
+        }
+        return skillName && skillName !== 'Unknown Skill';
+      }
+    });
+    
+    // Don't render the section if there are no valid skills and we're not adding/editing
+    if (validSkills.length === 0 && !isAdding && !isEditing) {
+      return null;
+    }
+    
     // Get the appropriate skills array based on type
     let options: Array<{_id: string, name: string, description: string, category: string}> = [];
     let isLoading = false;
@@ -672,7 +706,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         </div>
         {/* List */}
         <div className="mb-4 space-y-2">
-          {skills
+          {validSkills
             .map((skill, idx) => {
               let skillName = '';
               if (isLanguage) {
@@ -738,7 +772,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   }
                 }
               }
-              if (!skillName) return null;
+              // Don't display skills with invalid names
+              if (!skillName || skillName === 'Unknown Language' || skillName === 'Unknown Skill') return null;
               return (
                 <div
                   key={idx}
