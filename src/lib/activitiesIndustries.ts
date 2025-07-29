@@ -165,7 +165,7 @@ export function getLanguageById(id: string): Language | undefined {
 
 export function getLanguageNameById(id: string): string {
   const language = languagesCache.find(language => language._id === id);
-  return language ? language.name : 'Unknown Language';
+  return language ? language.name : '';
 }
 
 export function getLanguageCodeById(id: string): string {

@@ -110,6 +110,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
       try {
         setLanguagesLoading(true);
 
+        // Load languages from API first to ensure cache is populated
+        await loadLanguages();
         const languageOptions = getLanguageOptions();
         setLanguages(languageOptions);
         setLanguagesLoading(false);
@@ -536,7 +538,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         // For languages, check if the language name is valid
         if (languagesLoading) return true; // Keep during loading
         const languageName = getLanguageNameById(skill.language);
-        return languageName && languageName !== 'Unknown Language';
+        return languageName && languageName !== '';
       } else {
         // For other skills, check if the skill name is valid
         let skillName = '';
@@ -683,11 +685,16 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   let languageName = getLanguageNameById(skill.language);
                   
                   // If not found by ID, try to find by name (fallback for old data)
-                  if (!languageName || languageName === 'Unknown Language') {
+                  if (!languageName || languageName === '') {
                     const foundLanguage = languages.find(l => l.label === skill.language);
                     if (foundLanguage) {
                       languageName = foundLanguage.label;
-
+                    } else {
+                      // If still not found, try to find by code or partial match
+                      const foundByCode = languages.find(l => l.code === skill.language);
+                      if (foundByCode) {
+                        languageName = foundByCode.label;
+                      }
                     }
                   }
                   
@@ -727,7 +734,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 }
               }
               // Don't display skills with invalid names
-              if (!skillName || skillName === 'Unknown Language' || skillName === 'Unknown Skill') return null;
+              if (!skillName || skillName === '' || skillName === 'Unknown Skill') return null;
               return (
                 <div
                   key={idx}

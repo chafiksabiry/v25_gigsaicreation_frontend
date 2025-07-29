@@ -211,10 +211,11 @@ export function GigReview({
     } else if (language && typeof language === 'object' && language.$oid) {
       languageId = language.$oid;
     } else {
-      return 'Unknown Language';
+      return '';
     }
     
-    return getLanguageNameById(languageId) || languageId;
+    const languageName = getLanguageNameById(languageId);
+    return languageName || languageId;
   };
 
   const getCurrencySymbol = () => {
