@@ -414,7 +414,7 @@ const PrompAI: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <button
                     type="button"
-                    onClick={() => setShowSuggestions(true)}
+                    onClick={() => setShowGuidance(!showGuidance)}
                     className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
                   >
                     <HelpCircle className="w-4 h-4 mr-1" />
