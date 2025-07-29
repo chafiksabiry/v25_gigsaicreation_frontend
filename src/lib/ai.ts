@@ -92,7 +92,7 @@ Return ONLY a valid JSON object with the following structure:
   "category": string (MUST be EXACTLY one of the available categories, no variations or new categories allowed),
   "seniority": {
     "level": string (MUST be one of the available seniority levels),
-    "yearsExperience": string
+    "yearsExperience": number (MUST be a single number, not a range)
   },
   "timeZones": string[] (MUST be an array of time zones from the available options),
   "scheduleFlexibility": string[] (MUST be from available options),
@@ -1243,7 +1243,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const skills = generatedData.skills || {};
   const languages = skills.languages || [];
   
-  // Ensure all language levels are valid
+  // Ensure all language levels are valid and convert names to ObjectIds
   const validatedLanguages = languages.map((lang: string | any) => {
     if (typeof lang === 'string') {
       // If it's a string like "English (Fluent)", extract the language and level
@@ -1289,6 +1289,16 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       iso639_1: 'en'
     }; // Default to empty language and A1 level if invalid
   });
+
+  // Convert language names to ObjectIds
+  const languageNames = validatedLanguages.map(lang => lang.language).filter(name => name);
+  const languageIds = convertLanguageNamesToIds(languageNames);
+  
+  // Update validatedLanguages with ObjectIds
+  const validatedLanguagesWithIds = validatedLanguages.map((lang, index) => ({
+    ...lang,
+    language: languageIds[index] || lang.language // Use ObjectId if available, fallback to original
+  }));
 
   // Validate soft skills - keep names for now, will be mapped to ObjectId later
   const validatedSoftSkills = (skills.soft || []).map((skill: string | any) => {
@@ -1505,7 +1515,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       kpis: []
     },
     skills: {
-      languages: validatedLanguages,
+      languages: validatedLanguagesWithIds,
       soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1 })),
       professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
       technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1 }))
@@ -1777,12 +1787,9 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant that creates job listings. 
+            content: `You are an AI assistant that creates job listings. Return ONLY valid JSON.
 
-CRITICAL: You must return ONLY a valid JSON object. Do not include any explanatory text, markdown formatting, or comments. The response must be parseable JSON only.
-
-Generate a JSON response with this structure:
-
+Structure:
 {
   "title": "string",
   "description": "string (5-8 lines)",
@@ -1790,9 +1797,9 @@ Generate a JSON response with this structure:
   "highlights": ["string"],
   "jobTitles": ["string"],
   "deliverables": ["string"],
-  "sectors": ["string (MUST be from the predefined list)"],
-  "industries": ["string (MUST be from the predefined list)"],
-  "activities": ["string (MUST be from the predefined list)"],
+  "sectors": ["string"],
+  "industries": ["string"],
+  "activities": ["string"],
   "destinationZones": ["string"],
   "schedule": {
     "schedules": [{"days": ["Monday", "Tuesday"], "hours": {"start": "09:00", "end": "17:00"}}],
@@ -1826,60 +1833,24 @@ Generate a JSON response with this structure:
   }
 }
 
-Rules:
+CRITICAL RULES:
 - Use realistic numbers for commission
 - Choose relevant skills from common job requirements
 - Keep description concise but professional
 - Use standard time zones and working hours
-- IMPORTANT: For destinationZones, use specific country names (e.g., "France", "United States", "Germany") NOT "Global" or continents
 - Default destination zone should be "France" if no specific country is mentioned
-- CRITICAL: For activities, you MUST ONLY use these exact activities (no variations, no new activities):
-${activityNames.map(name => `  * ${name}`).join('\n')}
-- CRITICAL: For industries, you MUST ONLY use these exact industries (no variations, no new industries):
-${industryNames.map(name => `  * ${name}`).join('\n')}
-- CRITICAL: For languages, you MUST ONLY use these exact languages (no variations, no new languages):
-${languageNames.map(name => `  * ${name}`).join('\n')}
-- CRITICAL: For sectors, you MUST ONLY use these exact sectors (no variations, no new sectors):
-  * Inbound Sales
-  * Outbound Sales
-  * Customer Service
-  * Technical Support
-  * Account Management
-  * Lead Generation
-  * Market Research
-  * Appointment Setting
-  * Order Processing
-  * Customer Retention
-  * Billing Support
-  * Product Support
-  * Help Desk
-  * Chat Support
-  * Email Support
-  * Social Media Support
-  * Survey Calls
-  * Welcome Calls
-  * Follow-up Calls
-  * Complaint Resolution
-  * Warranty Support
-  * Collections
-  * Dispatch Services
-  * Emergency Support
-  * Multilingual Support
-- CRITICAL: For schedule flexibility, you MUST ONLY use these exact options (no variations, no new options):
-  * Remote Work Available
-  * Flexible Hours
-  * Weekend Rotation
-  * Night Shift Available
-  * Split Shifts
-  * Part-Time Options
-  * Compressed Work Week
-  * Shift Swapping Allowed
-- CRITICAL: For soft skills, you MUST ONLY use these exact skills (no variations, no new skills):
-${softSkillNames.map(name => `  * ${name}`).join('\n')}
-- CRITICAL: For professional skills, you MUST ONLY use these exact skills (no variations, no new skills):
-${professionalSkillNames.map(name => `  * ${name}`).join('\n')}
-- CRITICAL: For technical skills, you MUST ONLY use these exact skills (no variations, no new skills):
-${technicalSkillNames.map(name => `  * ${name}`).join('\n')}`
+- For sectors, use: Inbound Sales, Outbound Sales, Customer Service, Technical Support, Account Management, Lead Generation, Market Research, Appointment Setting, Order Processing, Customer Retention, Billing Support, Product Support, Help Desk, Chat Support, Email Support, Social Media Support, Survey Calls, Welcome Calls, Follow-up Calls, Complaint Resolution, Warranty Support, Collections, Dispatch Services, Emergency Support, Multilingual Support
+- For schedule flexibility, use: Remote Work Available, Flexible Hours, Weekend Rotation, Night Shift Available, Split Shifts, Part-Time Options, Compressed Work Week, Shift Swapping Allowed
+
+AVAILABLE DATA FROM API:
+- Available Industries: ${industryNames.join(', ')}
+- Available Activities: ${activityNames.join(', ')}
+- Available Languages: ${languageNames.join(', ')}
+- Available Soft Skills: ${softSkillNames.join(', ')}
+- Available Professional Skills: ${professionalSkillNames.join(', ')}
+- Available Technical Skills: ${technicalSkillNames.join(', ')}
+
+IMPORTANT: You MUST choose industries and activities ONLY from the available lists above. Do not create new ones or use variations.`
           },
           {
             role: "user",
@@ -1925,71 +1896,91 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
         
         const parsedResult = JSON.parse(jsonContent);
         
-        // Validate sectors to ensure only predefined ones are used
-        if (parsedResult.sectors && parsedResult.sectors.length > 0) {
-          const validSectors = predefinedOptions.sectors;
-          const filteredSectors = parsedResult.sectors.filter((sector: string) => {
-            const isValid = validSectors.includes(sector);
-            if (!isValid) {
-              console.warn(`Invalid sector "${sector}" - not in allowed list`);
-            }
-            return isValid;
-          });
-          parsedResult.sectors = filteredSectors;
-        }
-
-        // Convert industry names to IDs
-        if (parsedResult.industries && parsedResult.industries.length > 0) {
-          const industryIds = convertIndustryNamesToIds(parsedResult.industries);
-          parsedResult.industries = industryIds;
-        }
-
         // Convert activity names to IDs
         if (parsedResult.activities && parsedResult.activities.length > 0) {
-          const activityIds = convertActivityNamesToIds(parsedResult.activities);
+          const validActivities = activityNames;
+          const validActivityIds = activityOptions.map(opt => opt.value);
+          
+          // Filter valid activities and convert names to IDs
+          const validActivityNames = parsedResult.activities.filter((activity: string) => 
+            validActivities.includes(activity)
+          );
+          
+          // Convert names to IDs
+          const activityIds = validActivityNames.map((activityName: string) => {
+            const activityOption = activityOptions.find(opt => opt.label === activityName);
+            return activityOption ? activityOption.value : null;
+          }).filter((id: string | null): id is string => id !== null);
+          
           parsedResult.activities = activityIds;
+          
+          // If no valid activities found, add a default one from API
+          if (parsedResult.activities.length === 0) {
+            parsedResult.activities = [activityOptions[0]?.value || ''];
+            console.log('⚠️ No valid activities found, using default from API:', activityOptions[0]?.label);
+          }
+          
+          console.log('🎯 Converted activity names to IDs:', validActivityNames, '→', parsedResult.activities);
         }
 
-        // Convert language names to IDs
+                // Convert industry names to IDs
+        if (parsedResult.industries && parsedResult.industries.length > 0) {
+          const validIndustries = industryNames;
+          const validIndustryIds = industryOptions.map(opt => opt.value);
+          
+          // Filter valid industries and convert names to IDs
+          const validIndustryNames = parsedResult.industries.filter((industry: string) => 
+            validIndustries.includes(industry)
+          );
+          
+          // Convert names to IDs
+          const industryIds = validIndustryNames.map((industryName: string) => {
+            const industryOption = industryOptions.find(opt => opt.label === industryName);
+            return industryOption ? industryOption.value : null;
+          }).filter((id: string | null): id is string => id !== null);
+          
+          parsedResult.industries = industryIds;
+          
+          // If no valid industries found, add a default one from API
+          if (parsedResult.industries.length === 0) {
+            parsedResult.industries = [industryOptions[0]?.value || ''];
+            console.log('⚠️ No valid industries found, using default from API:', industryOptions[0]?.label);
+          }
+          
+          console.log('🎯 Converted industry names to IDs:', validIndustryNames, '→', parsedResult.industries);
+        }
+
+        // Validate and fix languages
         if (parsedResult.skills?.languages && parsedResult.skills.languages.length > 0) {
-          const languageNames = parsedResult.skills.languages.map((lang: any) => lang.language);
-          const languageIds = convertLanguageNamesToIds(languageNames);
-          parsedResult.skills.languages = parsedResult.skills.languages.map((lang: any, index: number) => ({
-            ...lang,
-            language: languageIds[index] || lang.language
-          }));
+          const validLanguages = languageNames;
+          parsedResult.skills.languages = parsedResult.skills.languages.filter((lang: any) => 
+            validLanguages.includes(lang.language)
+          );
+          
+          // If no valid languages found, add a default one
+          if (parsedResult.skills.languages.length === 0) {
+            parsedResult.skills.languages = [{
+              language: languageNames[0] || 'English',
+              proficiency: 'B1',
+              iso639_1: 'en'
+            }];
+          }
         }
 
-        // Validate flexibility options to ensure only predefined ones are used
-        if (parsedResult.schedule?.flexibility && parsedResult.schedule.flexibility.length > 0) {
-          const validFlexibilityOptions = [
-            "Remote Work Available",
-            "Flexible Hours", 
-            "Weekend Rotation",
-            "Night Shift Available",
-            "Split Shifts",
-            "Part-Time Options",
-            "Compressed Work Week",
-            "Shift Swapping Allowed"
-          ];
-          const filteredFlexibility = parsedResult.schedule.flexibility.filter((option: string) => {
-            const isValid = validFlexibilityOptions.includes(option);
-            if (!isValid) {
-              console.warn(`Invalid flexibility option "${option}" - not in allowed list`);
-            }
-            return isValid;
-          });
-          parsedResult.schedule.flexibility = filteredFlexibility;
-        }
-
-        // Validate and convert skills to use API data
+        // Validate and fix skills
         if (parsedResult.skills) {
-          console.log('🎯 AI Generated Skills (before validation):', {
-            professional: parsedResult.skills.professional,
-            technical: parsedResult.skills.technical,
-            soft: parsedResult.skills.soft
-          });
-
+          // Convert soft skills
+          if (parsedResult.skills.soft && parsedResult.skills.soft.length > 0) {
+            const softSkillNames = parsedResult.skills.soft.map((skill: any) => 
+              typeof skill === 'string' ? skill : skill.skill
+            );
+            const softSkillIds = convertSoftSkillNamesToIds(softSkillNames);
+            parsedResult.skills.soft = softSkillIds.map((id: string, index: number) => ({
+              skill: id,
+              level: 3
+            }));
+          }
+          
           // Convert professional skills
           if (parsedResult.skills.professional && parsedResult.skills.professional.length > 0) {
             const professionalSkillNames = parsedResult.skills.professional.map((skill: any) => 
@@ -2001,7 +1992,7 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
               level: 3
             }));
           }
-
+          
           // Convert technical skills
           if (parsedResult.skills.technical && parsedResult.skills.technical.length > 0) {
             const technicalSkillNames = parsedResult.skills.technical.map((skill: any) => 
@@ -2009,30 +2000,6 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
             );
             const technicalSkillIds = convertTechnicalSkillNamesToIds(technicalSkillNames);
             parsedResult.skills.technical = technicalSkillIds.map((id: string, index: number) => ({
-              skill: id,
-              level: 3
-            }));
-          }
-
-          // Convert soft skills
-          if (parsedResult.skills.soft && parsedResult.skills.soft.length > 0) {
-            const softSkillNames = parsedResult.skills.soft.map((skill: any) => 
-              typeof skill === 'string' ? skill : skill.skill
-            );
-            const softSkillIds = convertSoftSkillNamesToIds(softSkillNames);
-            parsedResult.skills.soft = softSkillIds.map((id: string, index: number) => ({
-              skill: id,
-              level: 3
-            }));
-          }
-
-          // Convert soft skills
-          if (parsedResult.skills.soft && parsedResult.skills.soft.length > 0) {
-            const softSkillNames = parsedResult.skills.soft.map((skill: any) => 
-              typeof skill === 'string' ? skill : skill.skill
-            );
-            const softSkillIds = convertSoftSkillNamesToIds(softSkillNames);
-            parsedResult.skills.soft = softSkillIds.map((id: string, index: number) => ({
               skill: id,
               level: 3
             }));
@@ -2083,18 +2050,16 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
         
         return parsedResult;
       } catch (parseError) {
-        console.error('Failed to parse AI response:', content);
-        console.error('Parse error:', parseError);
-        throw new Error(`Failed to parse AI suggestions. The AI returned invalid JSON. Please try again.`);
+        console.error('Error parsing AI response:', parseError);
+        console.error('Raw response:', content);
+        throw new Error('Failed to parse AI response');
       }
     });
 
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`AI suggestion failed: ${error.message}`);
-    }
-    throw new Error('AI suggestion failed');
+    console.error('Error generating gig suggestions:', error);
+    throw error;
   }
 }
 

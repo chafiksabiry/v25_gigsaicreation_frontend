@@ -6,6 +6,7 @@ import {
   GraduationCap, Award, Laptop, Shield, BookOpen
 } from 'lucide-react';
 import { GigData } from '../types';
+import Logo from './Logo';
 
 interface GigDetailsProps {
   data: GigData;
@@ -17,6 +18,11 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Logo */}
+      <div className="text-center py-8">
+        <Logo className="mb-6" />
+      </div>
+      
       {/* ... keep existing header and main content ... */}
 
       {/* Update the Skills Required section in the sidebar */}

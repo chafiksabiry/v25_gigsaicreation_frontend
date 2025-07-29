@@ -13,6 +13,7 @@ import {
 import { AIDialog } from "./AIDialog";
 import { Suggestions } from "./Suggestions";
 import { SectionContent } from "./SectionContent";
+import Logo from "./Logo";
 import type { GigData, GigSuggestion } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { mapGeneratedDataToGigData } from '../lib/ai';
@@ -24,7 +25,6 @@ const sections = [
   // { id: "leads", label: "Leads", icon: Target },
   { id: "skills", label: "Skills", icon: Brain },
   { id: "team", label: "Team", icon: Users },
-  { id: "docs", label: "Documentation", icon: FileText },
 ];
 
 const PrompAI: React.FC = () => {
@@ -37,6 +37,7 @@ const PrompAI: React.FC = () => {
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
   const [isManualMode, setIsManualMode] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [gigData, setGigData] = useState<GigData>({
     userId: Cookies.get('userId') || "",
     companyId: Cookies.get('companyId') || "",
@@ -109,14 +110,10 @@ const PrompAI: React.FC = () => {
       qualificationCriteria: []
     },
     skills: {
-      languages: [{
-        language: "French",
-        proficiency: "B1",
-        iso639_1: "fr"
-      }],
-      soft: [{ skill: "softSkillOid", level: 1 }],
-      professional: [{ skill: "professionalSkillOid", level: 1 }],
-      technical: [{ skill: "technicalSkillOid", level: 1 }]
+      languages: [],
+      soft: [],
+      professional: [],
+      technical: []
     },
     seniority: {
 
@@ -133,13 +130,7 @@ const PrompAI: React.FC = () => {
       },
       collaboration: []
     },
-    documentation: {
-      templates: null,
-      reference: null,
-      product: [],
-      process: [],
-      training: []
-    }
+
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -182,30 +173,33 @@ const PrompAI: React.FC = () => {
   const handleSectionChange = (sectionId: string) => {
     // Si onSectionChange est appelé avec 'suggestions', revenir aux suggestions
     if (sectionId === 'suggestions') {
-      // Préserver les suggestions confirmées pour pouvoir y revenir
+      // Si on est en mode manuel, revenir au mode AI
+      if (isManualMode) {
+        setIsManualMode(false);
+        setShowSuggestions(true);
+        return;
+      }
+      
+      // Si on a des suggestions confirmées, revenir aux suggestions
+      if (confirmedSuggestions) {
+        setShowSuggestions(true);
+        return;
+      }
+      
+      // Sinon, revenir à l'écran initial des suggestions
       setShowSuggestions(true);
-      setCurrentSection("basic");
-      
-      // Mettre à jour les suggestions confirmées avec les industries et activités actuelles
-      if (confirmedSuggestions && (gigData.industries || gigData.activities)) {
-        const updatedSuggestions = {
-          ...confirmedSuggestions,
-          industries: gigData.industries || confirmedSuggestions.industries,
-          activities: gigData.activities || confirmedSuggestions.activities
-        };
-        setConfirmedSuggestions(updatedSuggestions);
-      }
-      
-      // Préserver l'input original pour éviter la régénération
-      if (confirmedSuggestions && !input.trim()) {
-        // Si l'input est vide mais qu'on a des suggestions confirmées,
-        // on peut utiliser un placeholder ou garder l'input vide
-        // car les suggestions sont déjà chargées
-      }
       return;
     }
     
+    // Si onSectionChange est appelé avec 'review', afficher le review
+    if (sectionId === 'review') {
+      setShowReview(true);
+      return;
+    }
+    
+    // Pour les autres sections, mettre à jour la section courante et masquer le review
     setCurrentSection(sectionId);
+    setShowReview(false);
   };
 
   const handleGigDataChange = (newData: GigData) => {
@@ -240,7 +234,13 @@ const PrompAI: React.FC = () => {
       <div className="w-full h-full py-8 px-4 mx-auto max-w-5xl">
         <Suggestions
           input={input}
-          onBack={() => setShowSuggestions(false)}
+          onBack={() => {
+            setShowSuggestions(false);
+            // S'assurer que la section courante est définie quand on revient
+            if (confirmedSuggestions || isManualMode) {
+              setCurrentSection("basic");
+            }
+          }}
           onConfirm={handleConfirmSuggestions}
           initialSuggestions={confirmedSuggestions}
         />
@@ -249,57 +249,74 @@ const PrompAI: React.FC = () => {
   }
 
   if (confirmedSuggestions || isManualMode) {
+    // S'assurer que currentSection est valide
+    const validSections = sections.map(s => s.id);
+    const effectiveSection = validSections.includes(currentSection) ? currentSection : 'basic';
+    
+    // Si showReview est true, afficher directement le GigReview
+    if (showReview) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="w-full h-full py-8 px-4">
+            <div className="w-full max-w-3xl mx-auto mb-8">
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                <Logo className="mb-4" />
+              </div>
+            </div>
+            <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
+              <div>
+                <SectionContent
+                  section="review"
+                  data={gigData}
+                  onChange={handleGigDataChange}
+                  errors={{}}
+                  constants={predefinedOptions}
+                  onSectionChange={handleSectionChange}
+                  isAIMode={!!confirmedSuggestions}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className={
-          currentSection === 'review'
+          effectiveSection === 'review'
             ? 'w-full h-full py-8 px-4'
             : 'w-full h-full py-8 px-4 mx-auto max-w-5xl'
         }>
-          {/* Titre global en haut */}
-          {confirmedSuggestions && (
-            <div className="w-full max-w-3xl mx-auto mb-8">
-              {currentSection === 'review' ? (
-                <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
-                  <div className="mb-2">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                  <h1 className="text-2xl font-bold text-blue-700 mb-2">Final Review & Publication</h1>
-                  <p className="text-base text-gray-700 text-center max-w-xl">
-                    Review all the details of your gig before publishing. Make sure everything is accurate and complete. You can edit any section by clicking the "Edit" button next to each section.
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center mb-8">
-                  <div className="flex flex-col items-center justify-center mb-4">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                      AI-Powered Gig Creation
-                    </h1>
-                    <p className="text-base text-gray-700 text-center max-w-xl mt-2">
-                      Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Logo et Titre global en haut */}
+          <div className="w-full max-w-3xl mx-auto mb-8">
+            {confirmedSuggestions && (
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                <Logo className="mb-4" />
+              </div>
+            )}
+          </div>
 
-          {/* Header with back button for manual mode */}
+          {/* Header with back button and centered logo for manual mode */}
           {isManualMode && (
             <div className="mb-8">
-              <button
-                onClick={() => setIsManualMode(false)}
-                className="flex items-center text-blue-600 hover:text-blue-700 mb-6 transition-colors duration-200"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to AI Assistant
-              </button>
-              <div className="text-center">
-                <div className="flex items-center justify-center space-x-3 mb-3">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => setIsManualMode(false)}
+                  className="flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200 py-2"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to AI Assistant
+                </button>
+                <div className="flex-1 flex justify-center items-center">
+                  <Logo />
+                </div>
+                <div className="w-32"></div> {/* Spacer to balance the layout */}
+              </div>
+              <div className="text-center mt-2">
+                <div className="flex items-center justify-center space-x-3 mb-2">
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     Create Gig Manually
                   </h1>
@@ -311,22 +328,23 @@ const PrompAI: React.FC = () => {
 
           {/* Navigation and Section Content */}
           <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
+            
             {/* Navigation Tabs */}
-            {currentSection !== 'review' && (
+            {effectiveSection !== 'review' && (
               <nav className="border-b border-gray-200 bg-white px-4 py-3">
-                <div className="flex justify-start gap-2">
+                <div className="flex justify-center gap-2">
                   {sections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleSectionChange(section.id)}
                       className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200
-                        ${section.id === currentSection
+                        ${section.id === effectiveSection
                           ? "border-b-2 border-blue-600 text-blue-600"
                           : "text-gray-600 hover:text-blue-600 border-b-2 border-transparent"
                         }`}
                       style={{ outline: "none" }}
                     >
-                      <section.icon className={`w-5 h-5 ${section.id === currentSection ? 'text-blue-600' : 'text-gray-400'}`} />
+                      <section.icon className={`w-5 h-5 ${section.id === effectiveSection ? 'text-blue-600' : 'text-gray-400'}`} />
                       {section.label}
                     </button>
                   ))}
@@ -337,7 +355,7 @@ const PrompAI: React.FC = () => {
             {/* Section Content */}
             <div>
               <SectionContent
-                section={currentSection}
+                section={effectiveSection}
                 data={gigData}
                 onChange={handleGigDataChange}
                 errors={{}}
@@ -354,10 +372,11 @@ const PrompAI: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="w-full h-full py-16 px-4 mx-auto max-w-5xl">
+      <div className="w-full h-full py-6 px-4 mx-auto max-w-5xl">
         <div className="text-center mb-12">
+          <Logo className="mb-8" />
           <div className="flex items-center justify-center space-x-4 mb-6">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold text-black">
               Create with AI Assistance
             </h1>
           </div>
@@ -380,7 +399,7 @@ const PrompAI: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <button
                     type="button"
-                    onClick={() => setShowSuggestions(true)}
+                    onClick={() => setShowGuidance(!showGuidance)}
                     className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
                   >
                     <HelpCircle className="w-4 h-4 mr-1" />

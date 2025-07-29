@@ -11,7 +11,6 @@ import {
   Globe2,
   AlertCircle,
   Edit2,
-  Edit3,
   X,
   CheckCircle,
   ArrowRight,
@@ -26,7 +25,6 @@ import {
   Sunset,
   Moon,
   Calendar,
-  Search,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { GigSuggestion } from "../types";
@@ -45,11 +43,8 @@ import {
   getLanguageOptions,
   getActivityNameById,
   getIndustryNameById,
-  getLanguageNameById,
-  convertActivityNamesToIds,
-  convertIndustryNamesToIds,
-  convertLanguageNamesToIds
-} from '../lib/activitiesIndustries';
+  getLanguageNameById} from '../lib/activitiesIndustries';
+import Logo from "./Logo";
 
 type ScheduleEntry = {
   day: string;
@@ -3051,9 +3046,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={sector} value={sector}>{sector}</option>
           ))}
         </select>
-        <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all relevant sectors for this position
-        </p>
       </div>
     );
   };
@@ -3111,19 +3103,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
         {/* Badges sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(activityId => (
-            <span key={activityId} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {getActivityNameById(activityId)}
-              <button
-                type="button"
-                onClick={() => handleRemoveActivity(activityId)}
-                className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
+          {selected.map(activityId => {
+            const activityName = getActivityNameById(activityId);
+            return activityName ? (
+              <span key={activityId} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+                {activityName}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveActivity(activityId)}
+                  className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ) : null;
+          })}
         </div>
         {/* Select pour ajouter */}
         {activitiesLoading ? (
@@ -3143,9 +3138,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </select>
         )}
-        <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all relevant activities for this position
-        </p>
         {!activitiesLoading && activities.length === 0 && (
           <p className="text-xs text-red-500 italic text-center mt-2">
             ⚠️ No activities available. Please check API connection.
@@ -3208,19 +3200,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
         {/* Badges sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(industryId => (
-            <span key={industryId} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {getIndustryNameById(industryId)}
-              <button
-                type="button"
-                onClick={() => handleRemoveIndustry(industryId)}
-                className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
+          {selected.map(industryId => {
+            const industryName = getIndustryNameById(industryId);
+            return industryName ? (
+              <span key={industryId} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+                {industryName}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveIndustry(industryId)}
+                  className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ) : null;
+          })}
         </div>
         {/* Select pour ajouter */}
         {industriesLoading ? (
@@ -3240,9 +3235,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </select>
         )}
-        <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all relevant industries for this position
-        </p>
         {!industriesLoading && industries.length === 0 && (
           <p className="text-xs text-red-500 italic text-center mt-2">
             ⚠️ No industries available. Please check API connection.
@@ -5001,38 +4993,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="flex flex-col justify-center items-center h-screen from-slate-50 via-blue-50 to-indigo-50">
         <div className="text-center max-w-md">
-          <div className="inline-block mb-8">
-            <div className="flex items-center justify-center space-x-1 mb-6">
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
-                style={{ animationDelay: '0s' }}
-              >
-                H
-              </span>
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 animate-fade-in-scale"
-                style={{ animationDelay: '0.1s' }}
-              >
-                A
-              </span>
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 animate-fade-in-scale"
-                style={{ animationDelay: '0.2s' }}
-              >
-                R
-              </span>
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
-                style={{ animationDelay: '0.3s' }}
-              >
-                X
-              </span>
-            </div>
-            {/* Professional loading bar */}
-            <div className="relative h-1 w-48 mx-auto bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-professional-loading"></div>
-            </div>
-          </div>
+          <Logo className="mb-6" />
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
               Processing Your Request
@@ -5106,6 +5067,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <div className="w-full h-full">
           {/* AI Mode Title with HARX Logo */}
           <div className="text-center mb-8">
+            <Logo className="mb-6" />
             <div className="flex items-center justify-center space-x-3 mb-4">
               <h1 className="text-4xl font-bold text-center ...">AI-Powered Gig Creation</h1>
             </div>

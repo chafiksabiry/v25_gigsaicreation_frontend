@@ -109,20 +109,7 @@ export interface ParsedGig {
     }>;
     territories: string[];
   };
-  documentation?: {
-    product: Array<{
-      name: string;
-      url: string;
-    }>;
-    process: Array<{
-      name: string;
-      url: string;
-    }>;
-    training: Array<{
-      name: string;
-      url: string;
-    }>;
-  };
+
 }
 
 export interface Gig {
@@ -315,13 +302,7 @@ export interface GigData {
       metrics: any[];
     };
   };
-  documentation: {
-    templates: Record<string, any>;
-    reference: Record<string, any>;
-    product: Array<{ name: string; url: string; }>;
-    process: Array<{ name: string; url: string; }>;
-    training: Array<{ name: string; url: string; }>;
-  };
+
   compliance: {
     requirements: string[];
     certifications: string[];

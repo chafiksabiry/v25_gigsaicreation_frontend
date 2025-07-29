@@ -153,38 +153,27 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {predefinedOptions.commission.currencies.map((currency) => (
-              <button
-                key={currency.code}
-                onClick={() => onChange({ 
-                  ...data, 
-                  commission: { 
-                    ...data.commission,
-                    currency: currency.code
-                  } 
-                })}
-                className={`flex items-center gap-3 p-4 rounded-xl text-left transition-all duration-200 ${
-                  data?.commission?.currency === currency.code
-                    ? 'bg-green-100 text-green-700 border-2 border-green-300 shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-green-200 hover:shadow-sm'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                  data?.commission?.currency === currency.code
-                    ? 'bg-green-600 scale-110'
-                    : 'border-2 border-gray-300'
-                }`}>
-                  {data?.commission?.currency === currency.code && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                  )}
-                </div>
-                <div>
-                  <span className="font-medium">{currency.symbol}</span>
-                  <span className="text-sm text-gray-500 ml-2">{currency.name}</span>
-                </div>
-              </button>
-            ))}
+          {/* Other Currency Options */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">Other Currencies</label>
+            <select
+              value={data?.commission?.currency || ''}
+              onChange={(e) => onChange({ 
+                ...data, 
+                commission: { 
+                  ...data.commission,
+                  currency: e.target.value
+                } 
+              })}
+              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+            >
+              <option value="">Select a currency</option>
+              {predefinedOptions.commission.currencies.map((currency) => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.symbol} {currency.name} ({currency.code})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -242,18 +231,13 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">Target Amount</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                      {getCurrencySymbol()}
-                    </span>
-                    <input
-                      type="number"
-                      className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder="0.00"
-                      value={data?.commission?.minimumVolume?.amount || ''}
-                      onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="0.00"
+                    value={data?.commission?.minimumVolume?.amount || ''}
+                    onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
+                  />
                 </div>
                 
                 <div>

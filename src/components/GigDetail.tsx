@@ -5,6 +5,7 @@ import {
   ArrowLeft, Phone, Languages, TrendingUp, Check,
   ExternalLink
 } from 'lucide-react';
+import Logo from './Logo';
 
 interface GigDetailProps {
   gig: any;
@@ -50,6 +51,11 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
 
   return (
     <div className="w-full h-full py-8 px-4">
+      {/* Logo */}
+      <div className="text-center mb-8">
+        <Logo className="mb-6" />
+      </div>
+      
       {/* Header */}
       <div className="mb-8">
         <button
@@ -354,49 +360,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
             </div>
           )}
 
-          {/* Documentation */}
-          {gig?.gig_documentation && gig?.gig_documentation?.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">Documentation</h3>
-              </div>
-              <div className="space-y-4">
-                {['product', 'process', 'training'].map((type) => {
-                  const docs = gig?.gig_documentation?.filter((doc: any) => doc?.doc_type === type);
-                  if (!docs?.length) return null;
-                  return (
-                    <div key={type}>
-                      <h4 className="text-sm font-medium text-gray-500 capitalize mb-2">{type}</h4>
-                      <ul className="space-y-2">
-                        {docs?.map((doc: any, index: number) => (
-                          <li key={index}>
-                            {doc?.url ? (
-                              <a
-                                href={doc?.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-                              >
-                                <FileText className="w-4 h-4" />
-                                <span>{doc?.name}</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            ) : (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <FileText className="w-4 h-4" />
-                                <span>{doc?.name}</span>
-                              </div>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
     </div>

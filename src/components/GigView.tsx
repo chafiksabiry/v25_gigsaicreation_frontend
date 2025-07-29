@@ -3,6 +3,7 @@ import { getGig } from '../lib/api';
 import { GigDetails } from './GigDetails';
 import { Loader2 } from 'lucide-react';
 import { GigData } from '../types';
+import Logo from './Logo';
 
 interface GigViewProps {
   selectedGigId: string | null;
@@ -102,6 +103,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       bonus: gig.commission_bonus || '',
       bonusAmount: gig.commission_bonus_amount || '',
       structure: gig.commission_structure || '',
+      additionalDetails: gig.commission_structure || '',
       currency: gig.commission_currency || 'USD',
       minimumVolume: {
         amount: gig.minimum_volume_amount || '',
@@ -195,28 +197,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
         metrics: []
       }
     },
-    documentation: {
-      templates: {},
-      reference: {},
-      product: gig.gig_documentation
-        ?.filter((doc: any) => doc.doc_type === 'product')
-        .map((doc: any) => ({
-          name: doc.name,
-          url: doc.url
-        })) || [],
-      process: gig.gig_documentation
-        ?.filter((doc: any) => doc.doc_type === 'process')
-        .map((doc: any) => ({
-          name: doc.name,
-          url: doc.url
-        })) || [],
-      training: gig.gig_documentation
-        ?.filter((doc: any) => doc.doc_type === 'training')
-        .map((doc: any) => ({
-          name: doc.name,
-          url: doc.url
-        })) || []
-    },
+
     compliance: {
       requirements: [],
       certifications: [],
@@ -246,6 +227,11 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
 
   return (
     <div className="space-y-6">
+      {/* Logo */}
+      <div className="text-center mb-8">
+        <Logo className="mb-6" />
+      </div>
+      
       {gigs.map((gig) => (
         <div
           key={gig.id}

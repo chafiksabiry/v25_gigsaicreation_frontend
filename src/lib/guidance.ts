@@ -177,7 +177,7 @@ export const predefinedOptions = {
     ],
     minimumVolumeUnits: [
       'Calls',
-      'Conversions',
+      'Transactions',
       'Sales'
     ],
     minimumVolumePeriods: [
@@ -418,19 +418,5 @@ export const sectionGuidance = {
       'Define collaboration requirements'
     ]
   },
-  docs: {
-    title: 'Documentation',
-    steps: [
-      'List product documentation',
-      'Add process guides',
-      'Include training materials',
-      'Specify access requirements'
-    ],
-    tips: [
-      'Ensure all necessary resources are listed',
-      'Include both internal and external documentation',
-      'Specify any required certifications',
-      'Note documentation update frequency'
-    ]
-  }
+
 };

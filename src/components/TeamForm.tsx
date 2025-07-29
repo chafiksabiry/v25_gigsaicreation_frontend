@@ -7,7 +7,7 @@ interface TeamRole {
   count: number;
   seniority: {
     level: string;
-    yearsExperience: string;
+    yearsExperience: number;
   };
 }
 
@@ -48,7 +48,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
           count: 1,
           seniority: {
             level: 'Mid Level',
-            yearsExperience: ''
+            yearsExperience: 0
           }
         }
       ]

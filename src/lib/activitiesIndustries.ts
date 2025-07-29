@@ -90,7 +90,7 @@ export function getActivityById(id: string): Activity | undefined {
 
 export function getActivityNameById(id: string): string {
   const activity = activitiesCache.find(activity => activity._id === id);
-  return activity ? activity.name : 'Unknown Activity';
+  return activity ? activity.name : '';
 }
 
 export function convertActivityNamesToIds(names: string[]): string[] {
@@ -128,7 +128,7 @@ export function getIndustryById(id: string): Industry | undefined {
 
 export function getIndustryNameById(id: string): string {
   const industry = industriesCache.find(industry => industry._id === id);
-  return industry ? industry.name : 'Unknown Industry';
+  return industry ? industry.name : '';
 }
 
 export function convertIndustryNamesToIds(names: string[]): string[] {

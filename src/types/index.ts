@@ -208,13 +208,7 @@ export interface GigData {
     };
     qualificationCriteria: string[];
   };
-  documentation: {
-    templates: any;
-    reference: any;
-    product: Array<{ name: string; url: string }>;
-    process: Array<{ name: string; url: string }>;
-    training: Array<{ name: string; url: string }>;
-  };
+
 }
 
 export interface GigSuggestion {
