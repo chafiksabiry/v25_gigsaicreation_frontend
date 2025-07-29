@@ -294,21 +294,10 @@ const PrompAI: React.FC = () => {
         }>
           {/* Logo et Titre global en haut */}
           <div className="w-full max-w-3xl mx-auto mb-8">
-            {/* Logo removed to avoid duplication */}
             {confirmedSuggestions && (
-              <>
-                {effectiveSection === 'review' ? (
-                  <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
-                    <Logo className="mb-4" />
-                  </div>
-                ) : (
-                  <div className="text-center mb-8">
-                    <div className="flex flex-col items-center justify-center mb-4">
-                      {/* Title and instructions removed as per user request */}
-                    </div>
-                  </div>
-                )}
-              </>
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                <Logo className="mb-4" />
+              </div>
             )}
           </div>
 
