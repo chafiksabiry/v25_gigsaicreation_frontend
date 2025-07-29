@@ -1886,32 +1886,58 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
         
         const parsedResult = JSON.parse(jsonContent);
         
-        // Validate and fix activities
+        // Convert activity names to IDs
         if (parsedResult.activities && parsedResult.activities.length > 0) {
           const validActivities = activityNames;
-          parsedResult.activities = parsedResult.activities.filter((activity: string) => 
+          const validActivityIds = activityOptions.map(opt => opt.value);
+          
+          // Filter valid activities and convert names to IDs
+          const validActivityNames = parsedResult.activities.filter((activity: string) => 
             validActivities.includes(activity)
           );
           
+          // Convert names to IDs
+          const activityIds = validActivityNames.map((activityName: string) => {
+            const activityOption = activityOptions.find(opt => opt.label === activityName);
+            return activityOption ? activityOption.value : null;
+          }).filter((id: string | null): id is string => id !== null);
+          
+          parsedResult.activities = activityIds;
+          
           // If no valid activities found, add a default one from API
           if (parsedResult.activities.length === 0) {
-            parsedResult.activities = [activityNames[0] || 'Customer Service'];
-            console.log('⚠️ No valid activities found, using default from API:', parsedResult.activities[0]);
+            parsedResult.activities = [activityOptions[0]?.value || ''];
+            console.log('⚠️ No valid activities found, using default from API:', activityOptions[0]?.label);
           }
+          
+          console.log('🎯 Converted activity names to IDs:', validActivityNames, '→', parsedResult.activities);
         }
 
-                // Validate and fix industries
+                // Convert industry names to IDs
         if (parsedResult.industries && parsedResult.industries.length > 0) {
           const validIndustries = industryNames;
-          parsedResult.industries = parsedResult.industries.filter((industry: string) => 
+          const validIndustryIds = industryOptions.map(opt => opt.value);
+          
+          // Filter valid industries and convert names to IDs
+          const validIndustryNames = parsedResult.industries.filter((industry: string) => 
             validIndustries.includes(industry)
           );
           
+          // Convert names to IDs
+          const industryIds = validIndustryNames.map((industryName: string) => {
+            const industryOption = industryOptions.find(opt => opt.label === industryName);
+            return industryOption ? industryOption.value : null;
+          }).filter((id: string | null): id is string => id !== null);
+          
+          parsedResult.industries = industryIds;
+          
           // If no valid industries found, add a default one from API
           if (parsedResult.industries.length === 0) {
-            parsedResult.industries = [industryNames[0] || 'Technology'];
-            console.log('⚠️ No valid industries found, using default from API:', parsedResult.industries[0]);
+            parsedResult.industries = [industryOptions[0]?.value || ''];
+            console.log('⚠️ No valid industries found, using default from API:', industryOptions[0]?.label);
           }
+          
+          console.log('🎯 Converted industry names to IDs:', validIndustryNames, '→', parsedResult.industries);
         }
 
         // Validate and fix languages
