@@ -1884,9 +1884,64 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
             validActivities.includes(activity)
           );
           
-          // If no valid activities found, add a default one
+          // If no valid activities found, try to match based on description keywords
           if (parsedResult.activities.length === 0) {
-            parsedResult.activities = [activityNames[0] || 'Customer Service'];
+            const descriptionLower = description.toLowerCase();
+            const matchedActivities: string[] = [];
+            
+            // Keywords mapping for common activity mentions
+            const activityKeywords = {
+              'sales': ['Sales', 'Lead Generation', 'Account Management'],
+              'vendre': ['Sales', 'Lead Generation', 'Account Management'],
+              'vente': ['Sales', 'Lead Generation', 'Account Management'],
+              'customer service': ['Customer Service', 'Support', 'Help Desk'],
+              'support': ['Customer Service', 'Technical Support', 'Help Desk'],
+              'service client': ['Customer Service', 'Support', 'Help Desk'],
+              'technical': ['Technical Support', 'Product Support', 'Help Desk'],
+              'technique': ['Technical Support', 'Product Support', 'Help Desk'],
+              'marketing': ['Marketing', 'Lead Generation', 'Market Research'],
+              'appointment': ['Appointment Setting', 'Lead Generation'],
+              'rendez-vous': ['Appointment Setting', 'Lead Generation'],
+              'lead': ['Lead Generation', 'Sales', 'Account Management'],
+              'prospection': ['Lead Generation', 'Sales', 'Market Research'],
+              'survey': ['Survey Calls', 'Market Research'],
+              'sondage': ['Survey Calls', 'Market Research'],
+              'welcome': ['Welcome Calls', 'Customer Service'],
+              'bienvenue': ['Welcome Calls', 'Customer Service'],
+              'follow-up': ['Follow-up Calls', 'Customer Service'],
+              'suivi': ['Follow-up Calls', 'Customer Service'],
+              'complaint': ['Complaint Resolution', 'Customer Service'],
+              'plainte': ['Complaint Resolution', 'Customer Service'],
+              'billing': ['Billing Support', 'Customer Service'],
+              'facturation': ['Billing Support', 'Customer Service'],
+              'collections': ['Collections', 'Customer Service'],
+              'recouvrement': ['Collections', 'Customer Service'],
+              'dispatch': ['Dispatch Services', 'Customer Service'],
+              'emergency': ['Emergency Support', 'Customer Service'],
+              'urgence': ['Emergency Support', 'Customer Service'],
+              'multilingual': ['Multilingual Support', 'Customer Service'],
+              'multilingue': ['Multilingual Support', 'Customer Service']
+            };
+            
+            // Find matching activities based on keywords in description
+            for (const [keyword, possibleActivities] of Object.entries(activityKeywords)) {
+              if (descriptionLower.includes(keyword)) {
+                for (const activity of possibleActivities) {
+                  if (validActivities.includes(activity) && !matchedActivities.includes(activity)) {
+                    matchedActivities.push(activity);
+                  }
+                }
+              }
+            }
+            
+            // If we found matches, use them; otherwise use default
+            if (matchedActivities.length > 0) {
+              parsedResult.activities = matchedActivities.slice(0, 3); // Limit to 3 activities
+              console.log('🎯 Matched activities based on keywords:', parsedResult.activities);
+            } else {
+              parsedResult.activities = [activityNames[0] || 'Customer Service'];
+              console.log('⚠️ No activity matches found, using default:', parsedResult.activities[0]);
+            }
           }
         }
 
@@ -1897,9 +1952,54 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
             validIndustries.includes(industry)
           );
           
-          // If no valid industries found, add a default one
-          if (parsedResult.industries.length === 0) {
-            parsedResult.industries = [industryNames[0] || 'Technology'];
+                      // If no valid industries found, try to match based on description keywords
+            if (parsedResult.industries.length === 0) {
+              const descriptionLower = description.toLowerCase();
+              const matchedIndustries: string[] = [];
+            
+            // Keywords mapping for common industry mentions
+            const industryKeywords = {
+              'saas': ['Technology', 'Software', 'Information Technology'],
+              'b2b': ['Business Services', 'Professional Services', 'Technology'],
+              'education': ['Education', 'Training', 'Professional Services'],
+              'training': ['Education', 'Training', 'Professional Services'],
+              'healthcare': ['Healthcare', 'Medical', 'Pharmaceuticals'],
+              'finance': ['Financial Services', 'Banking', 'Insurance'],
+              'insurance': ['Insurance', 'Financial Services'],
+              'mutuelles': ['Insurance', 'Healthcare', 'Financial Services'],
+              'santé': ['Healthcare', 'Medical', 'Insurance'],
+              'retail': ['Retail / e-Commerce', 'Consumer Goods'],
+              'e-commerce': ['Retail / e-Commerce', 'Technology'],
+              'marketing': ['Marketing', 'Advertising', 'Professional Services'],
+              'sales': ['Sales', 'Business Services', 'Professional Services'],
+              'customer service': ['Customer Service', 'Professional Services'],
+              'support': ['Customer Service', 'Professional Services', 'Technology'],
+              'consulting': ['Professional Services', 'Business Services'],
+              'real estate': ['Real Estate', 'Property Management'],
+              'logistics': ['Logistics', 'Transportation', 'Supply Chain'],
+              'manufacturing': ['Manufacturing', 'Industrial'],
+              'energy': ['Energy', 'Utilities', 'Oil & Gas']
+            };
+            
+            // Find matching industries based on keywords in description
+            for (const [keyword, possibleIndustries] of Object.entries(industryKeywords)) {
+              if (descriptionLower.includes(keyword)) {
+                for (const industry of possibleIndustries) {
+                  if (validIndustries.includes(industry) && !matchedIndustries.includes(industry)) {
+                    matchedIndustries.push(industry);
+                  }
+                }
+              }
+            }
+            
+            // If we found matches, use them; otherwise use default
+            if (matchedIndustries.length > 0) {
+              parsedResult.industries = matchedIndustries.slice(0, 3); // Limit to 3 industries
+              console.log('🎯 Matched industries based on keywords:', parsedResult.industries);
+            } else {
+              parsedResult.industries = [industryNames[0] || 'Technology'];
+              console.log('⚠️ No industry matches found, using default:', parsedResult.industries[0]);
+            }
           }
         }
 
