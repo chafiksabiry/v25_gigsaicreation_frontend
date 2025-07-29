@@ -108,44 +108,34 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
   useEffect(() => {
     const fetchSkillsAndLanguages = async () => {
       try {
-        // Load languages from API
-        console.log('🔄 SkillsSection: Loading languages from API...');
         setLanguagesLoading(true);
-        const languagesData = await loadLanguages();
-        console.log('✅ SkillsSection: Languages loaded:', languagesData.length);
-        
+
+        // Load languages from API first to ensure cache is populated
+        await loadLanguages();
         const languageOptions = getLanguageOptions();
-        console.log('🌐 SkillsSection: Language options generated:', languageOptions.length);
-        if (languageOptions.length > 0) {
-          console.log('🌐 SkillsSection: Sample language options:', languageOptions.slice(0, 3));
-        }
         setLanguages(languageOptions);
         setLanguagesLoading(false);
 
         // Load professional skills from API
-        console.log('🔄 SkillsSection: Loading professional skills from API...');
         setLoadingSkills(prev => ({ ...prev, professional: true }));
         setErrorSkills(prev => ({ ...prev, professional: false }));
         const professionalSkillsData = await loadProfessionalSkills();
-        console.log('✅ SkillsSection: Professional skills loaded:', professionalSkillsData.length);
         setProfessionalSkills(professionalSkillsData);
         setLoadingSkills(prev => ({ ...prev, professional: false }));
 
         // Load soft skills from API
-        console.log('🔄 SkillsSection: Loading soft skills from API...');
+
         setLoadingSkills(prev => ({ ...prev, soft: true }));
         setErrorSkills(prev => ({ ...prev, soft: false }));
         const softSkillsData = await loadSoftSkills();
-        console.log('✅ SkillsSection: Soft skills loaded:', softSkillsData.length);
         setSoftSkills(softSkillsData);
         setLoadingSkills(prev => ({ ...prev, soft: false }));
 
         // Load technical skills from API
-        console.log('🔄 SkillsSection: Loading technical skills from API...');
+
         setLoadingSkills(prev => ({ ...prev, technical: true }));
         setErrorSkills(prev => ({ ...prev, technical: false }));
         const technicalSkillsData = await loadTechnicalSkills();
-        console.log('✅ SkillsSection: Technical skills loaded:', technicalSkillsData.length);
         setTechnicalSkills(technicalSkillsData);
         setLoadingSkills(prev => ({ ...prev, technical: false }));
       } catch (error) {
@@ -159,10 +149,37 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     fetchSkillsAndLanguages();
   }, []);
 
-  // Migrate skills to ObjectId format if needed
+  // Migrate skills and languages when data is loaded
+  useEffect(() => {
+    if (!languagesLoading && languages.length > 0) {
+      migrateSkillsToObjectIds();
+    }
+  }, [languagesLoading, languages.length]);
+
+  // Migrate skills and languages to ObjectId format if needed
   const migrateSkillsToObjectIds = () => {
     let needsUpdate = false;
     const migratedData = { ...safeData };
+    
+    // Migrate languages if needed
+    if (migratedData.languages && Array.isArray(migratedData.languages)) {
+      const migratedLanguages = migratedData.languages.map((lang: any) => {
+        // If language is stored as name instead of ID, convert it
+        if (lang.language && typeof lang.language === 'string') {
+          const foundLanguage = languages.find(l => l.label === lang.language);
+          if (foundLanguage) {
+            needsUpdate = true;
+            return {
+              ...lang,
+              language: foundLanguage.value, // Store the ID
+              iso639_1: foundLanguage.code
+            };
+          }
+        }
+        return lang;
+      });
+      migratedData.languages = migratedLanguages;
+    }
     
     ['soft', 'professional', 'technical'].forEach(type => {
       const skillArray = migratedData[type as keyof typeof migratedData];
@@ -212,10 +229,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
           // If skill is a string, convert to ObjectId format
           if (typeof skill === 'string') {
-            console.log(`🔄 Migrating string skill "${skill}" to ObjectId format`);
             const foundSkill = findSkillByName(skill, type);
             if (foundSkill) {
-              console.log(`✅ Found skill "${skill}" in database with ID: ${foundSkill._id}`);
               needsUpdate = true;
               return { 
                 skill: { $oid: foundSkill._id }, 
@@ -223,17 +238,14 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 details: foundSkill.description || 'Migrated from string'
               };
             } else {
-              console.log(`⚠️ Skill "${skill}" not found in database - removing`);
               return null; // Remove skills that don't exist in database
             }
           }
           
           // If skill.skill is a string, convert to ObjectId format
           if (skill && typeof skill.skill === 'string') {
-            console.log(`🔄 Migrating skill.skill string "${skill.skill}" to ObjectId format`);
             const foundSkill = findSkillByName(skill.skill, type);
             if (foundSkill) {
-              console.log(`✅ Found skill "${skill.skill}" in database with ID: ${foundSkill._id}`);
               needsUpdate = true;
               return { 
                 ...skill, 
@@ -241,7 +253,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 details: skill.details || foundSkill.description || 'Migrated from string'
               };
             } else {
-              console.log(`⚠️ Skill "${skill.skill}" not found in database - removing`);
               return null; // Remove skills that don't exist in database
             }
           }
@@ -253,7 +264,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     });
     
     if (needsUpdate) {
-      console.log('🔄 Migrating skills to ObjectId format');
       onChange(migratedData);
     }
   };
@@ -267,21 +277,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
   // Log Skills Section data
   React.useEffect(() => {
-    console.log('=== SKILLS SECTION DATA ===');
-    console.log('Skills Data:', {
-      languages: safeData.languages,
-      soft: safeData.soft,
-      professional: safeData.professional,
-      technical: safeData.technical,
-      certifications: safeData.certifications
-    });
-    console.log('API Skills:', {
-      professional: professionalSkills,
-      soft: softSkills,
-      technical: technicalSkills
-    });
-    console.log('Skills Errors:', errors);
-    console.log('========================');
+
+
   }, [safeData, errors, professionalSkills, softSkills, technicalSkills]);
 
   // State for editing
@@ -459,7 +456,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         };
       } else {
         // Don't update with skills that don't exist in the database
-        console.log(`❌ Skill not found in database during update: "${newSkill.language}". Skipping update.`);
         return; // Exit early without updating the skill
       }
     }
@@ -515,7 +511,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         }];
       } else {
         // Don't add skills that don't exist in the database
-        console.log(`❌ Skill not found in database: "${newSkill.language}". Skipping addition.`);
         return; // Exit early without adding the skill
       }
     }
@@ -536,6 +531,40 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     const skills = safeData[type as keyof typeof safeData] as any[];
     const isEditing = editingIndex?.type === type;
     const isAdding = addMode.type === type && addMode.active;
+    
+    // Filter out invalid skills (Unknown Language, Unknown Skill, etc.)
+    const validSkills = skills.filter((skill: any) => {
+      if (isLanguage) {
+        // For languages, check if the language name is valid
+        if (languagesLoading) return true; // Keep during loading
+        const languageName = getLanguageNameById(skill.language);
+        return languageName && languageName !== '';
+      } else {
+        // For other skills, check if the skill name is valid
+        let skillName = '';
+        if (typeof skill === 'string') {
+          if (type === 'soft') skillName = getSoftSkillNameById(skill);
+          else if (type === 'technical') skillName = getTechnicalSkillNameById(skill);
+          else if (type === 'professional') skillName = getProfessionalSkillNameById(skill);
+        } else if (skill.skill) {
+          if (typeof skill.skill === 'string') {
+            if (type === 'soft') skillName = getSoftSkillNameById(skill.skill);
+            else if (type === 'technical') skillName = getTechnicalSkillNameById(skill.skill);
+            else if (type === 'professional') skillName = getProfessionalSkillNameById(skill.skill);
+          } else if (typeof skill.skill === 'object' && skill.skill.$oid) {
+            if (type === 'soft') skillName = getSoftSkillNameById(skill.skill.$oid);
+            else if (type === 'technical') skillName = getTechnicalSkillNameById(skill.skill.$oid);
+            else if (type === 'professional') skillName = getProfessionalSkillNameById(skill.skill.$oid);
+          }
+        }
+        return skillName && skillName !== 'Unknown Skill';
+      }
+    });
+    
+    // Don't render the section if there are no valid skills and we're not adding/editing
+    if (validSkills.length === 0 && !isAdding && !isEditing) {
+      return null;
+    }
     
     // Get the appropriate skills array based on type
     let options: Array<{_id: string, name: string, description: string, category: string}> = [];
@@ -643,7 +672,7 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
         </div>
         {/* List */}
         <div className="mb-4 space-y-2">
-          {skills
+          {validSkills
             .map((skill, idx) => {
               let skillName = '';
               if (isLanguage) {
@@ -651,7 +680,25 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 if (languagesLoading) {
                   skillName = 'Loading...';
                 } else {
-                  skillName = getLanguageNameById(skill.language) || skill.language;
+
+                  // Try to find the language by ID first
+                  let languageName = getLanguageNameById(skill.language);
+                  
+                  // If not found by ID, try to find by name (fallback for old data)
+                  if (!languageName || languageName === '') {
+                    const foundLanguage = languages.find(l => l.label === skill.language);
+                    if (foundLanguage) {
+                      languageName = foundLanguage.label;
+                    } else {
+                      // If still not found, try to find by code or partial match
+                      const foundByCode = languages.find(l => l.code === skill.language);
+                      if (foundByCode) {
+                        languageName = foundByCode.label;
+                      }
+                    }
+                  }
+                  
+                  skillName = languageName || skill.language;
                 }
               } else {
                 if (typeof skill === 'string') {
@@ -686,7 +733,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   }
                 }
               }
-              if (!skillName) return null;
+              // Don't display skills with invalid names
+              if (!skillName || skillName === '' || skillName === 'Unknown Skill') return null;
               return (
                 <div
                   key={idx}
@@ -1098,10 +1146,8 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
                         // If skill is a string, convert to ObjectId format
                         if (typeof skill === 'string') {
-                          console.log(`🔄 Final migration: Converting string skill "${skill}" to ObjectId`);
                           const foundSkill = findSkillByName(skill, type);
                           if (foundSkill) {
-                            console.log(`✅ Final migration: Found skill "${skill}" with ID: ${foundSkill._id}`);
                             needsUpdate = true;
                             return { 
                               skill: { $oid: foundSkill._id }, 
@@ -1109,17 +1155,14 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                               details: foundSkill.description || 'Migrated from string'
                             };
                           } else {
-                            console.log(`⚠️ Final migration: Skill "${skill}" not found in database - removing`);
                             return null; // Remove skills that don't exist in database
                           }
                         }
                         
                         // If skill.skill is a string, convert to ObjectId format
                         if (skill && typeof skill.skill === 'string') {
-                          console.log(`🔄 Final migration: Converting skill.skill string "${skill.skill}" to ObjectId`);
                           const foundSkill = findSkillByName(skill.skill, type);
                           if (foundSkill) {
-                            console.log(`✅ Final migration: Found skill "${skill.skill}" with ID: ${foundSkill._id}`);
                             needsUpdate = true;
                             return { 
                               ...skill, 
@@ -1127,7 +1170,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                               details: skill.details || foundSkill.description || 'Migrated from string'
                             };
                           } else {
-                            console.log(`⚠️ Final migration: Skill "${skill.skill}" not found in database - removing`);
                             return null; // Remove skills that don't exist in database
                           }
                         }
@@ -1139,7 +1181,6 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                   });
                   
                   if (needsUpdate) {
-                    console.log('🔄 Final migration completed, updating data');
                     onChange(migratedData);
                   }
                 };
