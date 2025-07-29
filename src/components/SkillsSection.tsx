@@ -159,10 +159,39 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
     fetchSkillsAndLanguages();
   }, []);
 
-  // Migrate skills to ObjectId format if needed
+  // Migrate skills and languages when data is loaded
+  useEffect(() => {
+    if (!languagesLoading && languages.length > 0) {
+      console.log('🔄 SkillsSection: Languages loaded, checking for migration...');
+      migrateSkillsToObjectIds();
+    }
+  }, [languagesLoading, languages.length]);
+
+  // Migrate skills and languages to ObjectId format if needed
   const migrateSkillsToObjectIds = () => {
     let needsUpdate = false;
     const migratedData = { ...safeData };
+    
+    // Migrate languages if needed
+    if (migratedData.languages && Array.isArray(migratedData.languages)) {
+      const migratedLanguages = migratedData.languages.map((lang: any) => {
+        // If language is stored as name instead of ID, convert it
+        if (lang.language && typeof lang.language === 'string') {
+          const foundLanguage = languages.find(l => l.label === lang.language);
+          if (foundLanguage) {
+            console.log(`🔄 Migrating language "${lang.language}" to ID: ${foundLanguage.value}`);
+            needsUpdate = true;
+            return {
+              ...lang,
+              language: foundLanguage.value, // Store the ID
+              iso639_1: foundLanguage.code
+            };
+          }
+        }
+        return lang;
+      });
+      migratedData.languages = migratedLanguages;
+    }
     
     ['soft', 'professional', 'technical'].forEach(type => {
       const skillArray = migratedData[type as keyof typeof migratedData];
@@ -651,7 +680,30 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
                 if (languagesLoading) {
                   skillName = 'Loading...';
                 } else {
-                  skillName = getLanguageNameById(skill.language) || skill.language;
+                  // Debug: Log the language data to understand the issue
+                  console.log('🔍 SkillsSection: Language skill data:', {
+                    skill,
+                    languageValue: skill.language,
+                    languagesLoaded: languages.length,
+                    sampleLanguages: languages.slice(0, 3)
+                  });
+                  
+                  // Try to find the language by ID first
+                  let languageName = getLanguageNameById(skill.language);
+                  
+                  // If not found by ID, try to find by name (fallback for old data)
+                  if (!languageName || languageName === 'Unknown Language') {
+                    const foundLanguage = languages.find(l => l.label === skill.language);
+                    if (foundLanguage) {
+                      languageName = foundLanguage.label;
+                      console.log('🔄 SkillsSection: Found language by name, should migrate to ID:', {
+                        name: skill.language,
+                        id: foundLanguage.value
+                      });
+                    }
+                  }
+                  
+                  skillName = languageName || skill.language;
                 }
               } else {
                 if (typeof skill === 'string') {

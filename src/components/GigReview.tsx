@@ -26,7 +26,7 @@ import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { validateGigData } from "../lib/validation";
 import { groupSchedules } from "../lib/scheduleUtils";
-import { fetchAllTimezones, fetchCompanies } from '../lib/api';
+import { fetchAllTimezones, fetchCompanyById, fetchCountryName } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
 import { 
   getIndustryNameById,
@@ -63,6 +63,7 @@ export function GigReview({
   // State for timezones and companies
   const [timezoneMap, setTimezoneMap] = useState<{ [key: string]: string }>({});
   const [companyMap, setCompanyMap] = useState<{ [key: string]: string }>({});
+  const [countryName, setCountryName] = useState<string>('');
 
   // Load skills and languages from API
   useEffect(() => {
@@ -120,17 +121,45 @@ export function GigReview({
           setTimezoneMap(tzMap);
         }
       } catch (e) { /* ignore */ }
-      // Fetch companies
-      try {
-        const companies = await fetchCompanies();
-        if (companies && Array.isArray(companies)) {
-          const cMap: { [key: string]: string } = {};
-          companies.forEach((c: any) => {
-            cMap[c._id] = c.name || c._id;
-          });
-          setCompanyMap(cMap);
+      // Fetch company by ID if we have a companyId
+      if (data.companyId) {
+        try {
+          console.log('🔄 GigReview: Fetching company by ID:', data.companyId);
+          const company = await fetchCompanyById(data.companyId);
+          console.log('✅ GigReview: Company fetched:', company);
+          
+          if (company) {
+            const cMap: { [key: string]: string } = {};
+            cMap[company._id] = company.name || company._id;
+            console.log('🏢 GigReview: Company map created:', cMap);
+            setCompanyMap(cMap);
+          } else {
+            console.warn('⚠️ GigReview: No company data received');
+          }
+        } catch (e) { 
+          console.error('❌ GigReview: Error fetching company:', e);
         }
-      } catch (e) { /* ignore */ }
+      }
+      
+      // Fetch country name if we have a destination_zone
+      if (data.destination_zone) {
+        try {
+          console.log('🔄 GigReview: Fetching country name for zone:', data.destination_zone);
+          const countryResponse = await fetchCountryName(data.destination_zone);
+          console.log('✅ GigReview: Country response:', countryResponse);
+          
+          if (countryResponse.data) {
+            setCountryName(countryResponse.data);
+            console.log('🌍 GigReview: Country name set:', countryResponse.data);
+          } else {
+            console.warn('⚠️ GigReview: No country name received');
+            setCountryName(data.destination_zone); // Fallback to zone code
+          }
+        } catch (e) { 
+          console.error('❌ GigReview: Error fetching country name:', e);
+          setCountryName(data.destination_zone); // Fallback to zone code
+        }
+      }
     };
     fetchMeta();
   }, []);
@@ -141,7 +170,13 @@ export function GigReview({
   };
   // Helper to get company name
   const getCompanyName = (id: string) => {
-    return companyMap[id] || id;
+    console.log('🔍 GigReview: Getting company name for ID:', id);
+    console.log('🏢 GigReview: Company map:', companyMap);
+    
+    const companyName = companyMap[id] || id;
+    console.log('🏢 GigReview: Company name result:', companyName);
+    
+    return companyName;
   };
   // Helper to get skill name by id
   const getSkillName = (skill: any, category: 'soft' | 'professional' | 'technical') => {
@@ -329,7 +364,7 @@ export function GigReview({
 
   // Before return, define a variable for readable schedule time zones
   // Define a variable for the readable destination zone name
-  const destinationZoneName = getTimeZoneName(data.destination_zone);
+  const destinationZoneName = countryName || getTimeZoneName(data.destination_zone);
 
   return (
     <div className="min-h-screen w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
