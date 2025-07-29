@@ -3046,9 +3046,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={sector} value={sector}>{sector}</option>
           ))}
         </select>
-        <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all relevant sectors for this position
-        </p>
       </div>
     );
   };
@@ -3141,9 +3138,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </select>
         )}
-        <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all relevant activities for this position
-        </p>
         {!activitiesLoading && activities.length === 0 && (
           <p className="text-xs text-red-500 italic text-center mt-2">
             ⚠️ No activities available. Please check API connection.
@@ -3241,9 +3235,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </select>
         )}
-        <p className="text-xs text-gray-500 italic text-center mt-2">
-          Select all relevant industries for this position
-        </p>
         {!industriesLoading && industries.length === 0 && (
           <p className="text-xs text-red-500 italic text-center mt-2">
             ⚠️ No industries available. Please check API connection.
