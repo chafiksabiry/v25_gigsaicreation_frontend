@@ -9,6 +9,7 @@ import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
 
 import { GigReview } from "./GigReview";
+import { GigPreview } from "./GigPreview";
 import { validateGigData } from "../lib/validation";
 import { TimezoneCode } from "../lib/ai";
 import { DaySchedule } from "../lib/scheduleUtils";
@@ -126,7 +127,7 @@ export function SectionContent({
 
   const renderContent = () => {
     // Correction navigation : transformer 'documentation' en 'docs' si besoin
-    const effectiveSection = section as 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
+    const effectiveSection = section as 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'gigpreview' | 'review';
     switch (effectiveSection) {
       case "basic":
         return (
@@ -338,7 +339,47 @@ export function SectionContent({
           />
         );
 
-
+      case "gigpreview":
+        return (
+          <GigPreview
+            isOpen={true}
+            onClose={() => onSectionChange?.('team')}
+            data={{
+              ...initializedData,
+              seniority: {
+                ...initializedData.seniority,
+                yearsExperience: initializedData.seniority.yearsExperience
+              }
+            }}
+            onEdit={(section) => {
+              onSectionChange?.(section);
+            }}
+            isSubmitting={false}
+            skipValidation={false}
+            onSubmit={async () => {
+              console.log('Submitting gig data:', initializedData);
+              
+              try {
+                // Save gig data to API
+                const result = await saveGigData(initializedData);
+                
+                if (result.error) {
+                  console.error('Error saving gig:', result.error);
+                  return;
+                }
+                
+                if (result.data && result.data._id) {
+                  // Save lastGigId using the utility function
+                  setLastGigId(result.data._id);
+                  
+                  console.log('✅ Gig saved successfully with ID:', result.data._id);
+                }
+              } catch (error) {
+                console.error('Error in gig submission:', error);
+              }
+            }}
+          />
+        );
 
       case "review":
         return (

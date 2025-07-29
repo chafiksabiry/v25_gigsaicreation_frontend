@@ -32,7 +32,7 @@ interface TeamStructureProps {
   onNext?: () => void;
   onSave?: () => void;
   onAIAssist?: () => void;
-  onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team') => void;
+  onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'gigpreview') => void;
   currentSection: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team';
 }
 
