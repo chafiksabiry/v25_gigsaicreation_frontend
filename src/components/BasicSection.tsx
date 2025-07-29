@@ -66,6 +66,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onPrevious,
   onNext
 }) => {
+  console.log('🔍 BasicSection rendered with data:', data);
+  console.log('🔍 BasicSection errors:', errors);
+  console.log('🔍 Predefined options:', predefinedOptions.basic.seniorityLevels);
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedActivity, setSelectedActivity] = useState<string>('');
   const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
@@ -112,8 +115,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         console.log('✅ Successfully loaded all data from external API');
       } catch (error) {
         console.error('❌ Critical error loading data from API:', error);
-        // Show user-friendly error message
-        alert(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your internet connection and try again.`);
+        // Show user-friendly error message but don't block the UI
+        console.error(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your internet connection and try again.`);
+        // Set empty arrays to allow the form to work even without external data
+        setActivities([]);
+        setIndustries([]);
+        setIsDataLoaded(true);
       } finally {
         setIsLoading(false);
       }
@@ -283,6 +290,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} value - La nouvelle valeur
    */
   const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
+    console.log('🔍 handleSeniorityChange called:', field, value);
+    console.log('🔍 Available seniority levels:', predefinedOptions.basic.seniorityLevels);
+    
     const newData = { ...data };
     
     if (!newData.seniority) {
@@ -295,15 +305,19 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     if (field === 'level') {
       // Vérifier que le niveau est dans la liste prédéfinie
       if (!predefinedOptions.basic.seniorityLevels.includes(value)) {
+        console.log('❌ Level not in predefined list:', value);
         return; // Ignorer les niveaux non prédéfinis
       }
+      console.log('✅ Level accepted:', value);
       newData.seniority.level = value;
     } else if (field === 'years' || field === 'yearsExperience') {
       // Nettoyer la valeur pour n'avoir que des chiffres
       const cleanValue = value.replace(/[^0-9]/g, '');
       newData.seniority.yearsExperience = parseInt(cleanValue) || 0;
+      console.log('✅ Years experience updated:', newData.seniority.yearsExperience);
     }
 
+    console.log('🔍 Updated seniority data:', newData.seniority);
     onChange(newData);
   };
 
@@ -324,10 +338,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       callTypes: data.callTypes
     });
     console.log('Basic Errors:', errors);
+    console.log('🔍 Rendering Experience Level section...');
     console.log('========================');
   }, [data, errors]);
 
   // Le rendu du composant
+  console.log('🔍 BasicSection rendering content...');
   return (
     <div className="w-full bg-white py-6">
 
@@ -661,7 +677,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         </div>
 
         {/* --- Experience Level --- */}
-        {/* <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
+        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <GraduationCap className="w-5 h-5 text-emerald-600" />
@@ -702,7 +718,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               </p>
             </div>
           )}
-        </div> */}
+        </div>
       </div>
 
       {/* Navigation Buttons */}

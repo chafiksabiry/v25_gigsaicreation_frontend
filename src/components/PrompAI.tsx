@@ -37,6 +37,7 @@ const PrompAI: React.FC = () => {
     useState<GigSuggestion | null>(null);
   const [currentSection, setCurrentSection] = useState("basic");
   const [isManualMode, setIsManualMode] = useState(false);
+  const [showReview, setShowReview] = useState(false);
   const [gigData, setGigData] = useState<GigData>({
     userId: Cookies.get('userId') || "",
     companyId: Cookies.get('companyId') || "",
@@ -194,8 +195,15 @@ const PrompAI: React.FC = () => {
       return;
     }
     
-    // Pour les autres sections, mettre à jour la section courante
+    // Si onSectionChange est appelé avec 'review', afficher le review
+    if (sectionId === 'review') {
+      setShowReview(true);
+      return;
+    }
+    
+    // Pour les autres sections, mettre à jour la section courante et masquer le review
     setCurrentSection(sectionId);
+    setShowReview(false);
   };
 
   const handleGigDataChange = (newData: GigData) => {
@@ -249,6 +257,34 @@ const PrompAI: React.FC = () => {
     const validSections = sections.map(s => s.id);
     const effectiveSection = validSections.includes(currentSection) ? currentSection : 'basic';
     
+    // Si showReview est true, afficher directement le GigReview
+    if (showReview) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="w-full h-full py-8 px-4">
+            <div className="w-full max-w-3xl mx-auto mb-8">
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                <Logo className="mb-4" />
+              </div>
+            </div>
+            <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
+              <div>
+                <SectionContent
+                  section="review"
+                  data={gigData}
+                  onChange={handleGigDataChange}
+                  errors={{}}
+                  constants={predefinedOptions}
+                  onSectionChange={handleSectionChange}
+                  isAIMode={!!confirmedSuggestions}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className={
@@ -276,21 +312,26 @@ const PrompAI: React.FC = () => {
             )}
           </div>
 
-          {/* Header with back button for manual mode */}
+          {/* Header with back button and centered logo for manual mode */}
           {isManualMode && (
             <div className="mb-8">
-              <button
-                onClick={() => setIsManualMode(false)}
-                className="flex items-center text-blue-600 hover:text-blue-700 mb-6 transition-colors duration-200"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to AI Assistant
-              </button>
-              <div className="text-center">
-                <Logo className="mb-4" />
-                <div className="flex items-center justify-center space-x-3 mb-3">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => setIsManualMode(false)}
+                  className="flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200 py-2"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to AI Assistant
+                </button>
+                <div className="flex-1 flex justify-center items-center">
+                  <Logo />
+                </div>
+                <div className="w-32"></div> {/* Spacer to balance the layout */}
+              </div>
+              <div className="text-center mt-2">
+                <div className="flex items-center justify-center space-x-3 mb-2">
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     Create Gig Manually
                   </h1>
@@ -302,10 +343,6 @@ const PrompAI: React.FC = () => {
 
           {/* Navigation and Section Content */}
           <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
-            {/* Logo above navigation */}
-            <div className="text-center py-6 bg-white border-b border-gray-200">
-              <Logo className="mb-2" />
-            </div>
             
             {/* Navigation Tabs */}
             {effectiveSection !== 'review' && (

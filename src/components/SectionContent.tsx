@@ -4,19 +4,13 @@ import { SectionGuidance } from "./SectionGuidance";
 import BasicSection from "./BasicSection";
 import { ScheduleSection } from "./ScheduleSection";
 import { CommissionSection } from "./CommissionSection";
-import { LeadsSection } from "./LeadsSection";
 import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
 
 import { GigReview } from "./GigReview";
-import { GigPreview } from "./GigPreview";
-import { validateGigData } from "../lib/validation";
-import { TimezoneCode } from "../lib/ai";
 import { DaySchedule } from "../lib/scheduleUtils";
-import Cookies from 'js-cookie';
 import { saveGigData } from '../lib/api';
 import { setLastGigId } from '../lib/postMessageHandler';
-import Logo from "./Logo";
 
 interface SectionContentProps {
   section: string;
@@ -101,7 +95,6 @@ export function SectionContent({
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
-      aiGenerated: data.seniority?.aiGenerated,
     },
     skills: {
       professional: data.skills?.professional || [{
@@ -121,13 +114,14 @@ export function SectionContent({
         proficiency: "C1",
         iso639_1: "en"
       }],
-      certifications: data.skills?.certifications || []
+
+          certifications: []
     }
   }), [data]);
 
   const renderContent = () => {
     // Correction navigation : transformer 'documentation' en 'docs' si besoin
-    const effectiveSection = section as 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'gigpreview' | 'review';
+    const effectiveSection = section as 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
     switch (effectiveSection) {
       case "basic":
         return (
@@ -282,7 +276,13 @@ export function SectionContent({
       case "skills":
         return (
           <SkillsSection
-            data={initializedData.skills}
+            data={{
+              languages: initializedData.skills.languages,
+              soft: initializedData.skills.soft.map(s => ({ skill: { $oid: s.skill }, level: s.level, details: '' })),
+              professional: initializedData.skills.professional.map(s => ({ skill: { $oid: s.skill }, level: s.level, details: '' })),
+              technical: initializedData.skills.technical.map(s => ({ skill: { $oid: s.skill }, level: s.level, details: '' })),
+              certifications: []
+            }}
             onChange={(skillsData) => onChange({
               ...initializedData,
               seniority: {
@@ -334,52 +334,12 @@ export function SectionContent({
             onChange={onChange}
             errors={errors}
             onPrevious={() => onSectionChange?.('skills')}
-            onNext={() => onSectionChange?.('gigpreview')}
+            onNext={() => onSectionChange?.('review')}
             currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team'}
           />
         );
 
-      case "gigpreview":
-        return (
-          <GigPreview
-            isOpen={true}
-            onClose={() => onSectionChange?.('team')}
-            data={{
-              ...initializedData,
-              seniority: {
-                ...initializedData.seniority,
-                yearsExperience: initializedData.seniority.yearsExperience
-              }
-            }}
-            onEdit={(section) => {
-              onSectionChange?.(section);
-            }}
-            isSubmitting={false}
-            skipValidation={false}
-            onSubmit={async () => {
-              console.log('Submitting gig data:', initializedData);
-              
-              try {
-                // Save gig data to API
-                const result = await saveGigData(initializedData);
-                
-                if (result.error) {
-                  console.error('Error saving gig:', result.error);
-                  return;
-                }
-                
-                if (result.data && result.data._id) {
-                  // Save lastGigId using the utility function
-                  setLastGigId(result.data._id);
-                  
-                  console.log('✅ Gig saved successfully with ID:', result.data._id);
-                }
-              } catch (error) {
-                console.error('Error in gig submission:', error);
-              }
-            }}
-          />
-        );
+
 
       case "review":
         return (
@@ -396,7 +356,7 @@ export function SectionContent({
             }}
             isSubmitting={false}
             onBack={() => {
-              onSectionChange?.('docs');
+              onSectionChange?.('team');
             }}
             skipValidation={false}
             onSubmit={async () => {

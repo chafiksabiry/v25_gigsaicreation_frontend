@@ -223,9 +223,16 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
 
                 {/* Additional Details */}
                 {data?.commission?.additionalDetails && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Additional Details</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.additionalDetails}</p>
+                  <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-4">
+                    <h4 className="font-medium text-amber-800 mb-3">Additional Details</h4>
+                    <div className="bg-white p-4 rounded-lg border border-amber-100">
+                      <div className="flex items-start gap-3">
+                        <FileText className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{data?.commission?.additionalDetails}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
