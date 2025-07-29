@@ -333,7 +333,7 @@ export function SectionContent({
             onChange={onChange}
             errors={errors}
             onPrevious={() => onSectionChange?.('skills')}
-            onNext={() => onSectionChange?.('review')}
+            onNext={() => onSectionChange?.('gigpreview')}
             currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team'}
           />
         );
