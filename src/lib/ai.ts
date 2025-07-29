@@ -1243,7 +1243,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
   const skills = generatedData.skills || {};
   const languages = skills.languages || [];
   
-  // Ensure all language levels are valid
+  // Ensure all language levels are valid and convert names to ObjectIds
   const validatedLanguages = languages.map((lang: string | any) => {
     if (typeof lang === 'string') {
       // If it's a string like "English (Fluent)", extract the language and level
@@ -1289,6 +1289,16 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       iso639_1: 'en'
     }; // Default to empty language and A1 level if invalid
   });
+
+  // Convert language names to ObjectIds
+  const languageNames = validatedLanguages.map(lang => lang.language).filter(name => name);
+  const languageIds = convertLanguageNamesToIds(languageNames);
+  
+  // Update validatedLanguages with ObjectIds
+  const validatedLanguagesWithIds = validatedLanguages.map((lang, index) => ({
+    ...lang,
+    language: languageIds[index] || lang.language // Use ObjectId if available, fallback to original
+  }));
 
   // Validate soft skills - keep names for now, will be mapped to ObjectId later
   const validatedSoftSkills = (skills.soft || []).map((skill: string | any) => {
@@ -1505,7 +1515,7 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       kpis: []
     },
     skills: {
-      languages: validatedLanguages,
+      languages: validatedLanguagesWithIds,
       soft: validatedSoftSkills.map(skill => ({ skill: skill.skill, level: 1 })),
       professional: validatedProfessionalSkills.map(skill => ({ skill: skill.skill, level: 1 })),
       technical: validatedTechnicalSkills.map(skill => ({ skill: skill.skill, level: 1 }))

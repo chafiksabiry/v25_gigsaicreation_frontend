@@ -110,14 +110,10 @@ const PrompAI: React.FC = () => {
       qualificationCriteria: []
     },
     skills: {
-      languages: [{
-        language: "French",
-        proficiency: "B1",
-        iso639_1: "fr"
-      }],
-      soft: [{ skill: "softSkillOid", level: 1 }],
-      professional: [{ skill: "professionalSkillOid", level: 1 }],
-      technical: [{ skill: "technicalSkillOid", level: 1 }]
+      languages: [],
+      soft: [],
+      professional: [],
+      technical: []
     },
     seniority: {
 

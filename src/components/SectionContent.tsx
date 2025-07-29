@@ -109,11 +109,7 @@ export function SectionContent({
         skill: "Communication",
         level: 1
       }],
-      languages: data.skills?.languages || [{
-        language: "English",
-        proficiency: "C1",
-        iso639_1: "en"
-      }],
+      languages: data.skills?.languages || [],
 
           certifications: []
     }
