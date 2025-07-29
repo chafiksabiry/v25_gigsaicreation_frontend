@@ -4,15 +4,11 @@ import { SectionGuidance } from "./SectionGuidance";
 import BasicSection from "./BasicSection";
 import { ScheduleSection } from "./ScheduleSection";
 import { CommissionSection } from "./CommissionSection";
-import { LeadsSection } from "./LeadsSection";
 import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
-import { DocumentationSection } from "./DocumentationSection";
+
 import { GigReview } from "./GigReview";
-import { validateGigData } from "../lib/validation";
-import { TimezoneCode } from "../lib/ai";
 import { DaySchedule } from "../lib/scheduleUtils";
-import Cookies from 'js-cookie';
 import { saveGigData } from '../lib/api';
 import { setLastGigId } from '../lib/postMessageHandler';
 
@@ -99,7 +95,6 @@ export function SectionContent({
     seniority: {
       level: data.seniority?.level || '',
       yearsExperience: data.seniority?.yearsExperience || 0,
-      aiGenerated: data.seniority?.aiGenerated,
     },
     skills: {
       professional: data.skills?.professional || [{
@@ -114,18 +109,15 @@ export function SectionContent({
         skill: "Communication",
         level: 1
       }],
-      languages: data.skills?.languages || [{
-        language: "English",
-        proficiency: "C1",
-        iso639_1: "en"
-      }],
-      certifications: data.skills?.certifications || []
+      languages: data.skills?.languages || [],
+
+          certifications: []
     }
   }), [data]);
 
   const renderContent = () => {
     // Correction navigation : transformer 'documentation' en 'docs' si besoin
-    const effectiveSection = (section === 'documentation' ? 'docs' : section) as 'docs' | 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
+    const effectiveSection = section as 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
     switch (effectiveSection) {
       case "basic":
         return (
@@ -280,7 +272,13 @@ export function SectionContent({
       case "skills":
         return (
           <SkillsSection
-            data={initializedData.skills}
+            data={{
+              languages: initializedData.skills.languages,
+              soft: initializedData.skills.soft.map(s => ({ skill: { $oid: s.skill }, level: s.level, details: '' })),
+              professional: initializedData.skills.professional.map(s => ({ skill: { $oid: s.skill }, level: s.level, details: '' })),
+              technical: initializedData.skills.technical.map(s => ({ skill: { $oid: s.skill }, level: s.level, details: '' })),
+              certifications: []
+            }}
             onChange={(skillsData) => onChange({
               ...initializedData,
               seniority: {
@@ -332,31 +330,12 @@ export function SectionContent({
             onChange={onChange}
             errors={errors}
             onPrevious={() => onSectionChange?.('skills')}
-            onNext={() => onSectionChange?.('docs')}
-            currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs'}
+            onNext={() => onSectionChange?.('review')}
+            currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team'}
           />
         );
 
-      case "docs":
-        return (
-          <DocumentationSection
-            data={initializedData.documentation}
-            onChange={(newDocs) => onChange({
-              ...initializedData,
-              seniority: {
-                ...initializedData.seniority,
-                yearsExperience: initializedData.seniority.yearsExperience
-              },
-              documentation: newDocs
-            })}
-            onPrevious={() => onSectionChange?.('team')}
-            onNext={() => {}}
-            onReview={() => {
-              onSectionChange?.('review');
-            }}
-            isLastSection={true}
-          />
-        );
+
 
       case "review":
         return (
@@ -373,7 +352,7 @@ export function SectionContent({
             }}
             isSubmitting={false}
             onBack={() => {
-              onSectionChange?.('docs');
+              onSectionChange?.('team');
             }}
             skipValidation={false}
             onSubmit={async () => {

@@ -110,18 +110,7 @@ export function validateGigData(data: GigData): ValidationResult {
     warnings.skills = [...(warnings.skills || []), 'Consider adding professional skills requirements'];
   }
 
-  // Documentation
-  const hasDocumentation = data.documentation && (
-    (data.documentation.product && data.documentation.product.length > 0) ||
-    (data.documentation.process && data.documentation.process.length > 0) ||
-    (data.documentation.training && data.documentation.training.length > 0) ||
-    (data.documentation.templates && Object.keys(data.documentation.templates).length > 0) ||
-    (data.documentation.reference && Object.keys(data.documentation.reference).length > 0)
-  );
-  
-  if (!hasDocumentation) {
-    warnings.documentation = [...(warnings.documentation || []), 'Consider adding relevant documentation'];
-  }
+
 
   return {
     isValid: true, // Always valid since nothing is required

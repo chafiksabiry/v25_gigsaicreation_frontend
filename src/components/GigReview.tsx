@@ -25,14 +25,10 @@ import {
 import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { validateGigData } from "../lib/validation";
-import { saveGigData } from '../lib/api';
 import { groupSchedules } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchCompanies } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
 import { 
-  loadActivities, 
-  loadIndustries, 
-  getActivityNameById,
   getIndustryNameById,
   loadLanguages,
   getLanguageNameById
@@ -56,8 +52,6 @@ export function GigReview({
   skipValidation = false,
 }: GigReviewProps) {
   const validation = skipValidation ? { isValid: true, errors: {}, warnings: {} } : validateGigData(data);
-  const hasErrors = Object.keys(validation.errors).length > 0;
-  const hasWarnings = Object.keys(validation.warnings).length > 0;
 
   // State for skills data
   const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
@@ -332,30 +326,15 @@ export function GigReview({
     </div>
   );
 
-  const renderMetricCard = (icon: React.ReactNode, title: string, value: string | number, subtitle: string, color: string) => (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/20 hover:shadow-xl hover:scale-105 transition-all duration-300">
-      <div className="flex items-center gap-4 mb-4">
-        <div className={`p-3 rounded-xl ${color}`}>
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] text-base">{title}</h3>
-          <p className="text-gray-600 text-sm">{subtitle}</p>
-        </div>
-      </div>
-      <div className="text-2xl font-bold text-gray-900 mb-2">{value}</div>
-    </div>
-  );
 
   // Before return, define a variable for readable schedule time zones
-  const scheduleTimeZoneNames = (data.schedule?.timeZones || []).map((zone) => getTimeZoneName(zone));
   // Define a variable for the readable destination zone name
   const destinationZoneName = getTimeZoneName(data.destination_zone);
 
   return (
     <div className="min-h-screen w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
       <div className="w-full h-full px-8 py-6 max-w-7xl mx-auto">
-        
+  
         {/* Page Header with Title and Description */}
         <div className="mb-8">
           
@@ -439,11 +418,14 @@ export function GigReview({
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {data.industries.map((industry, index) => (
-                            <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
-                              {getIndustryNameById(industry)}
-                            </span>
-                          ))}
+                          {data.industries.map((industry, index) => {
+                            const industryName = getIndustryNameById(industry);
+                            return industryName ? (
+                              <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
+                                {industryName}
+                              </span>
+                            ) : null;
+                          })}
                         </div>
                       </div>
                     </div>
@@ -525,25 +507,6 @@ export function GigReview({
                   </div>
                 )}
 
-                {/* Performance Bonus */}
-                {data.commission.bonus && data.commission.bonusAmount && (
-                  <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
-                      <Star className="w-6 h-6 text-[#764ba2]" />
-                      Performance Bonus
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {getCurrencySymbol()}
-                        {data.commission.bonusAmount}
-                      </div>
-                      <div className="text-gray-700 text-lg">
-                        {data.commission.bonus}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Transaction Commission */}
                 {data.commission.transactionCommission?.type && (
                   <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
@@ -568,17 +531,30 @@ export function GigReview({
                   </div>
                 )}
 
-                {/* Additional Details */}
-                {data.commission.structure && (
-                  <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-xl p-6 border border-[#667eea]/20">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4">
-                      Additional Commission Details
+                {/* Performance Bonus */}
+                {data.commission.bonus && data.commission.bonusAmount && (
+                  <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
+                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
+                      <Star className="w-6 h-6 text-[#764ba2]" />
+                      Performance Bonus
                     </h3>
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-lg">
-                        {data.commission.structure}
-                      </p>
+                      <div className="text-3xl font-bold text-gray-900 mb-3">
+                        {getCurrencySymbol()}
+                        {data.commission.bonusAmount}
+                      </div>
+                      <div className="text-gray-700 text-lg">
+                        {data.commission.bonus}
+                      </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Additional Details */}
+                {data?.commission?.additionalDetails && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Additional Details</h4>
+                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.additionalDetails}</p>
                   </div>
                 )}
               </div>
@@ -675,29 +651,6 @@ export function GigReview({
               "skills",
               <Brain className="w-6 h-6 text-gray-600" />,
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-r from-[#667eea]/10 to-[#667eea]/20 rounded-lg p-4 text-center border border-[#667eea]/30">
-                    <Laptop className="w-8 h-8 text-[#667eea] mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.technical?.length || 0}</div>
-                    <div className="text-sm text-gray-600 font-semibold">Technical Skills</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-lg p-4 text-center border border-[#764ba2]/30">
-                    <Heart className="w-8 h-8 text-[#764ba2] mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.soft?.length || 0}</div>
-                    <div className="text-sm text-gray-600 font-semibold">Soft Skills</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-lg p-4 text-center border border-[#f093fb]/30">
-                    <Briefcase className="w-8 h-8 text-[#f093fb] mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.professional?.length || 0}</div>
-                    <div className="text-sm text-gray-600 font-semibold">Professional Skills</div>
-                  </div>
-                  <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-4 text-center border border-[#667eea]/30">
-                    <Award className="w-8 h-8 text-[#667eea] mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{data.skills?.technical?.length || 0}</div>
-                    <div className="text-sm text-gray-600 font-semibold">Technical Skills</div>
-                  </div>
-                </div>
-                
                 <div className="space-y-4">
                   <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
                     <div className="flex items-center justify-between mb-2">
@@ -814,101 +767,7 @@ export function GigReview({
               </div>
             )}
 
-            {/* Enhanced Documentation */}
-            {data.documentation && (
-              (Array.isArray(data.documentation.product) && data.documentation.product.length > 0) ||
-              (Array.isArray(data.documentation.process) && data.documentation.process.length > 0) ||
-              (Array.isArray(data.documentation.training) && data.documentation.training.length > 0)
-            ) ? renderEditableSection(
-              "Documentation",
-              "documentation",
-              <FileText className="w-6 h-6 text-gray-600" />, 
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-6 border border-[#667eea]/30">
-                  <div className="flex items-center gap-3 mb-3">
-                    <CheckSquare className="w-6 h-6 text-[#667eea]" />
-                    <span className="font-bold text-[#667eea] text-lg">Documentation Complete</span>
-                  </div>
-                  <p className="text-gray-700 text-base">
-                    All required documentation has been uploaded and verified successfully.
-                  </p>
-                  {/* Liste des documents */}
-                  <div className="mt-6 space-y-4">
-                    {(['product', 'process', 'training'] as const).map((type) => {
-                      const docs = data.documentation[type as 'product' | 'process' | 'training'];
-                      if (!docs.length) return null;
-                      return (
-                        <div key={type}>
-                          <h4 className="text-sm font-medium text-gray-700 capitalize mb-2">{type}</h4>
-                          <ul className="space-y-2">
-                            {docs.map((doc, idx) => (
-                              <li key={idx}>
-                                {doc.url ? (
-                                  <a
-                                    href={doc.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-                                  >
-                                    <FileText className="w-4 h-4" />
-                                    <span className="flex-1">{doc.name}</span>
-                                  </a>
-                                ) : (
-                                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <FileText className="w-4 h-4" />
-                                    <span className="flex-1">{doc.name}</span>
-                                  </div>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
-                  <h4 className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-2">Documentation Status</h4>
-                  <div className="space-y-2">
-                    {Array.isArray(data.documentation.product) && data.documentation.product.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-[#667eea]" />
-                        <span className="text-gray-700">Identity verification</span>
-                      </div>
-                    )}
-                    {Array.isArray(data.documentation.process) && data.documentation.process.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-[#667eea]" />
-                        <span className="text-gray-700">Professional credentials</span>
-                      </div>
-                    )}
-                    {Array.isArray(data.documentation.training) && data.documentation.training.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-[#667eea]" />
-                        <span className="text-gray-700">Portfolio materials</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              renderEditableSection(
-                "Documentation",
-                "documentation",
-                <FileText className="w-6 h-6 text-gray-600" />,
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-6 border border-[#667eea]/30">
-                    <div className="flex items-center gap-3 mb-3">
-                      <FileText className="w-6 h-6 text-[#667eea]" />
-                      <span className="font-bold text-[#667eea] text-lg">No documentation uploaded yet.</span>
-                    </div>
-                    <p className="text-gray-700 text-base">
-                      Please upload at least one document to complete this section.
-                    </p>
-                  </div>
-                </div>
-              )
-            )}
+
           </div>
         </div>
       </div>
