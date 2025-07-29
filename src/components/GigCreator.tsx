@@ -26,7 +26,6 @@ const sections = [
   // { id: "leads", label: "Leads", icon: Target },
   { id: "skills", label: "Skills", icon: Brain },
   { id: "team", label: "Team", icon: Users },
-  { id: "docs", label: "Documentation", icon: FileText },
 ];
 
 const initialGigData: GigData = {
@@ -416,7 +415,8 @@ export function GigCreator({ children }: GigCreatorProps) {
           transactionCommission: {
             type: gigData.commission.transactionCommission.type,
             amount: gigData.commission.transactionCommission.amount
-          }
+          },
+          structure: gigData.commission.additionalDetails
         },
         leads: {
           types: gigData.leads.types,

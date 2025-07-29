@@ -1,9 +1,10 @@
 import React from 'react';
-import { AlertCircle, CheckCircle, DollarSign, Users, Globe2, Brain, Target, FileText, ArrowRight, Star, TrendingUp, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, DollarSign, Users, Globe2, Brain, Target, FileText, ArrowRight, Star, TrendingUp, Clock, Coins } from 'lucide-react';
 import { Dialog } from './Dialog';
 import { GigData } from '../types';
 import { predefinedOptions } from '../lib/guidance';
 import { validateGigData } from '../lib/validation';
+import Logo from './Logo';
 
 interface GigPreviewProps {
   isOpen: boolean;
@@ -188,6 +189,22 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                   </div>
                 </div>
 
+                {/* Transaction Commission */}
+                {data?.commission?.transactionCommission?.type && (
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4">
+                    <h4 className="font-medium text-purple-800 mb-3">Transaction Commission</h4>
+                    <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-purple-100">
+                      <div>
+                        <div className="text-sm text-gray-600">{data?.commission?.transactionCommission?.type}</div>
+                        <div className="text-2xl font-bold text-gray-900 mt-1">
+                          {getCurrencySymbol()}{data?.commission?.transactionCommission?.amount || '0'}
+                        </div>
+                      </div>
+                      <Coins className="w-5 h-5 text-purple-600" />
+                    </div>
+                  </div>
+                )}
+
                 {/* Performance Bonus */}
                 {data?.commission?.bonus && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
@@ -205,10 +222,10 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
                 )}
 
                 {/* Additional Details */}
-                {data?.commission?.structure && (
+                {data?.commission?.additionalDetails && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Additional Details</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.structure}</p>
+                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.additionalDetails}</p>
                   </div>
                 )}
               </div>
@@ -289,42 +306,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
               </div>
             </div>
 
-            {/* Documentation */}
-            {Object.values(data.documentation).some(docs => docs.length > 0) && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Documentation</h3>
-                </div>
 
-                <div className="space-y-4">
-                  {Object.entries(data.documentation).map(([type, docs]) => {
-                    if (docs.length === 0) return null;
-                    return (
-                      <div key={type}>
-                        <h4 className="text-sm font-medium text-gray-700 capitalize mb-2">{type}</h4>
-                        <ul className="space-y-2">
-                          {docs.map((doc: { name: string; url: string }, index: number) => (
-                            <li key={index}>
-                              <a
-                                href={doc.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-                              >
-                                <FileText className="w-4 h-4" />
-                                <span className="flex-1">{doc.name}</span>
-                                <ArrowRight className="w-3 h-3" />
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

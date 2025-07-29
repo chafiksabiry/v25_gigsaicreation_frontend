@@ -7,7 +7,7 @@ import { CommissionSection } from "./CommissionSection";
 import { LeadsSection } from "./LeadsSection";
 import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
-import { DocumentationSection } from "./DocumentationSection";
+
 import { GigReview } from "./GigReview";
 import { validateGigData } from "../lib/validation";
 import { TimezoneCode } from "../lib/ai";
@@ -15,6 +15,7 @@ import { DaySchedule } from "../lib/scheduleUtils";
 import Cookies from 'js-cookie';
 import { saveGigData } from '../lib/api';
 import { setLastGigId } from '../lib/postMessageHandler';
+import Logo from "./Logo";
 
 interface SectionContentProps {
   section: string;
@@ -125,7 +126,7 @@ export function SectionContent({
 
   const renderContent = () => {
     // Correction navigation : transformer 'documentation' en 'docs' si besoin
-    const effectiveSection = (section === 'documentation' ? 'docs' : section) as 'docs' | 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
+    const effectiveSection = section as 'basic' | 'schedule' | 'commission' | 'skills' | 'team' | 'leads' | 'review';
     switch (effectiveSection) {
       case "basic":
         return (
@@ -332,31 +333,12 @@ export function SectionContent({
             onChange={onChange}
             errors={errors}
             onPrevious={() => onSectionChange?.('skills')}
-            onNext={() => onSectionChange?.('docs')}
-            currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs'}
+            onNext={() => onSectionChange?.('review')}
+            currentSection={section as 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team'}
           />
         );
 
-      case "docs":
-        return (
-          <DocumentationSection
-            data={initializedData.documentation}
-            onChange={(newDocs) => onChange({
-              ...initializedData,
-              seniority: {
-                ...initializedData.seniority,
-                yearsExperience: initializedData.seniority.yearsExperience
-              },
-              documentation: newDocs
-            })}
-            onPrevious={() => onSectionChange?.('team')}
-            onNext={() => {}}
-            onReview={() => {
-              onSectionChange?.('review');
-            }}
-            isLastSection={true}
-          />
-        );
+
 
       case "review":
         return (

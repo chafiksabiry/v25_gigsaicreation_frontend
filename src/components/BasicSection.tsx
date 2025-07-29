@@ -655,7 +655,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         </div>
 
         {/* --- Experience Level --- */}
-        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
+        {/* <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <GraduationCap className="w-5 h-5 text-emerald-600" />
@@ -696,7 +696,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               </p>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Navigation Buttons */}

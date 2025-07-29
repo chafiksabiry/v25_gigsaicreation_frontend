@@ -11,7 +11,6 @@ import {
   Globe2,
   AlertCircle,
   Edit2,
-  Edit3,
   X,
   CheckCircle,
   ArrowRight,
@@ -26,7 +25,6 @@ import {
   Sunset,
   Moon,
   Calendar,
-  Search,
 } from "lucide-react";
 import OpenAI from "openai";
 import type { GigSuggestion } from "../types";
@@ -45,11 +43,8 @@ import {
   getLanguageOptions,
   getActivityNameById,
   getIndustryNameById,
-  getLanguageNameById,
-  convertActivityNamesToIds,
-  convertIndustryNamesToIds,
-  convertLanguageNamesToIds
-} from '../lib/activitiesIndustries';
+  getLanguageNameById} from '../lib/activitiesIndustries';
+import Logo from "./Logo";
 
 type ScheduleEntry = {
   day: string;
@@ -5001,38 +4996,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="flex flex-col justify-center items-center h-screen from-slate-50 via-blue-50 to-indigo-50">
         <div className="text-center max-w-md">
-          <div className="inline-block mb-8">
-            <div className="flex items-center justify-center space-x-1 mb-6">
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
-                style={{ animationDelay: '0s' }}
-              >
-                H
-              </span>
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 animate-fade-in-scale"
-                style={{ animationDelay: '0.1s' }}
-              >
-                A
-              </span>
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 animate-fade-in-scale"
-                style={{ animationDelay: '0.2s' }}
-              >
-                R
-              </span>
-              <span
-                className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animate-fade-in-scale"
-                style={{ animationDelay: '0.3s' }}
-              >
-                X
-              </span>
-            </div>
-            {/* Professional loading bar */}
-            <div className="relative h-1 w-48 mx-auto bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-professional-loading"></div>
-            </div>
-          </div>
+          <Logo className="mb-6" />
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
               Processing Your Request
@@ -5106,6 +5070,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <div className="w-full h-full">
           {/* AI Mode Title with HARX Logo */}
           <div className="text-center mb-8">
+            <Logo className="mb-6" />
             <div className="flex items-center justify-center space-x-3 mb-4">
               <h1 className="text-4xl font-bold text-center ...">AI-Powered Gig Creation</h1>
             </div>

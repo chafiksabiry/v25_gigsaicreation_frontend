@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import Logo from './Logo';
 import type { ParsedGig } from '../lib/types';
 
 interface GigFormProps {
@@ -99,13 +100,7 @@ type GigFormData = {
     territories: string[];
   };
   prerequisites: string[];
-  documentation: {
-    templates: {};
-    reference: {};
-    product: string[];
-    process: string[];
-    training: string[];
-  };
+
 };
 
 interface GigData {
@@ -118,6 +113,15 @@ interface GigData {
   callTypes: string[];
   highlights: any[];
   industries: string[];
+  activities: string[];
+  activity: {
+    options: Array<{
+      type: string;
+      description: string;
+      requirements: string[];
+    }>;
+  };
+  status?: 'to_activate' | 'active' | 'inactive' | 'archived';
   requirements: {
     essential: any[];
     preferred: any[];
@@ -158,25 +162,25 @@ interface GigData {
   };
   commission: {
     base: string;
-    baseAmount: string;
+    baseAmount: number;
     bonus: string;
-    bonusAmount: string;
+    bonusAmount: number;
     structure: string;
     currency: string;
     minimumVolume: {
-      amount: string;
+      amount: number;
       period: string;
       unit: string;
     };
     transactionCommission: {
       type: string;
-      amount: string;
+      amount: number;
     };
     kpis: any[];
   };
   leads: {
     types: {
-      type: string;
+      type: 'hot' | 'warm' | 'cold';
       percentage: number;
       description: string;
     }[];
@@ -228,13 +232,7 @@ interface GigData {
     };
     collaboration: any[];
   };
-  documentation: {
-    templates: Record<string, any>;
-    reference: Record<string, any>;
-    product: { name: string; url: string; }[];
-    process: { name: string; url: string; }[];
-    training: { name: string; url: string; }[];
-  };
+
   tools: {
     provided: any[];
     required: any[];
@@ -289,6 +287,10 @@ export function GigForm() {
         callTypes: data.callTypes,
         highlights: [],
         industries: [],
+        activities: [],
+        activity: {
+          options: []
+        },
         status: 'to_activate',
         requirements: {
           essential: [],
@@ -306,6 +308,7 @@ export function GigForm() {
             }
           ],
           timeZones: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones : (data.schedule?.timeZones ? [data.schedule.timeZones] : []),
+          time_zone: Array.isArray(data.schedule?.timeZones) ? data.schedule.timeZones[0] || "" : (data.schedule?.timeZones || ""),
           flexibility: Array.isArray(data.schedule?.flexibility) ? data.schedule.flexibility : (data.schedule?.flexibility ? [data.schedule.flexibility] : []),
           minimumHours: {
             daily: undefined,
@@ -333,19 +336,19 @@ export function GigForm() {
         },
         commission: {
           base: data.commission.base,
-          baseAmount: data.commission.baseAmount,
+          baseAmount: parseFloat(data.commission.baseAmount) || 0,
           bonus: data.commission.bonus,
-          bonusAmount: data.commission.bonusAmount,
+          bonusAmount: parseFloat(data.commission.bonusAmount) || 0,
           structure: data.commission.structure,
           currency: "USD",
           minimumVolume: {
-            amount: "",
+            amount: 0,
             period: "",
             unit: ""
           },
           transactionCommission: {
             type: "",
-            amount: ""
+            amount: 0
           },
           kpis: []
         },
@@ -395,13 +398,7 @@ export function GigForm() {
           },
           collaboration: []
         },
-        documentation: {
-          templates: {},
-          reference: {},
-          product: (data.documentation?.product || []).map(name => ({ name, url: "" })),
-          process: (data.documentation?.process || []).map(name => ({ name, url: "" })),
-          training: (data.documentation?.training || []).map(name => ({ name, url: "" }))
-        },
+
         tools: {
           provided: [],
           required: []
@@ -483,30 +480,7 @@ export function GigForm() {
       });
       if (!leadsResponse.data) throw new Error('Failed to save leads');
 
-      // Insert documentation
-      const docsPromises = [
-        ...(data.documentation?.product || []).map(doc => ({
-          gig_id: gig.id,
-          type: 'product',
-          name: doc,
-          url: ""
-        })),
-        ...(data.documentation?.process || []).map(doc => ({
-          gig_id: gig.id,
-          type: 'process',
-          name: doc,
-          url: ""
-        })),
-        ...(data.documentation?.training || []).map(doc => ({
-          gig_id: gig.id,
-          type: 'training',
-          name: doc,
-          url: ""
-        }))
-      ];
 
-      const docsResponse = await axios.post(`${API_URL}/gig_documentation`, docsPromises);
-      if (!docsResponse.data) throw new Error('Failed to save documentation');
 
       const confirmed = window.confirm('Gig created successfully! Click OK to continue or Cancel to stay on this page.');
       if (confirmed) {
@@ -527,102 +501,107 @@ export function GigForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full py-8 px-4">
-      <div className="space-y-8">
-        {/* Basic Information */}
-        <section className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-4">Basic Information</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                type="text"
-                {...register('title', { required: true })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea
-                {...register('description', { required: true })}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Schedule */}
-        <section className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-4">
-            <Calendar className="w-6 h-6 text-blue-600 mr-2" />
-            <h2 className="text-2xl font-semibold">Schedule</h2>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Working Hours</label>
-              <input
-                type="text"
-                {...register('schedule.schedules.0.hours.start', { required: true })}
-                placeholder="e.g., 08h00 - 17h00 EST"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Time Zones</label>
-              <input
-                type="text"
-                {...register('schedule.timeZones', { required: true })}
-                placeholder="e.g., EST, CST, PST"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Skills */}
-        <section className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-4">
-            <Brain className="w-6 h-6 text-purple-600 mr-2" />
-            <h2 className="text-2xl font-semibold">Required Skills</h2>
-          </div>
-          <div className="space-y-6">
-            {/* Languages */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Languages</h3>
-              <div className="space-y-2">
-                {/* Add dynamic language fields */}
-              </div>
-            </div>
-
-            {/* Soft Skills */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Soft Skills</h3>
-              <div className="space-y-2">
-                {/* Add dynamic soft skills fields */}
-              </div>
-            </div>
-
-            {/* Professional Skills */}
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Professional Skills</h3>
-              <div className="space-y-2">
-                {/* Add dynamic professional skills fields */}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Create Gig
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="text-center py-8">
+        <Logo className="mb-6" />
       </div>
-    </form>
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full py-8 px-4">
+        <div className="space-y-8">
+          {/* Basic Information */}
+          <section className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-4">Basic Information</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Title</label>
+                <input
+                  type="text"
+                  {...register('title', { required: true })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  {...register('description', { required: true })}
+                  rows={4}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Schedule */}
+          <section className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center mb-4">
+              <Calendar className="w-6 h-6 text-blue-600 mr-2" />
+              <h2 className="text-2xl font-semibold">Schedule</h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Working Hours</label>
+                <input
+                  type="text"
+                  {...register('schedule.schedules.0.hours.start', { required: true })}
+                  placeholder="e.g., 08h00 - 17h00 EST"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Time Zones</label>
+                <input
+                  type="text"
+                  {...register('schedule.timeZones', { required: true })}
+                  placeholder="e.g., EST, CST, PST"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Skills */}
+          <section className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center mb-4">
+              <Brain className="w-6 h-6 text-purple-600 mr-2" />
+              <h2 className="text-2xl font-semibold">Required Skills</h2>
+            </div>
+            <div className="space-y-6">
+              {/* Languages */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Languages</h3>
+                <div className="space-y-2">
+                  {/* Add dynamic language fields */}
+                </div>
+              </div>
+
+              {/* Soft Skills */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Soft Skills</h3>
+                <div className="space-y-2">
+                  {/* Add dynamic soft skills fields */}
+                </div>
+              </div>
+
+              {/* Professional Skills */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Professional Skills</h3>
+                <div className="space-y-2">
+                  {/* Add dynamic professional skills fields */}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Create Gig
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }

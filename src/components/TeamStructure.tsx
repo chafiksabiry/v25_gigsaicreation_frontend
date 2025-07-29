@@ -32,8 +32,8 @@ interface TeamStructureProps {
   onNext?: () => void;
   onSave?: () => void;
   onAIAssist?: () => void;
-  onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs') => void;
-  currentSection: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team' | 'docs';
+  onSectionChange?: (sectionId: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team') => void;
+  currentSection: 'basic' | 'schedule' | 'commission' | 'leads' | 'skills' | 'team';
 }
 
 export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection }: TeamStructureProps) {
@@ -229,11 +229,15 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
   const handleSeniorityChange = (index: number, field: 'level' | 'yearsExperience', value: string) => {
     const newStructure = [...normalizedStructure];
+    
+    // Convert yearsExperience to number if it's that field
+    const processedValue = field === 'yearsExperience' ? parseInt(value, 10) || 0 : value;
+    
     newStructure[index] = {
       ...newStructure[index],
       seniority: {
         ...newStructure[index].seniority,
-        [field]: value
+        [field]: processedValue
       }
     };
     onChange({
@@ -429,10 +433,11 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                         </div>
                       </label>
                       <input
-                        type="text"
-                        value={role.seniority.yearsExperience.toString()}
+                        type="number"
+                        min="0"
+                        value={role.seniority.yearsExperience}
                         onChange={(e) => handleSeniorityChange(index, 'yearsExperience', e.target.value)}
-                        placeholder="e.g., 2-3 years"
+                        placeholder="e.g., 2"
                         className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
@@ -539,7 +544,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
         </div>
 
         {/* Collaboration */}
-        <div className="bg-gradient-to-r from-lime-50 to-green-50 rounded-xl p-6">
+        {/* <div className="bg-gradient-to-r from-lime-50 to-green-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-lime-100 rounded-lg">
               <Users className="w-5 h-5 text-lime-600" />
@@ -584,7 +589,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
               <span>Add Collaborator</span>
             </button>
           </div>
-        </div>
+        </div> */}
 
         {/* Navigation Buttons */}
         <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">

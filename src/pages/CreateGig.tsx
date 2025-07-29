@@ -5,7 +5,8 @@ import { ScheduleSection } from '../components/ScheduleSection';
 import { CommissionSection } from '../components/CommissionSection';
 import { SkillsSection } from '../components/SkillsSection';
 import { TeamStructure } from '../components/TeamStructure';
-import { DocumentationSection } from '../components/DocumentationSection';
+
+import Logo from '../components/Logo';
 import { GigData } from '../types';
 import { TimezoneCode } from '../lib/ai';
 
@@ -23,6 +24,9 @@ interface GigCreatorProps {
 export function CreateGig() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <div className="text-center py-8">
+        <Logo className="mb-6" />
+      </div>
       <GigCreator>
         {({
           data,
@@ -160,19 +164,7 @@ export function CreateGig() {
                 />
               );
             
-            case 'docs':
-              return (
-                <DocumentationSection
-                  data={data.documentation}
-                  onChange={(newDocs) => onChange({
-                    ...data,
-                    documentation: newDocs
-                  })}
-                  onPrevious={onPrevious}
-                  onNext={onNext}
-                  isLastSection={true}
-                />
-              );
+
             
             default:
               return null;
