@@ -418,11 +418,14 @@ export function GigReview({
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {data.industries.map((industry, index) => (
-                            <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
-                              {getIndustryNameById(industry)}
-                            </span>
-                          ))}
+                          {data.industries.map((industry, index) => {
+                            const industryName = getIndustryNameById(industry);
+                            return industryName ? (
+                              <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
+                                {industryName}
+                              </span>
+                            ) : null;
+                          })}
                         </div>
                       </div>
                     </div>

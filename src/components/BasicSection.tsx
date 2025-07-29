@@ -441,21 +441,24 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <span className="text-sm font-medium text-indigo-800">Selected Industries:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(data.industries || []).map((industryId, index) => (
-                  <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full">
-                    {getIndustryNameById(industryId)}
-                    <button
-                      onClick={() => {
-                        const currentIndustries = data.industries || [];
-                        const updatedIndustries = currentIndustries.filter((_, i) => i !== index);
-                        onChange({ ...data, industries: updatedIndustries });
-                      }}
-                      className="ml-1 text-indigo-500 hover:text-indigo-700"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
+                {(data.industries || []).map((industryId, index) => {
+                  const industryName = getIndustryNameById(industryId);
+                  return industryName ? (
+                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full">
+                      {industryName}
+                      <button
+                        onClick={() => {
+                          const currentIndustries = data.industries || [];
+                          const updatedIndustries = currentIndustries.filter((_, i) => i !== index);
+                          onChange({ ...data, industries: updatedIndustries });
+                        }}
+                        className="ml-1 text-indigo-500 hover:text-indigo-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ) : null;
+                })}
               </div>
             </div>
           )}
@@ -540,21 +543,24 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <span className="text-sm font-medium text-green-800">Selected Activities:</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(data.activities || []).map((activityId, index) => (
-                  <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
-                    {getActivityNameById(activityId)}
-                    <button
-                      onClick={() => {
-                        const currentActivities = data.activities || [];
-                        const updatedActivities = currentActivities.filter((_, i) => i !== index);
-                        onChange({ ...data, activities: updatedActivities });
-                      }}
-                      className="ml-1 text-green-500 hover:text-green-700"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
+                {(data.activities || []).map((activityId, index) => {
+                  const activityName = getActivityNameById(activityId);
+                  return activityName ? (
+                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
+                      {activityName}
+                      <button
+                        onClick={() => {
+                          const currentActivities = data.activities || [];
+                          const updatedActivities = currentActivities.filter((_, i) => i !== index);
+                          onChange({ ...data, activities: updatedActivities });
+                        }}
+                        className="ml-1 text-green-500 hover:text-green-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ) : null;
+                })}
               </div>
             </div>
           )}
