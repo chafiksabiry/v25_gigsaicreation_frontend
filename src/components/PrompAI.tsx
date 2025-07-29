@@ -291,9 +291,9 @@ const PrompAI: React.FC = () => {
           {/* Logo et Titre global en haut */}
           <div className="w-full max-w-3xl mx-auto mb-8">
             {confirmedSuggestions && (
-              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
-                <Logo className="mb-4" />
-              </div>
+                  <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                    <Logo className="mb-4" />
+                  </div>
             )}
           </div>
 

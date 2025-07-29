@@ -34,17 +34,54 @@ export async function getGigHistory(gigId: string) {
 
 export async function fetchCompanies() {
   try {
-    const response = await fetch(`${import.meta.env.VITE_REP_URL}/companies`);
+    const url = `${import.meta.env.VITE_API_URL_ONBOARDING}/companies`;
+    console.log('🔄 API: Fetching companies from:', url);
+    
+    const response = await fetch(url);
+    console.log('📡 API: Companies response status:', response.status);
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch companies');
+      throw new Error(`Failed to fetch companies: ${response.status} ${response.statusText}`);
     }
+    
     const data = await response.json();
+    console.log('📦 API: Companies response data:', data);
+    
     if (!data.success) {
       throw new Error(data.message || 'Failed to fetch companies');
     }
+    
+    console.log('✅ API: Companies fetched successfully:', data.data);
     return data.data;
   } catch (error) {
-    console.error('Error fetching companies:', error);
+    console.error('❌ API: Error fetching companies:', error);
+    throw error;
+  }
+}
+
+export async function fetchCompanyById(companyId: string) {
+  try {
+    const url = `${import.meta.env.VITE_API_URL_ONBOARDING}/companies/${companyId}`;
+    console.log('🔄 API: Fetching company by ID from:', url);
+    
+    const response = await fetch(url);
+    console.log('📡 API: Company response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch company: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('📦 API: Company response data:', data);
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to fetch company');
+    }
+    
+    console.log('✅ API: Company fetched successfully:', data.data);
+    return data.data;
+  } catch (error) {
+    console.error('❌ API: Error fetching company:', error);
     throw error;
   }
 }
@@ -309,6 +346,39 @@ export async function fetchTimezonesByCountry(countryCode: string): Promise<{ da
       data: [], 
       error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
     };
+  }
+}
+
+export async function fetchCountryName(countryCode: string): Promise<{ data: string; error?: Error }> {
+  try {
+    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    console.log('🔄 API: Fetching country name for code:', countryCode);
+    
+    const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
+    console.log('📡 API: Country response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('📦 API: Country response data:', result);
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch country data');
+    }
+    
+    if (result.data && result.data.length > 0) {
+      const countryName = result.data[0].countryName;
+      console.log('✅ API: Country name fetched:', countryName);
+      return { data: countryName };
+    } else {
+      console.warn('⚠️ API: No country data found for code:', countryCode);
+      return { data: countryCode }; // Fallback to code if no data
+    }
+  } catch (error) {
+    console.error('❌ API: Error fetching country name:', error);
+    return { data: countryCode, error: error as Error }; // Fallback to code on error
   }
 }
 
