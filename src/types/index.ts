@@ -32,6 +32,9 @@ export interface Language {
 }
 
 export interface GigData {
+  documentation: any;
+  documentation: any;
+  documentation: any;
   userId: string;
   companyId: string;
   title: string;

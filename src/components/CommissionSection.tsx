@@ -26,14 +26,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
 
   // Log Commission Section data
   useEffect(() => {
-    console.log('=== COMMISSION SECTION DATA ===');
-    console.log('Commission Data:', {
-      commission: data.commission,
-      seniority: data.seniority
-    });
-    console.log('Commission Errors:', errors);
-    console.log('Commission Warnings:', warnings);
-    console.log('========================');
   }, [data.commission, data.seniority, errors, warnings]);
 
   const handleBaseChange = (field: string, value: string | number) => {

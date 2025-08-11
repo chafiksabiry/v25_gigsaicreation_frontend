@@ -16,18 +16,14 @@ let isProfessionalSkillsLoaded = false;
 
 export async function loadActivities(): Promise<Activity[]> {
   if (isActivitiesLoaded && activitiesCache.length > 0) {
-    console.log('📋 Using cached activities:', activitiesCache.length);
     return activitiesCache;
   }
   try {
-    console.log('🔄 Fetching activities from API...');
     const { data, error } = await fetchActivities();
     if (error) {
       console.error('❌ Error loading activities:', error);
       return [];
     }
-    console.log('✅ Activities loaded successfully:', data.length);
-    console.log('📋 Sample activities:', data.slice(0, 3).map(a => ({ id: a._id, name: a.name, category: a.category })));
     activitiesCache = data;
     isActivitiesLoaded = true;
     return data;
@@ -39,18 +35,14 @@ export async function loadActivities(): Promise<Activity[]> {
 
 export async function loadIndustries(): Promise<Industry[]> {
   if (isIndustriesLoaded && industriesCache.length > 0) {
-    console.log('🏭 Using cached industries:', industriesCache.length);
     return industriesCache;
   }
   try {
-    console.log('🔄 Fetching industries from API...');
     const { data, error } = await fetchIndustries();
     if (error) {
       console.error('❌ Error loading industries:', error);
       return [];
     }
-    console.log('✅ Industries loaded successfully:', data.length);
-    console.log('🏭 Sample industries:', data.slice(0, 3).map(i => ({ id: i._id, name: i.name })));
     industriesCache = data;
     isIndustriesLoaded = true;
     return data;
@@ -62,18 +54,14 @@ export async function loadIndustries(): Promise<Industry[]> {
 
 export async function loadLanguages(): Promise<Language[]> {
   if (isLanguagesLoaded && languagesCache.length > 0) {
-    console.log('🌐 Using cached languages:', languagesCache.length);
     return languagesCache;
   }
   try {
-    console.log('🔄 Fetching languages from API...');
     const { data, error } = await fetchLanguages();
     if (error) {
       console.error('❌ Error loading languages:', error);
       return [];
     }
-    console.log('✅ Languages loaded successfully:', data.length);
-    console.log('🌐 Sample languages:', data.slice(0, 3).map(l => ({ id: l._id, name: l.name, code: l.code })));
     languagesCache = data;
     isLanguagesLoaded = true;
     return data;
@@ -114,10 +102,6 @@ export function getActivityOptions(): Array<{ value: string; label: string; cate
       label: activity.name,
       category: activity.category
     }));
-  console.log('🎯 Activity options generated:', options.length);
-  if (options.length > 0) {
-    console.log('📋 Sample activity options:', options.slice(0, 3));
-  }
   return options;
 }
 
@@ -151,10 +135,6 @@ export function getIndustryOptions(): Array<{ value: string; label: string }> {
       value: industry._id,
       label: industry.name
     }));
-  console.log('🏭 Industry options generated:', options.length);
-  if (options.length > 0) {
-    console.log('🏭 Sample industry options:', options.slice(0, 3));
-  }
   return options;
 }
 
@@ -192,28 +172,20 @@ export function getLanguageOptions(): Array<{ value: string; label: string; code
     label: language.name,
     code: language.code
   }));
-  console.log('🌐 Language options generated:', options.length);
-  if (options.length > 0) {
-    console.log('🌐 Sample language options:', options.slice(0, 3));
-  }
   return options;
 }
 
 // Load soft skills from API
 export async function loadSoftSkills(): Promise<Array<{_id: string, name: string, description: string, category: string}>> {
   if (isSoftSkillsLoaded && softSkillsCache.length > 0) {
-    console.log('💬 Using cached soft skills:', softSkillsCache.length);
     return softSkillsCache;
   }
   try {
-    console.log('🔄 Fetching soft skills from API...');
     const response = await fetchSoftSkills();
     if (response.error) {
       console.error('❌ Error loading soft skills:', response.error);
       return [];
     }
-    console.log('✅ Soft skills loaded successfully:', response.data.length);
-    console.log('💬 Sample soft skills:', response.data.slice(0, 3).map((s: any) => ({ id: s._id, name: s.name, category: s.category })));
     softSkillsCache = response.data;
     isSoftSkillsLoaded = true;
     return response.data;
@@ -226,18 +198,14 @@ export async function loadSoftSkills(): Promise<Array<{_id: string, name: string
 // Load technical skills from API
 export async function loadTechnicalSkills(): Promise<Array<{_id: string, name: string, description: string, category: string}>> {
   if (isTechnicalSkillsLoaded && technicalSkillsCache.length > 0) {
-    console.log('🔧 Using cached technical skills:', technicalSkillsCache.length);
     return technicalSkillsCache;
   }
   try {
-    console.log('🔄 Fetching technical skills from API...');
     const response = await fetchTechnicalSkills();
     if (response.error) {
       console.error('❌ Error loading technical skills:', response.error);
       return [];
     }
-    console.log('✅ Technical skills loaded successfully:', response.data.length);
-    console.log('🔧 Sample technical skills:', response.data.slice(0, 3).map((s: any) => ({ id: s._id, name: s.name, category: s.category })));
     technicalSkillsCache = response.data;
     isTechnicalSkillsLoaded = true;
     return response.data;
@@ -250,20 +218,21 @@ export async function loadTechnicalSkills(): Promise<Array<{_id: string, name: s
 // Load professional skills from API
 export async function loadProfessionalSkills(): Promise<Array<{_id: string, name: string, description: string, category: string}>> {
   if (isProfessionalSkillsLoaded && professionalSkillsCache.length > 0) {
-    console.log('💼 Using cached professional skills:', professionalSkillsCache.length);
     return professionalSkillsCache;
   }
   try {
-    console.log('🔄 Fetching professional skills from API...');
     const response = await fetchProfessionalSkills();
     if (response.error) {
       console.error('❌ Error loading professional skills:', response.error);
       return [];
     }
-    console.log('✅ Professional skills loaded successfully:', response.data.length);
-    console.log('💼 Sample professional skills:', response.data.slice(0, 3).map((s: any) => ({ id: s._id, name: s.name, category: s.category })));
+    
+    // Update global cache
     professionalSkillsCache = response.data;
     isProfessionalSkillsLoaded = true;
+    
+    
+    
     return response.data;
   } catch (error) {
     console.error('❌ Error loading professional skills:', error);
@@ -336,10 +305,6 @@ export function getSoftSkillOptions(): Array<{ value: string; label: string; cat
       label: skill.name,
       category: skill.category
     }));
-  console.log('💬 Soft skill options generated:', options.length);
-  if (options.length > 0) {
-    console.log('💬 Sample soft skill options:', options.slice(0, 3));
-  }
   return options;
 }
 
@@ -351,10 +316,6 @@ export function getTechnicalSkillOptions(): Array<{ value: string; label: string
       label: skill.name,
       category: skill.category
     }));
-  console.log('🔧 Technical skill options generated:', options.length);
-  if (options.length > 0) {
-    console.log('🔧 Sample technical skill options:', options.slice(0, 3));
-  }
   return options;
 }
 
@@ -366,10 +327,6 @@ export function getProfessionalSkillOptions(): Array<{ value: string; label: str
       label: skill.name,
       category: skill.category
     }));
-  console.log('💼 Professional skill options generated:', options.length);
-  if (options.length > 0) {
-    console.log('💼 Sample professional skill options:', options.slice(0, 3));
-  }
   return options;
 }
 
@@ -387,11 +344,9 @@ export function clearCache() {
   isSoftSkillsLoaded = false;
   isTechnicalSkillsLoaded = false;
   isProfessionalSkillsLoaded = false;
-  console.log('🗑️ Cache cleared');
 }
 
 export async function initializeData() {
-  console.log('🚀 Initializing all data...');
   await Promise.all([
     loadActivities(),
     loadIndustries(),
@@ -400,5 +355,5 @@ export async function initializeData() {
     loadTechnicalSkills(),
     loadProfessionalSkills()
   ]);
-  console.log('✅ All data initialized');
+  
 } 
