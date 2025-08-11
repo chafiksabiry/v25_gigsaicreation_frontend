@@ -278,7 +278,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Load activities, industries, and languages from external API
   useEffect(() => {
     const loadActivitiesIndustriesAndLanguages = async () => {
-      console.log('🔄 Suggestions: Loading activities, industries, and languages from external API...');
       
       try {
         setActivitiesLoading(true);

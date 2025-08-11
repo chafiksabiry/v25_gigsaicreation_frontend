@@ -258,14 +258,11 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
       // Find the selected timezone to get the _id
       const selectedTimezone = filteredTimezones.find(tz => tz._id === timezoneValue);
       if (selectedTimezone) {
-        console.log('🕐 Selected timezone:', selectedTimezone._id, selectedTimezone.name);
         props.onChange({ ...props.data, time_zone: selectedTimezone._id });
       } else {
-        console.log('🕐 Using fallback timezone value:', timezoneValue);
         props.onChange({ ...props.data, time_zone: timezoneValue }); // Fallback to string
       }
     } else {
-      console.log('🕐 Clearing timezone selection');
       props.onChange({ ...props.data, time_zone: undefined });
     }
   };

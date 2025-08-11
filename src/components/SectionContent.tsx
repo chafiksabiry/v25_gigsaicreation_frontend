@@ -6,11 +6,9 @@ import { ScheduleSection } from "./ScheduleSection";
 import { CommissionSection } from "./CommissionSection";
 import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
-
 import { GigReview } from "./GigReview";
 import { DaySchedule } from "../lib/scheduleUtils";
 import { saveGigData } from '../lib/api';
-import { setLastGigId } from '../lib/postMessageHandler';
 
 interface SectionContentProps {
   section: string;
@@ -33,10 +31,6 @@ export function SectionContent({
 
   // Log section data when component renders
   React.useEffect(() => {
-    console.log(`=== SECTION: ${section.toUpperCase()} ===`);
-    console.log('Section Data:', data);
-    console.log('Section Errors:', errors);
-    console.log('========================');
   }, [section, data, errors]);
 
   const cleanSchedules = (schedules: DaySchedule[]): DaySchedule[] => {
@@ -150,23 +144,19 @@ export function SectionContent({
               time_zone: (() => {
                 // Priorité 1: time_zone direct depuis schedule
                 if (data.schedule?.time_zone) {
-                  console.log('🕐 Using time_zone from schedule:', data.schedule.time_zone);
                   return data.schedule.time_zone;
                 }
                 // Priorité 2: premier élément de timeZones array
                 if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
                   const firstTimezone = data.schedule.timeZones[0];
                   if (typeof firstTimezone === 'string') {
-                    console.log('🕐 Using first timezone from timeZones array:', firstTimezone);
                     return firstTimezone;
                   }
                 }
                 // Priorité 3: timezone depuis availability (qui vient de Suggestions)
                 if (data.availability?.time_zone) {
-                  console.log('🕐 Using timezone from availability (Suggestions):', data.availability.time_zone);
                   return data.availability.time_zone;
                 }
-                console.log('🕐 No timezone found, using empty string');
                 return "";
               })(),
               flexibility: data.schedule.flexibility || data.availability?.flexibility || [],
@@ -286,29 +276,33 @@ export function SectionContent({
                 yearsExperience: initializedData.seniority.yearsExperience
               },
               skills: {
-                ...skillsData,
-                languages: skillsData.languages.map((lang: string | { language: string; proficiency: string; iso639_1: string }) => ({
+                // Preserve existing skills data
+                ...initializedData.skills,
+                // Update with new skills data, preserving existing skills
+                languages: skillsData.languages?.map((lang: string | { language: string; proficiency: string; iso639_1: string }) => ({
                   language: typeof lang === 'string' ? lang : lang.language,
                   proficiency: typeof lang === 'string' ? 'A1' : (lang.proficiency || 'A1'),
                   iso639_1: '' // This will be handled by the backend
-                })),
-                soft: skillsData.soft.map((skill: string | { skill: string; level: number }) => ({
-                  skill: typeof skill === 'string' ? skill : skill.skill,
+                })) || initializedData.skills.languages,
+                soft: skillsData.soft?.map((skill: string | { skill: { $oid: string } | string; level: number }) => ({
+                  skill: typeof skill === 'string' ? skill : 
+                         typeof skill.skill === 'string' ? skill.skill : 
+                         skill.skill.$oid,
                   level: typeof skill === 'string' ? 1 : Number(skill.level)
-                })),
-                professional: skillsData.professional.map((skill: string | { skill: string; level: number }) => ({
-                  skill: typeof skill === 'string' ? skill : skill.skill,
+                })) || initializedData.skills.soft,
+                professional: skillsData.professional?.map((skill: string | { skill: { $oid: string } | string; level: number }) => ({
+                  skill: typeof skill === 'string' ? skill : 
+                         typeof skill.skill === 'string' ? skill.skill : 
+                         skill.skill.$oid,
                   level: typeof skill === 'string' ? 1 : Number(skill.level)
-                })),
-                certifications: skillsData.certifications.map((cert: string | { name: string; required: boolean; provider?: string }) => ({
-                  name: typeof cert === 'string' ? cert : cert.name,
-                  required: typeof cert === 'string' ? true : cert.required,
-                  provider: typeof cert === 'string' ? '' : cert.provider
-                })),
-                technical: skillsData.technical.map((skill: string | { skill: string; level: number }) => ({
-                  skill: typeof skill === 'string' ? skill : skill.skill,
+                })) || initializedData.skills.professional,
+
+                technical: skillsData.technical?.map((skill: string | { skill: { $oid: string } | string; level: number }) => ({
+                  skill: typeof skill === 'string' ? skill : 
+                         typeof skill.skill === 'string' ? skill.skill : 
+                         skill.skill.$oid,
                   level: typeof skill === 'string' ? 1 : Number(skill.level)
-                }))
+                })) || initializedData.skills.technical
               }
             })}
             errors={errors}
@@ -356,7 +350,6 @@ export function SectionContent({
             }}
             skipValidation={false}
             onSubmit={async () => {
-              console.log('Submitting gig data:', initializedData);
               
               try {
                 // Save gig data to API
@@ -365,13 +358,6 @@ export function SectionContent({
                 if (result.error) {
                   console.error('Error saving gig:', result.error);
                   return;
-                }
-                
-                if (result.data && result.data._id) {
-                  // Save lastGigId using the utility function
-                  setLastGigId(result.data._id);
-                  
-                  console.log('✅ Gig saved successfully with ID:', result.data._id);
                 }
               } catch (error) {
                 console.error('Error in gig submission:', error);

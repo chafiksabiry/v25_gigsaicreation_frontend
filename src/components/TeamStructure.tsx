@@ -45,12 +45,10 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   React.useEffect(() => {
     const fetchTerritories = async () => {
       try {
-        console.log('🌍 Fetching territories from API...');
         const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
         if (response.ok) {
           const countriesData = await response.json();
           const countryNames = countriesData.map((country: any) => country.name.common).sort();
-          console.log('✅ Fetched', countryNames.length, 'territories from API');
           setTerritories(countryNames);
         } else {
           console.error('❌ Failed to fetch territories');
@@ -137,13 +135,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
   // Log Team Section data
   React.useEffect(() => {
-    console.log('=== TEAM SECTION DATA ===');
-    console.log('Team Data:', {
-      team: initializedTeam.team,
-      seniority: data.seniority
-    });
-    console.log('Team Errors:', errors);
-    console.log('========================');
+    
   }, [initializedTeam.team, data.seniority, errors]);
 
   // Helper function to map role names to IDs
