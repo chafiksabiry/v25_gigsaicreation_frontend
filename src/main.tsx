@@ -6,7 +6,6 @@ import './index.css';
 import './public-path'; // For Qiankun public path setup
 import 'systemjs';
 import Cookies from 'js-cookie';
-import { initPostMessageListener } from './lib/postMessageListener';
 
 // Keep a reference to the React Root instance
 let root: Root | null = null;
@@ -58,9 +57,6 @@ if (!window.__POWERED_BY_QIANKUN__) {
   } else {
     console.warn('[App] VITE_COMPANY_ID environment variable not set');
   }
-  
-  // Initialiser le listener PostMessage
-  initPostMessageListener();
   
   render({});
 }

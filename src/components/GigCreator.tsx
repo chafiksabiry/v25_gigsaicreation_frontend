@@ -13,7 +13,6 @@ import { GigReview } from "./GigReview";
 import { analyzeTitleAndGenerateDescription, generateSkills } from "../lib/ai";
 import { validateGigData } from "../lib/validation";
 import { GigData } from "../types";
-import { predefinedOptions } from "../lib/guidance";
 import { AIDialog } from "./AIDialog";
 import Cookies from 'js-cookie';
 import { saveGigData } from '../lib/api';
@@ -110,69 +109,30 @@ const initialGigData: GigData = {
       to: "",
       frequency: "",
     },
-    collaboration: [],
+    collaboration: []
   },
-  tools: {
-    provided: [],
-    required: [],
-  },
-  training: {
-    initial: {
-      duration: "",
-      format: "",
-      topics: [],
-    },
-    ongoing: {
-      frequency: "",
-      format: "",
-      topics: [],
-    },
-    support: [],
-  },
-  metrics: {
-    kpis: [],
-    targets: {},
-    reporting: {
-      frequency: "",
-      metrics: [],
-    },
-  },
-  documentation: {
-    templates: {},
-    reference: {},
-    product: [],
-    process: [],
-    training: [],
-  },
-  compliance: {
-    requirements: [],
-    certifications: [],
-    policies: [],
-  },
-  equipment: {
-    required: [],
-    provided: [],
-  },
+  activities: [],
   availability: {
-    schedule: [
-      {
-        day: "Monday",
-        hours: {
-          start: "09:00",
-          end: "18:00"
-        }
-      }
-    ],
-    timeZones: [""],
+    schedule: [],
+    timeZones: [],
     time_zone: "",
     flexibility: [],
     minimumHours: {
-      daily: 8,
-      weekly: 40,
-      monthly: 160
+      daily: undefined,
+      weekly: undefined,
+      monthly: undefined
     }
-  }
-};
+  },
+     activity: {
+     options: []
+   },
+   documentation: {
+     training: [],
+     product: [],
+     process: []
+   }
+}
+
 
 interface GigCreatorProps {
   children: (props: {
@@ -288,8 +248,8 @@ export function GigCreator({ children }: GigCreatorProps) {
         return `${h}:${m}`;
       };
 
-      setGigData((prev) => {
-        const newGigData = {
+      setGigData((prev: GigData) => {
+        const newGigData: GigData = {
           ...prev,
           ...suggestions,
           schedule: suggestions.schedule ? {
@@ -304,11 +264,19 @@ export function GigCreator({ children }: GigCreatorProps) {
           } : prev.schedule,
           skills: {
             ...prev.skills,
-            soft: skills.soft || prev.skills.soft,
+            soft: (skills.soft || prev.skills.soft)?.map(s => ({
+              skill: typeof s.skill === 'object' && '$oid' in s.skill ? s.skill.$oid : s.skill as string,
+              level: s.level
+            })) || [],
             languages: skills.languages || prev.skills.languages,
-            professional: skills.professional || prev.skills.professional,
-            technical: skills.technical || prev.skills.technical,
-            certifications: prev.skills.certifications,
+            professional: (skills.professional || prev.skills.professional)?.map(s => ({
+              skill: typeof s.skill === 'object' && '$oid' in s.skill ? s.skill.$oid : s.skill as string,
+              level: s.level
+            })),
+            technical: (skills.technical || prev.skills.technical)?.map(s => ({
+              skill: typeof s.skill === 'object' && s.skill.$oid ? s.skill.$oid : s.skill as unknown as string,
+              level: s.level
+            })) || [],
           },
         };
         return newGigData;
@@ -337,6 +305,7 @@ export function GigCreator({ children }: GigCreatorProps) {
       userId = Cookies.get('userId') || "";
 
       const gigDataToSave = {
+        ...gigData,
         title: gigData.title,
         description: gigData.description,
         category: gigData.category,
@@ -376,6 +345,7 @@ export function GigCreator({ children }: GigCreatorProps) {
             }
           ],
           timeZones: gigData.availability?.timeZones || [],
+          time_zone: gigData.availability?.time_zone || "",
           flexibility: gigData.availability?.flexibility || [],
           minimumHours: gigData.availability?.minimumHours || {
             daily: 0,
@@ -416,7 +386,8 @@ export function GigCreator({ children }: GigCreatorProps) {
             type: gigData.commission.transactionCommission.type,
             amount: gigData.commission.transactionCommission.amount
           },
-          structure: gigData.commission.additionalDetails
+          structure: gigData.commission.additionalDetails || "",
+          kpis: gigData.commission.kpis || []
         },
         leads: {
           types: gigData.leads.types,
@@ -436,11 +407,22 @@ export function GigCreator({ children }: GigCreatorProps) {
         updatedAt: new Date()
       };
 
-
-      const { data: gig, error: gigError } = await saveGigData(gigDataToSave);
+      // Ensure commission.kpis and structure are included as required by GigData type
+      (gigDataToSave.commission as any).kpis = gigData.commission.kpis || [];
+      if (!gigDataToSave.commission.structure) {
+        gigDataToSave.commission.structure = gigData.commission.structure || "";
+      }
       
-      if (gigError) {
-        throw new Error(gigError.message);
+      let gig;
+      try {
+        const response = await saveGigData(gigDataToSave);
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        gig = response.data;
+      } catch (error) {
+        console.error("Failed to save gig data:", error);
+        throw error;
       }
 
       if (gig) {
@@ -488,19 +470,19 @@ export function GigCreator({ children }: GigCreatorProps) {
 
         // Insert documentation
         const docsToInsert = [
-          ...gigData.documentation.product.map((doc) => ({
+          ...gigData.documentation.product.map((doc: { name: any; url: any; }) => ({
             gig_id: gig.id,
             doc_type: "product",
             name: doc.name,
             url: doc.url,
           })),
-          ...gigData.documentation.process.map((doc) => ({
+          ...gigData.documentation.process.map((doc: { name: any; url: any; }) => ({
             gig_id: gig.id,
             doc_type: "process",
             name: doc.name,
             url: doc.url,
           })),
-          ...gigData.documentation.training.map((doc) => ({
+          ...gigData.documentation.training.map((doc: { name: any; url: any; }) => ({
             gig_id: gig.id,
             doc_type: "training",
             name: doc.name,
@@ -531,14 +513,6 @@ export function GigCreator({ children }: GigCreatorProps) {
       // Save current progress to local storage
       localStorage.setItem("gigDraft", JSON.stringify(gigData));
       // Show success message with OK/Cancel buttons
-      const confirmed = window.confirm("Progress saved successfully! Click OK to continue or Cancel to stay on this page.");
-      if (confirmed) {
-        // User clicked OK - could add navigation logic here if needed
-        console.log("User confirmed save success");
-      } else {
-        // User clicked Cancel - stay on current page
-        console.log("User cancelled - staying on current page");
-      }
     } catch (error) {
       console.error("Error saving progress:", error);
       const retry = window.confirm("Failed to save progress. Click OK to try again or Cancel to continue without saving.");

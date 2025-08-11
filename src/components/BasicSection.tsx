@@ -66,9 +66,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   onPrevious,
   onNext
 }) => {
-  console.log('🔍 BasicSection rendered with data:', data);
-  console.log('🔍 BasicSection errors:', errors);
-  console.log('🔍 Predefined options:', predefinedOptions.basic.seniorityLevels);
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedActivity, setSelectedActivity] = useState<string>('');
   const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
@@ -81,8 +78,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     const loadData = async () => {
       try {
         setIsLoading(true);
-        console.log('🔄 Loading activities and industries from external API...');
-        
         // Load data from external API with error handling
         const [activitiesData, industriesData] = await Promise.all([
           loadActivities().catch(error => {
@@ -97,10 +92,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         
         const activityOptions = getActivityOptions();
         const industryOptions = getIndustryOptions();
-        
-        console.log('📊 Loaded activities from API:', activityOptions.length);
-        console.log('📊 Loaded industries from API:', industryOptions.length);
-        
+      
         // Validate that we have data
         if (activityOptions.length === 0) {
           throw new Error('No activities available from external API');
@@ -112,7 +104,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         setActivities(activityOptions);
         setIndustries(industryOptions);
         setIsDataLoaded(true);
-        console.log('✅ Successfully loaded all data from external API');
       } catch (error) {
         console.error('❌ Critical error loading data from API:', error);
         // Show user-friendly error message but don't block the UI
@@ -290,9 +281,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} value - La nouvelle valeur
    */
   const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
-    console.log('🔍 handleSeniorityChange called:', field, value);
-    console.log('🔍 Available seniority levels:', predefinedOptions.basic.seniorityLevels);
-    
     const newData = { ...data };
     
     if (!newData.seniority) {
@@ -305,45 +293,23 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     if (field === 'level') {
       // Vérifier que le niveau est dans la liste prédéfinie
       if (!predefinedOptions.basic.seniorityLevels.includes(value)) {
-        console.log('❌ Level not in predefined list:', value);
         return; // Ignorer les niveaux non prédéfinis
       }
-      console.log('✅ Level accepted:', value);
       newData.seniority.level = value;
     } else if (field === 'years' || field === 'yearsExperience') {
       // Nettoyer la valeur pour n'avoir que des chiffres
       const cleanValue = value.replace(/[^0-9]/g, '');
       newData.seniority.yearsExperience = parseInt(cleanValue) || 0;
-      console.log('✅ Years experience updated:', newData.seniority.yearsExperience);
     }
 
-    console.log('🔍 Updated seniority data:', newData.seniority);
     onChange(newData);
   };
 
   // Log Basic Section data
   useEffect(() => {
-    console.log('=== BASIC SECTION DATA ===');
-    console.log('Basic Data:', {
-      title: data.title,
-      category: data.category,
-      industries: data.industries,
-      activities: data.activities,
-      highlights: data.highlights,
-      destinationZones: data.destinationZones,
-      destination_zone: data.destination_zone,
-      seniority: data.seniority,
-      requirements: data.requirements,
-      benefits: data.benefits,
-      callTypes: data.callTypes
-    });
-    console.log('Basic Errors:', errors);
-    console.log('🔍 Rendering Experience Level section...');
-    console.log('========================');
   }, [data, errors]);
 
   // Le rendu du composant
-  console.log('🔍 BasicSection rendering content...');
   return (
     <div className="w-full bg-white py-6">
 

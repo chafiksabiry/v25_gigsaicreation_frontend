@@ -124,33 +124,25 @@ export function GigReview({
       // Fetch company by ID if we have a companyId
       if (data.companyId) {
         try {
-          console.log('🔄 GigReview: Fetching company by ID:', data.companyId);
           const company = await fetchCompanyById(data.companyId);
-          console.log('✅ GigReview: Company fetched:', company);
           
           if (company) {
             const cMap: { [key: string]: string } = {};
             cMap[company._id] = company.name || company._id;
-            console.log('🏢 GigReview: Company map created:', cMap);
             setCompanyMap(cMap);
           } else {
-            console.warn('⚠️ GigReview: No company data received');
           }
         } catch (e) { 
-          console.error('❌ GigReview: Error fetching company:', e);
         }
       }
       
       // Fetch country name if we have a destination_zone
       if (data.destination_zone) {
         try {
-          console.log('🔄 GigReview: Fetching country name for zone:', data.destination_zone);
           const countryResponse = await fetchCountryName(data.destination_zone);
-          console.log('✅ GigReview: Country response:', countryResponse);
           
           if (countryResponse.data) {
             setCountryName(countryResponse.data);
-            console.log('🌍 GigReview: Country name set:', countryResponse.data);
           } else {
             console.warn('⚠️ GigReview: No country name received');
             setCountryName(data.destination_zone); // Fallback to zone code
@@ -170,12 +162,8 @@ export function GigReview({
   };
   // Helper to get company name
   const getCompanyName = (id: string) => {
-    console.log('🔍 GigReview: Getting company name for ID:', id);
-    console.log('🏢 GigReview: Company map:', companyMap);
-    
+  
     const companyName = companyMap[id] || id;
-    console.log('🏢 GigReview: Company name result:', companyName);
-    
     return companyName;
   };
   // Helper to get skill name by id
@@ -231,7 +219,6 @@ export function GigReview({
 
   const handlePublish = async () => {
     try {
-      console.log('🚀 Publishing gig with skills data:', data.skills);
       
       // Let onSubmit handle the saving (it already calls saveGigData)
       await onSubmit();

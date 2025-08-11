@@ -1772,13 +1772,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
   const professionalSkillNames = professionalSkillOptions.map(opt => opt.label);
   const technicalSkillNames = technicalSkillOptions.map(opt => opt.label);
 
-  console.log('📊 Using dynamic data from API:');
-  console.log(`  - Activities: ${activityNames.length} loaded`);
-  console.log(`  - Industries: ${industryNames.length} loaded`);
-  console.log(`  - Languages: ${languageNames.length} loaded`);
-  console.log(`  - Soft Skills: ${softSkillNames.length} loaded`);
-  console.log(`  - Professional Skills: ${professionalSkillNames.length} loaded`);
-  console.log(`  - Technical Skills: ${technicalSkillNames.length} loaded`);
+
 
   try {
     const result = await retryWithBackoff(async () => {
@@ -1917,10 +1911,8 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
           // If no valid activities found, add a default one from API
           if (parsedResult.activities.length === 0) {
             parsedResult.activities = [activityOptions[0]?.value || ''];
-            console.log('⚠️ No valid activities found, using default from API:', activityOptions[0]?.label);
           }
           
-          console.log('🎯 Converted activity names to IDs:', validActivityNames, '→', parsedResult.activities);
         }
 
                 // Convert industry names to IDs
@@ -1944,10 +1936,8 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
           // If no valid industries found, add a default one from API
           if (parsedResult.industries.length === 0) {
             parsedResult.industries = [industryOptions[0]?.value || ''];
-            console.log('⚠️ No valid industries found, using default from API:', industryOptions[0]?.label);
           }
           
-          console.log('🎯 Converted industry names to IDs:', validIndustryNames, '→', parsedResult.industries);
         }
 
         // Validate and fix languages
@@ -2005,11 +1995,7 @@ CRITICAL: Return ONLY the JSON object. Do not include any explanatory text, mark
             }));
           }
           
-          console.log('✅ AI Generated Skills (after validation):', {
-            professional: parsedResult.skills.professional,
-            technical: parsedResult.skills.technical,
-            soft: parsedResult.skills.soft
-          });
+          
         }
 
         // Basic validation and defaults
