@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
 import {
   Brain,
@@ -116,7 +116,6 @@ const PrompAI: React.FC = () => {
       technical: []
     },
     seniority: {
-
       level: "",
       yearsExperience: 0
     },
@@ -130,8 +129,17 @@ const PrompAI: React.FC = () => {
       },
       collaboration: []
     },
-
+    documentation: {
+      training: [],
+      product: [],
+      process: []
+    }
   });
+
+  // Scroll to top when section changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentSection]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
