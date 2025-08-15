@@ -284,36 +284,25 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setIndustriesLoading(true);
         setLanguagesLoading(true);
         
-        console.log('📋 Suggestions: Starting to load activities...');
         const activitiesData = await loadActivities();
-        console.log('✅ Suggestions: Activities loaded:', activitiesData.length);
         
-        console.log('🏭 Suggestions: Starting to load industries...');
         const industriesData = await loadIndustries();
-        console.log('✅ Suggestions: Industries loaded:', industriesData.length);
         
-        console.log('🌐 Suggestions: Starting to load languages...');
         const languagesData = await loadLanguages();
-        console.log('✅ Suggestions: Languages loaded:', languagesData.length);
         
         // Get options for UI components
         const activityOptions = getActivityOptions();
         const industryOptions = getIndustryOptions();
         const languageOptions = getLanguageOptions();
         
-        console.log('🎯 Suggestions: Activity options generated:', activityOptions.length);
-        console.log('🎯 Suggestions: Industry options generated:', industryOptions.length);
-        console.log('🎯 Suggestions: Language options generated:', languageOptions.length);
+        
         
         // Log sample data for debugging
         if (activityOptions.length > 0) {
-          console.log('📋 Suggestions: Sample activities:', activityOptions.slice(0, 3));
         }
         if (industryOptions.length > 0) {
-          console.log('🏭 Suggestions: Sample industries:', industryOptions.slice(0, 3));
         }
         if (languageOptions.length > 0) {
-          console.log('🌐 Suggestions: Sample languages:', languageOptions.slice(0, 3));
         }
         
         setActivities(activityOptions);
@@ -321,7 +310,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setLanguages(languageOptions);
         setIsDataLoaded(true);
         
-        console.log('✅ Suggestions: All data loaded successfully');
+        
         
       } catch (error) {
         console.error('❌ Suggestions: Error loading activities, industries, and languages:', error);
@@ -442,14 +431,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const fetchAllData = async () => {
       // Fetch countries
       if (allCountries.length === 0) {
-        console.log('🌍 Fetching countries from API...');
         setCountriesLoading(true);
         try {
           const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
           if (response.ok) {
             const countriesData: CountryData[] = await response.json();
-            console.log('✅ Fetched', countriesData.length, 'countries');
-            console.log('🌍 Sample countries:', countriesData.slice(0, 5));
             setAllCountries(countriesData);
           } else {
             console.error('❌ Failed to fetch countries');
@@ -463,14 +449,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       // Fetch territories
       if (territories.length === 0) {
-        console.log('🌍 Fetching territories from API...');
         setTerritoriesLoading(true);
         try {
           const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
           if (response.ok) {
             const countriesData = await response.json();
             const countryNames = countriesData.map((country: any) => country.name.common).sort();
-            console.log('✅ Fetched', countryNames.length, 'territories from API');
             setTerritories(countryNames);
           } else {
             console.error('❌ Failed to fetch territories');
@@ -542,12 +526,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       // Fetch timezones only once
       if (!timezonesLoaded) {
-        console.log('🕐 Fetching all timezones from API...');
       setTimezoneLoading(true);
       try {
         const { data, error } = await fetchAllTimezones();
         if (!error && data.length > 0) {
-            console.log('✅ Fetched', data.length, 'timezones from API');
           setAllTimezones(data);
           setTimezonesLoaded(true);
         } else {
@@ -575,7 +557,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       return;
     }
 
-    console.log('🔄 Processing timezones...');
     setTimezoneLoading(true);
     
     try {
@@ -590,7 +571,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }))
         .sort((a, b) => a.offset - b.offset);
 
-      console.log('✅ Processed', processedTimezones.length, 'timezones');
       setAvailableTimezones(processedTimezones);
     } catch (error) {
       console.error('❌ Error processing timezones:', error);
@@ -624,13 +604,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         return;
       }
 
-      console.log('🕐 Fetching timezones for country:', firstDestination);
       setTimezoneLoading(true);
       
       try {
         const { data, error } = await fetchTimezonesByCountry(firstDestination);
         if (!error && data.length > 0) {
-          console.log('✅ Fetched', data.length, 'timezones for', firstDestination);
           
           // Process timezones for the specific country
           const processedTimezones = data
@@ -706,7 +684,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         return; // Already loaded
       }
 
-      console.log('🎯 Fetching skills from API...');
       setSkillsLoading(true);
       
       try {
@@ -717,17 +694,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         ]);
 
         if (!softResult.error && softResult.data.length > 0) {
-          console.log('✅ Fetched', softResult.data.length, 'soft skills');
           setSoftSkills(softResult.data);
         }
 
         if (!technicalResult.error && technicalResult.data.length > 0) {
-          console.log('✅ Fetched', technicalResult.data.length, 'technical skills');
           setTechnicalSkills(technicalResult.data);
         }
 
         if (!professionalResult.error && professionalResult.data.length > 0) {
-          console.log('✅ Fetched', professionalResult.data.length, 'professional skills');
           setProfessionalSkills(professionalResult.data);
         }
 
@@ -745,7 +719,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Global migration effect - runs when skills are loaded
   useEffect(() => {
     if (suggestions && (softSkills.length > 0 || professionalSkills.length > 0 || technicalSkills.length > 0)) {
-      console.log('🔄 Running global skills migration...');
       
       const migrateAllSkills = () => {
         if (!suggestions.skills) return;
@@ -758,7 +731,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           if (skillArray && Array.isArray(skillArray)) {
             (migratedSkills as any)[type] = skillArray.map((skill: any) => {
               if (skill && typeof skill.skill === 'string') {
-                console.log(`🔄 Global migration: "${skill.skill}" (${type})`);
                 
                 let skillArray: any[] = [];
                 switch (type) {
@@ -784,7 +756,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 }
                 
                 if (found) {
-                  console.log(`✅ Global migration to ObjectId: ${found._id} (matched "${found.name}")`);
                   needsUpdate = true;
                   return { 
                     ...skill, 
@@ -792,7 +763,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     details: skill.details || `Migrated from "${skill.skill}" to "${found.name}"`
                   };
                 } else {
-                  console.log(`⚠️ Skill not found in database: "${skill.skill}" - keeping as string for now`);
                   // Keep as string but mark for later processing
                   return { 
                     ...skill, 
@@ -807,7 +777,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         });
         
         if (needsUpdate) {
-          console.log('🔄 Updating suggestions with globally migrated ObjectIds');
           setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
@@ -819,7 +788,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Skills migration effect - runs when skills are loaded
   useEffect(() => {
     if (suggestions && (softSkills.length > 0 || professionalSkills.length > 0 || technicalSkills.length > 0)) {
-      console.log('🔄 Running skills migration from renderSkillsSection...');
       
       // Helper: get ObjectId for a skill name and type
       const getSkillObjectId = (skillName: string, type: string): string | undefined => {
@@ -842,10 +810,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           if (skillArray && Array.isArray(skillArray)) {
             migratedSkills[type] = skillArray.map((skill: any) => {
               if (skill && typeof skill.skill === 'string') {
-                console.log(`🔄 Migrating skill: "${skill.skill}" (${type})`);
                 const oid = getSkillObjectId(skill.skill, type);
                 if (oid) {
-                  console.log(`✅ Migrated to ObjectId: ${oid}`);
                   needsUpdate = true;
                   return { 
                     ...skill, 
@@ -853,7 +819,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     details: skill.details || 'Migrated from string'
                   };
                 } else {
-                  console.log(`⚠️ Skill not found in database: "${skill.skill}"`);
                   return skill; // Keep as string if not found
                 }
               }
@@ -863,7 +828,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         });
         
         if (needsUpdate) {
-          console.log('🔄 Updating suggestions with migrated ObjectIds');
           setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
@@ -876,7 +840,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     const forceMigration = () => {
       if (suggestions && suggestions.skills) {
-        console.log('🔄 Force migration check on mount...');
         let hasStringSkills = false;
         
         ['soft', 'professional', 'technical'].forEach(type => {
@@ -885,14 +848,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             skillArray.forEach((skill: any) => {
               if (skill && typeof skill.skill === 'string') {
                 hasStringSkills = true;
-                console.log(`⚠️ Found string skill: "${skill.skill}" in ${type}`);
               }
             });
           }
         });
         
         if (hasStringSkills) {
-          console.log('🔄 Forcing migration of string skills...');
           // Trigger the global migration effect
           const event = new CustomEvent('forceSkillsMigration');
           window.dispatchEvent(event);
@@ -1020,8 +981,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Validate and filter sectors to only allow predefined ones
         if (result.sectors && result.sectors.length > 0) {
-          console.log('🔍 Validating sectors...');
-          console.log('📋 Original sectors:', result.sectors);
+          
           
           const validSectors = result.sectors.filter(sector => {
             const isValid = predefinedOptions.sectors.includes(sector);
@@ -1032,13 +992,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           });
           
           result.sectors = validSectors;
-          console.log('✅ Validated sectors:', result.sectors);
         }
 
         // Validate and filter flexibility options to only allow predefined ones
         if (result.schedule?.flexibility && result.schedule.flexibility.length > 0) {
-          console.log('🔍 Validating flexibility options...');
-          console.log('📋 Original flexibility options:', result.schedule.flexibility);
+          
           
           const validFlexibility = result.schedule.flexibility.filter(option => {
             const isValid = FLEXIBILITY_SELECT_OPTIONS.includes(option);
@@ -1049,28 +1007,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           });
           
           result.schedule.flexibility = validFlexibility;
-          console.log('✅ Validated flexibility options:', result.schedule.flexibility);
         }
 
         // Validate and filter skills to only allow predefined ones from API
         if (result.skills) {
-          console.log('🔍 Validating skills...');
-          console.log('🎯 AI Generated Skills:', {
-            professional: result.skills.professional,
-            technical: result.skills.technical,
-            soft: result.skills.soft
-          });
-          console.log('📊 Available skills from API:', {
-            professional: professionalSkills.length,
-            technical: technicalSkills.length,
-            soft: softSkills.length
-          });
+          
           
           // Only validate if skills are loaded from API
           if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
-            console.log('📋 Professional skills from API:', professionalSkills.map(s => s.name));
-            console.log('📋 Technical skills from API:', technicalSkills.map(s => s.name));
-            console.log('📋 Soft skills from API:', softSkills.map(s => s.name));
+            
             
             // Helper function to find best match for a skill
             const findBestSkillMatch = (skillName: string, skillArray: any[]) => {
@@ -1099,7 +1044,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
                 const found = findBestSkillMatch(skillName, professionalSkills);
                 if (found) {
-                  console.log(`✅ Professional skill "${skillName}" matched to "${found.name}" (${found._id})`);
                   return { 
                     skill: { $oid: found._id },
                     level: typeof skill === 'object' ? skill.level : 1,
@@ -1111,7 +1055,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 }
               });
               result.skills.professional = validProfessional;
-              console.log('✅ Validated professional skills:', result.skills.professional);
             }
 
             // Validate and migrate technical skills
@@ -1120,7 +1063,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
                 const found = findBestSkillMatch(skillName, technicalSkills);
                 if (found) {
-                  console.log(`✅ Technical skill "${skillName}" matched to "${found.name}" (${found._id})`);
                   return { 
                     skill: { $oid: found._id },
                     level: typeof skill === 'object' ? skill.level : 1,
@@ -1132,7 +1074,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 }
               });
               result.skills.technical = validTechnical;
-              console.log('✅ Validated technical skills:', result.skills.technical);
             }
 
             // Validate and migrate soft skills
@@ -1141,7 +1082,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
                 const found = findBestSkillMatch(skillName, softSkills);
                 if (found) {
-                  console.log(`✅ Soft skill "${skillName}" matched to "${found.name}" (${found._id})`);
                   return { 
                     skill: { $oid: found._id },
                     level: typeof skill === 'object' ? skill.level : 1,
@@ -1152,35 +1092,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 }
               });
               result.skills.soft = validSoft;
-              console.log('✅ Validated soft skills:', result.skills.soft);
             }
           } else {
-            console.log('⚠️ Skills not yet loaded from API, skipping validation');
           }
         }
 
         // Convert destination zones from country names to alpha-2 codes
         if (result.destinationZones && result.destinationZones.length > 0) {
-          console.log('🔄 Converting destination zones from names to alpha-2 codes...');
-          console.log('📋 Original destination zones:', result.destinationZones);
           
           const convertedZones = await Promise.all(result.destinationZones.map(async (zone) => {
             // If it's already an alpha-2 code (2 letters), keep it
             if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
-              console.log('✅ Already alpha-2 code:', zone);
               return zone;
             }
             
             // If it's "Global", replace with "France" (FR)
             if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
-              console.log('🔄 Converting "Global" to "France" (FR)');
               return 'FR';
             }
             
             // If it's a country name, convert to alpha-2 code
             if (typeof zone === 'string') {
               const alpha2Code = await getAlpha2Code(zone);
-              console.log(`🔄 Converting "${zone}" to "${alpha2Code}"`);
               return alpha2Code;
             }
             
@@ -1188,11 +1121,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           }));
           
           result.destinationZones = convertedZones;
-          console.log('📋 Converted destination zones:', result.destinationZones);
-          console.log('🏢 Basic Info will display these zones with country names');
         } else {
           // If no destination zones are provided, default to France
-          console.log('🔄 No destination zones provided, defaulting to France (FR)');
           result.destinationZones = ['FR'];
         }
 
@@ -1238,7 +1168,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     if (!suggestions?.schedule || availableTimezones.length === 0) return;
     
-    console.log('🕐 Setting default timezone:', availableTimezones[0]._id);
     setSuggestions(prev => {
       if (!prev || !prev.schedule) return prev;
       return {
@@ -1256,7 +1185,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     if (!suggestions?.skills) return;
     if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
-      console.log('🔄 Re-validating skills now that API data is loaded...');
       
       setSuggestions(prev => {
         if (!prev || !prev.skills) return prev;
@@ -1290,7 +1218,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, professionalSkills);
             if (found) {
-              console.log(`✅ Re-validation: Professional skill "${skillName}" matched to "${found.name}" (${found._id})`);
               return { 
                 skill: { $oid: found._id },
                 level: typeof skill === 'object' ? skill.level : 1,
@@ -1302,7 +1229,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
           });
           newSuggestions.skills.professional = validProfessional;
-          console.log('✅ Re-validated professional skills:', newSuggestions.skills.professional);
         }
 
         // Validate and migrate technical skills
@@ -1311,7 +1237,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, technicalSkills);
             if (found) {
-              console.log(`✅ Re-validation: Technical skill "${skillName}" matched to "${found.name}" (${found._id})`);
               return { 
                 skill: { $oid: found._id },
                 level: typeof skill === 'object' ? skill.level : 1,
@@ -1323,7 +1248,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
           });
           newSuggestions.skills.technical = validTechnical;
-          console.log('✅ Re-validated technical skills:', newSuggestions.skills.technical);
         }
 
         // Validate and migrate soft skills
@@ -1332,7 +1256,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, softSkills);
             if (found) {
-              console.log(`✅ Re-validation: Soft skill "${skillName}" matched to "${found.name}" (${found._id})`);
               return { 
                 skill: { $oid: found._id },
                 level: typeof skill === 'object' ? skill.level : 1,
@@ -1343,7 +1266,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
           });
           newSuggestions.skills.soft = validSoft;
-          console.log('✅ Re-validated soft skills:', newSuggestions.skills.soft);
         }
 
         return newSuggestions;
@@ -1395,10 +1317,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
               // If skill is a string, convert to ObjectId format
               if (typeof skill === 'string') {
-                console.log(`🔄 Final migration: Converting string skill "${skill}" to ObjectId`);
                 const foundSkill = findSkillByName(skill, type);
                 if (foundSkill) {
-                  console.log(`✅ Final migration: Found skill "${skill}" with ID: ${foundSkill._id}`);
                   needsUpdate = true;
                   return { 
                     skill: { $oid: foundSkill._id }, 
@@ -1406,17 +1326,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     details: foundSkill.description || 'Migrated from string'
                   };
                 } else {
-                  console.log(`⚠️ Final migration: Skill "${skill}" not found in database - removing`);
                   return null; // Remove skills that don't exist in database
                 }
               }
               
               // If skill.skill is a string, convert to ObjectId format
               if (skill && typeof skill.skill === 'string') {
-                console.log(`🔄 Final migration: Converting skill.skill string "${skill.skill}" to ObjectId`);
                 const foundSkill = findSkillByName(skill.skill, type);
                 if (foundSkill) {
-                  console.log(`✅ Final migration: Found skill "${skill.skill}" with ID: ${foundSkill._id}`);
                   needsUpdate = true;
                   return { 
                     ...skill, 
@@ -1424,7 +1341,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     details: skill.details || foundSkill.description || 'Migrated from string'
                   };
                 } else {
-                  console.log(`⚠️ Final migration: Skill "${skill.skill}" not found in database - removing`);
                   return null; // Remove skills that don't exist in database
                 }
               }
@@ -1435,7 +1351,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         });
         
         if (needsUpdate) {
-          console.log('🔄 Final migration completed, updating suggestions');
           return { ...suggestions, skills: migratedSkills };
         }
         
@@ -1449,22 +1364,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Helper function to get country name from alpha-2 code
   const getCountryName = (alpha2Code: string): string => {
-    console.log('🔍 getCountryName called with alpha2Code:', alpha2Code);
     
     // First check our predefined list
     if (DESTINATION_ZONES[alpha2Code]) {
-      console.log('✅ Found in predefined list:', DESTINATION_ZONES[alpha2Code]);
       return DESTINATION_ZONES[alpha2Code];
     }
     
     // Then check the fetched countries
     const country = allCountries.find(c => c.cca2 === alpha2Code);
     if (country) {
-      console.log('✅ Found in fetched countries:', country.name.common);
       return country.name.common;
     }
     
-    console.log('❌ Not found, returning alpha2Code as fallback');
     return alpha2Code;
   };
 
@@ -1472,17 +1383,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const searchCountries = async (searchTerm: string): Promise<CountryData[]> => {
     if (!searchTerm || searchTerm.length < 2) return [];
     
-    console.log('🔍 Searching countries for:', searchTerm);
     setSearching(true);
     try {
       const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(searchTerm)}?fields=name,cca2`);
       if (response.ok) {
         const data: CountryData[] = await response.json();
-        console.log('✅ Search results:', data.length, 'countries found');
-        console.log('🔍 Search results:', data);
         return data;
       } else {
-        console.log('❌ Search failed with status:', response.status);
       }
     } catch (error) {
       console.error('❌ Error searching countries:', error);
@@ -1494,57 +1401,48 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Helper function to get alpha-2 code from country name (synchronous version for UI)
   const getAlpha2CodeSync = (countryName: string): string => {
-    console.log('🔍 getAlpha2CodeSync called with countryName:', countryName);
     
     // First check our predefined list
     const predefinedCode = Object.keys(DESTINATION_ZONES).find(
       code => DESTINATION_ZONES[code] === countryName
     );
     if (predefinedCode) {
-      console.log('✅ Found in predefined list:', predefinedCode);
       return predefinedCode;
     }
     
     // Then check the fetched countries
     const country = allCountries.find(c => c.name.common === countryName);
     if (country) {
-      console.log('✅ Found in fetched countries:', country.cca2);
       return country.cca2;
     }
     
-    console.log('❌ Not found locally, returning countryName as fallback');
     return countryName;
   };
 
   // Helper function to get alpha-2 code from country name (async version for API calls)
   const getAlpha2Code = async (countryName: string): Promise<string> => {
-    console.log('🔍 getAlpha2Code called with countryName:', countryName);
     
     // First check our predefined list
     const predefinedCode = Object.keys(DESTINATION_ZONES).find(
       code => DESTINATION_ZONES[code] === countryName
     );
     if (predefinedCode) {
-      console.log('✅ Found in predefined list:', predefinedCode);
       return predefinedCode;
     }
     
     // Then check the fetched countries
     const country = allCountries.find(c => c.name.common === countryName);
     if (country) {
-      console.log('✅ Found in fetched countries:', country.cca2);
       return country.cca2;
     }
     
     // If not found, try to fetch from API
-    console.log('🔍 Not found locally, searching via API...');
     try {
       const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fields=name,cca2`);
       if (response.ok) {
         const data: CountryData[] = await response.json();
         if (data.length > 0) {
           const alpha2Code = data[0].cca2;
-          console.log('✅ Found via API:', alpha2Code);
           return alpha2Code;
         }
       }
@@ -1552,7 +1450,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       console.error('❌ Error fetching from API:', error);
     }
     
-    console.log('❌ Not found anywhere, returning countryName as fallback');
     return countryName;
   };
 
@@ -1617,21 +1514,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "destinationZones":
         // For destination zones, we store the alpha-2 code
-        console.log('➕ Adding destination zone:', item);
         
         // If someone tries to add "Global", replace with "France"
         if (item.toLowerCase() === 'global') {
-          console.log('🔄 Converting "Global" to "France"');
           item = 'France';
         }
         
         const alpha2Code = getAlpha2CodeSync(item);
-        console.log('📝 Storing alpha2Code:', alpha2Code);
+        
         newSuggestions.destinationZones = [
           ...(newSuggestions.destinationZones || []),
           alpha2Code,
         ];
-        console.log('📋 Updated destinationZones:', newSuggestions.destinationZones);
+        
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential = [
@@ -1711,18 +1606,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "destinationZones":
         // For destination zones, we store the alpha-2 code
-        console.log('✏️ Updating destination zone at index', index, 'with:', newValue);
         
         // If someone tries to update to "Global", replace with "France"
         if (newValue.toLowerCase() === 'global') {
-          console.log('🔄 Converting "Global" to "France"');
           newValue = 'France';
         }
         
         const alpha2Code = getAlpha2CodeSync(newValue);
-        console.log('📝 Storing alpha2Code:', alpha2Code);
         newSuggestions.destinationZones[index] = alpha2Code;
-        console.log('📋 Updated destinationZones:', newSuggestions.destinationZones);
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential[index] = newValue;
@@ -1827,9 +1718,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (typeof currentValue === "string") {
       // For destination zones, convert alpha-2 code to country name for editing
       if (section === "destinationZones") {
-        console.log('🎯 Starting edit for destination zone with alpha2Code:', currentValue);
         const countryName = getCountryName(currentValue);
-        console.log('📝 Setting editValue to country name:', countryName);
         setEditValue(countryName);
       } else {
       setEditValue(currentValue);
@@ -1990,9 +1879,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       {typeof item === "string"
                         ? section === "destinationZones" 
                           ? (() => {
-                              console.log('🖥️ Rendering destination zone item:', item);
                               const countryName = getCountryName(item);
-                              console.log('🖥️ Displaying country name:', countryName);
                               return (
                                 <div className="flex items-center space-x-2">
                                   <span>{countryName}</span>
@@ -3052,16 +2939,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderActivitiesSection = () => {
     if (!suggestions) return null;
 
-    console.log('🎯 renderActivitiesSection - Debug Info:');
-    console.log('  - activities state:', activities);
-    console.log('  - activitiesLoading:', activitiesLoading);
-    console.log('  - isDataLoaded:', isDataLoaded);
-    console.log('  - suggestions.activities:', suggestions.activities);
+
 
     const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
-      console.log('➕ Adding activity:', value);
       
       // Find the activity by label and get its ID
       const selectedActivity = activities.find(activity => activity.label === value);
@@ -3075,14 +2957,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!newSuggestions.activities.includes(selectedActivity.value)) {
         newSuggestions.activities = [...newSuggestions.activities, selectedActivity.value];
         setSuggestions(newSuggestions);
-        console.log('✅ Activity added with ID:', selectedActivity.value);
       }
       // Reset select
       e.target.value = '';
     };
 
     const handleRemoveActivity = (activity: string) => {
-      console.log('➖ Removing activity:', activity);
       const newSuggestions = { ...suggestions };
       newSuggestions.activities = newSuggestions.activities.filter(a => a !== activity);
       setSuggestions(newSuggestions);
@@ -3091,8 +2971,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const selected = suggestions.activities || [];
     const available = activities.filter(activity => !selected.includes(activity.value));
     
-    console.log('  - selected activities:', selected);
-    console.log('  - available activities:', available.length);
 
     return (
       <div className="mb-8">
@@ -3149,16 +3027,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderIndustriesSection = () => {
     if (!suggestions) return null;
 
-    console.log('🏭 renderIndustriesSection - Debug Info:');
-    console.log('  - industries state:', industries);
-    console.log('  - industriesLoading:', industriesLoading);
-    console.log('  - isDataLoaded:', isDataLoaded);
-    console.log('  - suggestions.industries:', suggestions.industries);
+
 
     const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
-      console.log('➕ Adding industry:', value);
       
       // Find the industry by label and get its ID
       const selectedIndustry = industries.find(industry => industry.label === value);
@@ -3172,14 +3045,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!newSuggestions.industries.includes(selectedIndustry.value)) {
         newSuggestions.industries = [...newSuggestions.industries, selectedIndustry.value];
         setSuggestions(newSuggestions);
-        console.log('✅ Industry added with ID:', selectedIndustry.value);
       }
       // Reset select
       e.target.value = '';
     };
 
     const handleRemoveIndustry = (industry: string) => {
-      console.log('➖ Removing industry:', industry);
       const newSuggestions = { ...suggestions };
       newSuggestions.industries = newSuggestions.industries.filter(i => i !== industry);
       setSuggestions(newSuggestions);
@@ -3188,8 +3059,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const selected = suggestions.industries || [];
     const available = industries.filter(industry => !selected.includes(industry.value));
     
-    console.log('  - selected industries:', selected);
-    console.log('  - available industries:', available.length);
 
     return (
       <div className="mb-8">
@@ -3884,10 +3753,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         return s;
       });
     });
-    console.log('Current suggestions skills (with ObjectIds):', skillsWithObjectIds);
 
     const addSkill = (skillType: string, skill: string, level: number = 1) => {
-      console.log(`🔄 Adding skill - Type: ${skillType}, Skill ID: ${skill}, Level: ${level}`);
       
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) {
@@ -3910,7 +3777,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               proficiency: LANGUAGE_LEVELS[level - 1]?.value || "B1",
               iso639_1: selectedLanguage.code, // Use correct code
             });
-            console.log(`✅ Added language: ${selectedLanguage.label} (${selectedLanguage.code})`);
           } else {
             console.warn(`Language with ID "${skill}" not found. Skipping addition.`);
             return; // Exit early without adding the skill
@@ -3937,8 +3803,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           
           // Find the skill by ObjectId (skill parameter is now the ObjectId)
           const skillObject = skillArray.find(s => s._id === skill);
-          console.log(`🔍 Looking for skill with ID: ${skill}`);
-          console.log(`📋 Available skills in ${skillType}:`, skillArray.map(s => ({ id: s._id, name: s.name })));
           
           if (skillObject) {
             const skillData = { 
@@ -3947,22 +3811,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               details: skillObject.description || '' // Add details field
             };
             (newSuggestions.skills as any)[skillType].push(skillData);
-            console.log(`✅ Added ${skillType} skill:`, skillData);
-            console.log(`📝 Skill ObjectId: ${skillObject._id}, Name: ${skillObject.name}`);
           } else {
             // Don't add skills that don't exist in the database
-            console.log(`❌ Skill not found in database: "${skill}". Skipping addition.`);
             return; // Exit early without adding the skill
           }
           break;
       }
       
-      console.log('📊 Updated suggestions skills:', newSuggestions.skills);
       setSuggestions(newSuggestions);
     };
 
     const updateSkill = (skillType: string, index: number, field: string, value: string | number) => {
-      console.log(`🔄 Updating skill - Type: ${skillType}, Index: ${index}, Field: ${field}, Value: ${value}`);
       
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) return;
@@ -4005,21 +3864,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             // Find the skill by ObjectId (value parameter is now the ObjectId)
             const skillObject = skillArray.find(s => s._id === value);
-            console.log(`🔍 Updating skill - Looking for skill with ID: ${value}`);
-            console.log(`📋 Available skills in ${skillType}:`, skillArray.map(s => ({ id: s._id, name: s.name })));
+            
             
             if (skillObject) {
               (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
               (newSuggestions.skills as any)[skillType][index].details = skillObject.description || ''; // Update details field
-              console.log(`✅ Updated ${skillType} skill:`, {
-                skill: { $oid: skillObject._id },
-                level: (newSuggestions.skills as any)[skillType][index].level,
-                details: skillObject.description || ''
-              });
-              console.log(`📝 Skill ObjectId: ${skillObject._id}, Name: ${skillObject.name}`);
             } else {
               // Don't update with skills that don't exist in the database
-              console.log(`❌ Skill not found in database during update: "${value}". Skipping update.`);
               return; // Exit early without updating the skill
             }
           } else if (field === "level") {
@@ -4031,14 +3882,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const deleteSkill = (skillType: string, index: number) => {
-      console.log(`🗑️ Deleting skill - Type: ${skillType}, Index: ${index}`);
+      
       const arr = (suggestions.skills as any)[skillType];
       if (arr && arr[index]) {
         const skillEntry = arr[index];
         if (skillEntry && skillEntry.skill && skillEntry.skill.$oid) {
-          console.log(`🗑️ Skill ObjectId to delete: ${skillEntry.skill.$oid}`);
         } else {
-          console.log('🗑️ Skill entry to delete:', skillEntry);
         }
       }
       const newSuggestions = { ...suggestions };
@@ -4439,9 +4288,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             setEditValue("");
                             setEditingSection(null);
                             setEditingIndex(null);
-                          } else {
-                            console.log(`❌ Selected skill does not exist in database: "${editValue}"`);
-                            // You could show an error message to the user here
                           }
                         }
                       }
