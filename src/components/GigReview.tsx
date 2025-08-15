@@ -107,6 +107,11 @@ export function GigReview({
     fetchSkillsAndLanguages();
   }, []);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Fetch all timezones and companies on mount
   useEffect(() => {
     const fetchMeta = async () => {
@@ -130,7 +135,7 @@ export function GigReview({
             const cMap: { [key: string]: string } = {};
             cMap[company._id] = company.name || company._id;
             setCompanyMap(cMap);
-          } else {
+        } else {
           }
         } catch (e) { 
         }
