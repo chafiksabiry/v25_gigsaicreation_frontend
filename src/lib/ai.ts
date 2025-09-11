@@ -24,6 +24,9 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
 
     const data = await response.json();
     
+    // Log the backend response for debugging
+    console.log('Backend API Response:', data);
+    
     // Transform the backend response to match our GigSuggestion type
     return {
       jobTitles: data.jobTitles || [],
