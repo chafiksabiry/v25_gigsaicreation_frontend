@@ -1,4 +1,5 @@
-import { TimezoneCode } from './ai';
+// TimezoneCode type removed with OpenAI integration
+type TimezoneCode = string;
 
 export interface AIPrompt {
   title: string;
@@ -72,33 +73,18 @@ export interface TimezoneGenerationResponse {
 export async function generateTimezoneRecommendations(
   request: TimezoneGenerationRequest
 ): Promise<TimezoneGenerationResponse> {
-  try {
-    // Get the API key from environment variables
-    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-    
-    if (!apiKey) {
-      throw new Error('OpenAI API key not found in environment variables');
-    }
-
-    // Call the OpenAI service
-    const response = await generateTimezones(request, apiKey);
-    return response;
-  } catch (error) {
-    console.error('Error generating timezone recommendations:', error);
-    
-    // Return a fallback response if the API call fails
-    return {
-      suggestedTimezones: ['New York (EST/EDT)', 'London (GMT/BST)', 'Singapore (SGT)'],
-      workingHours: {
-        start: '09:00',
-        end: '17:00'
-      },
-      coverageAnalysis: 'Coverage across major global business hours with focus on US, Europe, and Asia',
-      flexibilityRecommendations: [
-        'Consider split shifts for 24/7 coverage',
-        'Implement rotating schedules for global team members',
-        'Allow flexible hours within core business times'
-      ]
-    };
-  }
+  // OpenAI functionality moved to backend - return default fallback
+  return {
+    suggestedTimezones: ['New York (EST/EDT)', 'London (GMT/BST)', 'Singapore (SGT)'],
+    workingHours: {
+      start: '09:00',
+      end: '17:00'
+    },
+    coverageAnalysis: 'Coverage across major global business hours with focus on US, Europe, and Asia',
+    flexibilityRecommendations: [
+      'Consider split shifts for 24/7 coverage',
+      'Implement rotating schedules for global team members',
+      'Allow flexible hours within core business times'
+    ]
+  };
 } 

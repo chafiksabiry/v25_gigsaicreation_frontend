@@ -26,7 +26,6 @@ import {
   Moon,
   Calendar,
 } from "lucide-react";
-import OpenAI from "openai";
 import type { GigSuggestion } from "../types";
 import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
@@ -101,17 +100,7 @@ interface SuggestionsProps {
   initialSuggestions?: GigSuggestion | null;
 }
 
-let openai: OpenAI | null = null;
-try {
-  if (import.meta.env.VITE_OPENAI_API_KEY) {
-    openai = new OpenAI({
-      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-      dangerouslyAllowBrowser: true,
-    });
-  }
-} catch (error) {
-  console.error("Error initializing OpenAI client:", error);
-}
+// OpenAI functionality has been moved to backend API
 
 
 // Major countries with their alpha-2 codes
