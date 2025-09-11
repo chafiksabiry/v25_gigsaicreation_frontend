@@ -46,8 +46,8 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
       sectors: data.category ? [data.category] : [],
       scheduleFlexibility: data.availability?.flexibility || [],
       destinationZones: data.destination_zone ? [data.destination_zone] : [],
-      highlights: [], // Backend doesn't provide this yet
-      deliverables: [], // Backend doesn't provide this yet
+      highlights: data.highlights || [],
+      deliverables: data.deliverables || [],
       requirements: { essential: [], preferred: [] }, // Backend doesn't provide this yet
       
       // Schedule mapping
