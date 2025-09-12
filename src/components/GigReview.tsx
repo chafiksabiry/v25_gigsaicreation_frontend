@@ -26,7 +26,7 @@ import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { validateGigData } from "../lib/validation";
 import { groupSchedules } from "../lib/scheduleUtils";
-import { fetchAllTimezones, fetchCompanyById, fetchCountryName, getCountryNameById } from '../lib/api';
+import { fetchAllTimezones, fetchCompanyById, getCountryNameById } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
 import { 
   getIndustryNameById,

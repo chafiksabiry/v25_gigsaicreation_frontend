@@ -410,34 +410,7 @@ export async function fetchTimezonesByCountry(countryCode: string): Promise<{ da
   }
 }
 
-export async function fetchCountryName(countryCode: string): Promise<{ data: string; error?: Error }> {
-  try {
-    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
-    
-    const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.message || 'Failed to fetch country data');
-    }
-    
-    if (result.data && result.data.length > 0) {
-      const countryName = result.data[0].countryName;
-      return { data: countryName };
-    } else {
-      console.warn('⚠️ API: No country data found for code:', countryCode);
-      return { data: countryCode }; // Fallback to code if no data
-    }
-  } catch (error) {
-    console.error('❌ API: Error fetching country name:', error);
-    return { data: countryCode, error: error as Error }; // Fallback to code on error
-  }
-}
+// Removed fetchCountryName - now using getCountryNameById from countries API
 
 // Skills API functions
 export async function fetchSoftSkills() {

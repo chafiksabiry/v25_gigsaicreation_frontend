@@ -31,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
+import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import { 
   loadActivities, 
@@ -316,18 +316,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Fetch all countries from API for destination zones
   useEffect(() => {
-    const fetchAllCountries = async () => {
+    const loadAllCountries = async () => {
       setDestinationCountriesLoading(true);
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-        if (response.ok) {
-          const data: CountryData[] = await response.json();
-          // Sort countries alphabetically by common name
-          const sortedData = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-          setAllCountriesFromAPI(sortedData);
-        } else {
-          console.error('Failed to fetch countries from API');
-        }
+        const countries = await fetchAllCountries();
+        // Convert to the format expected by the component
+        const formattedData = countries.map(country => ({
+          name: {
+            common: country.name.common,
+            official: country.name.official
+          },
+          cca2: country.cca2
+        }));
+        // Sort countries alphabetically by common name
+        const sortedData = formattedData.sort((a, b) => a.name.common.localeCompare(b.name.common));
+        setAllCountriesFromAPI(sortedData);
       } catch (error) {
         console.error('Error fetching countries:', error);
       } finally {
@@ -335,7 +338,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       }
     };
 
-    fetchAllCountries();
+    loadAllCountries();
   }, []);
 
   // Ensure all team roles have valid seniority structure
@@ -422,13 +425,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (allCountries.length === 0) {
         setCountriesLoading(true);
         try {
-          const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-          if (response.ok) {
-            const countriesData: CountryData[] = await response.json();
-            setAllCountries(countriesData);
-          } else {
-            console.error('❌ Failed to fetch countries');
-          }
+          const countries = await fetchAllCountries();
+          const countriesData = countries.map(country => ({
+            name: {
+              common: country.name.common,
+              official: country.name.official
+            },
+            cca2: country.cca2
+          }));
+          setAllCountries(countriesData);
         } catch (error) {
           console.error('❌ Error fetching countries:', error);
         } finally {
@@ -440,15 +445,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (territories.length === 0) {
         setTerritoriesLoading(true);
         try {
-          const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-          if (response.ok) {
-            const countriesData = await response.json();
-            const countryNames = countriesData.map((country: any) => country.name.common).sort();
-            setTerritories(countryNames);
-          } else {
-            console.error('❌ Failed to fetch territories');
-            // Fallback to basic territories
-            setTerritories([
+          const countries = await fetchAllCountries();
+          const countryNames = countries.map(country => country.name.common).sort();
+          setTerritories(countryNames);
+        } catch (error) {
+          console.error('❌ Error fetching territories:', error);
+          // Fallback to basic territories
+          setTerritories([
               "North America",
               "Europe",
               "Asia Pacific",
@@ -1374,14 +1377,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     
     setSearching(true);
     try {
-      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(searchTerm)}?fields=name,cca2`);
-      if (response.ok) {
-        const data: CountryData[] = await response.json();
-        return data;
-      } else {
-      }
+      const countries = await fetchAllCountries();
+      // Filter countries by search term
+      const filtered = countries.filter(country => 
+        country.name.common.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        country.name.official.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      // Convert to expected format
+      const data = filtered.map(country => ({
+        name: {
+          common: country.name.common,
+          official: country.name.official
+        },
+        cca2: country.cca2
+      }));
+      
+      return data;
     } catch (error) {
       console.error('❌ Error searching countries:', error);
+      return [];
     } finally {
       setSearching(false);
     }
@@ -1425,15 +1440,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       return country.cca2;
     }
     
-    // If not found, try to fetch from API
+    // If not found, try to fetch from our API
     try {
-      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fields=name,cca2`);
-      if (response.ok) {
-        const data: CountryData[] = await response.json();
-        if (data.length > 0) {
-          const alpha2Code = data[0].cca2;
-          return alpha2Code;
-        }
+      const countries = await fetchAllCountries();
+      const country = countries.find(c => 
+        c.name.common.toLowerCase() === countryName.toLowerCase() ||
+        c.name.official.toLowerCase() === countryName.toLowerCase()
+      );
+      
+      if (country) {
+        return country.cca2;
       }
     } catch (error) {
       console.error('❌ Error fetching from API:', error);

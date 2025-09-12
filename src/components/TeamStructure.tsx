@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2, Globe, Users, Building2, Briefcase, GraduationCap, ArrowLeft, ArrowRight, XCircle } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
+import { fetchAllCountries } from '../lib/api';
 
 interface TeamRoleOption {
   id: string;
@@ -45,15 +46,13 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   React.useEffect(() => {
     const fetchTerritories = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-        if (response.ok) {
-          const countriesData = await response.json();
-          const countryNames = countriesData.map((country: any) => country.name.common).sort();
-          setTerritories(countryNames);
-        } else {
-          console.error('❌ Failed to fetch territories');
-          // Fallback to basic territories
-          setTerritories([
+        const countries = await fetchAllCountries();
+        const countryNames = countries.map(country => country.name.common).sort();
+        setTerritories(countryNames);
+      } catch (error) {
+        console.error('❌ Error fetching territories:', error);
+        // Fallback to basic territories
+        setTerritories([
             "North America",
             "Europe",
             "Asia Pacific",
