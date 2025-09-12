@@ -13,7 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { DaySchedule, GroupedSchedule } from "../lib/scheduleUtils";
-import { fetchAllTimezones, fetchTimezonesByCountry } from "../lib/api";
+import { fetchAllTimezones as fetchAllTimezonesNew } from "../lib/api";
 
 interface ScheduleSectionProps {
   data: {
@@ -137,19 +137,8 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
     const fetchTimezones = async () => {
       setTimezoneLoading(true);
       try {
-        let timezoneData: any[] = [];
-        if (!showAllTimezones && props.destination_zone && props.destination_zone.length === 2) {
-          const { data, error } = await fetchTimezonesByCountry(props.destination_zone);
-          if (!error && data.length > 0) {
-            timezoneData = data;
-          }
-        }
-        if (showAllTimezones || !timezoneData.length) {
-          const { data, error } = await fetchAllTimezones();
-          if (!error && data.length > 0) {
-            timezoneData = data;
-          }
-        }
+        // Always use all timezones from the new API (no longer filtering by country)
+        const timezoneData = await fetchAllTimezonesNew();
         const processedTimezones = timezoneData
           .map(tz => ({
             _id: tz._id,

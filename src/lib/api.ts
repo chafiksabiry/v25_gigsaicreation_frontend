@@ -439,55 +439,6 @@ export async function getGig(gigId: string | null) {
   }
 }
 
-export async function fetchAllTimezones(): Promise<{ data: any[]; error?: Error }> {
-  try {
-    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
-    const response = await fetch(`${timezoneApiUrl}/timezones`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch timezones: ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
-    }
-    
-    return { data: result.data || [], error: undefined };
-  } catch (error) {
-    console.error('Error fetching timezones:', error);
-    return { 
-      data: [], 
-      error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
-    };
-  }
-}
-
-export async function fetchTimezonesByCountry(countryCode: string): Promise<{ data: any[]; error?: Error }> {
-  try {
-    const timezoneApiUrl = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
-    const response = await fetch(`${timezoneApiUrl}/timezones/country/${countryCode}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch timezones for country ${countryCode}: ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
-    }
-    
-    return { data: result.data || [], error: undefined };
-  } catch (error) {
-    console.error('Error fetching timezones:', error);
-    return { 
-      data: [], 
-      error: error instanceof Error ? error : new Error('Failed to fetch timezones') 
-    };
-  }
-}
 
 // Removed fetchCountryName - now using getCountryNameById from countries API
 
