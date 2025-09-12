@@ -2807,9 +2807,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           {selected.map(zone => (
             <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
               <span>{getCountryName(zone)}</span>
-              <span className="ml-1 text-xs text-amber-600 bg-amber-200 px-1 rounded">
-                {zone}
-              </span>
               <button
                 type="button"
                 onClick={() => handleRemoveDestinationZone(zone)}
