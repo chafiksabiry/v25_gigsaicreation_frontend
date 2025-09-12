@@ -57,6 +57,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
           hours: sched.hours
         })) : [],
         timeZones: data.availability?.time_zone ? [data.availability.time_zone] : [],
+        time_zone: data.availability?.time_zone || '',
         flexibility: data.availability?.flexibility || [],
         minimumHours: data.availability?.minimumHours || { daily: 0, weekly: 0, monthly: 0 }
       }

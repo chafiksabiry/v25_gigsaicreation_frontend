@@ -68,52 +68,6 @@ const getUnusedDay = (schedules: DaySchedule[]): string | undefined => {
   return allWeekDays.find((d) => !used.includes(d));
 };
 
-const getCountryName = (countryCode: string): string => {
-  const countryNames: { [key: string]: string } = {
-    'US': 'United States',
-    'FR': 'France',
-    'GB': 'United Kingdom',
-    'DE': 'Germany',
-    'CA': 'Canada',
-    'AU': 'Australia',
-    'JP': 'Japan',
-    'IN': 'India',
-    'BR': 'Brazil',
-    'MX': 'Mexico',
-    'ES': 'Spain',
-    'IT': 'Italy',
-    'NL': 'Netherlands',
-    'SE': 'Sweden',
-    'NO': 'Norway',
-    'DK': 'Denmark',
-    'FI': 'Finland',
-    'CH': 'Switzerland',
-    'AT': 'Austria',
-    'BE': 'Belgium',
-    'PT': 'Portugal',
-    'IE': 'Ireland',
-    'NZ': 'New Zealand',
-    'SG': 'Singapore',
-    'KR': 'South Korea',
-    'CN': 'China',
-    'RU': 'Russia',
-    'ZA': 'South Africa',
-    'AR': 'Argentina',
-    'CL': 'Chile',
-    'CO': 'Colombia',
-    'PE': 'Peru',
-    'VE': 'Venezuela',
-    'UY': 'Uruguay',
-    'PY': 'Paraguay',
-    'BO': 'Bolivia',
-    'EC': 'Ecuador',
-    'GY': 'Guyana',
-    'SR': 'Suriname',
-    'GF': 'French Guiana',
-    'TN': 'Tunisia',
-  };
-  return countryNames[countryCode] || countryCode;
-}
 
 const ScheduleSection = (props: ScheduleSectionProps) => {
   // Use flat schedules as source of truth
@@ -126,18 +80,17 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
   const [timezoneLoading, setTimezoneLoading] = useState(false);
   const [timezonesLoaded, setTimezonesLoaded] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
-  const [showAllTimezones, setShowAllTimezones] = useState(false);
 
   useEffect(() => {
     props.onChange({ ...props.data, schedules });
   }, [schedules]);
 
-  // Fetch timezones when destination zone changes
+  // Fetch all available timezones
   useEffect(() => {
     const fetchTimezones = async () => {
       setTimezoneLoading(true);
       try {
-        // Always use all timezones from the new API (no longer filtering by country)
+        // Always use all timezones from the new API
         const timezoneData = await fetchAllTimezonesNew();
         const processedTimezones = timezoneData
           .map(tz => ({
@@ -149,6 +102,8 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
           }))
           .sort((a, b) => a.offset - b.offset);
         setAvailableTimezones(processedTimezones);
+        
+        // If there's a time_zone from API, keep it; otherwise set to first available
         if (processedTimezones.length > 0 && !props.data.time_zone) {
           props.onChange({ ...props.data, time_zone: processedTimezones[0]._id });
         }
@@ -160,7 +115,7 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
       }
     };
     fetchTimezones();
-  }, [props.destination_zone, showAllTimezones]);
+  }, []);
 
   // Group for display
   const groupedSchedules = groupSchedulesByHours(schedules);
@@ -650,7 +605,7 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
                   <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
                   {props.destination_zone && (
                   <p className="text-sm text-green-700">
-                      Based on destination: <span className="font-semibold">{getCountryName(props.destination_zone)} ({props.destination_zone})</span>
+                      Available timezones worldwide
                     </p>
                   )}
                 </div>
@@ -661,18 +616,6 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
                     <Loader2 className="w-4 h-4 animate-spin text-green-600" />
                     <span className="text-sm text-green-600 ml-1">Loading...</span>
                   </div>
-                )}
-                {availableTimezones.length > 0 && (
-                  <button
-                    onClick={() => setShowAllTimezones((v) => !v)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      showAllTimezones
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    }`}
-                  >
-                    {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
-                  </button>
                 )}
               </div>
             </div>
@@ -708,8 +651,8 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
                 ? 'Loading timezones from API...'
                 : availableTimezones.length > 0
                  ? timezoneSearch
-                   ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${props.destination_zone ? ` for ${getCountryName(props.destination_zone)}` : ''}`
-                  : `${availableTimezones.length} timezones available${props.destination_zone ? ` for ${getCountryName(props.destination_zone)}` : ' worldwide'}`
+                   ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones`
+                  : `${availableTimezones.length} timezones available worldwide`
                   : 'No timezones available'
               }
             </p>
