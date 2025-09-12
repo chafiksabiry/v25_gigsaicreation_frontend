@@ -31,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country } from "../lib/api";
+import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import { 
   loadActivities, 
@@ -480,12 +480,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!timezonesLoaded) {
       setTimezoneLoading(true);
       try {
-        const { data, error } = await fetchAllTimezones();
-        if (!error && data.length > 0) {
+        const data = await fetchAllTimezonesNew();
+        if (data.length > 0) {
           setAllTimezones(data);
           setTimezonesLoaded(true);
         } else {
-            console.error('❌ Failed to fetch timezones:', error);
+            console.error('❌ No timezones received from API');
             // Fallback to default timezones
             setAllTimezones([]);
             setTimezonesLoaded(true);
@@ -539,95 +539,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
   }, [allTimezones, timezonesLoaded]);
 
-  // Fetch country-specific timezones when destination changes
+  // No longer fetch country-specific timezones - we show all timezones available
+
+  // Effect to show all timezones from API (no longer filtering by country)
   useEffect(() => {
-    const fetchCountryTimezones = async () => {
-      if (!suggestions?.destinationZones || suggestions.destinationZones.length === 0) {
-        return;
-      }
-
-      const firstDestination = suggestions.destinationZones[0];
-      if (!firstDestination || firstDestination.length !== 2) {
-        return;
-      }
-
-      // Only fetch if we're not showing all timezones
-      if (showAllTimezones) {
-        return;
-      }
-
-      setTimezoneLoading(true);
-      
-      try {
-        const { data, error } = await fetchTimezonesByCountry(firstDestination);
-        if (!error && data.length > 0) {
-          
-          // Process timezones for the specific country
-          const processedTimezones = data
-            .map(tz => ({
-              _id: tz._id,
-              name: tz.zoneName,
-              offset: tz.gmtOffset / 3600, // Convert seconds to hours
-              abbreviation: tz.zoneName.split('/').pop() || '',
-              countryName: tz.countryName
-            }))
-            .sort((a, b) => a.offset - b.offset);
-
-          setAvailableTimezones(processedTimezones);
-          
-          // Set the first timezone as default
-          if (processedTimezones.length > 0) {
-            const newSuggestions = { ...suggestions };
-            if (!newSuggestions.schedule) {
-              newSuggestions.schedule = { schedules: [], timeZones: [], flexibility: [], minimumHours: {} };
-            }
-            newSuggestions.schedule.timeZones = [processedTimezones[0]._id];
-            newSuggestions.schedule.time_zone = processedTimezones[0]._id;
-            setSuggestions(newSuggestions);
-          }
-        } else {
-          console.error('❌ Failed to fetch timezones for country:', error);
-          // Keep current timezones if country-specific fetch fails
-        }
-      } catch (error) {
-        console.error('❌ Error fetching timezones for country:', error);
-        // Keep current timezones if fetch fails
-      } finally {
-        setTimezoneLoading(false);
-      }
-    };
-
-    fetchCountryTimezones();
-  }, [suggestions?.destinationZones?.[0], showAllTimezones]); // Only depend on first destination and showAllTimezones
-
-  // Effect to handle switching between country-specific and all timezones
-  useEffect(() => {
-    if (showAllTimezones) {
-      // Show all timezones from API
-      if (allTimezones && allTimezones.length > 0) {
-        const processedTimezones = allTimezones
-          .map(tz => ({
-            _id: tz._id,
-            name: tz.zoneName,
-            offset: tz.gmtOffset / 3600,
-            abbreviation: tz.zoneName.split('/').pop() || '',
-            countryName: tz.countryName
-          }))
-          .sort((a, b) => a.offset - b.offset);
-        setAvailableTimezones(processedTimezones);
-      } else {
-        // Fallback to default timezones if API data is not available
-        setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
-          _id: `default_${code}`,
-          name,
-          offset,
-          abbreviation: code.split('(')[1]?.split(')')[0] || '',
-          countryName: ''
-        })));
-      }
+    if (allTimezones && allTimezones.length > 0 && availableTimezones.length === 0) {
+      const processedTimezones = allTimezones
+        .map(tz => ({
+          _id: tz._id,
+          name: tz.zoneName,
+          offset: tz.gmtOffset / 3600,
+          abbreviation: tz.zoneName.split('/').pop() || '',
+          countryName: tz.countryName
+        }))
+        .sort((a, b) => a.offset - b.offset);
+      setAvailableTimezones(processedTimezones);
     }
-    // If not showing all timezones, the country-specific effect will handle it
-  }, [showAllTimezones, allTimezones]);
+  }, [allTimezones, availableTimezones.length]);
 
   // Fetch skills from API
   useEffect(() => {
@@ -2711,18 +2639,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <span className="text-sm text-green-600 ml-1">Loading...</span>
               </div>
             )}
-            {firstDestination && (
-              <button
-                onClick={() => setShowAllTimezones(!showAllTimezones)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  showAllTimezones
-                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-              >
-                {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
-              </button>
-            )}
           </div>
         </div>
         
@@ -2755,8 +2671,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {availableTimezones.length > 0 
             ? timezoneSearch 
-              ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ''}`
-              : `${availableTimezones.length} timezones available${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ' worldwide'}`
+              ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones`
+              : `${availableTimezones.length} timezones available worldwide`
             : timezoneLoading 
               ? 'Loading timezones from API...'
               : 'No timezones available'

@@ -38,6 +38,30 @@ export interface CountryResponse {
   data: Country;
 }
 
+// Types for timezones API
+export interface Timezone {
+  _id: string;
+  countryCode: string;
+  countryName: string;
+  zoneName: string;
+  gmtOffset: number;
+  lastUpdated: string;
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimezonesResponse {
+  success: boolean;
+  data: Timezone[];
+  count: number;
+}
+
+export interface TimezoneResponse {
+  success: boolean;
+  data: Timezone;
+}
+
 
 // TODO: Implement these functions with your preferred storage solution
 export async function createGig() {
@@ -114,6 +138,61 @@ export async function getCountryNameById(countryId: string): Promise<string> {
   } catch (error) {
     console.error('Error getting country name:', error);
     return 'Unknown Country';
+  }
+}
+
+// Timezones API functions
+export async function fetchAllTimezones(): Promise<Timezone[]> {
+  try {
+    const TIMEZONE_API_URL = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const response = await fetch(`${TIMEZONE_API_URL}/timezones/`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch timezones: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: TimezonesResponse = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Failed to fetch timezones');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching timezones:', error);
+    throw error;
+  }
+}
+
+export async function fetchTimezoneById(timezoneId: string): Promise<Timezone> {
+  try {
+    const TIMEZONE_API_URL = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const response = await fetch(`${TIMEZONE_API_URL}/timezones/${timezoneId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch timezone: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: TimezoneResponse = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Failed to fetch timezone');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching timezone:', error);
+    throw error;
+  }
+}
+
+export async function getTimezoneNameById(timezoneId: string): Promise<string> {
+  try {
+    const timezone = await fetchTimezoneById(timezoneId);
+    return `${timezone.zoneName} (${timezone.countryName})`;
+  } catch (error) {
+    console.error('Error getting timezone name:', error);
+    return 'Unknown Timezone';
   }
 }
 
