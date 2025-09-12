@@ -31,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries } from "../lib/api";
+import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import { 
   loadActivities, 
@@ -249,7 +249,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [territories, setTerritories] = useState<string[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
-  const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<CountryData[]>([]);
+  const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<Country[]>([]);
   const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
@@ -320,16 +320,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       setDestinationCountriesLoading(true);
       try {
         const countries = await fetchAllCountries();
-        // Convert to the format expected by the component
-        const formattedData = countries.map(country => ({
-          name: {
-            common: country.name.common,
-            official: country.name.official
-          },
-          cca2: country.cca2
-        }));
         // Sort countries alphabetically by common name
-        const sortedData = formattedData.sort((a, b) => a.name.common.localeCompare(b.name.common));
+        const sortedData = countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
         setAllCountriesFromAPI(sortedData);
       } catch (error) {
         console.error('Error fetching countries:', error);
@@ -1322,21 +1314,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
   };
 
-  // Helper function to get country name from alpha-2 code
-  const getCountryName = (alpha2Code: string): string => {
-    
-    // First check our predefined list
-    if (DESTINATION_ZONES[alpha2Code]) {
-      return DESTINATION_ZONES[alpha2Code];
+  // Helper function to get country name from API ID or alpha-2 code
+  const getCountryName = (countryId: string): string => {
+    // First check if it's an API ID (MongoDB ObjectId format)
+    if (countryId && countryId.length === 24) {
+      const country = allCountriesFromAPI.find(c => c._id === countryId);
+      if (country) {
+        return country.name.common;
+      }
     }
     
-    // Then check the fetched countries
-    const country = allCountries.find(c => c.cca2 === alpha2Code);
+    // Then check our predefined list (for backward compatibility)
+    if (DESTINATION_ZONES[countryId]) {
+      return DESTINATION_ZONES[countryId];
+    }
+    
+    // Then check the fetched countries by cca2 (for backward compatibility)
+    const country = allCountries.find(c => c.cca2 === countryId);
     if (country) {
       return country.name.common;
     }
     
-    return alpha2Code;
+    return countryId;
   };
 
   // Helper function to search for countries by name
@@ -2791,9 +2790,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     
     // Get all available countries from API, excluding already selected ones
     const availableCountries = allCountriesFromAPI
-      .filter(country => !selected.includes(country.cca2))
+      .filter(country => !selected.includes(country._id))
       .map(country => ({ 
-        code: country.cca2, 
+        code: country._id, 
         name: country.name.common 
       }));
 
@@ -2834,7 +2833,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
           </option>
           {availableCountries.map(({ code, name }) => (
-            <option key={code} value={name}>{name} ({code})</option>
+            <option key={code} value={code}>{name}</option>
           ))}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
