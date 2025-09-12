@@ -242,7 +242,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [searchResults, setSearchResults] = useState<CountryData[]>([]);
   const [searching, setSearching] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
-  const [showAllTimezones, setShowAllTimezones] = useState(false);
   const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
@@ -2620,16 +2619,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
             <div>
               <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
-              {firstDestination && !showAllTimezones && (
-                <p className="text-sm text-green-700">
-                  Based on destination: <span className="font-semibold">{destinationCountryName} ({firstDestination})</span>
-                </p>
-              )}
-              {showAllTimezones && (
-                <p className="text-sm text-green-700">
-                  Showing <span className="font-semibold">all available timezones</span>
-                </p>
-              )}
+              <p className="text-sm text-green-700">
+                Available timezones worldwide
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
