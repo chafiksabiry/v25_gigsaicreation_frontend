@@ -246,7 +246,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [skillsLoading, setSkillsLoading] = useState(false);
-  const [territories, setTerritories] = useState<string[]>([]);
+  const [territoriesFromAPI, setTerritoriesFromAPI] = useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
   const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<Country[]>([]);
   const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
@@ -432,44 +432,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
       }
 
-      // Fetch territories
-      if (territories.length === 0) {
+      // Fetch territories (countries) from API
+      if (territoriesFromAPI.length === 0) {
         setTerritoriesLoading(true);
         try {
           const countries = await fetchAllCountries();
-          const countryNames = countries.map(country => country.name.common).sort();
-          setTerritories(countryNames);
+          const sortedCountries = countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+          setTerritoriesFromAPI(sortedCountries);
         } catch (error) {
           console.error('❌ Error fetching territories:', error);
-          // Fallback to basic territories
-          setTerritories([
-            "North America",
-            "Europe",
-            "Asia Pacific",
-            "Latin America",
-            "Middle East & Africa",
-            "Global",
-            "United States",
-            "Canada",
-            "United Kingdom",
-            "France",
-            "Germany",
-            "Spain",
-            "Italy",
-            "Netherlands",
-            "Belgium",
-            "Switzerland",
-            "Austria",
-            "Scandinavia",
-            "Eastern Europe",
-            "Australia",
-            "New Zealand",
-            "Japan",
-            "South Korea",
-            "China",
-            "India",
-            "Southeast Asia",
-          ]);
+          // Fallback to empty array - will show loading state
+          setTerritoriesFromAPI([]);
         } finally {
           setTerritoriesLoading(false);
         }
@@ -1263,6 +1236,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
     
     return countryId;
+  };
+
+  // Helper function to get territory name by ID
+  const getTerritoryName = (territoryId: string): string => {
+    // First check if it's an API ID (MongoDB ObjectId format)
+    if (territoryId && territoryId.length === 24) {
+      const country = territoriesFromAPI.find(c => c._id === territoryId);
+      if (country) {
+        return country.name.common;
+      }
+    }
+    // Fallback to display the ID as-is (for backward compatibility)
+    return territoryId;
   };
 
   // Helper function to search for countries by name
@@ -4226,7 +4212,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.team = {
           size: 1,
           structure: [],
-          territories: ["Global"],
+          territories: [],
           reporting: {
             to: "Project Manager",
             frequency: "Weekly",
@@ -4418,7 +4404,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         newSuggestions.team = {
                           size: newSize,
                           structure: [],
-                          territories: ["Global"],
+                          territories: [],
                           reporting: {
                             to: "Project Manager",
                             frequency: "Weekly",
@@ -4673,7 +4659,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 key={territory}
                 className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
               >
-                {territory}
+                {getTerritoryName(territory)}
                 <button
                   onClick={() => removeTerritory(territory)}
                   className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
@@ -4698,11 +4684,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option value="" disabled>
               {territoriesLoading ? "Loading territories..." : "Add a territory..."}
             </option>
-            {territories.filter(
-              (territory: string) => !suggestions.team?.territories?.includes(territory)
-            ).map((territory: string) => (
-              <option key={territory} value={territory}>
-                {territory}
+            {territoriesFromAPI.filter(
+              (country: Country) => !suggestions.team?.territories?.includes(country._id)
+            ).map((country: Country) => (
+              <option key={country._id} value={country._id}>
+                {country.name.common}
               </option>
             ))}
           </select>

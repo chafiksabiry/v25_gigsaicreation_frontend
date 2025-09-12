@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus, Trash2, Globe, Users, Building2, Briefcase, GraduationCap, ArrowLeft, ArrowRight, XCircle } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
-import { fetchAllCountries } from '../lib/api';
+import { fetchAllCountries, Country } from '../lib/api';
 
 interface TeamRoleOption {
   id: string;
@@ -38,8 +38,8 @@ interface TeamStructureProps {
 }
 
 export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSave, onAIAssist, onSectionChange, currentSection }: TeamStructureProps) {
-  // State for territories from API
-  const [territories, setTerritories] = React.useState<string[]>([]);
+  // State for territories from API - now storing full country objects
+  const [territoriesFromAPI, setTerritoriesFromAPI] = React.useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = React.useState(true);
 
   // Fetch territories from API on component mount
@@ -47,39 +47,12 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
     const fetchTerritories = async () => {
       try {
         const countries = await fetchAllCountries();
-        const countryNames = countries.map(country => country.name.common).sort();
-        setTerritories(countryNames);
+        const sortedCountries = countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+        setTerritoriesFromAPI(sortedCountries);
       } catch (error) {
         console.error('❌ Error fetching territories:', error);
-        // Fallback to basic territories
-        setTerritories([
-          "North America",
-          "Europe",
-          "Asia Pacific",
-          "Latin America",
-          "Middle East & Africa",
-          "Global",
-          "United States",
-          "Canada",
-          "United Kingdom",
-          "France",
-          "Germany",
-          "Spain",
-          "Italy",
-          "Netherlands",
-          "Belgium",
-          "Switzerland",
-          "Austria",
-          "Scandinavia",
-          "Eastern Europe",
-          "Australia",
-          "New Zealand",
-          "Japan",
-          "South Korea",
-          "China",
-          "India",
-          "Southeast Asia",
-        ]);
+        // Fallback to empty array - will show loading state
+        setTerritoriesFromAPI([]);
       } finally {
         setTerritoriesLoading(false);
       }
@@ -115,6 +88,19 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   const mapRoleIdToName = (roleId: string): string => {
     const role = teamRoles.find(r => r.id === roleId);
     return role ? role.name : roleId;
+  };
+
+  // Helper function to get territory name by ID
+  const getTerritoryName = (territoryId: string): string => {
+    // First check if it's an API ID (MongoDB ObjectId format)
+    if (territoryId && territoryId.length === 24) {
+      const country = territoriesFromAPI.find(c => c._id === territoryId);
+      if (country) {
+        return country.name.common;
+      }
+    }
+    // Fallback to display the ID as-is (for backward compatibility)
+    return territoryId;
   };
 
   // Normalize structure to use role IDs
@@ -431,7 +417,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
                 key={territory}
                 className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
               >
-                {territory}
+                {getTerritoryName(territory)}
                 <button
                   onClick={() => handleTerritoryToggle(territory)}
                   className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
@@ -456,11 +442,11 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
             <option value="" disabled>
               {territoriesLoading ? "Loading territories..." : "Add a territory..."}
             </option>
-            {territories.filter(
-              (territory) => !initializedTeam.team.territories.includes(territory)
-            ).map((territory) => (
-              <option key={territory} value={territory}>
-                {territory}
+            {territoriesFromAPI.filter(
+              (country) => !initializedTeam.team.territories.includes(country._id)
+            ).map((country) => (
+              <option key={country._id} value={country._id}>
+                {country.name.common}
               </option>
             ))}
           </select>
