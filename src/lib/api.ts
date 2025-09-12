@@ -5,6 +5,39 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+// Types for countries API
+export interface Country {
+  _id: string;
+  name: {
+    common: string;
+    official: string;
+    nativeName?: Record<string, {
+      official: string;
+      common: string;
+      _id: string;
+    }>;
+  };
+  flags: {
+    png: string;
+    svg: string;
+    alt: string;
+  };
+  cca2: string;
+  __v: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CountriesResponse {
+  success: boolean;
+  data: Country[];
+}
+
+export interface CountryResponse {
+  success: boolean;
+  data: Country;
+}
+
 
 // TODO: Implement these functions with your preferred storage solution
 export async function createGig() {
@@ -29,6 +62,59 @@ export async function closeGig(id: string) {
 
 export async function getGigHistory(gigId: string) {
   throw new Error('Not implemented');
+}
+
+// Countries API functions
+export async function fetchAllCountries(): Promise<Country[]> {
+  try {
+    const response = await fetch(`${API_URL}/countries`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch countries: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: CountriesResponse = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Failed to fetch countries');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching countries:', error);
+    throw error;
+  }
+}
+
+export async function fetchCountryById(countryId: string): Promise<Country> {
+  try {
+    const response = await fetch(`${API_URL}/countries/${countryId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch country: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: CountryResponse = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Failed to fetch country');
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching country:', error);
+    throw error;
+  }
+}
+
+export async function getCountryNameById(countryId: string): Promise<string> {
+  try {
+    const country = await fetchCountryById(countryId);
+    return country.name.common;
+  } catch (error) {
+    console.error('Error getting country name:', error);
+    return 'Unknown Country';
+  }
 }
 
 export async function fetchCompanies() {

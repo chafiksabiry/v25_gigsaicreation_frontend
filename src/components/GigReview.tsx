@@ -26,7 +26,7 @@ import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { validateGigData } from "../lib/validation";
 import { groupSchedules } from "../lib/scheduleUtils";
-import { fetchAllTimezones, fetchCompanyById, fetchCountryName } from '../lib/api';
+import { fetchAllTimezones, fetchCompanyById, fetchCountryName, getCountryNameById } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
 import { 
   getIndustryNameById,
@@ -144,17 +144,11 @@ export function GigReview({
       // Fetch country name if we have a destination_zone
       if (data.destination_zone) {
         try {
-          const countryResponse = await fetchCountryName(data.destination_zone);
-          
-          if (countryResponse.data) {
-            setCountryName(countryResponse.data);
-          } else {
-            console.warn('⚠️ GigReview: No country name received');
-            setCountryName(data.destination_zone); // Fallback to zone code
-          }
+          const countryNameFromApi = await getCountryNameById(data.destination_zone);
+          setCountryName(countryNameFromApi);
         } catch (e) { 
           console.error('❌ GigReview: Error fetching country name:', e);
-          setCountryName(data.destination_zone); // Fallback to zone code
+          setCountryName(data.destination_zone); // Fallback to zone ID
         }
       }
     };

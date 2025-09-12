@@ -26,6 +26,7 @@ import {
   getActivityNameById,
   getIndustryNameById
 } from '../lib/activitiesIndustries';
+import { fetchAllCountries, Country } from '../lib/api';
 
 // Enregistrement des langues pour la traduction des noms de pays
 i18n.registerLocale(fr);
@@ -70,6 +71,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   const [selectedActivity, setSelectedActivity] = useState<string>('');
   const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
   const [industries, setIndustries] = useState<Array<{ value: string; label: string }>>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -79,7 +81,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       try {
         setIsLoading(true);
         // Load data from external API with error handling
-        const [activitiesData, industriesData] = await Promise.all([
+        const [activitiesData, industriesData, countriesData] = await Promise.all([
           loadActivities().catch(error => {
             console.error('❌ Failed to load activities from API:', error);
             throw new Error(`Cannot load activities: ${error.message}`);
@@ -87,6 +89,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           loadIndustries().catch(error => {
             console.error('❌ Failed to load industries from API:', error);
             throw new Error(`Cannot load industries: ${error.message}`);
+          }),
+          fetchAllCountries().catch(error => {
+            console.error('❌ Failed to load countries from API:', error);
+            throw new Error(`Cannot load countries: ${error.message}`);
           })
         ]);
         
@@ -100,9 +106,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         if (industryOptions.length === 0) {
           throw new Error('No industries available from external API');
         }
+        if (countriesData.length === 0) {
+          throw new Error('No countries available from external API');
+        }
         
         setActivities(activityOptions);
         setIndustries(industryOptions);
+        setCountries(countriesData);
         setIsDataLoaded(true);
       } catch (error) {
         console.error('❌ Critical error loading data from API:', error);
@@ -145,20 +155,27 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   }, [data]);
 
   /**
-   * Obtient le nom du pays à partir du code alpha-2
-   * @param {string} alpha2Code - Le code alpha-2 du pays
+   * Obtient le nom du pays à partir de l'ID de l'API ou du code alpha-2
+   * @param {string} countryId - L'ID du pays de l'API ou le code alpha-2
    * @returns {string} - Le nom du pays
    */
-  const getCountryName = (alpha2Code: string): string => {
-    return i18n.getName(alpha2Code, 'en') || alpha2ToCountry[alpha2Code] || alpha2Code;
+  const getCountryName = (countryId: string): string => {
+    // D'abord chercher par ID dans l'API
+    const countryFromApi = countries.find(country => country._id === countryId);
+    if (countryFromApi) {
+      return countryFromApi.name.common;
+    }
+    
+    // Sinon, essayer avec les méthodes existantes (pour la compatibilité)
+    return i18n.getName(countryId, 'en') || alpha2ToCountry[countryId] || countryId;
   };
 
   /**
    * Gère la sélection d'un pays
-   * @param {string} countryCode - Le code du pays sélectionné
+   * @param {string} countryId - L'ID du pays sélectionné
    */
-  const handleCountrySelect = (countryCode: string) => {
-    if (!countryCode) {
+  const handleCountrySelect = (countryId: string) => {
+    if (!countryId) {
       // Si aucun pays n'est sélectionné, on met à jour uniquement destination_zone
       onChange({
         ...data,
@@ -167,35 +184,36 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       return;
     }
 
-    const countryName = i18n.getName(countryCode, 'en');
+    const country = countries.find(c => c._id === countryId);
     
-    if (!countryName) {
-      console.error('Invalid country code:', countryCode);
+    if (!country) {
+      console.error('Invalid country ID:', countryId);
       return;
     }
     
+    console.log('Selected country:', country);
+    
     // Mettre à jour destination_zone et s'assurer que le pays sélectionné est dans destinationZones
     const updatedDestinationZones = data.destinationZones || [];
-    if (!updatedDestinationZones.includes(countryCode)) {
+    if (!updatedDestinationZones.includes(countryId)) {
       // Ajouter le nouveau pays au début de la liste
-      updatedDestinationZones.unshift(countryCode);
+      updatedDestinationZones.unshift(countryId);
     }
     
     onChange({
       ...data,
-      destination_zone: countryCode,
+      destination_zone: countryId,
       destinationZones: updatedDestinationZones
     });
   };
 
   /**
-   * Récupère la liste des pays par zone géographique
-   * Basé sur la logique de Suggestions.tsx avec les zones principales
+   * Récupère la liste des pays par zone géographique en utilisant l'API
    * @param {string} zone - La zone géographique
    * @returns {Array} - Liste des pays de la zone
    */
   const getCountriesByZone = (zone: string) => {
-    // Utiliser les mêmes zones que dans Suggestions.tsx
+    // Mapping des zones géographiques avec les codes de pays de l'API
     const zoneCountries: { [key: string]: string[] } = {
       'Europe': ['FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'CH', 'AT', 'PT', 'GR', 'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'SK', 'SI', 'DK', 'FI', 'SE', 'NO', 'IE', 'GB', 'EE', 'LV', 'LT', 'LU', 'MT', 'CY'],
       'Amérique du Nord': ['US', 'CA', 'MX'],
@@ -206,12 +224,15 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       'Moyen-Orient': ['AE', 'SA', 'QA', 'KW', 'PS', 'TR', 'LB']
     };
 
-    return (zoneCountries[zone] || [])
-      .map(code => {
-        const name = getCountryName(code);
-        return name ? { code, name } : null;
-      })
-      .filter((country): country is { code: string; name: string } => country !== null)
+    const zoneCodes = zoneCountries[zone] || [];
+    
+    // Filtrer les pays de l'API qui correspondent aux codes de cette zone
+    return countries
+      .filter(country => zoneCodes.includes(country.cca2))
+      .map(country => ({
+        code: country._id, // Utiliser l'_id de l'API comme code
+        name: country.name.common
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
   };
 
