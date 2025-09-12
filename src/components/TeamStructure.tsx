@@ -53,38 +53,6 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
         console.error('❌ Error fetching territories:', error);
         // Fallback to basic territories
         setTerritories([
-            "North America",
-            "Europe",
-            "Asia Pacific",
-            "Latin America",
-            "Middle East & Africa",
-            "Global",
-            "United States",
-            "Canada",
-            "United Kingdom",
-            "France",
-            "Germany",
-            "Spain",
-            "Italy",
-            "Netherlands",
-            "Belgium",
-            "Switzerland",
-            "Austria",
-            "Scandinavia",
-            "Eastern Europe",
-            "Australia",
-            "New Zealand",
-            "Japan",
-            "South Korea",
-            "China",
-            "India",
-            "Southeast Asia",
-          ]);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching territories:', error);
-        // Fallback to basic territories
-        setTerritories([
           "North America",
           "Europe",
           "Asia Pacific",
