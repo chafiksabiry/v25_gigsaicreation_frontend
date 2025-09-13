@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus, Trash2, Globe, Users, Building2, Briefcase, GraduationCap, ArrowLeft, ArrowRight, XCircle } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
-import { fetchAllCountries, Country } from '../lib/api';
+import { fetchAllCountries, Country, getCountryNameById } from '../lib/api';
 
 interface TeamRoleOption {
   id: string;
@@ -41,6 +41,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
   // State for territories from API - now storing full country objects
   const [territoriesFromAPI, setTerritoriesFromAPI] = React.useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = React.useState(true);
+  const [territoryNames, setTerritoryNames] = React.useState<{[key: string]: string}>({});
 
   // Fetch territories from API on component mount
   React.useEffect(() => {
@@ -60,6 +61,30 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
     fetchTerritories();
   }, []);
+
+  // Load territory names when team territories change
+  React.useEffect(() => {
+    const loadTerritoryNames = async () => {
+      if (!data.team?.territories || data.team.territories.length === 0) {
+        setTerritoryNames({});
+        return;
+      }
+      
+      const names: {[key: string]: string} = {};
+      for (const territoryId of data.team.territories) {
+        try {
+          const name = await getCountryNameById(territoryId);
+          names[territoryId] = name;
+        } catch (error) {
+          console.error(`Error loading territory name for ${territoryId}:`, error);
+          names[territoryId] = territoryId; // Fallback to ID
+        }
+      }
+      setTerritoryNames(names);
+    };
+
+    loadTerritoryNames();
+  }, [data.team?.territories]);
 
   // Initialize team with default values if undefined
   const initializedTeam = {
@@ -92,7 +117,12 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext, onSa
 
   // Helper function to get territory name by ID
   const getTerritoryName = (territoryId: string): string => {
-    // First check if it's an API ID (MongoDB ObjectId format)
+    // First check if we have the name in our resolved names cache
+    if (territoryNames[territoryId]) {
+      return territoryNames[territoryId];
+    }
+    
+    // Then check if it's an API ID (MongoDB ObjectId format) in loaded territories
     if (territoryId && territoryId.length === 24) {
       const country = territoriesFromAPI.find(c => c._id === territoryId);
       if (country) {

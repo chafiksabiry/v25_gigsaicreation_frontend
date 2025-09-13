@@ -31,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone } from "../lib/api";
+import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone, getCountryNameById } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import { 
   loadActivities, 
@@ -248,6 +248,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [territoriesFromAPI, setTerritoriesFromAPI] = useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
+  const [territoryNames, setTerritoryNames] = useState<{[key: string]: string}>({});
   const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<Country[]>([]);
   const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
   const isGeneratingRef = useRef(false);
@@ -687,6 +688,30 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       migrateSkillsToObjectIds();
     }
   }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
+
+  // Load territory names when suggestions change
+  useEffect(() => {
+    const loadTerritoryNames = async () => {
+      if (!suggestions?.team?.territories || suggestions.team.territories.length === 0) {
+        setTerritoryNames({});
+        return;
+      }
+      
+      const names: {[key: string]: string} = {};
+      for (const territoryId of suggestions.team.territories) {
+        try {
+          const name = await getCountryNameById(territoryId);
+          names[territoryId] = name;
+        } catch (error) {
+          console.error(`Error loading territory name for ${territoryId}:`, error);
+          names[territoryId] = territoryId; // Fallback to ID
+        }
+      }
+      setTerritoryNames(names);
+    };
+
+    loadTerritoryNames();
+  }, [suggestions?.team?.territories]);
 
   // Force migration on component mount - only run once
   useEffect(() => {
@@ -1240,7 +1265,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Helper function to get territory name by ID
   const getTerritoryName = (territoryId: string): string => {
-    // First check if it's an API ID (MongoDB ObjectId format)
+    // First check if we have the name in our resolved names cache
+    if (territoryNames[territoryId]) {
+      return territoryNames[territoryId];
+    }
+    
+    // Then check if it's an API ID (MongoDB ObjectId format) in loaded territories
     if (territoryId && territoryId.length === 24) {
       const country = territoriesFromAPI.find(c => c._id === territoryId);
       if (country) {
