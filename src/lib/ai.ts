@@ -2,6 +2,22 @@ import { GigData, GigSuggestion } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
 
+// Helper function to validate and clean territory IDs
+// Removes timezone IDs that might have been incorrectly included in territories
+function validateTerritories(territories: string[], timezoneId?: string): string[] {
+  if (!territories || !Array.isArray(territories)) return [];
+  
+  // Filter out timezone ID if it appears in territories
+  return territories.filter(territoryId => {
+    // Remove the timezone ID if it appears in territories
+    if (timezoneId && territoryId === timezoneId) {
+      console.warn(`⚠️ Timezone ID ${timezoneId} found in territories, removing it`);
+      return false;
+    }
+    return true;
+  });
+}
+
 export async function generateGigSuggestions(description: string): Promise<GigSuggestion> {
   if (!description) {
     throw new Error('Description is required');
@@ -28,6 +44,17 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
     console.log('Backend API Response:', data);
     
     // Transform the backend response to match our GigSuggestion type
+    const timezoneId = data.availability?.time_zone;
+    const originalTerritories = data.team?.territories || [];
+    const cleanedTerritories = validateTerritories(originalTerritories, timezoneId);
+    
+    // Log if territories were cleaned
+    if (originalTerritories.length !== cleanedTerritories.length) {
+      console.log(`🧹 Cleaned territories: ${originalTerritories.length} → ${cleanedTerritories.length}`);
+      console.log('Original:', originalTerritories);
+      console.log('Cleaned:', cleanedTerritories);
+    }
+    
     const transformedData = {
       jobTitles: data.jobTitles || [],
       jobDescription: data.jobDescription || '',
@@ -39,7 +66,12 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
       skills: data.skills || { languages: [], soft: [], professional: [], technical: [] },
       availability: data.availability || {},
       commission: data.commission || {},
-      team: data.team || { size: 1, structure: [], territories: [] },
+      team: {
+        ...data.team,
+        size: data.team?.size || 1,
+        structure: data.team?.structure || [],
+        territories: cleanedTerritories
+      },
       
       // Additional fields that might be expected by the UI
       description: data.jobDescription || '',
