@@ -3171,33 +3171,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderCommissionSection = () => {
     if (!suggestions) return null;
 
-    const addCommissionOption = () => {
-      const newSuggestions = { ...suggestions };
-      if (!newSuggestions.commission) {
-        newSuggestions.commission = { options: [] };
-      }
-
-      const newOption = {
-        base: "Base + Commission",
-        baseAmount: 0,
-        bonus: "Performance Bonus",
-        bonusAmount: 0,
-        structure: "Fixed",
-        currency: "EUR",
-        minimumVolume: {
-          amount: 0,
-          period: "Monthly",
-          unit: "Sales",
-        },
-        transactionCommission: {
-          type: "Fixed Amount",
-          amount: 0,
-        },
-      };
-
-      newSuggestions.commission.options.push(newOption);
-      setSuggestions(newSuggestions);
-    };
 
     const updateCommissionOption = (
       index: number,
@@ -3205,10 +3178,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       value: string | number
     ) => {
       const newSuggestions = { ...suggestions };
-      if (
-        newSuggestions.commission &&
-        newSuggestions.commission.options[index]
-      ) {
+      if (newSuggestions.commission) {
         // Correction : parser uniquement les champs numériques
         const numericFields = [
           'amount', 'baseAmount', 'bonusAmount'
@@ -3217,77 +3187,56 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           const [parent, child] = field.split(".");
           if (numericFields.includes(child)) {
             const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-            (newSuggestions.commission.options[index] as any)[parent][child] = numericValue;
+            (newSuggestions.commission as any)[parent][child] = numericValue;
           } else {
-            (newSuggestions.commission.options[index] as any)[parent][child] = value;
+            (newSuggestions.commission as any)[parent][child] = value;
           }
         } else {
           if (numericFields.includes(field)) {
             const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-            (newSuggestions.commission.options[index] as any)[field] = numericValue;
+            (newSuggestions.commission as any)[field] = numericValue;
           } else {
-            (newSuggestions.commission.options[index] as any)[field] = value;
+            (newSuggestions.commission as any)[field] = value;
           }
         }
         setSuggestions(newSuggestions);
       }
     };
 
-    const deleteCommissionOption = (index: number) => {
-      const newSuggestions = { ...suggestions };
-      if (newSuggestions.commission) {
-        newSuggestions.commission.options.splice(index, 1);
-        setSuggestions(newSuggestions);
-      }
-    };
 
     return (
       <div className="mb-8">
         {/* Enhanced Header */}
-        <div className="flex items-center justify-between mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
+        <div className="flex items-center mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
-                <DollarSign className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
-                <p className="text-sm text-gray-600">
-                  Configure compensation structure and performance incentives
-                </p>
-              </div>
+            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+              <DollarSign className="w-7 h-7 text-white" />
             </div>
-            <button
-              onClick={addCommissionOption}
-              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Option</span>
-            </button>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
+              <p className="text-sm text-gray-600">
+                Configure compensation structure and performance incentives
+              </p>
+            </div>
           </div>
         </div>
 
-        {suggestions.commission?.options &&
-        suggestions.commission.options.length > 0 ? (
+        {suggestions.commission ? (
           <div className="space-y-8">
-            {suggestions.commission.options.map((option, index) => (
+            {(() => {
+              const option = suggestions.commission;
+              const index = 0;
+              return (
               <div
                 key={index}
                 className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
-                {/* Enhanced Header with delete button */}
-                <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+                {/* Enhanced Header */}
+                <div className="flex items-center mb-8 pb-6 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
                     <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-                    <h4 className="text-lg font-bold text-gray-800">Commission Option #{index + 1}</h4>
+                    <h4 className="text-lg font-bold text-gray-800">Commission Configuration</h4>
                   </div>
-                  <button
-                    onClick={() => deleteCommissionOption(index)}
-                    className="p-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group"
-                    title="Delete option"
-                  >
-                    <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  </button>
                 </div>
 
                 {/* Base Configuration */}
@@ -3593,7 +3542,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })()}
           </div>
         ) : (
           <div className="text-center py-16 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 shadow-lg">

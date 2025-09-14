@@ -172,23 +172,22 @@ export interface GigData {
     collaboration: string[];
   };
   commission: {
-    options: Array<{
-      base: string;
-      baseAmount: number;
-      bonus?: string;
-      bonusAmount?: number;
-      structure?: string;
-      currency: string;
-      minimumVolume: {
-        amount: number;
-        period: string;
-        unit: string;
-      };
-      transactionCommission: {
-        type: string;
-        amount: number;
-      };
-    }>;
+    base: string;
+    baseAmount: number;
+    bonus?: string;
+    bonusAmount?: number;
+    structure?: string;
+    currency: string;
+    minimumVolume: {
+      amount: number;
+      period: string;
+      unit: string;
+    };
+    transactionCommission: {
+      type: string;
+      amount: number;
+    };
+    additionalDetails?: string;
   };
   activity: {
     options: Array<{
@@ -322,23 +321,22 @@ export interface GigSuggestion {
     collaboration: string[];
   };
   commission: {
-    options: Array<{
-      base: string;
-      baseAmount: number;
-      bonus?: string;
-      bonusAmount?: number;
-      structure?: string;
-      currency: string;
-      minimumVolume: {
-        amount: number;
-        period: string;
-        unit: string;
-      };
-      transactionCommission: {
-        type: string;
-        amount: number;
-      };
-    }>;
+    base: string;
+    baseAmount: number;
+    bonus?: string;
+    bonusAmount?: number;
+    structure?: string;
+    currency: string;
+    minimumVolume: {
+      amount: number;
+      period: string;
+      unit: string;
+    };
+    transactionCommission: {
+      type: string;
+      amount: number;
+    };
+    additionalDetails?: string;
   };
   activity: {
     options: Array<{
