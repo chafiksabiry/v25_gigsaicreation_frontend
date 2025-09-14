@@ -823,38 +823,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           result.schedule.schedules = convertedSchedules;
         }
 
-        // Convert commission structure to options format if needed
-        if (result.commission && !(result.commission as any).options) {
-          // Convert old structure to new options structure
-          const oldCommission = result.commission as any;
-          const commissionOption = {
-            base: oldCommission.base || "Base + Commission",
-            baseAmount:
-              typeof oldCommission.baseAmount === "string"
-                ? parseFloat(oldCommission.baseAmount) || 0
-                : oldCommission.baseAmount || 0,
-            bonus: "Performance Bonus",
-            bonusAmount:
-              typeof oldCommission.bonusAmount === "string"
-                ? parseFloat(oldCommission.bonusAmount) || 0
-                : oldCommission.bonusAmount || 0,
-            structure: oldCommission.structure,
-            currency: oldCommission.currency || "EUR",
-            minimumVolume: oldCommission.minimumVolume || {
-              amount: 0,
-              period: "Monthly",
-              unit: "Sales",
-            },
-            transactionCommission: oldCommission.transactionCommission || {
-              type: "Fixed Amount",
-              amount: 0,
-            },
-          };
-
-          result.commission = {
-            options: [commissionOption],
-          };
-        }
+        // Commission data is now used directly as an object (no options array needed)
 
         // Validate and filter sectors to only allow predefined ones
         if (result.sectors && result.sectors.length > 0) {
@@ -3206,6 +3175,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     return (
       <div className="mb-8">
+        {/* Enhanced Header */}
+        <div className="flex items-center mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+              <DollarSign className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
+              <p className="text-sm text-gray-600">
+                Configure compensation structure and performance incentives
+              </p>
+            </div>
+          </div>
+        </div>
+
         {suggestions.commission ? (
           <div className="space-y-8">
             {(() => {
@@ -3216,6 +3200,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 key={index}
                 className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
+                {/* Enhanced Header */}
+                <div className="flex items-center mb-8 pb-6 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                    <h4 className="text-lg font-bold text-gray-800">Commission Configuration</h4>
+                  </div>
+                </div>
+
                 {/* Base Configuration */}
                 <div className="mb-8">
                   <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -3505,19 +3497,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <DollarSign className="w-10 h-10 text-green-600" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">
-              No Commission Options
+              No Commission Data
             </h3>
             <p className="text-gray-600 mb-8 w-full mx-auto text-lg leading-relaxed">
-              Create commission options to define how your team will be
-              compensated for their performance and achievements.
+              Commission data will be populated automatically from AI suggestions.
             </p>
-            <button
-              onClick={addCommissionOption}
-              className="flex items-center space-x-3 mx-auto px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-lg transform hover:scale-105"
-            >
-              <Plus className="w-6 h-6" />
-              <span>Add Commission Option</span>
-            </button>
           </div>
         )}
       </div>
