@@ -3925,18 +3925,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                 ))
                               : skillType === "professional"
                               ? professionalSkills.map((skill) => (
-                                  <option key={skill._id} value={skill.name}>
+                                  <option key={skill._id} value={skill._id}>
                                     {skill.name}
                                   </option>
                                 ))
                               : skillType === "technical"
                               ? technicalSkills.map((skill) => (
-                                  <option key={skill._id} value={skill.name}>
+                                  <option key={skill._id} value={skill._id}>
                                     {skill.name}
                                   </option>
                                 ))
                               : softSkills.map((skill) => (
-                                  <option key={skill._id} value={skill.name}>
+                                  <option key={skill._id} value={skill._id}>
                                     {skill.name}
                                   </option>
                                 ))
@@ -4018,8 +4018,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                         skillArray = [];
                                     }
                                     const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                                    const skillObject = skillArray.find(s => s._id === skillId);
-                                    setEditValue(skillObject ? skillObject.name : skillId);
+                                    setEditValue(skillId || '');
                                   }
                                 }}
                                 className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
