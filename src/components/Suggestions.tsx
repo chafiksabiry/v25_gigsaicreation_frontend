@@ -3256,7 +3256,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     </div>
                     Minimum Volume Requirements
                   </h6>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-gray-700">
                         Target Amount
@@ -3281,26 +3281,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
                       />
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Unit Type
-                      </label>
-                      <select
-                        value={option.minimumVolume?.unit || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "minimumVolume.unit",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
-                      >
-                        <option value="">Select unit...</option>
-                        <option value="Calls">Calls</option>
-                        <option value="Sales">Sales</option>
-                      </select>
-                    </div>
+                    {/* Unit Type field hidden as requested */}
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-gray-700">
                         Period
@@ -3333,25 +3314,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     </div>
                     Bonus & Incentives
                   </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Bonus Type
-                      </label>
-                      <select
-                        value={option.bonus || "Performance Bonus"}
-                        onChange={(e) =>
-                          updateCommissionOption(index, "bonus", e.target.value)
-                        }
-                        className="w-full p-4 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white transition-all duration-200 hover:border-yellow-300"
-                      >
-                        {BONUS_TYPES.map((bonusType) => (
-                          <option key={bonusType} value={bonusType}>
-                            {bonusType}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Bonus Type field hidden as requested */}
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-gray-700">
                         Bonus Amount
@@ -3428,31 +3392,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     </div>
                     Transaction Commission
                   </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Commission Type
-                      </label>
-                      <select
-                        value={
-                          option.transactionCommission?.type || "Fixed Amount"
-                        }
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "transactionCommission.type",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200 hover:border-purple-300"
-                      >
-                        {TRANSACTION_TYPES.map((transactionType) => (
-                          <option key={transactionType} value={transactionType}>
-                            {transactionType}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Commission Type field hidden as requested */}
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-gray-700">
                         Commission Amount
