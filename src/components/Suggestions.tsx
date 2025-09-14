@@ -3206,21 +3206,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     return (
       <div className="mb-8">
-        {/* Enhanced Header */}
-        <div className="flex items-center mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
-              <DollarSign className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
-              <p className="text-sm text-gray-600">
-                Configure compensation structure and performance incentives
-              </p>
-            </div>
-          </div>
-        </div>
-
         {suggestions.commission ? (
           <div className="space-y-8">
             {(() => {
@@ -3231,47 +3216,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 key={index}
                 className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
-                {/* Enhanced Header */}
-                <div className="flex items-center mb-8 pb-6 border-b border-gray-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-                    <h4 className="text-lg font-bold text-gray-800">Commission Configuration</h4>
-                  </div>
-                </div>
-
                 {/* Base Configuration */}
                 <div className="mb-8">
                   <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                     <div className="p-2 bg-blue-100 rounded-lg mr-3">
                       <Briefcase className="w-5 h-5 text-blue-600" />
                     </div>
-                    Base Configuration
+                    Commission Per Call
                   </h6>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                        Base Type
-                      </label>
-                      <select
-                        value={option.base || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(index, "base", e.target.value)
-                        }
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-gray-300"
-                      >
-                        <option value="">Select base type...</option>
-                        <option value="Fixed Salary">Fixed Salary</option>
-                        <option value="Base + Commission">
-                          Base + Commission
-                        </option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center">
-                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                        Base Amount
-                      </label>
                       <div className="relative">
                         <input
                           type="number"
