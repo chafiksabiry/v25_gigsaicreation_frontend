@@ -164,6 +164,6 @@ export function mapGeneratedDataToGigData(generatedData: any): Partial<GigData> 
     },
     commission: generatedData.commission || {} as any,
     team: generatedData.team || { size: 1, structure: [], territories: [] },
-    destinationZone: generatedData.destinationZones?.[0] || ''
+    destination_zone: generatedData.destinationZones?.[0] || ''
   };
 }

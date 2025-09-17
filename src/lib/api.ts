@@ -394,9 +394,23 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       }))
     };
 
-    // Format destination zone to ensure it's a valid country code
-    const destinationZone = fixedGigData.destination_zone?.split(',')?.[0]?.trim() || 'US';
-    const formattedDestinationZone = destinationZone.length === 2 ? destinationZone : 'US';
+    // Keep destination zone as MongoDB ObjectId if it's valid, otherwise use default
+    const formattedDestinationZone = (() => {
+      if (fixedGigData.destination_zone) {
+        // If it's a MongoDB ObjectId (24 characters), keep it
+        if (typeof fixedGigData.destination_zone === 'string' && fixedGigData.destination_zone.length === 24) {
+          console.log('💾 SAVE GIG - Using MongoDB ObjectId for destination_zone:', fixedGigData.destination_zone);
+          return fixedGigData.destination_zone;
+        }
+        // If it's an alpha-2 code, keep it for backward compatibility
+        if (typeof fixedGigData.destination_zone === 'string' && fixedGigData.destination_zone.length === 2) {
+          console.log('💾 SAVE GIG - Using alpha-2 code for destination_zone:', fixedGigData.destination_zone);
+          return fixedGigData.destination_zone;
+        }
+      }
+      console.log('💾 SAVE GIG - Using default destination_zone: US');
+      return 'US'; // Default fallback
+    })();
 
     const gigDataWithIds = {
       ...fixedGigData,
