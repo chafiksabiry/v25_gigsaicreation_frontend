@@ -165,6 +165,8 @@ const PrompAI: React.FC = () => {
 
     // Map the generated data to the initialized structure
     const mappedData = mapGeneratedDataToGigData(suggestions);
+    console.log('🔄 PROMP AI - suggestions.destination_zone:', suggestions.destination_zone);
+    console.log('🔄 PROMP AI - mappedData.destination_zone:', mappedData.destination_zone);
     
     // Update the gig data with the mapped suggestions
     setGigData((prevData: GigData) => ({
@@ -173,8 +175,8 @@ const PrompAI: React.FC = () => {
       // Preserve any existing data that wasn't in the suggestions
       userId: prevData.userId,
       companyId: prevData.companyId,
-      // Ensure destination_zone is set correctly
-      destination_zone: suggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : prevData.destination_zone
+      // Use the destination_zone from mappedData (which comes from AI suggestions)
+      destination_zone: mappedData.destination_zone || prevData.destination_zone
     }));
   };
 
@@ -476,3 +478,481 @@ const PrompAI: React.FC = () => {
 };
 
 export default PrompAI;
+
+  const handleManualMode = () => {
+
+    setIsManualMode(true);
+
+    setCurrentSection("basic");
+
+  };
+
+
+
+
+
+  if (showSuggestions) {
+
+    return (
+
+      <div className="w-full h-full py-8 px-4 mx-auto max-w-5xl">
+
+        <Suggestions
+
+          input={input}
+
+          onBack={() => {
+
+            setShowSuggestions(false);
+
+            // S'assurer que la section courante est définie quand on revient
+
+            if (confirmedSuggestions || isManualMode) {
+
+              setCurrentSection("basic");
+
+            }
+
+          }}
+
+          onConfirm={handleConfirmSuggestions}
+
+          initialSuggestions={confirmedSuggestions}
+
+        />
+
+      </div>
+
+    );
+
+  }
+
+
+
+  if (confirmedSuggestions || isManualMode) {
+
+    // S'assurer que currentSection est valide
+
+    const validSections = sections.map(s => s.id);
+
+    const effectiveSection = validSections.includes(currentSection) ? currentSection : 'basic';
+
+    
+
+    // Si showReview est true, afficher directement le GigReview
+
+    if (showReview) {
+
+      return (
+
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+
+          <div className="w-full h-full py-8 px-4">
+
+            <div className="w-full max-w-3xl mx-auto mb-8">
+
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+
+                <Logo className="mb-4" />
+
+              </div>
+
+            </div>
+
+            <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
+
+              <div>
+
+                <SectionContent
+
+                  section="review"
+
+                  data={gigData}
+
+                  onChange={handleGigDataChange}
+
+                  errors={{}}
+
+                  constants={predefinedOptions}
+
+                  onSectionChange={handleSectionChange}
+
+                  isAIMode={!!confirmedSuggestions}
+
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      );
+
+    }
+
+    
+
+    return (
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+
+        <div className={
+
+          effectiveSection === 'review'
+
+            ? 'w-full h-full py-8 px-4'
+
+            : 'w-full h-full py-8 px-4 mx-auto max-w-5xl'
+
+        }>
+
+          {/* Logo et Titre global en haut */}
+
+          <div className="w-full max-w-3xl mx-auto mb-8">
+
+            {confirmedSuggestions && (
+
+                  <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+
+                    <Logo className="mb-4" />
+
+                  </div>
+
+            )}
+
+          </div>
+
+
+
+          {/* Header with back button and centered logo for manual mode */}
+
+          {isManualMode && (
+
+            <div className="mb-8">
+
+              <div className="flex items-center justify-between mb-4">
+
+                <button
+
+                  onClick={() => setIsManualMode(false)}
+
+                  className="flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200 py-2"
+
+                >
+
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+
+                  </svg>
+
+                  Back to AI Assistant
+
+                </button>
+
+                <div className="flex-1 flex justify-center items-center">
+
+                  <Logo />
+
+                </div>
+
+                <div className="w-32"></div> {/* Spacer to balance the layout */}
+
+              </div>
+
+              <div className="text-center mt-2">
+
+                <div className="flex items-center justify-center space-x-3 mb-2">
+
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+
+                    Create Gig Manually
+
+                  </h1>
+
+                </div>
+
+                <p className="text-lg text-gray-600">Fill out the sections below to create your gig</p>
+
+              </div>
+
+            </div>
+
+          )}
+
+
+
+          {/* Navigation and Section Content */}
+
+          <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
+
+            
+
+            {/* Navigation Tabs */}
+
+            {effectiveSection !== 'review' && (
+
+              <nav className="border-b border-gray-200 bg-white px-4 py-3">
+
+                <div className="flex justify-center gap-2">
+
+                  {sections.map((section) => (
+
+                    <button
+
+                      key={section.id}
+
+                      onClick={() => handleSectionChange(section.id)}
+
+                      className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200
+
+                        ${section.id === effectiveSection
+
+                          ? "border-b-2 border-blue-600 text-blue-600"
+
+                          : "text-gray-600 hover:text-blue-600 border-b-2 border-transparent"
+
+                        }`}
+
+                      style={{ outline: "none" }}
+
+                    >
+
+                      <section.icon className={`w-5 h-5 ${section.id === effectiveSection ? 'text-blue-600' : 'text-gray-400'}`} />
+
+                      {section.label}
+
+                    </button>
+
+                  ))}
+
+                </div>
+
+              </nav>
+
+            )}
+
+
+
+            {/* Section Content */}
+
+            <div>
+
+              <SectionContent
+
+                section={effectiveSection}
+
+                data={gigData}
+
+                onChange={handleGigDataChange}
+
+                errors={{}}
+
+                constants={predefinedOptions}
+
+                onSectionChange={handleSectionChange}
+
+                isAIMode={!!confirmedSuggestions}
+
+              />
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
+
+
+  return (
+
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+
+      <div className="w-full h-full py-6 px-4 mx-auto max-w-5xl">
+
+        <div className="text-center mb-12">
+
+          <Logo className="mb-8" />
+
+          <div className="flex items-center justify-center space-x-4 mb-6">
+
+            <h1 className="text-5xl font-bold text-black">
+
+              Create with AI Assistance
+
+            </h1>
+
+          </div>
+
+          <p className="text-xl text-gray-600 w-full mx-auto">
+
+            Describe your needs naturally, and let AI help structure your
+
+            content
+
+          </p>
+
+        </div>
+
+
+
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 p-8">
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+
+            <div>
+
+              <div className="flex items-center justify-between mb-2">
+
+                <label
+
+                  htmlFor="description"
+
+                  className="block text-sm font-medium text-gray-700"
+
+                >
+
+                  Describe your needs naturally
+
+                </label>
+
+                <div className="flex items-center space-x-4">
+
+                  <button
+
+                    type="button"
+
+                    onClick={() => setShowGuidance(!showGuidance)}
+
+                    className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
+
+                  >
+
+                    <HelpCircle className="w-4 h-4 mr-1" />
+
+                    Writing Tips
+
+                  </button>
+
+                  <button
+
+                    type="button"
+
+                    onClick={handleManualMode}
+
+                    className="text-green-600 hover:text-green-700 flex items-center text-sm"
+
+                  >
+
+                    <PlusCircle className="w-5 h-5 mr-1" />
+
+                    <span>Create Manually</span>
+
+                  </button>
+
+                </div>
+
+              </div>
+
+
+
+              {showGuidance && (
+
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+
+                  <h3 className="text-sm font-medium text-blue-800 mb-2">Writing Tips</h3>
+
+                  <ul className="text-sm text-blue-600 space-y-2">
+
+                    <li>• Be specific about your target audience and location</li>
+
+                    <li>• Mention key requirements and qualifications</li>
+
+                    <li>• Include details about schedule and availability</li>
+
+                    <li>• Specify any technical requirements or tools needed</li>
+
+                    <li>• Describe the compensation structure if possible</li>
+
+                  </ul>
+
+                </div>
+
+              )}
+
+
+
+              <div className="relative">
+
+                <textarea
+
+                  id="description"
+
+                  value={input}
+
+                  onChange={(e) => setInput(e.target.value)}
+
+                  placeholder="Example: I need a sales campaign targeting Spanish-speaking customers in Europe, with a focus on insurance products..."
+
+                  className="w-full h-32 px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm resize-none"
+
+                />
+
+                <button
+
+                  type="submit"
+
+                  disabled={!input.trim()}
+
+                  className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+
+                >
+
+                  <Brain className="w-5 h-5" />
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+
+
+      <AIDialog
+
+        isOpen={showAIDialog}
+
+        onClose={() => setShowAIDialog(false)}
+
+        onProceed={handleGenerateSuggestions}
+
+        analyzing={isAnalyzing}
+
+      />
+
+    </div>
+
+  );
+
+};
+
+
+
+export default PrompAI;
+
+

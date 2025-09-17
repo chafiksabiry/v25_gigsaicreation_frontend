@@ -145,6 +145,11 @@ export function mapGigDataToSuggestions(gigData: GigData): any {
 export function mapGeneratedDataToGigData(generatedData: any): Partial<GigData> {
   console.log('🗺️ MAPPING - generatedData.schedule:', generatedData.schedule);
   console.log('🗺️ MAPPING - generatedData.availability:', generatedData.availability);
+  console.log('🗺️ MAPPING - generatedData.destination_zone:', generatedData.destination_zone);
+  console.log('🗺️ MAPPING - generatedData.destinationZones:', generatedData.destinationZones);
+  
+  const mappedDestinationZone = generatedData.destination_zone || generatedData.destinationZones?.[0] || '';
+  console.log('🗺️ MAPPING - Final destination_zone:', mappedDestinationZone);
   
   return {
     title: generatedData.jobTitles?.[0] || '',
@@ -164,6 +169,6 @@ export function mapGeneratedDataToGigData(generatedData: any): Partial<GigData> 
     },
     commission: generatedData.commission || {} as any,
     team: generatedData.team || { size: 1, structure: [], territories: [] },
-    destination_zone: generatedData.destinationZones?.[0] || ''
+    destination_zone: mappedDestinationZone
   };
 }

@@ -228,34 +228,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     });
   };
 
-  /**
-   * Récupère la liste des pays par zone géographique en utilisant l'API
-   * @param {string} zone - La zone géographique
-   * @returns {Array} - Liste des pays de la zone
-   */
-  const getCountriesByZone = (zone: string) => {
-    // Mapping des zones géographiques avec les codes de pays de l'API
-    const zoneCountries: { [key: string]: string[] } = {
-      'Europe': ['FR', 'DE', 'ES', 'IT', 'NL', 'BE', 'CH', 'AT', 'PT', 'GR', 'PL', 'CZ', 'HU', 'RO', 'BG', 'HR', 'SK', 'SI', 'DK', 'FI', 'SE', 'NO', 'IE', 'GB', 'EE', 'LV', 'LT', 'LU', 'MT', 'CY'],
-      'Amérique du Nord': ['US', 'CA', 'MX'],
-      'Amérique du Sud': ['BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GY', 'SR'],
-      'Asie': ['CN', 'JP', 'KR', 'IN', 'ID', 'TH', 'VN', 'MY', 'PH', 'SG', 'HK', 'TW'],
-      'Afrique': ['ZA', 'EG', 'MA', 'NG', 'KE', 'GH', 'SN', 'TN', 'DZ', 'CI', 'AO', 'TZ', 'ZM', 'ZW', 'NA', 'MG', 'MU', 'MR', 'MZ', 'NE', 'RW', 'SC', 'SL', 'SO', 'SD', 'SZ', 'TG', 'UG'],
-      'Océanie': ['AU', 'NZ'],
-      'Moyen-Orient': ['AE', 'SA', 'QA', 'KW', 'PS', 'TR', 'LB']
-    };
-
-    const zoneCodes = zoneCountries[zone] || [];
-    
-    // Filtrer les pays de l'API qui correspondent aux codes de cette zone
-    return countries
-      .filter(country => zoneCodes.includes(country.cca2))
-      .map(country => ({
-        code: country._id, // Utiliser l'_id de l'API comme code
-        name: country.name.common
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  };
 
   /**
    * Effet pour initialiser destination_zone seulement si elle est vide
@@ -704,12 +676,21 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             <select value={data.destination_zone || ''} onChange={(e) => handleCountrySelect(e.target.value)}
               className="mt-1 block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm appearance-none transition-all">
               <option value="" disabled className="text-gray-400">Select a country</option>
-              {['Europe', 'Afrique', 'Amérique du Nord', 'Amérique du Sud', 'Asie', 'Océanie', 'Moyen-Orient'].map((zone) => {
-                const countries = getCountriesByZone(zone);
-                if (countries.length === 0) return null;
-                return <optgroup key={zone} label={zone}>{countries.map(({ code, name }) => <option key={code} value={code} className="text-gray-800">{name}</option>)}</optgroup>;
-              })}
+              {countries.length > 0 ? (
+                countries
+                  .sort((a, b) => a.name.common.localeCompare(b.name.common))
+                  .map((country) => (
+                    <option key={country._id} value={country._id} className="text-gray-800">
+                      {country.name.common}
+                    </option>
+                  ))
+              ) : (
+                <option disabled>Loading countries...</option>
+              )}
             </select>
+            <p className="text-xs text-gray-500 italic text-center mt-2">
+              {countries.length > 0 ? `${countries.length} countries available for selection` : 'Loading countries...'}
+            </p>
           </div>
           {data.destination_zone && (
             <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
