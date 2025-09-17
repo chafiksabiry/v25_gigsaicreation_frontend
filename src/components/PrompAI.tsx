@@ -179,6 +179,10 @@ const PrompAI: React.FC = () => {
   };
 
   const handleSectionChange = (sectionId: string) => {
+    console.log(`🔄 PROMP AI - Section change to: ${sectionId}`);
+    console.log('🔄 PROMP AI - gigData.schedule:', gigData.schedule);
+    console.log('🔄 PROMP AI - gigData.availability:', gigData.availability);
+    
     // Si onSectionChange est appelé avec 'suggestions', revenir aux suggestions
     if (sectionId === 'suggestions') {
       // Si on est en mode manuel, revenir au mode AI
