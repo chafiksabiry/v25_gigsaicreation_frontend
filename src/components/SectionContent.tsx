@@ -154,45 +154,21 @@ export function SectionContent({
         console.log('🔄 SECTION CONTENT - data.schedule?.schedules:', data.schedule?.schedules);
         console.log('🔄 SECTION CONTENT - data.availability:', data.availability);
         console.log('🔄 SECTION CONTENT - data.availability?.schedule:', data.availability?.schedule);
+        console.log('🔄 SECTION CONTENT - initializedData.schedule:', initializedData.schedule);
+        console.log('🔄 SECTION CONTENT - initializedData.schedule.schedules:', initializedData.schedule.schedules);
+        
+        const scheduleDataToPass = {
+          schedules: initializedData.schedule.schedules || [],
+          time_zone: initializedData.schedule.time_zone || "",
+          flexibility: initializedData.schedule.flexibility || [],
+          minimumHours: initializedData.schedule.minimumHours || {}
+        };
+        
+        console.log('🔄 SECTION CONTENT - scheduleDataToPass:', scheduleDataToPass);
         
         return (
           <ScheduleSection
-            data={data.schedule ? {
-              schedules: data.schedule.schedules || data.availability?.schedule || [],
-              time_zone: (() => {
-                // Priorité 1: time_zone direct depuis schedule
-                if (data.schedule?.time_zone) {
-                  return data.schedule.time_zone;
-                }
-                // Priorité 2: premier élément de timeZones array
-                if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
-                  const firstTimezone = data.schedule.timeZones[0];
-                  if (typeof firstTimezone === 'string') {
-                    return firstTimezone;
-                  }
-                }
-                // Priorité 3: timezone depuis availability (qui vient de Suggestions)
-                if (data.availability?.time_zone) {
-                  return data.availability.time_zone;
-                }
-                return "";
-              })(),
-              flexibility: data.schedule.flexibility || data.availability?.flexibility || [],
-              minimumHours: data.schedule.minimumHours || data.availability?.minimumHours || {
-                daily: undefined,
-                weekly: undefined,
-                monthly: undefined,
-              }
-            } : {
-              schedules: data.availability?.schedule || [],
-              time_zone: data.availability?.time_zone || "",
-              flexibility: data.availability?.flexibility || [],
-              minimumHours: data.availability?.minimumHours || {
-                daily: undefined,
-                weekly: undefined,
-                monthly: undefined,
-              }
-            }}
+            data={scheduleDataToPass}
             destination_zone={data.destination_zone}
             onChange={(scheduleData) => onChange({
               ...data,
