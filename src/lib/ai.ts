@@ -103,19 +103,57 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
   }
 }
 
+// Convert GigData back to GigSuggestion format for the Suggestions component
+export function mapGigDataToSuggestions(gigData: GigData): any {
+  console.log('🔄 REVERSE MAPPING - Converting gigData back to suggestions format');
+  console.log('🔄 REVERSE MAPPING - gigData.schedule:', gigData.schedule);
+  console.log('🔄 REVERSE MAPPING - gigData.availability:', gigData.availability);
+  
+  return {
+    jobTitles: gigData.title ? [gigData.title] : [],
+    description: gigData.description || '',
+    category: gigData.category || '',
+    destinationZones: gigData.destinationZones || [],
+    activities: gigData.activities || [],
+    industries: gigData.industries || [],
+    seniority: gigData.seniority || { level: '', yearsExperience: 0 },
+    skills: {
+      ...gigData.skills,
+      certifications: gigData.skills?.certifications || []
+    } || { languages: [], soft: [], professional: [], technical: [], certifications: [] },
+    schedule: gigData.schedule || {
+      schedules: [],
+      time_zone: '',
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {}
+    },
+    availability: gigData.availability || {},
+    commission: {
+      ...gigData.commission,
+      kpis: gigData.commission?.kpis || []
+    } || {},
+    team: gigData.team || { size: 1, structure: [], territories: [] },
+    highlights: gigData.highlights || [],
+    requirements: gigData.requirements || { essential: [], preferred: [] },
+    benefits: gigData.benefits || [],
+    callTypes: gigData.callTypes || []
+  };
+}
+
 // Keep the mapGeneratedDataToGigData function for compatibility
-export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial<GigData> {
+export function mapGeneratedDataToGigData(generatedData: any): Partial<GigData> {
   console.log('🗺️ MAPPING - generatedData.schedule:', generatedData.schedule);
   console.log('🗺️ MAPPING - generatedData.availability:', generatedData.availability);
   
   return {
     title: generatedData.jobTitles?.[0] || '',
-    description: generatedData.jobDescription || '',
+    description: generatedData.description || '',
     category: generatedData.category || '',
     seniority: generatedData.seniority || { level: '', yearsExperience: 0 },
     activities: generatedData.activities || [],
     industries: generatedData.industries || [],
-    skills: generatedData.skills || { languages: [], soft: [], professional: [], technical: [] },
+    skills: generatedData.skills || { languages: [], soft: [], professional: [], technical: [] } as any,
     availability: generatedData.availability || {},
     schedule: generatedData.schedule || {
       schedules: [],
@@ -124,8 +162,8 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
       flexibility: [],
       minimumHours: {}
     },
-    commission: generatedData.commission || {},
+    commission: generatedData.commission || {} as any,
     team: generatedData.team || { size: 1, structure: [], territories: [] },
-    destinationZone: generatedData.destination_zone || ''
+    destinationZone: generatedData.destinationZones?.[0] || ''
   };
 }

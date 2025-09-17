@@ -16,7 +16,7 @@ import { SectionContent } from "./SectionContent";
 import Logo from "./Logo";
 import type { GigData, GigSuggestion } from "../types";
 import { predefinedOptions } from "../lib/guidance";
-import { mapGeneratedDataToGigData } from '../lib/ai';
+import { mapGeneratedDataToGigData, mapGigDataToSuggestions } from '../lib/ai';
 
 const sections = [
   { id: "basic", label: "Basic Info", icon: Briefcase },
@@ -185,15 +185,18 @@ const PrompAI: React.FC = () => {
     
     // Si onSectionChange est appelé avec 'suggestions', revenir aux suggestions
     if (sectionId === 'suggestions') {
-      // Si on est en mode manuel, revenir au mode AI
-      if (isManualMode) {
-        setIsManualMode(false);
+      // Si on a des suggestions confirmées, les mettre à jour avec les données modifiées
+      if (confirmedSuggestions) {
+        console.log('🔄 UPDATING SUGGESTIONS - Converting current gigData back to suggestions');
+        const updatedSuggestions = mapGigDataToSuggestions(gigData);
+        setConfirmedSuggestions(updatedSuggestions);
         setShowSuggestions(true);
         return;
       }
       
-      // Si on a des suggestions confirmées, revenir aux suggestions
-      if (confirmedSuggestions) {
+      // Si on est en mode manuel, revenir au mode AI
+      if (isManualMode) {
+        setIsManualMode(false);
         setShowSuggestions(true);
         return;
       }
