@@ -156,26 +156,12 @@ export function SectionContent({
 
       case "schedule":
         console.log('🔄 SECTION CONTENT - Schedule case triggered');
-        console.log('🔄 SECTION CONTENT - data:', data);
-        console.log('🔄 SECTION CONTENT - data.schedule:', data.schedule);
-        console.log('🔄 SECTION CONTENT - data.schedule?.schedules:', data.schedule?.schedules);
-        console.log('🔄 SECTION CONTENT - data.availability:', data.availability);
-        console.log('🔄 SECTION CONTENT - data.availability?.schedule:', data.availability?.schedule);
         console.log('🔄 SECTION CONTENT - initializedData.schedule:', initializedData.schedule);
         console.log('🔄 SECTION CONTENT - initializedData.schedule.schedules:', initializedData.schedule.schedules);
         
-        const scheduleDataToPass = {
-          schedules: initializedData.schedule.schedules || [],
-          time_zone: initializedData.schedule.time_zone || "",
-          flexibility: initializedData.schedule.flexibility || [],
-          minimumHours: initializedData.schedule.minimumHours || {}
-        };
-        
-        console.log('🔄 SECTION CONTENT - scheduleDataToPass:', scheduleDataToPass);
-        
         return (
           <ScheduleSection
-            data={scheduleDataToPass}
+            data={{...initializedData.schedule}}
             destination_zone={data.destination_zone}
             onChange={(scheduleData) => onChange({
               ...data,
