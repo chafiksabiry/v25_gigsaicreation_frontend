@@ -105,6 +105,9 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
 
 // Keep the mapGeneratedDataToGigData function for compatibility
 export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial<GigData> {
+  console.log('🗺️ MAPPING - generatedData.schedule:', generatedData.schedule);
+  console.log('🗺️ MAPPING - generatedData.availability:', generatedData.availability);
+  
   return {
     title: generatedData.jobTitles?.[0] || '',
     description: generatedData.jobDescription || '',
@@ -114,6 +117,13 @@ export function mapGeneratedDataToGigData(generatedData: GigSuggestion): Partial
     industries: generatedData.industries || [],
     skills: generatedData.skills || { languages: [], soft: [], professional: [], technical: [] },
     availability: generatedData.availability || {},
+    schedule: generatedData.schedule || {
+      schedules: [],
+      time_zone: '',
+      timeZones: [],
+      flexibility: [],
+      minimumHours: {}
+    },
     commission: generatedData.commission || {},
     team: generatedData.team || { size: 1, structure: [], territories: [] },
     destinationZone: generatedData.destination_zone || ''
