@@ -103,9 +103,13 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
           .sort((a, b) => a.offset - b.offset);
         setAvailableTimezones(processedTimezones);
         
-        // If there's a time_zone from API, keep it; otherwise set to first available
+        // Only set default timezone if no timezone is currently set
+        // Don't override user's selection or existing timezone
         if (processedTimezones.length > 0 && !props.data.time_zone) {
+          console.log('🕐 TIMEZONE - Setting default timezone to first available:', processedTimezones[0]._id);
           props.onChange({ ...props.data, time_zone: processedTimezones[0]._id });
+        } else if (props.data.time_zone) {
+          console.log('🕐 TIMEZONE - Keeping existing timezone:', props.data.time_zone);
         }
       } catch (error) {
         setAvailableTimezones([]);

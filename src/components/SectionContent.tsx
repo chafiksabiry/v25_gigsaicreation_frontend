@@ -83,15 +83,27 @@ export function SectionContent({
       schedule: {
         schedules: cleanedSchedules,
         time_zone: (() => {
+          console.log('🕐 TIMEZONE INIT - data.schedule?.time_zone:', data.schedule?.time_zone);
+          console.log('🕐 TIMEZONE INIT - data.schedule?.timeZones:', data.schedule?.timeZones);
+          console.log('🕐 TIMEZONE INIT - data.availability?.time_zone:', data.availability?.time_zone);
+          
           if (data.schedule?.time_zone) {
+            console.log('🕐 TIMEZONE INIT - Using schedule.time_zone:', data.schedule.time_zone);
             return data.schedule.time_zone;
           }
           if (Array.isArray(data.schedule?.timeZones) && data.schedule.timeZones.length > 0) {
             const firstTimezone = data.schedule.timeZones[0];
             if (typeof firstTimezone === 'string') {
+              console.log('🕐 TIMEZONE INIT - Using first from timeZones array:', firstTimezone);
               return firstTimezone;
             }
           }
+          // Also check availability as fallback
+          if (data.availability?.time_zone) {
+            console.log('🕐 TIMEZONE INIT - Using availability.time_zone:', data.availability.time_zone);
+            return data.availability.time_zone;
+          }
+          console.log('🕐 TIMEZONE INIT - No timezone found, using empty string');
           return "";
         })(),
         timeZones: data.schedule?.time_zone ? [data.schedule?.time_zone] : [],
