@@ -239,11 +239,29 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   /**
    * Effet pour initialiser destination_zone seulement si elle est vide
    * Basé sur la logique de Suggestions.tsx et api.ts
+   * Gère aussi la compatibilité avec destinationZone (sans underscore)
    */
   useEffect(() => {
+    // Gérer la compatibilité entre destination_zone et destinationZone
+    const destinationZoneValue = (data as any).destinationZone || data.destination_zone;
+    const destinationZonesArray = data.destinationZones || [];
+    
+    // Si destination_zone est vide mais destinationZone (sans underscore) existe
+    if (!data.destination_zone && destinationZoneValue) {
+      console.log('🔄 BASIC SECTION - Initializing destination_zone from destinationZone:', destinationZoneValue);
+      onChange({ 
+        ...data, 
+        destination_zone: destinationZoneValue,
+        destinationZones: destinationZonesArray.length > 0 ? destinationZonesArray : [destinationZoneValue]
+      });
+      return;
+    }
+    
     // Seulement initialiser si destination_zone est vide et destinationZones contient des données
-    if (!data.destination_zone && data.destinationZones && data.destinationZones.length > 0) {
-      const firstDestination = data.destinationZones[0];
+    if (!data.destination_zone && destinationZonesArray.length > 0) {
+      const firstDestination = destinationZonesArray[0];
+      
+      console.log('🔄 BASIC SECTION - Initializing destination_zone from destinationZones[0]:', firstDestination);
       
       // Si c'est déjà un code de pays (2-3 caractères), l'utiliser directement
       if (firstDestination && firstDestination.length <= 3) {
@@ -253,23 +271,29 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           onChange({ ...data, destination_zone: firstDestination });
         }
       } else {
-        // Convertir les noms de pays en codes
-        const countryCode = countryToAlpha2[firstDestination] || 
-                           Object.entries(i18n.getNames('en'))
-                             .find(([_, name]) => name === firstDestination)?.[0];
-        
-        if (countryCode) {
-          onChange({ ...data, destination_zone: countryCode });
+        // Si c'est un MongoDB ObjectId (24 caractères), l'utiliser directement
+        if (firstDestination && firstDestination.length === 24) {
+          onChange({ ...data, destination_zone: firstDestination });
+        } else {
+          // Convertir les noms de pays en codes
+          const countryCode = countryToAlpha2[firstDestination] || 
+                             Object.entries(i18n.getNames('en'))
+                               .find(([_, name]) => name === firstDestination)?.[0];
+          
+          if (countryCode) {
+            onChange({ ...data, destination_zone: countryCode });
+          }
         }
       }
-    } else if (data.destination_zone && (!data.destinationZones || data.destinationZones.length === 0)) {
+    } else if (data.destination_zone && destinationZonesArray.length === 0) {
       // Si destination_zone est défini mais destinationZones est vide, initialiser destinationZones
+      console.log('🔄 BASIC SECTION - Initializing destinationZones from destination_zone:', data.destination_zone);
       onChange({
         ...data,
         destinationZones: [data.destination_zone]
       });
     }
-  }, [data.destinationZones, data.destination_zone]);
+  }, [data.destinationZones, data.destination_zone, (data as any).destinationZone]);
 
   /**
    * Effet pour ajouter les icônes Material Icons
@@ -335,6 +359,9 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   console.log('🏠 BASIC SECTION - data:', data);
   console.log('🏠 BASIC SECTION - destinationZones:', data.destinationZones);
   console.log('🏠 BASIC SECTION - destination_zone:', data.destination_zone);
+  console.log('🏠 BASIC SECTION - destinationZone (sans underscore):', (data as any).destinationZone);
+  console.log('🏠 BASIC SECTION - countries from API:', countries.length, 'countries loaded');
+  console.log('🏠 BASIC SECTION - isLoading:', isLoading);
   console.log('🏠 BASIC SECTION - industries:', data.industries);
   console.log('🏠 BASIC SECTION - activities:', data.activities);
   console.log('🏠 BASIC SECTION - seniority:', data.seniority);
