@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
+import { getCountryNameById } from '../lib/api';
 import {
   Brain,
   Briefcase,
@@ -72,6 +73,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
   const [industries, setIndustries] = useState<Array<{ value: string; label: string }>>([]);
   const [countries, setCountries] = useState<Country[]>([]);
+  const [countryName, setCountryName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -152,7 +154,23 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   }, []);
 
   useEffect(() => {
-  }, [data]);
+    // Récupérer le nom du pays si destination_zone est un ObjectId MongoDB
+    if (data.destination_zone && data.destination_zone.length === 24) {
+      const fetchCountryName = async () => {
+        try {
+          const name = await getCountryNameById(data.destination_zone);
+          setCountryName(name);
+          console.log(`🌍 BASIC SECTION - Fetched country name: ${name} for ID: ${data.destination_zone}`);
+        } catch (error) {
+          console.error('❌ BASIC SECTION - Error fetching country name:', error);
+          setCountryName(data.destination_zone);
+        }
+      };
+      fetchCountryName();
+    } else {
+      setCountryName('');
+    }
+  }, [data.destination_zone]);
 
   /**
    * Obtient le nom du pays à partir de l'ID de l'API ou du code alpha-2
@@ -163,8 +181,11 @@ const BasicSection: React.FC<BasicSectionProps> = ({
     // D'abord chercher par ID dans l'API
     const countryFromApi = countries.find(country => country._id === countryId);
     if (countryFromApi) {
+      console.log(`🌍 Found country in API: ${countryFromApi.name.common} for ID: ${countryId}`);
       return countryFromApi.name.common;
     }
+    
+    console.log(`⚠️ Country not found in API for ID: ${countryId}. Available countries: ${countries.length}`);
     
     // Sinon, essayer avec les méthodes existantes (pour la compatibilité)
     return i18n.getName(countryId, 'en') || alpha2ToCountry[countryId] || countryId;
@@ -693,7 +714,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           {data.destination_zone && (
             <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
               <Globe2 className="w-4 h-4" />
-              <span>Selected: {getCountryName(data.destination_zone)}</span>
+              <span>Selected: {countryName || getCountryName(data.destination_zone)}</span>
+              {data.destination_zone.length === 24 && !countryName && (
+                <span className="text-xs text-blue-500">(Loading country name...)</span>
+              )}
             </div>
           )}
           {errors.destination_zone && <p className="mt-2 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>}
