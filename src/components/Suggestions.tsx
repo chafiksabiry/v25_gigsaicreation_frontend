@@ -943,24 +943,38 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           }
         }
 
-        // Convert destination zones from country names to alpha-2 codes
+        // Convert destination zones from country names to MongoDB ObjectIds
         if (result.destinationZones && result.destinationZones.length > 0) {
           
           const convertedZones = await Promise.all(result.destinationZones.map(async (zone) => {
-            // If it's already an alpha-2 code (2 letters), keep it
-            if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
+            // If it's already a MongoDB ObjectId (24 characters), keep it
+            if (typeof zone === 'string' && zone.length === 24) {
               return zone;
             }
             
-            // If it's "Global", replace with "France" (FR)
+            // If it's "Global", replace with France's MongoDB ObjectId
             if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
-              return 'FR';
+              // Find France in allCountriesFromAPI
+              const franceCountry = allCountriesFromAPI.find(c => 
+                c.name.common.toLowerCase() === 'france' || 
+                c.cca2 === 'FR'
+              );
+              return franceCountry ? franceCountry._id : zone;
             }
             
-            // If it's a country name, convert to alpha-2 code
+            // If it's an alpha-2 code, convert to MongoDB ObjectId
+            if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
+              const country = allCountriesFromAPI.find(c => c.cca2 === zone);
+              return country ? country._id : zone;
+            }
+            
+            // If it's a country name, convert to MongoDB ObjectId
             if (typeof zone === 'string') {
-              const alpha2Code = await getAlpha2Code(zone);
-              return alpha2Code;
+              const country = allCountriesFromAPI.find(c => 
+                c.name.common.toLowerCase() === zone.toLowerCase() ||
+                c.name.official.toLowerCase() === zone.toLowerCase()
+              );
+              return country ? country._id : zone;
             }
             
             return zone;
@@ -968,8 +982,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           
           result.destinationZones = convertedZones;
         } else {
-          // If no destination zones are provided, default to France
-          result.destinationZones = ['FR'];
+          // If no destination zones are provided, default to France's MongoDB ObjectId
+          const franceCountry = allCountriesFromAPI.find(c => 
+            c.name.common.toLowerCase() === 'france' || 
+            c.cca2 === 'FR'
+          );
+          result.destinationZones = franceCountry ? [franceCountry._id] : [];
         }
 
         setSuggestions(result);
@@ -1397,18 +1415,31 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
         break;
       case "destinationZones":
-        // For destination zones, we store the alpha-2 code
+        // For destination zones, we store the MongoDB ObjectId
         
         // If someone tries to add "Global", replace with "France"
         if (item.toLowerCase() === 'global') {
           item = 'France';
         }
         
-        const alpha2Code = getAlpha2CodeSync(item);
+        // Find the country by name or code and get its MongoDB ObjectId
+        let countryId = item;
+        if (item.length === 2) {
+          // It's an alpha-2 code, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => c.cca2 === item);
+          countryId = country ? country._id : item;
+        } else {
+          // It's a country name, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => 
+            c.name.common.toLowerCase() === item.toLowerCase() ||
+            c.name.official.toLowerCase() === item.toLowerCase()
+          );
+          countryId = country ? country._id : item;
+        }
         
         newSuggestions.destinationZones = [
           ...(newSuggestions.destinationZones || []),
-          alpha2Code,
+          countryId,
         ];
         
         break;
@@ -1489,15 +1520,29 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
         break;
       case "destinationZones":
-        // For destination zones, we store the alpha-2 code
+        // For destination zones, we store the MongoDB ObjectId
         
         // If someone tries to update to "Global", replace with "France"
         if (newValue.toLowerCase() === 'global') {
           newValue = 'France';
         }
         
-        const alpha2Code = getAlpha2CodeSync(newValue);
-        newSuggestions.destinationZones[index] = alpha2Code;
+        // Find the country by name or code and get its MongoDB ObjectId
+        let countryId = newValue;
+        if (newValue.length === 2) {
+          // It's an alpha-2 code, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => c.cca2 === newValue);
+          countryId = country ? country._id : newValue;
+        } else {
+          // It's a country name, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => 
+            c.name.common.toLowerCase() === newValue.toLowerCase() ||
+            c.name.official.toLowerCase() === newValue.toLowerCase()
+          );
+          countryId = country ? country._id : newValue;
+        }
+        
+        newSuggestions.destinationZones[index] = countryId;
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential[index] = newValue;
@@ -2660,16 +2705,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   };
 
   const renderDestinationZonesSection = () => {
-    console.log('🔍 renderDestinationZonesSection - suggestions:', suggestions);
-    console.log('🔍 renderDestinationZonesSection - allCountriesFromAPI:', allCountriesFromAPI.length);
+    if (!suggestions) return null;
     
-    if (!suggestions) {
-      console.log('❌ renderDestinationZonesSection - no suggestions, returning null');
-      return null;
-    }
-
     const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+      const value = e.target.value; // This is the MongoDB ObjectId
       if (!value) return;
       
       // Use the existing addItem logic for destination zones
@@ -2686,17 +2725,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.destinationZones || [];
-    console.log('🔍 selected destinationZones:', selected);
     
     // Get all available countries from API, excluding already selected ones
     const availableCountries = allCountriesFromAPI
       .filter(country => !selected.includes(country._id))
       .map(country => ({ 
-        code: country._id, 
+        code: country._id,  // Use MongoDB ObjectId as the value
         name: country.name.common 
       }));
-    
-    console.log('🔍 availableCountries:', availableCountries.length);
 
     return (
       <div className="mb-8 p-6 rounded-xl border border-amber-200 bg-amber-50">
@@ -2706,23 +2742,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
         {/* Badges sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.length > 0 ? (
-            selected.map(zone => (
-              <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-                <span>{getCountryName(zone)}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveDestinationZone(zone)}
-                  className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </span>
-            ))
-          ) : (
-            <p className="text-sm text-amber-700 italic">No destination zones selected yet. Choose from the options below.</p>
-          )}
+          {selected.map(zone => (
+            <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+              <span>{getCountryName(zone)}</span>
+              <button
+                type="button"
+                onClick={() => handleRemoveDestinationZone(zone)}
+                className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
         </div>
         
         {/* Select pour ajouter */}
@@ -2733,7 +2765,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           disabled={destinationCountriesLoading}
         >
           <option value="" disabled>
-            {destinationCountriesLoading ? 'Loading countries...' : 'Select a destination zone...'}
+            {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
           </option>
           {availableCountries.map(({ code, name }) => (
             <option key={code} value={code}>{name}</option>
@@ -2742,9 +2774,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {destinationCountriesLoading 
             ? 'Loading countries from API...' 
-            : availableCountries.length > 0
-              ? `${availableCountries.length} countries available for selection`
-              : 'All countries have been selected or no countries are available'
+            : `${availableCountries.length} countries available for selection`
           }
         </p>
       </div>
