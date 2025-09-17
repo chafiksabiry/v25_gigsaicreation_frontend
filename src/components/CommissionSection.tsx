@@ -1,10 +1,10 @@
-import React from "react";
-import { useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
+import { fetchAllCurrencies, fetchCurrencyById, Currency } from "../lib/api";
 import { 
   DollarSign, Target, AlertCircle, Coins, 
-  Star, Calculator, ArrowLeft, ArrowRight
+  Star, Calculator, ArrowLeft, ArrowRight, Loader2
 } from 'lucide-react';
 import { GigData } from '../types';
 
@@ -18,10 +18,59 @@ interface CommissionSectionProps {
 }
 
 export function CommissionSection({ data, onChange, errors, warnings, onNext, onPrevious }: CommissionSectionProps) {
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [currenciesLoading, setCurrenciesLoading] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+
+  // Fetch all currencies on component mount
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      setCurrenciesLoading(true);
+      try {
+        const fetchedCurrencies = await fetchAllCurrencies();
+        setCurrencies(fetchedCurrencies);
+        console.log('💰 COMMISSION - Loaded currencies:', fetchedCurrencies.length);
+      } catch (error) {
+        console.error('❌ Error loading currencies:', error);
+      } finally {
+        setCurrenciesLoading(false);
+      }
+    };
+    
+    loadCurrencies();
+  }, []);
+
+  // Fetch selected currency details when currency ID changes
+  useEffect(() => {
+    const loadSelectedCurrency = async () => {
+      if (data?.commission?.currency && currencies.length > 0) {
+        // First try to find in loaded currencies
+        const foundCurrency = currencies.find(c => c._id === data.commission.currency);
+        if (foundCurrency) {
+          setSelectedCurrency(foundCurrency);
+          console.log('💰 COMMISSION - Selected currency from list:', foundCurrency);
+        } else {
+          // If not found, fetch by ID
+          try {
+            const fetchedCurrency = await fetchCurrencyById(data.commission.currency);
+            if (fetchedCurrency) {
+              setSelectedCurrency(fetchedCurrency);
+              console.log('💰 COMMISSION - Selected currency from API:', fetchedCurrency);
+            }
+          } catch (error) {
+            console.error('❌ Error fetching selected currency:', error);
+          }
+        }
+      } else {
+        setSelectedCurrency(null);
+      }
+    };
+
+    loadSelectedCurrency();
+  }, [data?.commission?.currency, currencies]);
+
   const getCurrencySymbol = () => {
-    return data?.commission?.currency ? 
-      predefinedOptions.commission.currencies.find(c => c.code === data?.commission?.currency)?.symbol || '$'
-      : '$';
+    return selectedCurrency?.symbol || '$';
   };
 
   // Log Commission Section data
@@ -157,9 +206,14 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
           </div>
 
-          {/* Other Currency Options */}
+          {/* Currency Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Other Currencies</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Currency Selection
+              {currenciesLoading && (
+                <Loader2 className="inline w-4 h-4 ml-2 animate-spin text-gray-400" />
+              )}
+            </label>
             <select
               value={data?.commission?.currency || ''}
               onChange={(e) => onChange({ 
@@ -169,15 +223,21 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                   currency: e.target.value
                 } 
               })}
-              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+              disabled={currenciesLoading}
+              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Select a currency</option>
-              {predefinedOptions.commission.currencies.map((currency) => (
-                <option key={currency.code} value={currency.code}>
+              {currencies.map((currency) => (
+                <option key={currency._id} value={currency._id}>
                   {currency.symbol} {currency.name} ({currency.code})
                 </option>
               ))}
             </select>
+            {selectedCurrency && (
+              <p className="text-xs text-gray-500 mt-2">
+                Selected: <span className="font-semibold">{selectedCurrency.symbol} {selectedCurrency.name} ({selectedCurrency.code})</span>
+              </p>
+            )}
           </div>
         </div>
 

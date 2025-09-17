@@ -79,8 +79,8 @@ export function SectionContent({
     console.log('🔧 SECTION CONTENT - cleanedSchedules:', cleanedSchedules);
     
     return {
-      ...data,
-      schedule: {
+    ...data,
+          schedule: {
         schedules: cleanedSchedules,
         time_zone: (() => {
           console.log('🕐 TIMEZONE INIT - data.schedule?.time_zone:', data.schedule?.time_zone);
@@ -135,7 +135,7 @@ export function SectionContent({
       languages: data.skills?.languages || [],
 
           certifications: []
-      }
+    }
     };
   }, [data]);
 

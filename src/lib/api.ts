@@ -62,6 +62,31 @@ export interface TimezoneResponse {
   data: Timezone;
 }
 
+// Types for currencies API
+export interface Currency {
+  _id: string;
+  code: string;
+  name: string;
+  symbol: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+export interface CurrenciesResponse {
+  success: boolean;
+  data: Currency[];
+  total: number;
+  message: string;
+}
+
+export interface CurrencyResponse {
+  success: boolean;
+  data: Currency;
+  message: string;
+}
+
 
 // TODO: Implement these functions with your preferred storage solution
 export async function createGig() {
@@ -792,5 +817,52 @@ export async function fetchLanguages(): Promise<{ data: Language[]; error?: Erro
   } catch (error) {
     console.error('Error fetching languages:', error);
     return { data: [], error: error as Error };
+  }
+}
+
+// Currencies API functions
+export async function fetchAllCurrencies(): Promise<Currency[]> {
+  try {
+    console.log('💰 Fetching all currencies from API...');
+    const response = await fetch('https://api-gigsmanual.harx.ai/api/currencies');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result: CurrenciesResponse = await response.json();
+    console.log('💰 Currencies API response:', result);
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch currencies');
+    }
+    
+    return result.data;
+  } catch (error) {
+    console.error('❌ Error fetching currencies:', error);
+    return [];
+  }
+}
+
+export async function fetchCurrencyById(currencyId: string): Promise<Currency | null> {
+  try {
+    console.log(`💰 Fetching currency by ID: ${currencyId}`);
+    const response = await fetch(`https://api-gigsmanual.harx.ai/api/currencies/id/${currencyId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result: CurrencyResponse = await response.json();
+    console.log('💰 Currency by ID API response:', result);
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch currency');
+    }
+    
+    return result.data;
+  } catch (error) {
+    console.error(`❌ Error fetching currency ${currencyId}:`, error);
+    return null;
   }
 }

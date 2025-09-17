@@ -3247,6 +3247,84 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               >
 
                 {/* Base Configuration */}
+                                {/* Currency */}
+                                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                      <Globe2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    Currency Settings
+                  </h6>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Currency
+                      </label>
+                      <select
+                        value={option.currency || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            index,
+                            "currency",
+                            e.target.value
+                          )
+                        }
+                        className="w-full p-4 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-blue-300"
+                      >
+                        <option value="EUR">EUR (€)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="CAD">CAD (C$)</option>
+                        <option value="AUD">AUD (A$)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transaction Commission */}
+                <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl border-2 border-purple-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                      <DollarSign className="w-5 h-5 text-purple-600" />
+                    </div>
+                    Transaction Commission
+                  </h6>
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Commission Type field hidden as requested */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold text-gray-700">
+                        Commission Amount
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.transactionCommission?.amount ===
+                            "number"
+                              ? option.transactionCommission.amount
+                              : parseFloat(
+                                  option.transactionCommission?.amount
+                                ) || ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              index,
+                              "transactionCommission.amount",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. 25.50"
+                          className="w-full p-4 pr-16 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-purple-300"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                          {option.currency || "EUR"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="mb-8">
                   <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                     <div className="p-2 bg-blue-100 rounded-lg mr-3">
@@ -3379,85 +3457,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           }
                           placeholder="e.g. 500"
                           className="w-full p-4 pr-16 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 hover:border-yellow-300"
-                        />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Currency */}
-                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-100">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                      <Globe2 className="w-5 h-5 text-blue-600" />
-                    </div>
-                    Currency Settings
-                  </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Currency
-                      </label>
-                      <select
-                        value={option.currency || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "currency",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-blue-300"
-                      >
-                        <option value="EUR">EUR (€)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="CAD">CAD (C$)</option>
-                        <option value="AUD">AUD (A$)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Transaction Commission */}
-                <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl border-2 border-purple-100">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
-                      <DollarSign className="w-5 h-5 text-purple-600" />
-                    </div>
-                    Transaction Commission
-                  </h6>
-                  <div className="grid grid-cols-1 gap-6">
-                    {/* Commission Type field hidden as requested */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Commission Amount
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={
-                            typeof option.transactionCommission?.amount ===
-                            "number"
-                              ? option.transactionCommission.amount
-                              : parseFloat(
-                                  option.transactionCommission?.amount
-                                ) || ""
-                          }
-                          onChange={(e) =>
-                            updateCommissionOption(
-                              index,
-                              "transactionCommission.amount",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. 25.50"
-                          className="w-full p-4 pr-16 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-purple-300"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
                           {option.currency || "EUR"}
