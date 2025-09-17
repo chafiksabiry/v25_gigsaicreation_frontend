@@ -280,7 +280,8 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
   console.log('🕒 SCHEDULE SECTION - groupedSchedules:', groupedSchedules);
   console.log('🕒 SCHEDULE SECTION - emptyGroups:', emptyGroups);
   console.log('🕒 SCHEDULE SECTION - availableTimezones:', availableTimezones);
-  console.log('🕒 SCHEDULE SECTION - timezonesLoading:', timezonesLoading);
+  console.log('🕒 SCHEDULE SECTION - timezoneLoading:', timezoneLoading);
+  console.log('🕒 SCHEDULE SECTION - timezonesLoaded:', timezonesLoaded);
   console.log('🕒 SCHEDULE SECTION - selectedTimezoneObj:', selectedTimezoneObj);
   console.log('🕒 SCHEDULE SECTION - selectedTimezoneName:', selectedTimezoneName);
   
