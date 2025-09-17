@@ -2660,7 +2660,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   };
 
   const renderDestinationZonesSection = () => {
-    if (!suggestions) return null;
+    console.log('🔍 renderDestinationZonesSection - suggestions:', suggestions);
+    console.log('🔍 renderDestinationZonesSection - allCountriesFromAPI:', allCountriesFromAPI.length);
+    
+    if (!suggestions) {
+      console.log('❌ renderDestinationZonesSection - no suggestions, returning null');
+      return null;
+    }
 
     const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
@@ -2680,6 +2686,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.destinationZones || [];
+    console.log('🔍 selected destinationZones:', selected);
     
     // Get all available countries from API, excluding already selected ones
     const availableCountries = allCountriesFromAPI
@@ -2688,6 +2695,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         code: country._id, 
         name: country.name.common 
       }));
+    
+    console.log('🔍 availableCountries:', availableCountries.length);
 
     return (
       <div className="mb-8 p-6 rounded-xl border border-amber-200 bg-amber-50">
@@ -2697,19 +2706,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
         {/* Badges sélectionnés */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(zone => (
-            <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              <span>{getCountryName(zone)}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveDestinationZone(zone)}
-                className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
+          {selected.length > 0 ? (
+            selected.map(zone => (
+              <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
+                <span>{getCountryName(zone)}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDestinationZone(zone)}
+                  className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))
+          ) : (
+            <p className="text-sm text-amber-700 italic">No destination zones selected yet. Choose from the options below.</p>
+          )}
         </div>
         
         {/* Select pour ajouter */}
@@ -2720,7 +2733,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           disabled={destinationCountriesLoading}
         >
           <option value="" disabled>
-            {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
+            {destinationCountriesLoading ? 'Loading countries...' : 'Select a destination zone...'}
           </option>
           {availableCountries.map(({ code, name }) => (
             <option key={code} value={code}>{name}</option>
@@ -2729,7 +2742,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {destinationCountriesLoading 
             ? 'Loading countries from API...' 
-            : `${availableCountries.length} countries available for selection`
+            : availableCountries.length > 0
+              ? `${availableCountries.length} countries available for selection`
+              : 'All countries have been selected or no countries are available'
           }
         </p>
       </div>
@@ -3200,13 +3215,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 key={index}
                 className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
-                {/* Enhanced Header */}
-                <div className="flex items-center mb-8 pb-6 border-b border-gray-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-                    <h4 className="text-lg font-bold text-gray-800">Commission Configuration</h4>
-                  </div>
-                </div>
 
                 {/* Base Configuration */}
                 <div className="mb-8">
