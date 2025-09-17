@@ -271,6 +271,7 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
   const selectedTimezoneName = selectedTimezoneObj ? `${selectedTimezoneObj.name} (GMT${selectedTimezoneObj.offset >= 0 ? '+' : ''}${selectedTimezoneObj.offset})` : timeZone;
 
   console.log('🕒 SCHEDULE SECTION - Rendering ScheduleSection component');
+  console.log('🕒 SCHEDULE SECTION - props.data.schedule----:', props);
   console.log('🕒 SCHEDULE SECTION - props.data:', props.data);
   console.log('🕒 SCHEDULE SECTION - schedules:', props.data.schedules);
   console.log('🕒 SCHEDULE SECTION - minimumHours:', props.data.minimumHours);
