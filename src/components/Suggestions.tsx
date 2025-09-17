@@ -4703,6 +4703,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
 
             {/* Basic Section */}
+            {(() => {
+              console.log('🔍 BASIC SECTION - Rendering Basic Information section');
+              console.log('🔍 BASIC SECTION - suggestions:', suggestions);
+              return null;
+            })()}
             <div className="p-3 rounded-2xl border-2 border-blue-200 bg-blue-50">
               <div className="flex justify-center mb-8">
                 <div className="relative">
@@ -4744,6 +4749,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   {renderActivitiesSection()}
                 </div>
                 <div>
+                  {(() => {
+                    console.log('📦 DELIVERABLES - suggestions.deliverables:', suggestions?.deliverables);
+                    return null;
+                  })()}
                   <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>
                   {renderEditableList(
                     "deliverables",
@@ -4752,44 +4761,98 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   )}
                 </div>
                 <div>
+                  {(() => {
+                    console.log('🏭 SECTORS - About to render sectors section');
+                    console.log('🏭 SECTORS - suggestions.sectors:', suggestions?.sectors);
+                    return null;
+                  })()}
                   {renderSectorsSection()}
                 </div>
                 <div>
                   {renderDestinationZonesSection()}
                 </div>
                 <div>
+                  {(() => {
+                    console.log('🎓 SENIORITY - About to render seniority section');
+                    console.log('🎓 SENIORITY - suggestions.seniority:', suggestions?.seniority);
+                    return null;
+                  })()}
                   {renderSenioritySection()}
                 </div>
               </div>
             </div>
 
             {/* Schedule Section */}
+            {(() => {
+              console.log('🕒 SCHEDULE SECTION - Rendering Schedule section');
+              console.log('🕒 SCHEDULE SECTION - suggestions.schedule:', suggestions?.schedule);
+              return null;
+            })()}
             <div className="p-6 rounded-lg border border-gray-200">
               <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                 <Clock className="w-7 h-7 mr-3 text-blue-700" />
                 Schedule
               </h3>
+              {(() => {
+                console.log('📅 EDITABLE SCHEDULES - About to render editable schedules');
+                console.log('📅 EDITABLE SCHEDULES - suggestions.schedule.schedules:', suggestions?.schedule?.schedules);
+                return null;
+              })()}
               {renderEditableSchedules()}
+              {(() => {
+                console.log('⏰ MINIMUM HOURS - About to render minimum hours section');
+                console.log('⏰ MINIMUM HOURS - suggestions.schedule.minimumHours:', suggestions?.schedule?.minimumHours);
+                return null;
+              })()}
               {renderMinimumHoursSection()}
+              {(() => {
+                console.log('🌍 TIMEZONE - About to render timezone section');
+                console.log('🌍 TIMEZONE - suggestions.schedule.timeZones:', suggestions?.schedule?.timeZones);
+                console.log('🌍 TIMEZONE - suggestions.schedule.time_zone:', suggestions?.schedule?.time_zone);
+                return null;
+              })()}
               {renderTimezoneSection()}
+              {(() => {
+                console.log('🔄 FLEXIBILITY - About to render flexibility section');
+                console.log('🔄 FLEXIBILITY - suggestions.schedule.flexibility:', suggestions?.schedule?.flexibility);
+                return null;
+              })()}
               {renderFlexibilitySection()}
             </div>
 
             {/* Commission Section */}
+            {(() => {
+              console.log('💰 COMMISSION SECTION - Rendering Commission section');
+              console.log('💰 COMMISSION SECTION - suggestions.commission:', suggestions?.commission);
+              return null;
+            })()}
             <div className="p-6 rounded-lg border border-gray-200">
               <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                 <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
                 Commission
               </h3>
+              {(() => {
+                console.log('💵 COMMISSION DETAILS - About to render commission section');
+                return null;
+              })()}
               {renderCommissionSection()}
             </div>
 
             {/* Skills Section */}
+            {(() => {
+              console.log('🎯 SKILLS SECTION - Rendering Skills section');
+              console.log('🎯 SKILLS SECTION - suggestions.skills:', suggestions?.skills);
+              return null;
+            })()}
             <div className="p-6 rounded-lg border border-gray-200">
               <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
                 <Award className="w-7 h-7 mr-3 text-blue-700" />
                 Skills
               </h3>
+              {(() => {
+                console.log('🛠️ SKILLS DETAILS - About to render skills section');
+                return null;
+              })()}
               {renderSkillsSection()}
             </div>
 
@@ -4799,6 +4862,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <Users className="w-7 h-7 mr-3 text-blue-700" />
                 Team Structure
               </h3>
+              {(() => {
+                console.log('👤 TEAM DETAILS - About to render team section');
+                return null;
+              })()}
               {renderTeamSection()}
             </div>
           </div>

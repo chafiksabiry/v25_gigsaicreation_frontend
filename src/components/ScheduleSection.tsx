@@ -270,6 +270,20 @@ const ScheduleSection = (props: ScheduleSectionProps) => {
   const selectedTimezoneObj = availableTimezones.find(tz => tz._id === timeZone);
   const selectedTimezoneName = selectedTimezoneObj ? `${selectedTimezoneObj.name} (GMT${selectedTimezoneObj.offset >= 0 ? '+' : ''}${selectedTimezoneObj.offset})` : timeZone;
 
+  console.log('🕒 SCHEDULE SECTION - Rendering ScheduleSection component');
+  console.log('🕒 SCHEDULE SECTION - props.data:', props.data);
+  console.log('🕒 SCHEDULE SECTION - schedules:', props.data.schedules);
+  console.log('🕒 SCHEDULE SECTION - minimumHours:', props.data.minimumHours);
+  console.log('🕒 SCHEDULE SECTION - time_zone:', props.data.time_zone);
+  console.log('🕒 SCHEDULE SECTION - flexibility:', props.data.flexibility);
+  console.log('🕒 SCHEDULE SECTION - destination_zone:', props.destination_zone);
+  console.log('🕒 SCHEDULE SECTION - groupedSchedules:', groupedSchedules);
+  console.log('🕒 SCHEDULE SECTION - emptyGroups:', emptyGroups);
+  console.log('🕒 SCHEDULE SECTION - availableTimezones:', availableTimezones);
+  console.log('🕒 SCHEDULE SECTION - timezonesLoading:', timezonesLoading);
+  console.log('🕒 SCHEDULE SECTION - selectedTimezoneObj:', selectedTimezoneObj);
+  console.log('🕒 SCHEDULE SECTION - selectedTimezoneName:', selectedTimezoneName);
+  
   return (
     <div className="w-full bg-white py-6">
       

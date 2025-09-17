@@ -124,6 +124,18 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
     }
   }, [data?.commission?.transactionCommission?.type]);
 
+  console.log('💰 COMMISSION SECTION - Rendering CommissionSection component');
+  console.log('💰 COMMISSION SECTION - data.commission:', data.commission);
+  console.log('💰 COMMISSION SECTION - currency:', data?.commission?.currency);
+  console.log('💰 COMMISSION SECTION - baseAmount:', data?.commission?.baseAmount);
+  console.log('💰 COMMISSION SECTION - base:', data?.commission?.base);
+  console.log('💰 COMMISSION SECTION - minimumVolume:', data?.commission?.minimumVolume);
+  console.log('💰 COMMISSION SECTION - transactionCommission:', data?.commission?.transactionCommission);
+  console.log('💰 COMMISSION SECTION - bonus:', data?.commission?.bonus);
+  console.log('💰 COMMISSION SECTION - bonusAmount:', data?.commission?.bonusAmount);
+  console.log('💰 COMMISSION SECTION - errors:', errors);
+  console.log('💰 COMMISSION SECTION - warnings:', warnings);
+  
   return (
     <div className="w-full bg-white p-0">
       

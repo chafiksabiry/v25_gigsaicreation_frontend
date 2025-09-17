@@ -331,6 +331,15 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   }, [data, errors]);
 
   // Le rendu du composant
+  console.log('🏠 BASIC SECTION - Rendering BasicSection component');
+  console.log('🏠 BASIC SECTION - data:', data);
+  console.log('🏠 BASIC SECTION - destinationZones:', data.destinationZones);
+  console.log('🏠 BASIC SECTION - destination_zone:', data.destination_zone);
+  console.log('🏠 BASIC SECTION - industries:', data.industries);
+  console.log('🏠 BASIC SECTION - activities:', data.activities);
+  console.log('🏠 BASIC SECTION - seniority:', data.seniority);
+  console.log('🏠 BASIC SECTION - errors:', errors);
+  
   return (
     <div className="w-full bg-white py-6">
 

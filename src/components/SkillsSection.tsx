@@ -1114,6 +1114,23 @@ export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: Sk
 
 
 
+  console.log('🎯 SKILLS SECTION - Rendering SkillsSection component');
+  console.log('🎯 SKILLS SECTION - data:', data);
+  console.log('🎯 SKILLS SECTION - safeData:', safeData);
+  console.log('🎯 SKILLS SECTION - languages:', safeData.languages);
+  console.log('🎯 SKILLS SECTION - professional:', safeData.professional);
+  console.log('🎯 SKILLS SECTION - technical:', safeData.technical);
+  console.log('🎯 SKILLS SECTION - soft:', safeData.soft);
+  console.log('🎯 SKILLS SECTION - certifications:', safeData.certifications);
+  console.log('🎯 SKILLS SECTION - professionalSkills from API:', professionalSkills);
+  console.log('🎯 SKILLS SECTION - softSkills from API:', softSkills);
+  console.log('🎯 SKILLS SECTION - technicalSkills from API:', technicalSkills);
+  console.log('🎯 SKILLS SECTION - languages from API:', languages);
+  console.log('🎯 SKILLS SECTION - loadingSkills:', loadingSkills);
+  console.log('🎯 SKILLS SECTION - errorSkills:', errorSkills);
+  console.log('🎯 SKILLS SECTION - languagesLoading:', languagesLoading);
+  console.log('🎯 SKILLS SECTION - errors:', errors);
+  
   return (
     <div className="w-full bg-white p-0">
       
