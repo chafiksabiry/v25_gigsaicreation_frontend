@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Brain, HelpCircle, PlusCircle } from 'lucide-react';
 import { Suggestions } from './Suggestions';
 import { SectionContent } from './SectionContent';
-import { Logo } from './Logo';
+import Logo from './Logo';
 import { AIDialog } from './AIDialog';
 import { GigData, GigSuggestion } from '../types';
 import { predefinedOptions } from '../lib/guidance';
