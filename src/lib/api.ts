@@ -824,7 +824,8 @@ export async function fetchLanguages(): Promise<{ data: Language[]; error?: Erro
 export async function fetchAllCurrencies(): Promise<Currency[]> {
   try {
     console.log('💰 Fetching all currencies from API...');
-    const response = await fetch('https://api-gigsmanual.harx.ai/api/currencies');
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
+    const response = await fetch(`${apiUrl}/currencies`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -847,7 +848,8 @@ export async function fetchAllCurrencies(): Promise<Currency[]> {
 export async function fetchCurrencyById(currencyId: string): Promise<Currency | null> {
   try {
     console.log(`💰 Fetching currency by ID: ${currencyId}`);
-    const response = await fetch(`https://api-gigsmanual.harx.ai/api/currencies/id/${currencyId}`);
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
+    const response = await fetch(`${apiUrl}/currencies/id/${currencyId}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
