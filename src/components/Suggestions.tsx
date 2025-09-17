@@ -31,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone, getCountryNameById } from "../lib/api";
+import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone, getCountryNameById, fetchAllCurrencies, Currency } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import { 
   loadActivities, 
@@ -261,8 +261,78 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [industriesLoading, setIndustriesLoading] = useState(true);
   const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [currenciesLoading, setCurrenciesLoading] = useState(false);
+  
+  // Helper function to get currency symbol by ID
+  const getCurrencySymbol = (currencyId: string): string => {
+    const currency = currencies.find(c => c._id === currencyId);
+    return currency?.symbol || '€';
+  };
+  
+  // Helper function to get default currency (EUR if available, otherwise first in list)
+  const getDefaultCurrencyId = (): string => {
+    if (currencies.length === 0) return '';
+    const eurCurrency = currencies.find(c => c.code === 'EUR');
+    return eurCurrency?._id || currencies[0]._id;
+  };
 
 
+
+  // Load currencies from API
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      setCurrenciesLoading(true);
+      try {
+        console.log('💰 SUGGESTIONS - Loading currencies from API...');
+        const fetchedCurrencies = await fetchAllCurrencies();
+        setCurrencies(fetchedCurrencies);
+        console.log('💰 SUGGESTIONS - Loaded currencies:', fetchedCurrencies.length);
+      } catch (error) {
+        console.error('❌ Error loading currencies in Suggestions:', error);
+      } finally {
+        setCurrenciesLoading(false);
+      }
+    };
+    
+    loadCurrencies();
+  }, []);
+
+  // Set default currency when currencies are loaded and suggestions exist
+  useEffect(() => {
+    if (currencies.length > 0 && suggestions?.commission) {
+      const defaultCurrencyId = getDefaultCurrencyId();
+      
+      // Set default currency for each commission option if not already set
+      if (suggestions.commission.options) {
+        const updatedOptions = suggestions.commission.options.map(option => ({
+          ...option,
+          currency: option.currency || defaultCurrencyId
+        }));
+        
+        setSuggestions(prev => prev ? {
+          ...prev,
+          commission: {
+            ...prev.commission,
+            options: updatedOptions
+          }
+        } : null);
+      }
+      
+      // Set default currency for main commission if not already set
+      if (!suggestions.commission.currency) {
+        setSuggestions(prev => prev ? {
+          ...prev,
+          commission: {
+            ...prev.commission,
+            currency: defaultCurrencyId
+          }
+        } : null);
+      }
+      
+      console.log('💰 SUGGESTIONS - Set default currency:', defaultCurrencyId);
+    }
+  }, [currencies, suggestions?.commission]);
 
   // Load activities, industries, and languages from external API
   useEffect(() => {
@@ -3261,7 +3331,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         Currency
                       </label>
                       <select
-                        value={option.currency || ""}
+                        value={option.currency || getDefaultCurrencyId()}
                         onChange={(e) =>
                           updateCommissionOption(
                             index,
@@ -3269,14 +3339,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             e.target.value
                           )
                         }
-                        className="w-full p-4 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-blue-300"
+                        disabled={currenciesLoading}
+                        className="w-full p-4 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <option value="EUR">EUR (€)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="CAD">CAD (C$)</option>
-                        <option value="AUD">AUD (A$)</option>
+                        <option value="">Select currency...</option>
+                        {currencies.map((currency) => (
+                          <option key={currency._id} value={currency._id}>
+                            {currency.symbol} {currency.name} ({currency.code})
+                          </option>
+                        ))}
                       </select>
+                      {currenciesLoading && (
+                        <div className="flex items-center mt-2 text-sm text-gray-500">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Loading currencies...
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -3319,7 +3397,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full p-4 pr-16 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-purple-300"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
@@ -3357,7 +3435,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full p-4 pr-16 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
@@ -3459,7 +3537,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full p-4 pr-16 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 hover:border-yellow-300"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
