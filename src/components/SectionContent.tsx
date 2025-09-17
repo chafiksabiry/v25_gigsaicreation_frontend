@@ -34,6 +34,7 @@ export function SectionContent({
   }, [section, data, errors]);
 
   const cleanSchedules = (schedules: DaySchedule[]): DaySchedule[] => {
+    console.log('🧹 CLEAN SCHEDULES - Input schedules:', schedules);
     if (!schedules || schedules.length === 0) {
       return [];
     }
@@ -41,7 +42,10 @@ export function SectionContent({
     const seen = new Set<string>();
     const cleaned: DaySchedule[] = [];
   
-    schedules.forEach(schedule => {
+    schedules.forEach((schedule, index) => {
+      console.log(`🧹 CLEAN SCHEDULES - Processing schedule ${index}:`, schedule);
+      console.log(`🧹 CLEAN SCHEDULES - schedule.day:`, schedule?.day);
+      console.log(`🧹 CLEAN SCHEDULES - schedule.hours:`, schedule?.hours);
       if (schedule && schedule.day && schedule.hours) {
         const key = `${schedule.day}-${schedule.hours.start}-${schedule.hours.end}`;
         if (!seen.has(key)) {
@@ -54,9 +58,12 @@ export function SectionContent({
             }
           });
         }
+      } else {
+        console.log(`🧹 CLEAN SCHEDULES - Schedule ${index} rejected - missing day or hours`);
       }
     });
   
+    console.log('🧹 CLEAN SCHEDULES - Final cleaned schedules:', cleaned);
     return cleaned;
   };
 
