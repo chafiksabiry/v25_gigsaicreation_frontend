@@ -274,16 +274,16 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         // Si c'est un MongoDB ObjectId (24 caractères), l'utiliser directement
         if (firstDestination && firstDestination.length === 24) {
           onChange({ ...data, destination_zone: firstDestination });
-        } else {
-          // Convertir les noms de pays en codes
-          const countryCode = countryToAlpha2[firstDestination] || 
-                             Object.entries(i18n.getNames('en'))
-                               .find(([_, name]) => name === firstDestination)?.[0];
-          
-          if (countryCode) {
-            onChange({ ...data, destination_zone: countryCode });
-          }
+      } else {
+        // Convertir les noms de pays en codes
+        const countryCode = countryToAlpha2[firstDestination] || 
+                           Object.entries(i18n.getNames('en'))
+                             .find(([_, name]) => name === firstDestination)?.[0];
+        
+        if (countryCode) {
+          onChange({ ...data, destination_zone: countryCode });
         }
+      }
       }
     } else if (data.destination_zone && destinationZonesArray.length === 0) {
       // Si destination_zone est défini mais destinationZones est vide, initialiser destinationZones

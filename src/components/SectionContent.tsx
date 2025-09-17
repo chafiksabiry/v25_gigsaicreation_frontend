@@ -61,10 +61,20 @@ export function SectionContent({
   };
 
   // Ensure seniority object is properly initialized
-  const initializedData = React.useMemo(() => ({
-    ...data,
-          schedule: {
-        schedules: cleanSchedules(data.schedule?.schedules || []),
+  const initializedData = React.useMemo(() => {
+    const schedulesToClean = data.schedule?.schedules || data.availability?.schedule || [];
+    console.log('🔧 SECTION CONTENT - Initializing data');
+    console.log('🔧 SECTION CONTENT - data.schedule?.schedules:', data.schedule?.schedules);
+    console.log('🔧 SECTION CONTENT - data.availability?.schedule:', data.availability?.schedule);
+    console.log('🔧 SECTION CONTENT - schedulesToClean:', schedulesToClean);
+    
+    const cleanedSchedules = cleanSchedules(schedulesToClean);
+    console.log('🔧 SECTION CONTENT - cleanedSchedules:', cleanedSchedules);
+    
+    return {
+      ...data,
+      schedule: {
+        schedules: cleanedSchedules,
         time_zone: (() => {
           if (data.schedule?.time_zone) {
             return data.schedule.time_zone;
@@ -106,8 +116,9 @@ export function SectionContent({
       languages: data.skills?.languages || [],
 
           certifications: []
-    }
-  }), [data]);
+      }
+    };
+  }, [data]);
 
   const renderContent = () => {
     // Correction navigation : transformer 'documentation' en 'docs' si besoin
@@ -137,10 +148,17 @@ export function SectionContent({
         );
 
       case "schedule":
+        console.log('🔄 SECTION CONTENT - Schedule case triggered');
+        console.log('🔄 SECTION CONTENT - data:', data);
+        console.log('🔄 SECTION CONTENT - data.schedule:', data.schedule);
+        console.log('🔄 SECTION CONTENT - data.schedule?.schedules:', data.schedule?.schedules);
+        console.log('🔄 SECTION CONTENT - data.availability:', data.availability);
+        console.log('🔄 SECTION CONTENT - data.availability?.schedule:', data.availability?.schedule);
+        
         return (
           <ScheduleSection
             data={data.schedule ? {
-              schedules: data.schedule.schedules || [],
+              schedules: data.schedule.schedules || data.availability?.schedule || [],
               time_zone: (() => {
                 // Priorité 1: time_zone direct depuis schedule
                 if (data.schedule?.time_zone) {
@@ -166,7 +184,7 @@ export function SectionContent({
                 monthly: undefined,
               }
             } : {
-              schedules: [],
+              schedules: data.availability?.schedule || [],
               time_zone: data.availability?.time_zone || "",
               flexibility: data.availability?.flexibility || [],
               minimumHours: data.availability?.minimumHours || {
