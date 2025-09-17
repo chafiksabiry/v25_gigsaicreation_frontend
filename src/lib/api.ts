@@ -394,7 +394,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       }))
     };
 
-    // Keep destination zone as MongoDB ObjectId if it's valid, otherwise use default
+    // Keep destination zone as MongoDB ObjectId if it's valid, otherwise omit it
     const formattedDestinationZone = (() => {
       if (fixedGigData.destination_zone) {
         // If it's a MongoDB ObjectId (24 characters), keep it
@@ -402,14 +402,11 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
           console.log('💾 SAVE GIG - Using MongoDB ObjectId for destination_zone:', fixedGigData.destination_zone);
           return fixedGigData.destination_zone;
         }
-        // If it's an alpha-2 code, keep it for backward compatibility
-        if (typeof fixedGigData.destination_zone === 'string' && fixedGigData.destination_zone.length === 2) {
-          console.log('💾 SAVE GIG - Using alpha-2 code for destination_zone:', fixedGigData.destination_zone);
-          return fixedGigData.destination_zone;
-        }
+        console.log('⚠️ SAVE GIG - destination_zone is not a valid MongoDB ObjectId, omitting from request');
+        return undefined; // Don't send invalid ObjectId
       }
-      console.log('💾 SAVE GIG - Using default destination_zone: US');
-      return 'US'; // Default fallback
+      console.log('💾 SAVE GIG - No destination_zone provided, omitting from request');
+      return undefined; // Don't send default value
     })();
 
     const gigDataWithIds = {
@@ -419,7 +416,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       skills: formattedSkills,
       schedule: formattedSchedule,
       availability: formattedAvailability,
-      destination_zone: formattedDestinationZone
+      ...(formattedDestinationZone && { destination_zone: formattedDestinationZone })
     };
 
     const response = await fetch(`${API_URL}/gigs`, {
