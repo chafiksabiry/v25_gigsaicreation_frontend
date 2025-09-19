@@ -2925,6 +2925,253 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     );
   };
 
+  const renderJobTitlesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddJobTitle = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      
+      // Add the job title if it's not already in the list
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.jobTitles) newSuggestions.jobTitles = [];
+      if (!newSuggestions.jobTitles.includes(value)) {
+        newSuggestions.jobTitles = [...newSuggestions.jobTitles, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveJobTitle = (jobTitle: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.jobTitles = newSuggestions.jobTitles.filter(jt => jt !== jobTitle);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.jobTitles || [];
+    
+    // Predefined job titles options
+    const predefinedJobTitles = [
+      "Commercial",
+      "Vendeur",
+      "Consultant",
+      "Représentant Commercial",
+      "Chargé de Clientèle",
+      "Business Developer",
+      "Account Manager",
+      "Sales Representative",
+      "Télé-conseiller",
+      "Conseiller Commercial"
+    ];
+    
+    const available = predefinedJobTitles.filter(title => !selected.includes(title));
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
+        </div>
+        
+        {/* Add selector */}
+        <select
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          defaultValue=""
+          onChange={handleAddJobTitle}
+        >
+          <option value="" disabled>Select a job title...</option>
+          {available.map(title => (
+            <option key={title} value={title}>{title}</option>
+          ))}
+        </select>
+        
+        {/* Selected badges - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            {selected.map(title => (
+              <span key={title} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+                {title}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveJobTitle(title)}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderHighlightsSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddHighlight = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.highlights) newSuggestions.highlights = [];
+      if (!newSuggestions.highlights.includes(value)) {
+        newSuggestions.highlights = [...newSuggestions.highlights, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveHighlight = (highlight: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.highlights = newSuggestions.highlights.filter(h => h !== highlight);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.highlights || [];
+    
+    // Predefined highlights options
+    const predefinedHighlights = [
+      "Rémunération attractive",
+      "Formation complète",
+      "Évolution de carrière",
+      "Ambiance dynamique",
+      "Télétravail possible",
+      "Horaires flexibles",
+      "Prime sur objectifs",
+      "Accompagnement personnalisé",
+      "Outils performants",
+      "Équipe jeune et motivée"
+    ];
+    
+    const available = predefinedHighlights.filter(highlight => !selected.includes(highlight));
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
+        </div>
+        
+        {/* Add selector */}
+        <select
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
+          defaultValue=""
+          onChange={handleAddHighlight}
+        >
+          <option value="" disabled>Select a highlight...</option>
+          {available.map(highlight => (
+            <option key={highlight} value={highlight}>{highlight}</option>
+          ))}
+        </select>
+        
+        {/* Selected badges - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            {selected.map(highlight => (
+              <span key={highlight} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-800 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors">
+                {highlight}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveHighlight(highlight)}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-600 hover:bg-green-200 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderDeliverablesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddDeliverable = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.deliverables) newSuggestions.deliverables = [];
+      if (!newSuggestions.deliverables.includes(value)) {
+        newSuggestions.deliverables = [...newSuggestions.deliverables, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveDeliverable = (deliverable: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.deliverables = newSuggestions.deliverables.filter(d => d !== deliverable);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.deliverables || [];
+    
+    // Predefined deliverables options
+    const predefinedDeliverables = [
+      "Ventes réalisées",
+      "Rendez-vous qualifiés",
+      "Prospects contactés",
+      "Objectifs atteints",
+      "Rapports d'activité",
+      "Suivi clientèle",
+      "Présentation produits",
+      "Négociation contrats",
+      "Fidélisation clients",
+      "Développement portefeuille"
+    ];
+    
+    const available = predefinedDeliverables.filter(deliverable => !selected.includes(deliverable));
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
+        </div>
+        
+        {/* Add selector */}
+        <select
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
+          defaultValue=""
+          onChange={handleAddDeliverable}
+        >
+          <option value="" disabled>Select a deliverable...</option>
+          {available.map(deliverable => (
+            <option key={deliverable} value={deliverable}>{deliverable}</option>
+          ))}
+        </select>
+        
+        {/* Selected badges - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            {selected.map(deliverable => (
+              <span key={deliverable} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-50 text-purple-800 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors">
+                {deliverable}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDeliverable(deliverable)}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-600 hover:bg-purple-200 hover:text-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderSectorsSection = () => {
     if (!suggestions) return null;
 
@@ -3874,7 +4121,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const renderSkillCard = (skillType: string, items: any[], title: string, icon: React.ReactNode) => {
       const currentItems = items || [];
 
-      const getSkillOptions = (skillType: string) => {
+      const handleAddSkill = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        if (!value) return;
+        
+        // Add skill with default level
+        if (skillType === "languages") {
+          const level = 2; // Default to B1 for languages (index 2)
+          addSkill(skillType, value, level);
+        } else {
+          const level = 1; // Default to Basic for skills
+          addSkill(skillType, value, level);
+        }
+        
+        // Reset select
+        e.target.value = '';
+      };
+
+      const handleRemoveSkill = (index: number) => {
+        deleteSkill(skillType, index);
+      };
+
+      const getSkillOptions = () => {
         switch (skillType) {
           case "languages":
             return languages
@@ -3909,375 +4177,178 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
       };
 
-      const skillOptions = getSkillOptions(skillType);
+      const skillOptions = getSkillOptions();
+
+      // Get colors for each skill type
+      const getColors = () => {
+        switch (skillType) {
+          case "languages":
+            return {
+              border: "border-blue-300",
+              focus: "focus:ring-blue-500 focus:border-blue-500",
+              bg: "bg-blue-50",
+              text: "text-blue-800",
+              hover: "hover:bg-blue-100"
+            };
+          case "professional":
+            return {
+              border: "border-green-300",
+              focus: "focus:ring-green-500 focus:border-green-500",
+              bg: "bg-green-50",
+              text: "text-green-800",
+              hover: "hover:bg-green-100"
+            };
+          case "technical":
+            return {
+              border: "border-purple-300",
+              focus: "focus:ring-purple-500 focus:border-purple-500",
+              bg: "bg-purple-50",
+              text: "text-purple-800",
+              hover: "hover:bg-purple-100"
+            };
+          case "soft":
+            return {
+              border: "border-orange-300",
+              focus: "focus:ring-orange-500 focus:border-orange-500",
+              bg: "bg-orange-50",
+              text: "text-orange-800",
+              hover: "hover:bg-orange-100"
+            };
+          default:
+            return {
+              border: "border-gray-300",
+              focus: "focus:ring-gray-500 focus:border-gray-500",
+              bg: "bg-gray-50",
+              text: "text-gray-800",
+              hover: "hover:bg-gray-100"
+            };
+        }
+      };
+
+      const colors = getColors();
 
       return (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                {icon}
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-800">{title}</h4>
-                <p className="text-sm text-gray-600">
-                  {skillType === "languages" && `${languages.length} available`}
-                  {skillType === "professional" && `${professionalSkills.length} available`}
-                  {skillType === "technical" && `${technicalSkills.length} available`}
-                  {skillType === "soft" && `${softSkills.length} available`}
-                </p>
-              </div>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              {icon}
             </div>
-            <button
-              onClick={() => {
-                setEditingSection(skillType);
-                setEditingIndex(-1);
-                setEditValue("");
-              }}
-              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add</span>
-            </button>
+            <div>
+              <h4 className="text-lg font-semibold text-gray-900">{title}</h4>
+              <p className="text-sm text-gray-600">
+                {skillType === "languages" && `${languages.length} available`}
+                {skillType === "professional" && `${professionalSkills.length} available`}
+                {skillType === "technical" && `${technicalSkills.length} available`}
+                {skillType === "soft" && `${softSkills.length} available`}
+              </p>
+            </div>
           </div>
-
-          {currentItems.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {currentItems
-                .map((item, index) => {
-                  let skillName = '';
-                  if (skillType === "languages") {
-                    skillName = getLanguageNameById(item.language);
-                  } else {
-                    let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                    switch (skillType) {
-                      case "soft":
-                        skillArray = softSkills;
-                        break;
-                      case "professional":
-                        skillArray = professionalSkills;
-                        break;
-                      case "technical":
-                        skillArray = technicalSkills;
-                        break;
-                      default:
-                        skillArray = [];
-                    }
-                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                    if (skillId) {
-                      const skillObject = skillArray.find(s => s._id === skillId);
-                      skillName = skillObject ? skillObject.name : '';
-                    } else if (item.skill && typeof item.skill === 'object' && item.skill.name) {
-                      skillName = item.skill.name;
-                    }
-                  }
-                  if (!skillName) return null;
-                  return (
-                    <div
-                      key={index}
-                      className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      {editingSection === skillType && editingIndex === index ? (
-                        <div className="space-y-3">
-                          <select
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            autoFocus
-                          >
-                            <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
-                            {skillType === "languages" 
-                              ? languages.map((lang) => (
-                                  <option key={lang.value} value={lang.value}>
-                                    {lang.label}
-                                  </option>
-                                ))
-                              : skillType === "professional"
-                              ? professionalSkills.map((skill) => (
-                                  <option key={skill._id} value={skill._id}>
-                                    {skill.name}
-                                  </option>
-                                ))
-                              : skillType === "technical"
-                              ? technicalSkills.map((skill) => (
-                                  <option key={skill._id} value={skill._id}>
-                                    {skill.name}
-                                  </option>
-                                ))
-                              : softSkills.map((skill) => (
-                                  <option key={skill._id} value={skill._id}>
-                                    {skill.name}
-                                  </option>
-                                ))
-                            }
-                          </select>
-                          {skillType === "languages" ? (
-                            <select
-                              value={item.proficiency || "B1"}
-                              onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              {LANGUAGE_LEVELS.map((level) => (
-                                <option key={level.value} value={level.value}>
-                                  {level.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <select
-                              value={item.level || 1}
-                              onChange={(e) => updateSkill(skillType, index, "level", parseInt(e.target.value))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              {SKILL_LEVELS.map((level) => (
-                                <option key={level.value} value={level.value}>
-                                  {level.label}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                if (editValue.trim()) {
-                                  updateSkill(skillType, index, skillType === "languages" ? "language" : "skill", editValue.trim());
-                                  setEditingSection(null);
-                                  setEditingIndex(null);
-                                  setEditValue("");
-                                }
-                              }}
-                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-semibold text-gray-800">{skillName}</h5>
-                            <div className="flex space-x-1">
-                              <button
-                                onClick={() => {
-                                  setEditingSection(skillType);
-                                  setEditingIndex(index);
-                                  if (skillType === "languages") {
-                                    // Find the language name by ID for display
-                                    const languageObj = languages.find(l => l.value === item.language);
-                                    setEditValue(languageObj ? languageObj.value : item.language);
-                                  } else {
-                                    let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                                    switch (skillType) {
-                                      case "soft":
-                                        skillArray = softSkills;
-                                        break;
-                                      case "professional":
-                                        skillArray = professionalSkills;
-                                        break;
-                                      case "technical":
-                                        skillArray = technicalSkills;
-                                        break;
-                                      default:
-                                        skillArray = [];
-                                    }
-                                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                                    setEditValue(skillId || '');
-                                  }
-                                }}
-                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => deleteSkill(skillType, index)}
-                                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-600">Level:</span>
-                            {skillType === "languages" ? (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item.proficiency?.includes("C") 
-                                  ? "bg-green-100 text-green-800"
-                                  : item.proficiency?.includes("B") 
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}>
-                                {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"}
-                              </span>
-                            ) : (
-                              <div className="flex items-center space-x-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <svg
-                                    key={star}
-                                    className={`w-4 h-4 ${
-                                      star <= (item.level || 1) 
-                                        ? "text-yellow-400 fill-current" 
-                                        : "text-gray-300"
-                                    }`}
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                  </svg>
-                                ))}
-                                <span className="text-xs text-gray-500 ml-1">
-                                  ({SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"})
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+          
+          {/* Add selector */}
+          {skillsLoading ? (
+            <div className={`w-full px-4 py-3 rounded-lg border ${colors.border} bg-gray-50 text-gray-500 text-center text-sm`}>
+              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+              Loading {skillType} from API...
+            </div>
+          ) : (
+            <select
+              className={`w-full px-4 py-3 text-sm border ${colors.border} rounded-lg ${colors.focus} bg-white`}
+              defaultValue=""
+              onChange={handleAddSkill}
+            >
+              <option value="" disabled>Select a {skillType === "languages" ? "language" : "skill"}...</option>
+              {skillOptions.map(option => (
+                <option key={option.id} value={option.id}>{option.name}</option>
+              ))}
+            </select>
+          )}
+          
+          {!skillsLoading && skillOptions.length === 0 && currentItems.length === 0 && (
+            <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+              ⚠️ No {skillType} available. Please check API connection.
             </div>
           )}
-
-          {editingSection === skillType && editingIndex === -1 && (
-            <div className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
-              <div className="space-y-4">
-                {skillsLoading ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
-                    <span className="text-gray-600">Loading skills from API...</span>
+          
+          {/* Selected badges - displayed below the select */}
+          {currentItems.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {currentItems.map((item, index) => {
+                let skillName = '';
+                let levelDisplay = null;
+                
+                if (skillType === "languages") {
+                  skillName = getLanguageNameById(item.language);
+                  levelDisplay = (
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      item.proficiency?.includes("C") 
+                        ? "bg-green-100 text-green-800"
+                        : item.proficiency?.includes("B") 
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
+                    </span>
+                  );
+                } else {
+                  let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                  switch (skillType) {
+                    case "soft":
+                      skillArray = softSkills;
+                      break;
+                    case "professional":
+                      skillArray = professionalSkills;
+                      break;
+                    case "technical":
+                      skillArray = technicalSkills;
+                      break;
+                    default:
+                      skillArray = [];
+                  }
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  if (skillId) {
+                    const skillObject = skillArray.find(s => s._id === skillId);
+                    skillName = skillObject ? skillObject.name : '';
+                  }
+                  
+                  levelDisplay = (
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          className={`w-3 h-3 ${
+                            star <= (item.level || 1) 
+                              ? "text-yellow-400 fill-current" 
+                              : "text-gray-300"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                  );
+                }
+                
+                if (!skillName) return null;
+                
+                return (
+                  <div key={index} className={`group relative flex items-center ${colors.bg} ${colors.text} text-sm font-medium px-3 py-2 rounded-lg border ${colors.border} cursor-pointer ${colors.hover} transition-colors`}>
+                    <div className="flex items-center space-x-2">
+                      <span>{skillName}</span>
+                      {levelDisplay}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkill(index)}
+                      className={`ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full ${colors.text.replace('text-', 'text-').replace('-800', '-600')} hover:bg-white/50 focus:outline-none focus:ring-2 focus:ring-offset-1 ${colors.focus.split(' ')[0]} opacity-0 group-hover:opacity-100 transition-opacity`}
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
-                ) : (
-                  <select
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    autoFocus
-                  >
-                    <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
-                    {skillType === "languages" 
-                      ? skillOptions.map((option: any) => (
-                          <option key={option.id} value={option.id}>
-                            {option.name}
-                          </option>
-                        ))
-                      : skillType === "professional"
-                      ? professionalSkills
-                          .filter(skill => !currentItems.some(item => {
-                            if (!item || !item.skill) return false;
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            return skillId === skill._id;
-                          }))
-                          .map((skill) => (
-                            <option key={skill._id} value={skill._id}>
-                              {skill.name}
-                            </option>
-                          ))
-                      : skillType === "technical"
-                      ? technicalSkills
-                          .filter(skill => !currentItems.some(item => {
-                            if (!item || !item.skill) return false;
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            return skillId === skill._id;
-                          }))
-                          .map((skill) => (
-                            <option key={skill._id} value={skill._id}>
-                              {skill.name}
-                            </option>
-                          ))
-                      : softSkills
-                          .filter(skill => !currentItems.some(item => {
-                            if (!item || !item.skill) return false;
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            return skillId === skill._id;
-                          }))
-                          .map((skill) => (
-                            <option key={skill._id} value={skill._id}>
-                              {skill.name}
-                            </option>
-                          ))
-                    }
-                  </select>
-                )}
-                {skillType === "languages" ? (
-                  <select
-                    defaultValue="B1"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {LANGUAGE_LEVELS.map((level) => (
-                      <option key={level.value} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <select
-                    defaultValue={1}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {SKILL_LEVELS.map((level) => (
-                      <option key={level.value} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => {
-                      if (editValue.trim()) {
-                        if (skillType === "languages") {
-                          const level = 2; // Default to B1 for languages (index 2)
-                          addSkill(skillType, editValue.trim(), level);
-                          setEditValue("");
-                          setEditingSection(null);
-                          setEditingIndex(null);
-                        } else {
-                          // For skills, editValue should already be the ObjectId
-                          // Verify that the skill exists in the database before adding
-                          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                          switch (skillType) {
-                            case "soft":
-                              skillArray = softSkills;
-                              break;
-                            case "professional":
-                              skillArray = professionalSkills;
-                              break;
-                            case "technical":
-                              skillArray = technicalSkills;
-                              break;
-                            default:
-                              skillArray = [];
-                          }
-                          
-                          const skillExists = skillArray.some(s => s._id === editValue.trim());
-                          if (skillExists) {
-                            const level = 1; // Default to Basic for skills
-                            addSkill(skillType, editValue.trim(), level);
-                            setEditValue("");
-                            setEditingSection(null);
-                            setEditingIndex(null);
-                          }
-                        }
-                      }
-                    }}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Add {skillType === "languages" ? "Language" : "Skill"}
-                  </button>
-                  <button
-                    onClick={cancelEditing}
-                    className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -5007,20 +5078,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <div className="p-6 space-y-8">
               {/* Job Titles */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
-                </div>
-                {renderEditableList("jobTitles", suggestions.jobTitles, "Job Titles")}
+                {renderJobTitlesSection()}
               </div>
 
               {/* Highlights */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
-                </div>
-                {renderEditableList("highlights", suggestions.highlights, "Highlights")}
+                {renderHighlightsSection()}
               </div>
 
               {/* Job Description - Full Width */}
@@ -5049,11 +5112,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
               {/* Deliverables */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
-                </div>
-                {renderEditableList("deliverables", suggestions.deliverables, "Deliverables")}
+                {renderDeliverablesSection()}
               </div>
 
               {/* Destination Zones */}
