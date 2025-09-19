@@ -267,6 +267,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [newHighlight, setNewHighlight] = useState('');
   const [newDeliverable, setNewDeliverable] = useState('');
   
+  // States for showing add forms
+  const [showJobTitleForm, setShowJobTitleForm] = useState(false);
+  const [showHighlightForm, setShowHighlightForm] = useState(false);
+  const [showDeliverableForm, setShowDeliverableForm] = useState(false);
+  
+  // States for editing existing items
+  const [editingJobTitleIndex, setEditingJobTitleIndex] = useState<number | null>(null);
+  const [editingHighlightIndex, setEditingHighlightIndex] = useState<number | null>(null);
+  const [editingDeliverableIndex, setEditingDeliverableIndex] = useState<number | null>(null);
+  
   // Helper function to get currency symbol by ID
   const getCurrencySymbol = (currencyId: string): string => {
     const currency = currencies.find(c => c._id === currencyId);
@@ -2944,6 +2954,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.jobTitles = [...newSuggestions.jobTitles, value];
         setSuggestions(newSuggestions);
         setNewJobTitle('');
+        setShowJobTitleForm(false);
+      }
+    };
+
+    const handleUpdateJobTitle = (index: number) => {
+      const value = newJobTitle.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.jobTitles) {
+        newSuggestions.jobTitles[index] = value;
+        setSuggestions(newSuggestions);
+        setNewJobTitle('');
+        setEditingJobTitleIndex(null);
       }
     };
 
@@ -2953,45 +2977,97 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       setSuggestions(newSuggestions);
     };
 
+    const handleDoubleClick = (title: string, index: number) => {
+      setNewJobTitle(title);
+      setEditingJobTitleIndex(index);
+      setShowJobTitleForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewJobTitle('');
+      setEditingJobTitleIndex(null);
+      setShowJobTitleForm(false);
+    };
+
     const selected = suggestions.jobTitles || [];
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
-        </div>
-        
-        {/* Add textarea */}
-        <div className="space-y-3">
-          <textarea
-            value={newJobTitle}
-            onChange={(e) => setNewJobTitle(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAddJobTitle();
-              }
-            }}
-            placeholder="Enter a job title (Press Enter to add)..."
-            rows={2}
-            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-none"
-          />
-          {newJobTitle.trim() && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
+          </div>
+          
+          {/* Add button */}
+          {!showJobTitleForm && editingJobTitleIndex === null && (
             <button
-              onClick={handleAddJobTitle}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              onClick={() => setShowJobTitleForm(true)}
+              className="flex items-center space-x-1 px-3 py-2 text-blue-700 hover:text-blue-900 hover:bg-blue-50 font-semibold text-sm rounded-lg transition-colors"
             >
-              Add Job Title
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
             </button>
           )}
         </div>
         
-        {/* Selected badges - displayed below the textarea */}
+        {/* Add/Edit textarea - only shown when needed */}
+        {(showJobTitleForm || editingJobTitleIndex !== null) && (
+          <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <textarea
+              value={newJobTitle}
+              onChange={(e) => setNewJobTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (editingJobTitleIndex !== null) {
+                    handleUpdateJobTitle(editingJobTitleIndex);
+                  } else {
+                    handleAddJobTitle();
+                  }
+                } else if (e.key === 'Escape') {
+                  handleCancelEdit();
+                }
+              }}
+              placeholder={editingJobTitleIndex !== null ? "Edit job title..." : "Enter a job title..."}
+              rows={2}
+              className="w-full px-4 py-3 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-none"
+              autoFocus
+            />
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  if (editingJobTitleIndex !== null) {
+                    handleUpdateJobTitle(editingJobTitleIndex);
+                  } else {
+                    handleAddJobTitle();
+                  }
+                }}
+                disabled={!newJobTitle.trim()}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingJobTitleIndex !== null ? 'Update' : 'Add'}
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* Selected badges */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map(title => (
-              <span key={title} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+            {selected.map((title, index) => (
+              <span 
+                key={index} 
+                className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                onDoubleClick={() => handleDoubleClick(title, index)}
+                title="Double-click to edit"
+              >
                 {title}
                 <button
                   type="button"
@@ -3022,6 +3098,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.highlights = [...newSuggestions.highlights, value];
         setSuggestions(newSuggestions);
         setNewHighlight('');
+        setShowHighlightForm(false);
+      }
+    };
+
+    const handleUpdateHighlight = (index: number) => {
+      const value = newHighlight.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.highlights) {
+        newSuggestions.highlights[index] = value;
+        setSuggestions(newSuggestions);
+        setNewHighlight('');
+        setEditingHighlightIndex(null);
       }
     };
 
@@ -3031,45 +3121,97 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       setSuggestions(newSuggestions);
     };
 
+    const handleDoubleClick = (highlight: string, index: number) => {
+      setNewHighlight(highlight);
+      setEditingHighlightIndex(index);
+      setShowHighlightForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewHighlight('');
+      setEditingHighlightIndex(null);
+      setShowHighlightForm(false);
+    };
+
     const selected = suggestions.highlights || [];
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
-        </div>
-        
-        {/* Add textarea */}
-        <div className="space-y-3">
-          <textarea
-            value={newHighlight}
-            onChange={(e) => setNewHighlight(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAddHighlight();
-              }
-            }}
-            placeholder="Enter a key highlight (Press Enter to add)..."
-            rows={2}
-            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white resize-none"
-          />
-          {newHighlight.trim() && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
+          </div>
+          
+          {/* Add button */}
+          {!showHighlightForm && editingHighlightIndex === null && (
             <button
-              onClick={handleAddHighlight}
-              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+              onClick={() => setShowHighlightForm(true)}
+              className="flex items-center space-x-1 px-3 py-2 text-green-700 hover:text-green-900 hover:bg-green-50 font-semibold text-sm rounded-lg transition-colors"
             >
-              Add Highlight
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
             </button>
           )}
         </div>
         
-        {/* Selected badges - displayed below the textarea */}
+        {/* Add/Edit textarea - only shown when needed */}
+        {(showHighlightForm || editingHighlightIndex !== null) && (
+          <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
+            <textarea
+              value={newHighlight}
+              onChange={(e) => setNewHighlight(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (editingHighlightIndex !== null) {
+                    handleUpdateHighlight(editingHighlightIndex);
+                  } else {
+                    handleAddHighlight();
+                  }
+                } else if (e.key === 'Escape') {
+                  handleCancelEdit();
+                }
+              }}
+              placeholder={editingHighlightIndex !== null ? "Edit highlight..." : "Enter a key highlight..."}
+              rows={2}
+              className="w-full px-4 py-3 text-sm border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white resize-none"
+              autoFocus
+            />
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  if (editingHighlightIndex !== null) {
+                    handleUpdateHighlight(editingHighlightIndex);
+                  } else {
+                    handleAddHighlight();
+                  }
+                }}
+                disabled={!newHighlight.trim()}
+                className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingHighlightIndex !== null ? 'Update' : 'Add'}
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* Selected badges */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map(highlight => (
-              <span key={highlight} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-800 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors">
+            {selected.map((highlight, index) => (
+              <span 
+                key={index} 
+                className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-800 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                onDoubleClick={() => handleDoubleClick(highlight, index)}
+                title="Double-click to edit"
+              >
                 {highlight}
                 <button
                   type="button"
@@ -3100,6 +3242,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.deliverables = [...newSuggestions.deliverables, value];
         setSuggestions(newSuggestions);
         setNewDeliverable('');
+        setShowDeliverableForm(false);
+      }
+    };
+
+    const handleUpdateDeliverable = (index: number) => {
+      const value = newDeliverable.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.deliverables) {
+        newSuggestions.deliverables[index] = value;
+        setSuggestions(newSuggestions);
+        setNewDeliverable('');
+        setEditingDeliverableIndex(null);
       }
     };
 
@@ -3109,45 +3265,97 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       setSuggestions(newSuggestions);
     };
 
+    const handleDoubleClick = (deliverable: string, index: number) => {
+      setNewDeliverable(deliverable);
+      setEditingDeliverableIndex(index);
+      setShowDeliverableForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewDeliverable('');
+      setEditingDeliverableIndex(null);
+      setShowDeliverableForm(false);
+    };
+
     const selected = suggestions.deliverables || [];
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-          <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
-        </div>
-        
-        {/* Add textarea */}
-        <div className="space-y-3">
-          <textarea
-            value={newDeliverable}
-            onChange={(e) => setNewDeliverable(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAddDeliverable();
-              }
-            }}
-            placeholder="Enter a deliverable (Press Enter to add)..."
-            rows={2}
-            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white resize-none"
-          />
-          {newDeliverable.trim() && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+            <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
+          </div>
+          
+          {/* Add button */}
+          {!showDeliverableForm && editingDeliverableIndex === null && (
             <button
-              onClick={handleAddDeliverable}
-              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+              onClick={() => setShowDeliverableForm(true)}
+              className="flex items-center space-x-1 px-3 py-2 text-purple-700 hover:text-purple-900 hover:bg-purple-50 font-semibold text-sm rounded-lg transition-colors"
             >
-              Add Deliverable
+              <Plus className="w-4 h-4" />
+              <span>Add</span>
             </button>
           )}
         </div>
         
-        {/* Selected badges - displayed below the textarea */}
+        {/* Add/Edit textarea - only shown when needed */}
+        {(showDeliverableForm || editingDeliverableIndex !== null) && (
+          <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <textarea
+              value={newDeliverable}
+              onChange={(e) => setNewDeliverable(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (editingDeliverableIndex !== null) {
+                    handleUpdateDeliverable(editingDeliverableIndex);
+                  } else {
+                    handleAddDeliverable();
+                  }
+                } else if (e.key === 'Escape') {
+                  handleCancelEdit();
+                }
+              }}
+              placeholder={editingDeliverableIndex !== null ? "Edit deliverable..." : "Enter a deliverable..."}
+              rows={2}
+              className="w-full px-4 py-3 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white resize-none"
+              autoFocus
+            />
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  if (editingDeliverableIndex !== null) {
+                    handleUpdateDeliverable(editingDeliverableIndex);
+                  } else {
+                    handleAddDeliverable();
+                  }
+                }}
+                disabled={!newDeliverable.trim()}
+                className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {editingDeliverableIndex !== null ? 'Update' : 'Add'}
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* Selected badges */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map(deliverable => (
-              <span key={deliverable} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-50 text-purple-800 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors">
+            {selected.map((deliverable, index) => (
+              <span 
+                key={index} 
+                className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-50 text-purple-800 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
+                onDoubleClick={() => handleDoubleClick(deliverable, index)}
+                title="Double-click to edit"
+              >
                 {deliverable}
                 <button
                   type="button"
@@ -3212,20 +3420,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         {/* Selected badges - displayed below the select */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map(sector => (
+          {selected.map(sector => (
               <span key={sector} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-                {sector}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSector(sector)}
+              {sector}
+              <button
+                type="button"
+                onClick={() => handleRemoveSector(sector)}
                   className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove"
-                >
+                title="Remove"
+              >
                   <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
+              </button>
+            </span>
+          ))}
+        </div>
         )}
       </div>
     );
@@ -3458,20 +3666,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         {/* Badges sélectionnés - displayed below the select */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
-            {selected.map(option => (
+          {selected.map(option => (
               <span key={option} className="group relative flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-200 transition-colors">
-                {option}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFlexibility(option)}
+              {option}
+              <button
+                type="button"
+                onClick={() => handleRemoveFlexibility(option)}
                   className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </span>
-            ))}
-          </div>
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
         )}
         
         <p className="text-xs text-gray-500 italic text-center mt-2">
@@ -4223,28 +4431,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       return (
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              {icon}
-            </div>
-            <div>
+              <div className="p-2 bg-blue-100 rounded-lg">
+                {icon}
+              </div>
+              <div>
               <h4 className="text-lg font-semibold text-gray-900">{title}</h4>
-              <p className="text-sm text-gray-600">
-                {skillType === "languages" && `${languages.length} available`}
-                {skillType === "professional" && `${professionalSkills.length} available`}
-                {skillType === "technical" && `${technicalSkills.length} available`}
-                {skillType === "soft" && `${softSkills.length} available`}
-              </p>
-            </div>
+                <p className="text-sm text-gray-600">
+                  {skillType === "languages" && `${languages.length} available`}
+                  {skillType === "professional" && `${professionalSkills.length} available`}
+                  {skillType === "technical" && `${technicalSkills.length} available`}
+                  {skillType === "soft" && `${softSkills.length} available`}
+                </p>
+              </div>
           </div>
-          
+
           {/* Add selector */}
           {skillsLoading ? (
             <div className={`w-full px-4 py-3 rounded-lg border ${colors.border} bg-gray-50 text-gray-500 text-center text-sm`}>
               <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
               Loading {skillType} from API...
             </div>
-          ) : (
-            <select
+                          ) : (
+                            <select
               className={`w-full px-4 py-3 text-sm border ${colors.border} rounded-lg ${colors.focus} bg-white`}
               defaultValue=""
               onChange={handleAddSkill}
@@ -4252,14 +4460,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <option value="" disabled>Select a {skillType === "languages" ? "language" : "skill"}...</option>
               {skillOptions.map(option => (
                 <option key={option.id} value={option.id}>{option.name}</option>
-              ))}
-            </select>
-          )}
+                              ))}
+                            </select>
+                          )}
           
           {!skillsLoading && skillOptions.length === 0 && currentItems.length === 0 && (
             <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
               ⚠️ No {skillType} available. Please check API connection.
-            </div>
+                          </div>
           )}
           
           {/* Selected badges - displayed below the select */}
@@ -4269,34 +4477,34 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 let skillName = '';
                 let levelDisplay = null;
                 
-                if (skillType === "languages") {
+                                  if (skillType === "languages") {
                   skillName = getLanguageNameById(item.language);
                   levelDisplay = (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       item.proficiency?.includes("C") 
-                        ? "bg-green-100 text-green-800"
-                        : item.proficiency?.includes("B") 
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}>
+                                  ? "bg-green-100 text-green-800"
+                                  : item.proficiency?.includes("B") 
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                            }`}>
                       {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
-                    </span>
+                            </span>
                   );
-                } else {
-                  let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                  switch (skillType) {
-                    case "soft":
-                      skillArray = softSkills;
-                      break;
-                    case "professional":
-                      skillArray = professionalSkills;
-                      break;
-                    case "technical":
-                      skillArray = technicalSkills;
-                      break;
-                    default:
-                      skillArray = [];
-                  }
+                        } else {
+                          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+                          switch (skillType) {
+                            case "soft":
+                              skillArray = softSkills;
+                              break;
+                            case "professional":
+                              skillArray = professionalSkills;
+                              break;
+                            case "technical":
+                              skillArray = technicalSkills;
+                              break;
+                            default:
+                              skillArray = [];
+                          }
                   const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
                   if (skillId) {
                     const skillObject = skillArray.find(s => s._id === skillId);
@@ -4331,15 +4539,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <span>{skillName}</span>
                       {levelDisplay}
                     </div>
-                    <button
+                  <button
                       type="button"
                       onClick={() => handleRemoveSkill(index)}
                       className={`ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full ${colors.text.replace('text-', 'text-').replace('-800', '-600')} hover:bg-white/50 focus:outline-none focus:ring-2 focus:ring-offset-1 ${colors.focus.split(' ')[0]} opacity-0 group-hover:opacity-100 transition-opacity`}
                       title="Remove"
                     >
                       <X className="w-3 h-3" />
-                    </button>
-                  </div>
+                  </button>
+                </div>
                 );
               })}
             </div>
@@ -5029,8 +5237,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             <div className="text-center">
               <h2 className="text-lg font-semibold text-gray-900">
-                Review & Refine Suggestions
-              </h2>
+              Review & Refine Suggestions
+            </h2>
               {/* Mock Data Indicator */}
               {import.meta.env.VITE_USE_MOCK_DATA === 'true' && (
                 <div className="mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -5077,7 +5285,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               {/* Highlights */}
               <div className="space-y-4">
                 {renderHighlightsSection()}
-              </div>
+                </div>
 
               {/* Job Description - Full Width */}
               <div className="space-y-4">
@@ -5085,33 +5293,33 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
                 </div>
-                {renderDescriptionSection()}
-              </div>
+                  {renderDescriptionSection()}
+                </div>
 
               {/* Sectors - After Description */}
               <div className="space-y-4">
                 {renderSectorsSection()}
-              </div>
+                </div>
 
               {/* Industries */}
-              <div>
-                {renderIndustriesSection()}
-              </div>
+                <div>
+                  {renderIndustriesSection()}
+                </div>
 
               {/* Activities */}
-              <div>
-                {renderActivitiesSection()}
-              </div>
+                <div>
+                  {renderActivitiesSection()}
+                </div>
 
               {/* Deliverables */}
               <div className="space-y-4">
                 {renderDeliverablesSection()}
-              </div>
+                </div>
 
               {/* Destination Zones */}
-              <div>
-                {renderDestinationZonesSection()}
-              </div>
+                <div>
+                  {renderDestinationZonesSection()}
+                </div>
 
               {/* Seniority */}
                 <div>
