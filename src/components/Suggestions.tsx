@@ -2928,8 +2928,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderJobTitlesSection = () => {
     if (!suggestions) return null;
 
-    const handleAddJobTitle = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+    const [newJobTitle, setNewJobTitle] = useState('');
+
+    const handleAddJobTitle = () => {
+      const value = newJobTitle.trim();
       if (!value) return;
       
       // Add the job title if it's not already in the list
@@ -2938,9 +2940,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!newSuggestions.jobTitles.includes(value)) {
         newSuggestions.jobTitles = [...newSuggestions.jobTitles, value];
         setSuggestions(newSuggestions);
+        setNewJobTitle('');
       }
-      // Reset select
-      e.target.value = '';
     };
 
     const handleRemoveJobTitle = (jobTitle: string) => {
@@ -2950,22 +2951,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.jobTitles || [];
-    
-    // Predefined job titles options
-    const predefinedJobTitles = [
-      "Commercial",
-      "Vendeur",
-      "Consultant",
-      "Représentant Commercial",
-      "Chargé de Clientèle",
-      "Business Developer",
-      "Account Manager",
-      "Sales Representative",
-      "Télé-conseiller",
-      "Conseiller Commercial"
-    ];
-    
-    const available = predefinedJobTitles.filter(title => !selected.includes(title));
 
     return (
       <div className="space-y-4">
@@ -2974,19 +2959,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
         </div>
         
-        {/* Add selector */}
-        <select
-          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-          defaultValue=""
-          onChange={handleAddJobTitle}
-        >
-          <option value="" disabled>Select a job title...</option>
-          {available.map(title => (
-            <option key={title} value={title}>{title}</option>
-          ))}
-        </select>
+        {/* Add textarea */}
+        <div className="space-y-3">
+          <textarea
+            value={newJobTitle}
+            onChange={(e) => setNewJobTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddJobTitle();
+              }
+            }}
+            placeholder="Enter a job title (Press Enter to add)..."
+            rows={2}
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-none"
+          />
+          {newJobTitle.trim() && (
+            <button
+              onClick={handleAddJobTitle}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            >
+              Add Job Title
+            </button>
+          )}
+        </div>
         
-        {/* Selected badges - displayed below the select */}
+        {/* Selected badges - displayed below the textarea */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
             {selected.map(title => (
@@ -3011,8 +3009,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderHighlightsSection = () => {
     if (!suggestions) return null;
 
-    const handleAddHighlight = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+    const [newHighlight, setNewHighlight] = useState('');
+
+    const handleAddHighlight = () => {
+      const value = newHighlight.trim();
       if (!value) return;
       
       const newSuggestions = { ...suggestions };
@@ -3020,9 +3020,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!newSuggestions.highlights.includes(value)) {
         newSuggestions.highlights = [...newSuggestions.highlights, value];
         setSuggestions(newSuggestions);
+        setNewHighlight('');
       }
-      // Reset select
-      e.target.value = '';
     };
 
     const handleRemoveHighlight = (highlight: string) => {
@@ -3032,22 +3031,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.highlights || [];
-    
-    // Predefined highlights options
-    const predefinedHighlights = [
-      "Rémunération attractive",
-      "Formation complète",
-      "Évolution de carrière",
-      "Ambiance dynamique",
-      "Télétravail possible",
-      "Horaires flexibles",
-      "Prime sur objectifs",
-      "Accompagnement personnalisé",
-      "Outils performants",
-      "Équipe jeune et motivée"
-    ];
-    
-    const available = predefinedHighlights.filter(highlight => !selected.includes(highlight));
 
     return (
       <div className="space-y-4">
@@ -3056,19 +3039,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
         </div>
         
-        {/* Add selector */}
-        <select
-          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
-          defaultValue=""
-          onChange={handleAddHighlight}
-        >
-          <option value="" disabled>Select a highlight...</option>
-          {available.map(highlight => (
-            <option key={highlight} value={highlight}>{highlight}</option>
-          ))}
-        </select>
+        {/* Add textarea */}
+        <div className="space-y-3">
+          <textarea
+            value={newHighlight}
+            onChange={(e) => setNewHighlight(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddHighlight();
+              }
+            }}
+            placeholder="Enter a key highlight (Press Enter to add)..."
+            rows={2}
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white resize-none"
+          />
+          {newHighlight.trim() && (
+            <button
+              onClick={handleAddHighlight}
+              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+            >
+              Add Highlight
+            </button>
+          )}
+        </div>
         
-        {/* Selected badges - displayed below the select */}
+        {/* Selected badges - displayed below the textarea */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
             {selected.map(highlight => (
@@ -3093,8 +3089,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderDeliverablesSection = () => {
     if (!suggestions) return null;
 
-    const handleAddDeliverable = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+    const [newDeliverable, setNewDeliverable] = useState('');
+
+    const handleAddDeliverable = () => {
+      const value = newDeliverable.trim();
       if (!value) return;
       
       const newSuggestions = { ...suggestions };
@@ -3102,9 +3100,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!newSuggestions.deliverables.includes(value)) {
         newSuggestions.deliverables = [...newSuggestions.deliverables, value];
         setSuggestions(newSuggestions);
+        setNewDeliverable('');
       }
-      // Reset select
-      e.target.value = '';
     };
 
     const handleRemoveDeliverable = (deliverable: string) => {
@@ -3114,22 +3111,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.deliverables || [];
-    
-    // Predefined deliverables options
-    const predefinedDeliverables = [
-      "Ventes réalisées",
-      "Rendez-vous qualifiés",
-      "Prospects contactés",
-      "Objectifs atteints",
-      "Rapports d'activité",
-      "Suivi clientèle",
-      "Présentation produits",
-      "Négociation contrats",
-      "Fidélisation clients",
-      "Développement portefeuille"
-    ];
-    
-    const available = predefinedDeliverables.filter(deliverable => !selected.includes(deliverable));
 
     return (
       <div className="space-y-4">
@@ -3138,19 +3119,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
         </div>
         
-        {/* Add selector */}
-        <select
-          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-          defaultValue=""
-          onChange={handleAddDeliverable}
-        >
-          <option value="" disabled>Select a deliverable...</option>
-          {available.map(deliverable => (
-            <option key={deliverable} value={deliverable}>{deliverable}</option>
-          ))}
-        </select>
+        {/* Add textarea */}
+        <div className="space-y-3">
+          <textarea
+            value={newDeliverable}
+            onChange={(e) => setNewDeliverable(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddDeliverable();
+              }
+            }}
+            placeholder="Enter a deliverable (Press Enter to add)..."
+            rows={2}
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white resize-none"
+          />
+          {newDeliverable.trim() && (
+            <button
+              onClick={handleAddDeliverable}
+              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+            >
+              Add Deliverable
+            </button>
+          )}
+        </div>
         
-        {/* Selected badges - displayed below the select */}
+        {/* Selected badges - displayed below the textarea */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
             {selected.map(deliverable => (
