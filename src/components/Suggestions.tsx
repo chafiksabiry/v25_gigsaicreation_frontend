@@ -1772,6 +1772,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               setSearchResults([]);
                             }
                           }}
+                          onBlur={() => {
+                            if (editValue.trim()) {
+                              updateItem(section, index, editValue);
+                            }
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                            setEditValue("");
+                            setSearchResults([]);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (editValue.trim()) {
+                                updateItem(section, index, editValue);
+                              }
+                              setEditingSection(null);
+                              setEditingIndex(null);
+                              setEditValue("");
+                              setSearchResults([]);
+                            } else if (e.key === 'Escape') {
+                              cancelEditing();
+                            }
+                          }}
                           placeholder="Type to search countries..."
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         autoFocus
@@ -1791,6 +1813,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                 onClick={() => {
                                   setEditValue(country.name.common);
                                   setSearchResults([]);
+                                  updateItem(section, index, country.name.common);
+                                  setEditingSection(null);
+                                  setEditingIndex(null);
+                                  setEditValue("");
                                 }}
                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                               >
@@ -1804,7 +1830,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     ) : section === "sectors" || section === "industries" || section === "activities" ? (
                       <select
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setEditValue(value);
+                          if (value) {
+                            updateItem(section, index, value);
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                            setEditValue("");
+                          }
+                        }}
+                        onBlur={() => {
+                          setEditingSection(null);
+                          setEditingIndex(null);
+                          setEditValue("");
+                        }}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         autoFocus
                       >
@@ -1827,25 +1867,34 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         type="text"
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => {
+                          if (editValue.trim()) {
+                        updateItem(section, index, editValue);
+                          }
+                        setEditingSection(null);
+                        setEditingIndex(null);
+                        setEditValue("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            if (editValue.trim()) {
+                              updateItem(section, index, editValue);
+                            }
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                            setEditValue("");
+                          } else if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         autoFocus
                       />
                     )}
                     <button
-                      onClick={() => {
-                        updateItem(section, index, editValue);
-                        setEditingSection(null);
-                        setEditingIndex(null);
-                        setEditValue("");
-                        setSearchResults([]);
-                      }}
-                      className="text-green-600 hover:text-green-700 p-1"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                    <button
                       onClick={cancelEditing}
                       className="text-gray-500 hover:text-gray-700 p-1"
+                      title="Cancel (Esc)"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1906,6 +1955,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       setSearchResults([]);
                     }
                   }}
+                  onBlur={() => {
+                    if (editValue.trim()) {
+                      addItem(section, editValue.trim());
+                    }
+                    setEditValue("");
+                    setEditingSection(null);
+                    setEditingIndex(null);
+                    setSearchResults([]);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (editValue.trim()) {
+                        addItem(section, editValue.trim());
+                      }
+                      setEditValue("");
+                      setEditingSection(null);
+                      setEditingIndex(null);
+                      setSearchResults([]);
+                    } else if (e.key === 'Escape') {
+                      cancelEditing();
+                    }
+                  }}
                   placeholder="Type to search countries..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autoFocus
@@ -1923,7 +1994,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         key={country.cca2}
                         type="button"
                         onClick={() => {
-                          setEditValue(country.name.common);
+                          addItem(section, country.name.common);
+                          setEditValue("");
+                          setEditingSection(null);
+                          setEditingIndex(null);
                           setSearchResults([]);
                         }}
                         className="w-full px-4 py-3 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
@@ -1938,7 +2012,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ) : section === "sectors" || section === "industries" || section === "activities" ? (
               <select
                 value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEditValue(value);
+                  if (value) {
+                    addItem(section, value);
+                    setEditValue("");
+                    setEditingSection(null);
+                    setEditingIndex(null);
+                  }
+                }}
+                onBlur={() => {
+                  setEditingSection(null);
+                  setEditingIndex(null);
+                  setEditValue("");
+                }}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autoFocus
               >
@@ -1963,28 +2051,35 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 type="text"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => {
+                if (editValue.trim()) {
+                  addItem(section, editValue.trim());
+                  }
+                  setEditValue("");
+                  setEditingSection(null);
+                  setEditingIndex(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (editValue.trim()) {
+                      addItem(section, editValue.trim());
+                    }
+                    setEditValue("");
+                    setEditingSection(null);
+                    setEditingIndex(null);
+                  } else if (e.key === 'Escape') {
+                    cancelEditing();
+                  }
+                }}
                 placeholder={`Add a new ${title.toLowerCase()}`}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autoFocus
               />
             )}
             <button
-              onClick={() => {
-                if (editValue.trim()) {
-                  addItem(section, editValue.trim());
-                  setEditValue("");
-                  setEditingSection(null);
-                  setEditingIndex(null);
-                  setSearchResults([]);
-                }
-              }}
-              className="text-green-600 hover:text-green-700 p-2"
-            >
-              <Check className="w-5 h-5" />
-            </button>
-            <button
               onClick={cancelEditing}
               className="text-gray-500 hover:text-gray-700 p-2"
+              title="Cancel (Esc)"
             >
               <X className="w-5 h-5" />
             </button>
@@ -2785,22 +2880,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-amber-500 text-white font-bold mr-3">D</div>
           <h4 className="text-xl font-bold text-amber-900">Destination Zones</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(zone => (
-            <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              <span>{getCountryName(zone)}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveDestinationZone(zone)}
-                className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
-        </div>
         
         {/* Select pour ajouter */}
         <select
@@ -2816,6 +2895,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={code} value={code}>{name}</option>
           ))}
         </select>
+        
+        {/* Badges sélectionnés - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-amber-200">
+            {selected.map(zone => (
+              <span key={zone} className="group relative flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-amber-200 transition-colors">
+                <span>{getCountryName(zone)}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDestinationZone(zone)}
+                  className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {destinationCountriesLoading 
             ? 'Loading countries from API...' 
@@ -2858,25 +2957,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
         </div>
         
-        {/* Selected badges */}
-        {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {selected.map(sector => (
-              <span key={sector} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200">
-                {sector}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSector(sector)}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  title="Remove"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-        
         {/* Add selector */}
         <select
           className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
@@ -2888,6 +2968,25 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={sector} value={sector}>{sector}</option>
           ))}
         </select>
+        
+        {/* Selected badges - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            {selected.map(sector => (
+              <span key={sector} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+                {sector}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSector(sector)}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
@@ -2963,12 +3062,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {selected.map(activityId => {
               const activityName = getActivityNameById(activityId);
               return activityName ? (
-                <span key={activityId} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+                <span key={activityId} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
                   {activityName}
                   <button
                     type="button"
                     onClick={() => handleRemoveActivity(activityId)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3053,12 +3152,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {selected.map(industryId => {
               const industryName = getIndustryNameById(industryId);
               return industryName ? (
-                <span key={industryId} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
+                <span key={industryId} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
                   {industryName}
                   <button
                     type="button"
                     onClick={() => handleRemoveIndustry(industryId)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3103,22 +3202,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-500 text-white font-bold mr-3">F</div>
           <h4 className="text-xl font-bold text-purple-900">Schedule Flexibility</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(option => (
-            <span key={option} className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {option}
-              <button
-                type="button"
-                onClick={() => handleRemoveFlexibility(option)}
-                className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
-        </div>
+        
         {/* Select pour ajouter */}
         <select
           className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
@@ -3130,6 +3214,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={option} value={option}>{option}</option>
           ))}
         </select>
+        
+        {/* Badges sélectionnés - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
+            {selected.map(option => (
+              <span key={option} className="group relative flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-200 transition-colors">
+                {option}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFlexibility(option)}
+                  className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        
         <p className="text-xs text-gray-500 italic text-center mt-2">
           Select all applicable schedule flexibility options
         </p>
@@ -3522,6 +3626,44 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
                           {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Details */}
+                <div className="mb-8 p-6 bg-gradient-to-br from-gray-50 to-slate-50 rounded-2xl border-2 border-gray-100">
+                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 bg-gray-100 rounded-lg mr-3">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    Additional Details
+                  </h6>
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-gray-700">
+                      Commission Details & Notes
+                    </label>
+                    <textarea
+                      value={option.additionalDetails || ""}
+                      onChange={(e) =>
+                        updateCommissionOption(
+                          0,
+                          "additionalDetails",
+                          e.target.value
+                        )
+                      }
+                      placeholder="Add any additional details about the commission structure, payment terms, conditions, or special notes..."
+                      rows={4}
+                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 hover:border-gray-300 resize-none"
+                    />
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-500">
+                        {option.additionalDetails ? `${option.additionalDetails.length} characters` : "0 characters"}
+                      </div>
+                      <div className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+                        Optional field for extra information
                       </div>
                     </div>
                   </div>
@@ -3962,24 +4104,37 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-600">Level:</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              skillType === "languages" 
-                                ? item.proficiency?.includes("C") 
+                            {skillType === "languages" ? (
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                item.proficiency?.includes("C") 
                                   ? "bg-green-100 text-green-800"
                                   : item.proficiency?.includes("B") 
                                   ? "bg-blue-100 text-blue-800"
                                   : "bg-yellow-100 text-yellow-800"
-                                : item.level >= 4 
-                                ? "bg-purple-100 text-purple-800"
-                                : item.level >= 3 
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}>
-                              {skillType === "languages" 
-                                ? LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"
-                                : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
-                              }
-                            </span>
+                              }`}>
+                                {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"}
+                              </span>
+                            ) : (
+                              <div className="flex items-center space-x-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <svg
+                                    key={star}
+                                    className={`w-4 h-4 ${
+                                      star <= (item.level || 1) 
+                                        ? "text-yellow-400 fill-current" 
+                                        : "text-gray-300"
+                                    }`}
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                ))}
+                                <span className="text-xs text-gray-500 ml-1">
+                                  ({SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"})
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -4545,12 +4700,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">
+                            Seniority Level
+                          </label>
                           <select
                             value={seniorityLevel}
                             onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
                           >
                             {predefinedOptions.basic.seniorityLevels.map((level) => (
                               <option key={level} value={level}>
@@ -4567,8 +4725,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <input
                             type="number"
                             min="0"
+                            max="50"
                             value={yearsExperience}
                             onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                            placeholder="e.g. 3"
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                           />
                         </div>
@@ -4609,23 +4769,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             Territories
           </h4>
           
-          <div className="flex flex-wrap gap-2 mb-4">
-            {suggestions.team?.territories?.map((territory) => (
-              <div
-                key={territory}
-                className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
-              >
-                {getTerritoryName(territory)}
-                <button
-                  onClick={() => removeTerritory(territory)}
-                  className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-          
           <select
             onChange={(e) => {
               if (e.target.value) {
@@ -4648,6 +4791,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </option>
             ))}
           </select>
+          
+          {/* Territories badges - displayed below the select */}
+          {suggestions.team?.territories && suggestions.team.territories.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4 pt-2 border-t border-gray-200">
+              {suggestions.team.territories.map((territory) => (
+                <div
+                  key={territory}
+                  className="group relative flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-200 transition-colors"
+                >
+                  {getTerritoryName(territory)}
+                  <button
+                    onClick={() => removeTerritory(territory)}
+                    className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -4658,7 +4821,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
         <div className="text-center max-w-lg mx-auto px-4">
           <div className="mb-8">
-            <Logo className="mb-6" />
+          <Logo className="mb-6" />
           </div>
           
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
@@ -4668,11 +4831,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-gray-900">
-                Processing Your Request
-              </h2>
+              Processing Your Request
+            </h2>
               <p className="text-gray-600 leading-relaxed">
                 Our AI is analyzing your requirements and generating personalized suggestions tailored to your needs.
-              </p>
+            </p>
             </div>
             
             {/* Professional loading animation */}
@@ -4681,17 +4844,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-              </div>
+          </div>
             </div>
             
             <div className="pt-4 border-t border-gray-100">
-              <button
-                onClick={props.onBack}
+            <button
+              onClick={props.onBack}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
+            >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Cancel
-              </button>
+            </button>
             </div>
           </div>
         </div>
@@ -4714,21 +4877,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-gray-900">
-                Error Generating Suggestions
-              </h2>
+          Error Generating Suggestions
+        </h2>
               <p className="text-gray-600 leading-relaxed">
                 {error}
               </p>
             </div>
             
             <div className="pt-4 border-t border-gray-100">
-              <button
-                onClick={props.onBack}
+        <button
+          onClick={props.onBack}
                 className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-colors"
-              >
+        >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Input
-              </button>
+        </button>
             </div>
           </div>
         </div>
@@ -4759,13 +4922,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </div>
             
             <div className="pt-4 border-t border-gray-100">
-              <button
-                onClick={props.onBack}
+        <button
+          onClick={props.onBack}
                 className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
-              >
+        >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Input
-              </button>
+        </button>
             </div>
           </div>
         </div>
@@ -4785,8 +4948,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 AI-Powered Gig Creation
               </h1>
               <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
-              </p>
+              Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
+            </p>
             </div>
           </div>
 
@@ -4802,8 +4965,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             <div className="text-center">
               <h2 className="text-lg font-semibold text-gray-900">
-                Review & Refine Suggestions
-              </h2>
+              Review & Refine Suggestions
+            </h2>
             </div>
             
             <button
@@ -4815,7 +4978,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </button>
           </div>
         </div>
-      </div>
+          </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -4832,9 +4995,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <h3 className="text-xl font-bold text-white">Basic Information</h3>
                   <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
                 </div>
+                </div>
               </div>
-            </div>
-            
+
             <div className="p-6 space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Job Titles */}
@@ -4842,7 +5005,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <div className="flex items-center space-x-2 mb-4">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
-                  </div>
+              </div>
                   {renderEditableList("jobTitles", suggestions.jobTitles, "Job Titles")}
                 </div>
 
@@ -4865,6 +5028,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 {renderDescriptionSection()}
               </div>
 
+              {/* Sectors - After Description */}
+              <div className="space-y-4">
+                {renderSectorsSection()}
+              </div>
+
               {/* Industries and Activities */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
@@ -4875,19 +5043,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               </div>
 
-              {/* Deliverables */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
-                </div>
-                {renderEditableList("deliverables", suggestions.deliverables, "Deliverables")}
-              </div>
-
-              {/* Sectors and Destination Zones */}
+              {/* Deliverables and Destination Zones */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                  {renderSectorsSection()}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
+                  </div>
+                  {renderEditableList("deliverables", suggestions.deliverables, "Deliverables")}
                 </div>
                 <div>
                   {renderDestinationZonesSection()}
@@ -4895,13 +5058,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </div>
 
               {/* Seniority */}
-              <div>
-                {renderSenioritySection()}
+                <div>
+                  {renderSenioritySection()}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Schedule Section */}
+            {/* Schedule Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
               <div className="flex items-center">
@@ -4921,9 +5084,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               {renderTimezoneSection()}
               {renderFlexibilitySection()}
             </div>
-          </div>
+            </div>
 
-          {/* Commission Section */}
+            {/* Commission Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
               <div className="flex items-center">
@@ -4940,9 +5103,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <div className="p-6">
               {renderCommissionSection()}
             </div>
-          </div>
+            </div>
 
-          {/* Skills Section */}
+            {/* Skills Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
               <div className="flex items-center">
@@ -4959,9 +5122,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <div className="p-6">
               {renderSkillsSection()}
             </div>
-          </div>
+            </div>
 
-          {/* Team Section */}
+            {/* Team Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
               <div className="flex items-center">
