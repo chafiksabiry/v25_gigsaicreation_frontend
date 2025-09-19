@@ -262,6 +262,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [currenciesLoading, setCurrenciesLoading] = useState(false);
   
+  // States for textarea inputs
+  const [newJobTitle, setNewJobTitle] = useState('');
+  const [newHighlight, setNewHighlight] = useState('');
+  const [newDeliverable, setNewDeliverable] = useState('');
+  
   // Helper function to get currency symbol by ID
   const getCurrencySymbol = (currencyId: string): string => {
     const currency = currencies.find(c => c._id === currencyId);
@@ -2928,8 +2933,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderJobTitlesSection = () => {
     if (!suggestions) return null;
 
-    const [newJobTitle, setNewJobTitle] = useState('');
-
     const handleAddJobTitle = () => {
       const value = newJobTitle.trim();
       if (!value) return;
@@ -3009,8 +3012,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderHighlightsSection = () => {
     if (!suggestions) return null;
 
-    const [newHighlight, setNewHighlight] = useState('');
-
     const handleAddHighlight = () => {
       const value = newHighlight.trim();
       if (!value) return;
@@ -3088,8 +3089,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const renderDeliverablesSection = () => {
     if (!suggestions) return null;
-
-    const [newDeliverable, setNewDeliverable] = useState('');
 
     const handleAddDeliverable = () => {
       const value = newDeliverable.trim();
