@@ -1,6 +1,10 @@
 import { GigData, GigSuggestion } from '../types';
+import { generateMockGigSuggestions } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
+
+// Configuration pour activer/désactiver le mode mock
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false;
 
 // Helper function to validate and clean territory IDs
 // Removes timezone IDs that might have been incorrectly included in territories
@@ -23,7 +27,14 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
     throw new Error('Description is required');
   }
 
+  // Si le mode mock est activé, utiliser les données mockées
+  if (USE_MOCK_DATA) {
+    console.log('🎭 MOCK MODE ENABLED - Using mock data instead of OpenAI API');
+    return await generateMockGigSuggestions(description);
+  }
+
   try {
+    console.log('🤖 REAL API MODE - Calling OpenAI backend');
     const response = await fetch(`${API_BASE_URL}/ai/generate-gig-suggestions`, {
       method: 'POST',
       headers: {

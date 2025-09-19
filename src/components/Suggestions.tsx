@@ -4965,8 +4965,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             
             <div className="text-center">
               <h2 className="text-lg font-semibold text-gray-900">
-              Review & Refine Suggestions
-            </h2>
+                Review & Refine Suggestions
+              </h2>
+              {/* Mock Data Indicator */}
+              {import.meta.env.VITE_USE_MOCK_DATA === 'true' && (
+                <div className="mt-1 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  🎭 Mock Mode Active
+                </div>
+              )}
             </div>
             
             <button
@@ -4999,24 +5005,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </div>
 
             <div className="p-6 space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Job Titles */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
+              {/* Job Titles */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
+                </div>
+                {renderEditableList("jobTitles", suggestions.jobTitles, "Job Titles")}
               </div>
-                  {renderEditableList("jobTitles", suggestions.jobTitles, "Job Titles")}
-                </div>
 
-                {/* Highlights */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
-                  </div>
-                  {renderEditableList("highlights", suggestions.highlights, "Highlights")}
+              {/* Highlights */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
                 </div>
+                {renderEditableList("highlights", suggestions.highlights, "Highlights")}
               </div>
 
               {/* Job Description - Full Width */}
@@ -5033,28 +5037,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 {renderSectorsSection()}
               </div>
 
-              {/* Industries and Activities */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
-                  {renderIndustriesSection()}
-                </div>
-                <div>
-                  {renderActivitiesSection()}
-                </div>
+              {/* Industries */}
+              <div>
+                {renderIndustriesSection()}
               </div>
 
-              {/* Deliverables and Destination Zones */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
-                  </div>
-                  {renderEditableList("deliverables", suggestions.deliverables, "Deliverables")}
+              {/* Activities */}
+              <div>
+                {renderActivitiesSection()}
+              </div>
+
+              {/* Deliverables */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
                 </div>
-                <div>
-                  {renderDestinationZonesSection()}
-                </div>
+                {renderEditableList("deliverables", suggestions.deliverables, "Deliverables")}
+              </div>
+
+              {/* Destination Zones */}
+              <div>
+                {renderDestinationZonesSection()}
               </div>
 
               {/* Seniority */}
