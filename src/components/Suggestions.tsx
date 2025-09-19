@@ -277,6 +277,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [editingHighlightIndex, setEditingHighlightIndex] = useState<number | null>(null);
   const [editingDeliverableIndex, setEditingDeliverableIndex] = useState<number | null>(null);
   
+  // States for selection
+  const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
+  const [selectedHighlights, setSelectedHighlights] = useState<string[]>([]);
+  const [selectedDeliverables, setSelectedDeliverables] = useState<string[]>([]);
+  const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  
   // Helper function to get currency symbol by ID
   const getCurrencySymbol = (currencyId: string): string => {
     const currency = currencies.find(c => c._id === currencyId);
@@ -3058,27 +3066,54 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         )}
         
-        {/* Selected badges */}
+        {/* Available job titles */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map((title, index) => (
-              <span 
-                key={index} 
-                className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
-                onDoubleClick={() => handleDoubleClick(title, index)}
-                title="Double-click to edit"
-              >
-                {title}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveJobTitle(title)}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove"
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">
+              <strong>Instructions:</strong> Click on a job title below to select it as your main position. Only one job title can be selected.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map((title, index) => (
+                <span 
+                  key={index} 
+                  className={`group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+                    selectedJobTitle === title 
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                      : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                  }`}
+                  onClick={() => setSelectedJobTitle(selectedJobTitle === title ? null : title)}
+                  onDoubleClick={() => handleDoubleClick(title, index)}
+                  title={selectedJobTitle === title ? "Selected as main job title" : "Click to select as main job title"}
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
+                  {selectedJobTitle === title && (
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                  )}
+                  {title}
+                  {/* Edit icon on hover */}
+                  <Edit2 className={`w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    selectedJobTitle === title ? 'text-white' : 'text-blue-600'
+                  }`} title="Double-click to edit" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveJobTitle(title);
+                      if (selectedJobTitle === title) {
+                        setSelectedJobTitle(null);
+                      }
+                    }}
+                    className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedJobTitle === title 
+                        ? 'text-white hover:bg-blue-700' 
+                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                    }`}
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -3202,27 +3237,58 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         )}
         
-        {/* Selected badges */}
+        {/* Available highlights */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map((highlight, index) => (
-              <span 
-                key={index} 
-                className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-800 border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
-                onDoubleClick={() => handleDoubleClick(highlight, index)}
-                title="Double-click to edit"
-              >
-                {highlight}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveHighlight(highlight)}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-600 hover:bg-green-200 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove"
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-green-500">
+              <strong>Instructions:</strong> Click on the highlights below to select them for your final gig. You can select multiple highlights or none at all.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map((highlight, index) => (
+                <span 
+                  key={index} 
+                  className={`group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+                    selectedHighlights.includes(highlight) 
+                      ? 'bg-green-600 text-white border-green-600 shadow-md' 
+                      : 'bg-green-50 text-green-800 border-green-200 hover:bg-green-100'
+                  }`}
+                  onClick={() => {
+                    if (selectedHighlights.includes(highlight)) {
+                      setSelectedHighlights(selectedHighlights.filter(h => h !== highlight));
+                    } else {
+                      setSelectedHighlights([...selectedHighlights, highlight]);
+                    }
+                  }}
+                  onDoubleClick={() => handleDoubleClick(highlight, index)}
+                  title={selectedHighlights.includes(highlight) ? "Selected highlight" : "Click to select this highlight"}
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
+                  {selectedHighlights.includes(highlight) && (
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                  )}
+                  {highlight}
+                  {/* Edit icon on hover */}
+                  <Edit2 className={`w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    selectedHighlights.includes(highlight) ? 'text-white' : 'text-green-600'
+                  }`} title="Double-click to edit" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveHighlight(highlight);
+                      setSelectedHighlights(selectedHighlights.filter(h => h !== highlight));
+                    }}
+                    className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedHighlights.includes(highlight) 
+                        ? 'text-white hover:bg-green-700' 
+                        : 'text-green-600 hover:bg-green-200 hover:text-green-800'
+                    }`}
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -3346,27 +3412,58 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         )}
         
-        {/* Selected badges */}
+        {/* Available deliverables */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map((deliverable, index) => (
-              <span 
-                key={index} 
-                className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-50 text-purple-800 border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors"
-                onDoubleClick={() => handleDoubleClick(deliverable, index)}
-                title="Double-click to edit"
-              >
-                {deliverable}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveDeliverable(deliverable)}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-purple-600 hover:bg-purple-200 hover:text-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove"
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-purple-500">
+              <strong>Instructions:</strong> Click on the deliverables below to select them for your final gig. You can select multiple deliverables or none at all.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map((deliverable, index) => (
+                <span 
+                  key={index} 
+                  className={`group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+                    selectedDeliverables.includes(deliverable) 
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-md' 
+                      : 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100'
+                  }`}
+                  onClick={() => {
+                    if (selectedDeliverables.includes(deliverable)) {
+                      setSelectedDeliverables(selectedDeliverables.filter(d => d !== deliverable));
+                    } else {
+                      setSelectedDeliverables([...selectedDeliverables, deliverable]);
+                    }
+                  }}
+                  onDoubleClick={() => handleDoubleClick(deliverable, index)}
+                  title={selectedDeliverables.includes(deliverable) ? "Selected deliverable" : "Click to select this deliverable"}
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
+                  {selectedDeliverables.includes(deliverable) && (
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                  )}
+                  {deliverable}
+                  {/* Edit icon on hover */}
+                  <Edit2 className={`w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    selectedDeliverables.includes(deliverable) ? 'text-white' : 'text-purple-600'
+                  }`} title="Double-click to edit" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveDeliverable(deliverable);
+                      setSelectedDeliverables(selectedDeliverables.filter(d => d !== deliverable));
+                    }}
+                    className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedDeliverables.includes(deliverable) 
+                        ? 'text-white hover:bg-purple-700' 
+                        : 'text-purple-600 hover:bg-purple-200 hover:text-purple-800'
+                    }`}
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -3417,23 +3514,58 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           ))}
         </select>
         
-        {/* Selected badges - displayed below the select */}
+        {/* Available sectors */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-          {selected.map(sector => (
-              <span key={sector} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-              {sector}
-              <button
-                type="button"
-                onClick={() => handleRemoveSector(sector)}
-                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove"
-              >
-                  <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">
+              <strong>Instructions:</strong> Click on the sectors below to select them for your final gig. You can select multiple sectors or none at all.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map(sector => (
+                <span 
+                  key={sector} 
+                  className={`group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+                    selectedSectors.includes(sector) 
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                      : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                  }`}
+                  onClick={() => {
+                    if (selectedSectors.includes(sector)) {
+                      setSelectedSectors(selectedSectors.filter(s => s !== sector));
+                    } else {
+                      setSelectedSectors([...selectedSectors, sector]);
+                    }
+                  }}
+                  title={selectedSectors.includes(sector) ? "Selected sector" : "Click to select this sector"}
+                >
+                  {selectedSectors.includes(sector) && (
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                  )}
+                  {sector}
+                  {/* Edit icon on hover */}
+                  <Edit2 className={`w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                    selectedSectors.includes(sector) ? 'text-white' : 'text-blue-600'
+                  }`} title="Double-click to edit" />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveSector(sector);
+                      setSelectedSectors(selectedSectors.filter(s => s !== sector));
+                    }}
+                    className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedSectors.includes(sector) 
+                        ? 'text-white hover:bg-blue-700' 
+                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                    }`}
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     );
@@ -3504,25 +3636,60 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         )}
         
-        {/* Selected badges - displayed below the select */}
+        {/* Available activities */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map(activityId => {
-              const activityName = getActivityNameById(activityId);
-              return activityName ? (
-                <span key={activityId} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-                  {activityName}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveActivity(activityId)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove"
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">
+              <strong>Instructions:</strong> Click on the activities below to select them for your final gig. You can select multiple activities or none at all.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map(activityId => {
+                const activityName = getActivityNameById(activityId);
+                return activityName ? (
+                  <span 
+                    key={activityId} 
+                    className={`group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+                      selectedActivities.includes(activityId) 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                        : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                    }`}
+                    onClick={() => {
+                      if (selectedActivities.includes(activityId)) {
+                        setSelectedActivities(selectedActivities.filter(a => a !== activityId));
+                      } else {
+                        setSelectedActivities([...selectedActivities, activityId]);
+                      }
+                    }}
+                    title={selectedActivities.includes(activityId) ? "Selected activity" : "Click to select this activity"}
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ) : null;
-            })}
+                    {selectedActivities.includes(activityId) && (
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                    )}
+                    {activityName}
+                    {/* Edit icon on hover */}
+                    <Edit2 className={`w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedActivities.includes(activityId) ? 'text-white' : 'text-blue-600'
+                    }`} title="Double-click to edit" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveActivity(activityId);
+                        setSelectedActivities(selectedActivities.filter(a => a !== activityId));
+                      }}
+                      className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                        selectedActivities.includes(activityId) 
+                          ? 'text-white hover:bg-blue-700' 
+                          : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                      }`}
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ) : null;
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -3594,25 +3761,60 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         )}
         
-        {/* Selected badges - displayed below the select */}
+        {/* Available industries */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-            {selected.map(industryId => {
-              const industryName = getIndustryNameById(industryId);
-              return industryName ? (
-                <span key={industryId} className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-                  {industryName}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveIndustry(industryId)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove"
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">
+              <strong>Instructions:</strong> Click on the industries below to select them for your final gig. You can select multiple industries or none at all.
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map(industryId => {
+                const industryName = getIndustryNameById(industryId);
+                return industryName ? (
+                  <span 
+                    key={industryId} 
+                    className={`group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border cursor-pointer transition-colors ${
+                      selectedIndustries.includes(industryId) 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                        : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                    }`}
+                    onClick={() => {
+                      if (selectedIndustries.includes(industryId)) {
+                        setSelectedIndustries(selectedIndustries.filter(i => i !== industryId));
+                      } else {
+                        setSelectedIndustries([...selectedIndustries, industryId]);
+                      }
+                    }}
+                    title={selectedIndustries.includes(industryId) ? "Selected industry" : "Click to select this industry"}
                   >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ) : null;
-            })}
+                    {selectedIndustries.includes(industryId) && (
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                    )}
+                    {industryName}
+                    {/* Edit icon on hover */}
+                    <Edit2 className={`w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedIndustries.includes(industryId) ? 'text-white' : 'text-blue-600'
+                    }`} title="Double-click to edit" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveIndustry(industryId);
+                        setSelectedIndustries(selectedIndustries.filter(i => i !== industryId));
+                      }}
+                      className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                        selectedIndustries.includes(industryId) 
+                          ? 'text-white hover:bg-blue-700' 
+                          : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                      }`}
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ) : null;
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -5325,6 +5527,177 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <div>
                   {renderSenioritySection()}
                 </div>
+
+              {/* Selection Summary */}
+              {(selectedJobTitle || selectedHighlights.length > 0 || selectedDeliverables.length > 0 || selectedSectors.length > 0 || selectedActivities.length > 0 || selectedIndustries.length > 0) && (
+                <div className="mt-8 p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border-2 border-indigo-200 shadow-lg">
+                  <div className="flex items-center mb-4">
+                    <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                      <CheckCircle className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-indigo-900">Your Selection Summary</h4>
+                      <p className="text-sm text-indigo-700">
+                        Here are the elements you've selected for your final gig
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Selected Job Title */}
+                    {selectedJobTitle && (
+                      <div className="bg-white rounded-lg p-4 border border-indigo-200 shadow-sm">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                          Selected Job Title
+                        </h5>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-blue-600 mr-2" />
+                          <span className="text-blue-800 font-medium">{selectedJobTitle}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Sectors */}
+                    {selectedSectors.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-indigo-200 shadow-sm">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                          Selected Sectors ({selectedSectors.length})
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSectors.map((sector, index) => (
+                            <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              {sector}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Industries */}
+                    {selectedIndustries.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-indigo-200 shadow-sm">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-teal-500 rounded-full mr-2"></div>
+                          Selected Industries ({selectedIndustries.length})
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedIndustries.map((industryId, index) => {
+                            const industryName = getIndustryNameById(industryId);
+                            return industryName ? (
+                              <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800 border border-teal-200">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                {industryName}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Activities */}
+                    {selectedActivities.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-indigo-200 shadow-sm">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-cyan-500 rounded-full mr-2"></div>
+                          Selected Activities ({selectedActivities.length})
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedActivities.map((activityId, index) => {
+                            const activityName = getActivityNameById(activityId);
+                            return activityName ? (
+                              <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800 border border-cyan-200">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                {activityName}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Highlights */}
+                    {selectedHighlights.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-indigo-200 shadow-sm">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          Selected Highlights ({selectedHighlights.length})
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedHighlights.map((highlight, index) => (
+                            <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              {highlight}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Deliverables */}
+                    {selectedDeliverables.length > 0 && (
+                      <div className="bg-white rounded-lg p-4 border border-indigo-200 shadow-sm">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                          Selected Deliverables ({selectedDeliverables.length})
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedDeliverables.map((deliverable, index) => (
+                            <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              {deliverable}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selection Stats */}
+                  <div className="mt-4 pt-4 border-t border-indigo-200">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
+                      <div>
+                        <div className="text-lg font-bold text-blue-600">
+                          {selectedJobTitle ? 1 : 0}
+                        </div>
+                        <div className="text-xs text-gray-500">Job Title</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-blue-600">
+                          {selectedSectors.length}
+                        </div>
+                        <div className="text-xs text-gray-500">Sectors</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-teal-600">
+                          {selectedIndustries.length}
+                        </div>
+                        <div className="text-xs text-gray-500">Industries</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-cyan-600">
+                          {selectedActivities.length}
+                        </div>
+                        <div className="text-xs text-gray-500">Activities</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-green-600">
+                          {selectedHighlights.length}
+                        </div>
+                        <div className="text-xs text-gray-500">Highlights</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-purple-600">
+                          {selectedDeliverables.length}
+                        </div>
+                        <div className="text-xs text-gray-500">Deliverables</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               </div>
             </div>
 
