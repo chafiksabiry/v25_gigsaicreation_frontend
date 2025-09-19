@@ -238,7 +238,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [timezoneLoading, setTimezoneLoading] = useState(false);
   const [timezonesLoaded, setTimezonesLoaded] = useState(false);
   const [allCountries, setAllCountries] = useState<CountryData[]>([]);
-  const [countriesLoading, setCountriesLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<CountryData[]>([]);
   const [searching, setSearching] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
@@ -257,7 +256,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
   const [industries, setIndustries] = useState<Array<{ value: string; label: string }>>([]);
   const [languages, setLanguages] = useState<Array<{ value: string; label: string; code: string }>>([]);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [industriesLoading, setIndustriesLoading] = useState(true);
   const [languagesLoading, setLanguagesLoading] = useState(true);
@@ -303,22 +301,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (currencies.length > 0 && suggestions?.commission) {
       const defaultCurrencyId = getDefaultCurrencyId();
       
-      // Set default currency for each commission option if not already set
-      if (suggestions.commission.options) {
-        const updatedOptions = suggestions.commission.options.map(option => ({
-          ...option,
-          currency: option.currency || defaultCurrencyId
-        }));
-        
-        setSuggestions(prev => prev ? {
-          ...prev,
-          commission: {
-            ...prev.commission,
-            options: updatedOptions
-          }
-        } : null);
-      }
-      
       // Set default currency for main commission if not already set
       if (!suggestions.commission.currency) {
         setSuggestions(prev => prev ? {
@@ -343,11 +325,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setIndustriesLoading(true);
         setLanguagesLoading(true);
         
-        const activitiesData = await loadActivities();
+        await loadActivities();
         
-        const industriesData = await loadIndustries();
+        await loadIndustries();
         
-        const languagesData = await loadLanguages();
+        await loadLanguages();
         
         // Get options for UI components
         const activityOptions = getActivityOptions();
@@ -367,7 +349,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setActivities(activityOptions);
         setIndustries(industryOptions);
         setLanguages(languageOptions);
-        setIsDataLoaded(true);
         
         
         
@@ -485,7 +466,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const fetchAllData = async () => {
       // Fetch countries
       if (allCountries.length === 0) {
-        setCountriesLoading(true);
         try {
           const countries = await fetchAllCountries();
           const countriesData = countries.map(country => ({
@@ -498,8 +478,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           setAllCountries(countriesData);
         } catch (error) {
           console.error('❌ Error fetching countries:', error);
-        } finally {
-          setCountriesLoading(false);
         }
       }
 
@@ -2710,7 +2688,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     // Get the first destination zone for display
     const firstDestination = suggestions.destinationZones?.[0];
-    const destinationCountryName = firstDestination ? getCountryName(firstDestination) : 'Unknown';
+    firstDestination ? getCountryName(firstDestination) : 'Unknown';
 
     return (
       <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
@@ -2877,34 +2855,38 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold mr-3">S</div>
-          <h4 className="text-xl font-bold text-orange-900">Sectors</h4>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(sector => (
-            <span key={sector} className="flex items-center bg-orange-100 text-orange-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {sector}
-              <button
-                type="button"
-                onClick={() => handleRemoveSector(sector)}
-                className="ml-2 text-orange-600 hover:text-orange-800 rounded-full focus:outline-none focus:bg-orange-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
-        </div>
-        {/* Select pour ajouter */}
+        
+        {/* Selected badges */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selected.map(sector => (
+              <span key={sector} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200">
+                {sector}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSector(sector)}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  title="Remove"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        
+        {/* Add selector */}
         <select
-          className="w-full p-3 rounded-lg border border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2"
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
           defaultValue=""
           onChange={handleAddSector}
         >
-          <option value="" disabled>Add sector...</option>
+          <option value="" disabled>Select a sector...</option>
           {available.map(sector => (
             <option key={sector} value={sector}>{sector}</option>
           ))}
@@ -2915,8 +2897,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const renderActivitiesSection = () => {
     if (!suggestions) return null;
-
-
 
     const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
@@ -2947,55 +2927,59 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     const selected = suggestions.activities || [];
     const available = activities.filter(activity => !selected.includes(activity.value));
-    
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">A</div>
-          <h4 className="text-xl font-bold text-green-900">Activities</h4>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Activities</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(activityId => {
-            const activityName = getActivityNameById(activityId);
-            return activityName ? (
-              <span key={activityId} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-                {activityName}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveActivity(activityId)}
-                  className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </span>
-            ) : null;
-          })}
-        </div>
-        {/* Select pour ajouter */}
+        
+        {/* Selected badges */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selected.map(activityId => {
+              const activityName = getActivityNameById(activityId);
+              return activityName ? (
+                <span key={activityId} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200">
+                  {activityName}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveActivity(activityId)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })}
+          </div>
+        )}
+        
+        {/* Add selector */}
         {activitiesLoading ? (
-          <div className="w-full p-3 rounded-lg border border-green-300 bg-gray-50 text-gray-500 text-center">
+          <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
             <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
             Loading activities from API...
           </div>
         ) : (
           <select
-            className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             defaultValue=""
             onChange={handleAddActivity}
           >
-            <option value="" disabled>Add activity...</option>
+            <option value="" disabled>Select an activity...</option>
             {available.map(activity => (
               <option key={activity.value} value={activity.label}>{activity.label}</option>
             ))}
           </select>
         )}
+        
         {!activitiesLoading && activities.length === 0 && (
-          <p className="text-xs text-red-500 italic text-center mt-2">
+          <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
             ⚠️ No activities available. Please check API connection.
-          </p>
+          </div>
         )}
       </div>
     );
@@ -3003,8 +2987,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const renderIndustriesSection = () => {
     if (!suggestions) return null;
-
-
 
     const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
@@ -3035,55 +3017,59 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     const selected = suggestions.industries || [];
     const available = industries.filter(industry => !selected.includes(industry.value));
-    
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold mr-3">I</div>
-          <h4 className="text-xl font-bold text-indigo-900">Industries</h4>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Industries</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(industryId => {
-            const industryName = getIndustryNameById(industryId);
-            return industryName ? (
-              <span key={industryId} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-                {industryName}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveIndustry(industryId)}
-                  className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </span>
-            ) : null;
-          })}
-        </div>
-        {/* Select pour ajouter */}
+        
+        {/* Selected badges */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selected.map(industryId => {
+              const industryName = getIndustryNameById(industryId);
+              return industryName ? (
+                <span key={industryId} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200">
+                  {industryName}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveIndustry(industryId)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-600 hover:bg-blue-200 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })}
+          </div>
+        )}
+        
+        {/* Add selector */}
         {industriesLoading ? (
-          <div className="w-full p-3 rounded-lg border border-indigo-300 bg-gray-50 text-gray-500 text-center">
+          <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
             <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
             Loading industries from API...
           </div>
         ) : (
           <select
-            className="w-full p-3 rounded-lg border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 mb-2"
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             defaultValue=""
             onChange={handleAddIndustry}
           >
-            <option value="" disabled>Add industry...</option>
+            <option value="" disabled>Select an industry...</option>
             {available.map(industry => (
               <option key={industry.value} value={industry.label}>{industry.label}</option>
             ))}
           </select>
         )}
+        
         {!industriesLoading && industries.length === 0 && (
-          <p className="text-xs text-red-500 italic text-center mt-2">
+          <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
             ⚠️ No industries available. Please check API connection.
-          </p>
+          </div>
         )}
       </div>
     );
@@ -3257,7 +3243,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
 
     const updateCommissionOption = (
-      index: number,
+      _index: number,
       field: string,
       value: string | number
     ) => {
@@ -3334,7 +3320,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         value={option.currency || getDefaultCurrencyId()}
                         onChange={(e) =>
                           updateCommissionOption(
-                            index,
+                            0,
                             "currency",
                             e.target.value
                           )
@@ -3388,7 +3374,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           }
                           onChange={(e) =>
                             updateCommissionOption(
-                              index,
+                              0,
                               "transactionCommission.amount",
                               e.target.value
                             )
@@ -3426,7 +3412,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           }
                           onChange={(e) =>
                             updateCommissionOption(
-                              index,
+                              0,
                               "baseAmount",
                               e.target.value
                             )
@@ -3466,7 +3452,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         }
                         onChange={(e) =>
                           updateCommissionOption(
-                            index,
+                            0,
                             "minimumVolume.amount",
                             e.target.value
                           )
@@ -3484,7 +3470,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         value={option.minimumVolume?.period || ""}
                         onChange={(e) =>
                           updateCommissionOption(
-                            index,
+                            0,
                             "minimumVolume.period",
                             e.target.value
                           )
@@ -3528,7 +3514,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           }
                           onChange={(e) =>
                             updateCommissionOption(
-                              index,
+                              0,
                               "bonusAmount",
                               e.target.value
                             )
@@ -4672,31 +4658,44 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (loading && !props.initialSuggestions) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen from-slate-50 via-blue-50 to-indigo-50">
-        <div className="text-center max-w-md">
-          <Logo className="mb-6" />
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
-              Processing Your Request
-            </h2>
-            <p className="text-gray-600 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              Our AI is analyzing your requirements and generating personalized suggestions...
-            </p>
-            {/* Professional loading dots */}
-            <div className="flex justify-center space-x-2 mt-6">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-professional-dots"></div>
-              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-professional-dots"></div>
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-professional-dots"></div>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
           </div>
-          <div className="mt-8">
-            <button
-              onClick={props.onBack}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-            >
-              <X className="w-4 h-4" />
-              <span>Cancel</span>
-            </button>
+          
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4">
+              <Brain className="w-8 h-8 text-blue-600 animate-pulse" />
+            </div>
+            
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Processing Your Request
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                Our AI is analyzing your requirements and generating personalized suggestions tailored to your needs.
+              </p>
+            </div>
+            
+            {/* Professional loading animation */}
+            <div className="flex items-center justify-center space-x-1 py-4">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
+              <button
+                onClick={props.onBack}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -4705,244 +4704,281 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-red-50 text-red-800 p-8">
-        <AlertCircle className="w-16 h-16 mb-4 text-red-600" />
-        <h2 className="text-2xl font-bold mb-2">
-          Error Generating Suggestions
-        </h2>
-        <p className="text-center mb-6">{error}</p>
-        <button
-          onClick={props.onBack}
-          className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Error Generating Suggestions
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                {error}
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
+              <button
+                onClick={props.onBack}
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Input
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!suggestions) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 text-gray-700 p-8">
-        <Brain className="w-16 h-16 mb-4 text-gray-400" />
-        <h2 className="text-2xl font-bold mb-2">No Suggestions Available</h2>
-        <p className="text-center mb-6">
-          We couldn't generate suggestions based on your input. Please try
-          again.
-        </p>
-        <button
-          onClick={props.onBack}
-          className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+              <Brain className="w-8 h-8 text-gray-400" />
+            </div>
+            
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
+                No Suggestions Available
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                We couldn't generate suggestions based on your input. Please try again with different requirements.
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
+              <button
+                onClick={props.onBack}
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Input
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="w-full h-full px-4 py-8">
-        <div className="w-full h-full">
-          {/* AI Mode Title with HARX Logo */}
-          <div className="text-center mb-8">
-            <Logo className="mb-6" />
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <h1 className="text-4xl font-bold text-center ...">AI-Powered Gig Creation</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="text-center mb-6">
+            <Logo className="mb-4" />
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                AI-Powered Gig Creation
+              </h1>
+              <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
+              </p>
             </div>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
-            </p>
           </div>
 
-          <div className="flex justify-between items-center mb-8">
+          {/* Navigation Bar */}
+          <div className="flex items-center justify-between">
             <button
               onClick={props.onBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Input
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Review & Refine Suggestions
-            </h2>
+            
+            <div className="text-center">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Review & Refine Suggestions
+              </h2>
+            </div>
+            
             <button
               onClick={handleConfirm}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
             >
-              <span>Confirm & Continue</span>
-              <ArrowRight className="w-5 h-5" />
+              Confirm & Continue
+              <ArrowRight className="w-4 h-4 ml-2" />
             </button>
           </div>
+        </div>
+      </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
 
-            {/* Basic Section */}
-            {(() => {
-              console.log('🔍 BASIC SECTION - Rendering Basic Information section');
-              console.log('🔍 BASIC SECTION - suggestions:', suggestions);
-              return null;
-            })()}
-            <div className="p-3 rounded-2xl border-2 border-blue-200 bg-blue-50">
-              <div className="flex justify-center mb-8">
-                <div className="relative">
-                  {/* No logo related state, logic, or JSX */}
+          {/* Basic Information Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Briefcase className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Basic Information</h3>
+                  <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Job Titles */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <h4 className="text-lg font-semibold text-gray-900">Job Titles</h4>
+                  </div>
+                  {renderEditableList("jobTitles", suggestions.jobTitles, "Job Titles")}
+                </div>
+
+                {/* Highlights */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
+                  </div>
+                  {renderEditableList("highlights", suggestions.highlights, "Highlights")}
                 </div>
               </div>
 
-              <div className="flex items-center mb-3">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white mr-2">
-                  <Briefcase className="w-5 h-5" />
-                </span>
-                <h3 className="text-lg font-extrabold text-blue-900 tracking-tight">Basic Information</h3>
+              {/* Job Description - Full Width */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
+                </div>
+                {renderDescriptionSection()}
               </div>
-              <div className="space-y-2">
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Job Titles</h4>
-                  {renderEditableList(
-                    "jobTitles",
-                    suggestions.jobTitles,
-                    "Job Titles"
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Job Description</h4>
-                  {renderDescriptionSection()}
-                </div>
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Highlights</h4>
-                  {renderEditableList(
-                    "highlights",
-                    suggestions.highlights,
-                    "Highlights"
-                  )}
-                </div>
+
+              {/* Industries and Activities */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
                   {renderIndustriesSection()}
                 </div>
                 <div>
                   {renderActivitiesSection()}
                 </div>
-                <div>
-                  {(() => {
-                    console.log('📦 DELIVERABLES - suggestions.deliverables:', suggestions?.deliverables);
-                    return null;
-                  })()}
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>
-                  {renderEditableList(
-                    "deliverables",
-                    suggestions.deliverables,
-                    "Deliverables"
-                  )}
+              </div>
+
+              {/* Deliverables */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
                 </div>
+                {renderEditableList("deliverables", suggestions.deliverables, "Deliverables")}
+              </div>
+
+              {/* Sectors and Destination Zones */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
-                  {(() => {
-                    console.log('🏭 SECTORS - About to render sectors section');
-                    console.log('🏭 SECTORS - suggestions.sectors:', suggestions?.sectors);
-                    return null;
-                  })()}
                   {renderSectorsSection()}
                 </div>
                 <div>
                   {renderDestinationZonesSection()}
                 </div>
+              </div>
+
+              {/* Seniority */}
+              <div>
+                {renderSenioritySection()}
+              </div>
+            </div>
+          </div>
+
+          {/* Schedule Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
                 <div>
-                  {(() => {
-                    console.log('🎓 SENIORITY - About to render seniority section');
-                    console.log('🎓 SENIORITY - suggestions.seniority:', suggestions?.seniority);
-                    return null;
-                  })()}
-                  {renderSenioritySection()}
+                  <h3 className="text-xl font-bold text-white">Schedule & Availability</h3>
+                  <p className="text-emerald-100 text-sm">Working hours, timezones, and flexibility options</p>
                 </div>
               </div>
             </div>
-
-            {/* Schedule Section */}
-            {(() => {
-              console.log('🕒 SCHEDULE SECTION - Rendering Schedule section');
-              console.log('🕒 SCHEDULE SECTION - suggestions.schedule:', suggestions?.schedule);
-              return null;
-            })()}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Clock className="w-7 h-7 mr-3 text-blue-700" />
-                Schedule
-              </h3>
-              {(() => {
-                console.log('📅 EDITABLE SCHEDULES - About to render editable schedules');
-                console.log('📅 EDITABLE SCHEDULES - suggestions.schedule.schedules:', suggestions?.schedule?.schedules);
-                return null;
-              })()}
+            
+            <div className="p-6 space-y-8">
               {renderEditableSchedules()}
-              {(() => {
-                console.log('⏰ MINIMUM HOURS - About to render minimum hours section');
-                console.log('⏰ MINIMUM HOURS - suggestions.schedule.minimumHours:', suggestions?.schedule?.minimumHours);
-                return null;
-              })()}
               {renderMinimumHoursSection()}
-              {(() => {
-                console.log('🌍 TIMEZONE - About to render timezone section');
-                console.log('🌍 TIMEZONE - suggestions.schedule.timeZones:', suggestions?.schedule?.timeZones);
-                console.log('🌍 TIMEZONE - suggestions.schedule.time_zone:', suggestions?.schedule?.time_zone);
-                return null;
-              })()}
               {renderTimezoneSection()}
-              {(() => {
-                console.log('🔄 FLEXIBILITY - About to render flexibility section');
-                console.log('🔄 FLEXIBILITY - suggestions.schedule.flexibility:', suggestions?.schedule?.flexibility);
-                return null;
-              })()}
               {renderFlexibilitySection()}
             </div>
+          </div>
 
-            {/* Commission Section */}
-            {(() => {
-              console.log('💰 COMMISSION SECTION - Rendering Commission section');
-              console.log('💰 COMMISSION SECTION - suggestions.commission:', suggestions?.commission);
-              return null;
-            })()}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
-                Commission
-              </h3>
-              {(() => {
-                console.log('💵 COMMISSION DETAILS - About to render commission section');
-                return null;
-              })()}
+          {/* Commission Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Commission Structure</h3>
+                  <p className="text-green-100 text-sm">Compensation details and performance incentives</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
               {renderCommissionSection()}
             </div>
+          </div>
 
-            {/* Skills Section */}
-            {(() => {
-              console.log('🎯 SKILLS SECTION - Rendering Skills section');
-              console.log('🎯 SKILLS SECTION - suggestions.skills:', suggestions?.skills);
-              return null;
-            })()}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Award className="w-7 h-7 mr-3 text-blue-700" />
-                Skills
-              </h3>
-              {(() => {
-                console.log('🛠️ SKILLS DETAILS - About to render skills section');
-                return null;
-              })()}
+          {/* Skills Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Skills & Qualifications</h3>
+                  <p className="text-purple-100 text-sm">Required technical, professional, and soft skills</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
               {renderSkillsSection()}
             </div>
+          </div>
 
-            {/* Team Section */}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Users className="w-7 h-7 mr-3 text-blue-700" />
-                Team Structure
-              </h3>
-              {(() => {
-                console.log('👤 TEAM DETAILS - About to render team section');
-                return null;
-              })()}
+          {/* Team Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Team Structure</h3>
+                  <p className="text-orange-100 text-sm">Team composition, roles, and territories</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
               {renderTeamSection()}
             </div>
           </div>
