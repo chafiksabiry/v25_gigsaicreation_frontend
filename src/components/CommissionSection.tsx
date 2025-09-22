@@ -4,7 +4,7 @@ import { predefinedOptions } from '../lib/guidance';
 import { fetchAllCurrencies, fetchCurrencyById, Currency } from "../lib/api";
 import { 
   DollarSign, Target, AlertCircle, Coins, 
-  Star, Calculator, ArrowLeft, ArrowRight, Loader2
+  Star, Calculator, ArrowLeft, ArrowRight, Loader2, Award, Gauge
 } from 'lucide-react';
 import { GigData } from '../types';
 
@@ -194,20 +194,20 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           and performance bonus. All components will be displayed together.
         </InfoText>
 
-        {/* Commission Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Commission Layout - Reorganized */}
+        <div className="space-y-6">
           
-          {/* Currency Card */}
+          {/* 1. Currency - Full Width at Top */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <DollarSign className="w-6 h-6 text-white" />
-            </div>
+              </div>
               <div className="ml-4">
                 <h3 className="text-lg font-bold text-gray-900">Currency</h3>
                 <p className="text-sm text-gray-500">Base currency for payments</p>
+              </div>
             </div>
-          </div>
 
             <select
               value={data?.commission?.currency || ''}
@@ -236,130 +236,140 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             )}
           </div>
 
-          {/* Commission Per Call Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-        </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
-                <p className="text-sm text-gray-500">Base amount per successful call</p>
+          {/* 2. Per Call and Per Transaction - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Commission Per Call Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
+                  <p className="text-sm text-gray-500">Base amount per successful call</p>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 font-bold text-lg">
+                  {getCurrencySymbol()}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={data?.commission?.baseAmount || ''}
+                  onChange={e => handleBaseChange('baseAmount', e.target.value)}
+                  placeholder="0"
+                  className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
+                />
+              </div>
+            </div>
+            
+            {/* Transaction Commission Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
+                  <p className="text-sm text-gray-500">Commission per transaction</p>
+                </div>
+              </div>
+
+              <div className="relative">
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-600 font-bold text-lg">
+                  {getCurrencySymbol()}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={data?.commission?.transactionCommission?.amount || ''}
+                  onChange={e => handleTransactionChange('amount', e.target.value)}
+                  placeholder="0"
+                  className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                />
+              </div>
             </div>
           </div>
-          
+
+          {/* 3. Bonus and Volume Min - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Bonus & Incentives Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <Star className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
+                  <p className="text-sm text-gray-500">Performance bonus amount</p>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-600 font-bold text-lg">
+                  {getCurrencySymbol()}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={data?.commission?.bonusAmount || ''}
+                  onChange={e => handleBonusChange('bonusAmount', e.target.value)}
+                  placeholder="0"
+                  className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-amber-400 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Minimum Volume Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-100 hover:border-orange-200 group">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-bold text-gray-900">Minimum Volume</h3>
+                  <p className="text-sm text-gray-500">Minimum performance threshold</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
                 <div className="relative">
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 font-bold text-lg">
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-orange-600 font-bold text-lg">
                     {getCurrencySymbol()}
                   </span>
                   <input
                     type="number"
-                step="0.01"
-                min="0"
-                    value={data?.commission?.baseAmount || ''}
-                    onChange={e => handleBaseChange('baseAmount', e.target.value)}
-                placeholder="100"
-                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
+                    step="0.01"
+                    min="0"
+                    value={data?.commission?.minimumVolume?.amount || ''}
+                    onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
+                    placeholder="0"
+                    className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
                   />
                 </div>
+                
+                <select
+                  value={data?.commission?.minimumVolume?.period || ''}
+                  onChange={e => handleMinimumVolumeChange('period', e.target.value)}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                >
+                  <option value="">Select Period</option>
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                </select>
               </div>
-              
-          {/* Transaction Commission Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
-                <p className="text-sm text-gray-500">Commission per transaction</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-600 font-bold text-lg">
-                {getCurrencySymbol()}
-              </span>
-                  <input
-                    type="number"
-                step="0.01"
-                min="0"
-                value={data?.commission?.transactionCommission?.amount || ''}
-                onChange={e => handleTransactionChange('amount', e.target.value)}
-                placeholder="50"
-                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
-              />
-            </div>
-          </div>
-          
-          {/* Bonus & Incentives Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
-                <p className="text-sm text-gray-500">Performance bonus amount</p>
-              </div>
-            </div>
-            
-              <div className="relative">
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-600 font-bold text-lg">
-                {getCurrencySymbol()}
-                </span>
-                <input
-                  type="number"
-                step="0.01"
-                min="0"
-                value={data?.commission?.bonusAmount || ''}
-                onChange={e => handleBonusChange('bonusAmount', e.target.value)}
-                placeholder="150"
-                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-amber-400 transition-all"
-              />
             </div>
           </div>
         </div>
 
-        {/* Minimum Volume Requirements Section */}
-        <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
-              <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <input
-                  type="number"
-                step="0.01"
-                min="0"
-                value={data?.commission?.minimumVolume?.amount || ''}
-                onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
-                placeholder="100"
-                className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-              />
-            </div>
-            
-            <select
-              value={data?.commission?.minimumVolume?.period || ''}
-              onChange={e => handleMinimumVolumeChange('period', e.target.value)}
-              className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-            >
-              <option value="">Select Period</option>
-              <option value="Daily">Daily</option>
-              <option value="Weekly">Weekly</option>
-              <option value="Monthly">Monthly</option>
-            </select>
-          </div>
-        </div>
 
         {/* Additional Details Section */}
         <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">

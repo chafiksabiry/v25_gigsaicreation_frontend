@@ -4140,10 +4140,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     <p className="text-gray-500 text-sm">Configure compensation and performance incentives</p>
                   </div> */}
 
-                  {/* Commission Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    {/* Currency Card */}
+                  {/* Commission Layout - Reorganized */}
+                  <div className="space-y-6">
+                    
+                    {/* 1. Currency - Full Width at Top */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
@@ -4183,169 +4183,178 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       )}
                     </div>
 
-                    {/* Commission Per Call Card */}
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                          <Briefcase className="w-6 h-6 text-white" />
+                    {/* 2. Per Call and Per Transaction - Side by Side */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Commission Per Call Card */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+                        <div className="flex items-center mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                            <Briefcase className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="ml-4">
+                            <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
+                            <p className="text-sm text-gray-500">Base amount per successful call</p>
+                          </div>
                         </div>
-                        <div className="ml-4">
-                          <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
-                          <p className="text-sm text-gray-500">Base amount per successful call</p>
-                  </div>
-                </div>
 
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={option.baseAmount || ""}
-                          onChange={(e) => {
-                            updateCommissionOption(
-                              0,
-                              "baseAmount",
-                              e.target.value
-                            );
-                          }}
-                          placeholder="2500"
-                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
-                        />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
-                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
-                        </span>
-                    </div>
-                    </div>
-
-                    {/* Transaction Commission Card */}
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                          <DollarSign className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="ml-4">
-                          <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
-                          <p className="text-sm text-gray-500">Commission per transaction</p>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={option.baseAmount || ""}
+                            onChange={(e) => {
+                              updateCommissionOption(
+                                0,
+                                "baseAmount",
+                                e.target.value
+                              );
+                            }}
+                            placeholder="0"
+                            className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
+                          />
+                          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
+                            {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                          </span>
                         </div>
                       </div>
-                      
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={option.transactionCommission?.amount || ""}
-                          onChange={(e) => {
-                            updateCommissionOption(
-                              0,
-                              "transactionCommission.amount",
-                              e.target.value
-                            );
-                          }}
-                          placeholder="25.50"
-                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
-                        />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
-                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
-                        </span>
+
+                      {/* Transaction Commission Card */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+                        <div className="flex items-center mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                            <DollarSign className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="ml-4">
+                            <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
+                            <p className="text-sm text-gray-500">Commission per transaction</p>
+                          </div>
+                        </div>
+                        
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={option.transactionCommission?.amount || ""}
+                            onChange={(e) => {
+                              updateCommissionOption(
+                                0,
+                                "transactionCommission.amount",
+                                e.target.value
+                              );
+                            }}
+                            placeholder="0"
+                            className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                          />
+                          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
+                            {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Bonus & Incentives Card */}
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-yellow-100 hover:border-yellow-200 group">
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                          <Award className="w-6 h-6 text-white" />
+                    {/* 3. Bonus and Volume Min - Side by Side */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Bonus & Incentives Card */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-yellow-100 hover:border-yellow-200 group">
+                        <div className="flex items-center mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                            <Award className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="ml-4">
+                            <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
+                            <p className="text-sm text-gray-500">Performance bonus amount</p>
+                          </div>
+                        </div>
+                        
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={
+                              typeof option.bonusAmount === "number"
+                                ? option.bonusAmount
+                                : option.bonusAmount
+                                ? parseFloat(option.bonusAmount)
+                                : ""
+                            }
+                            onChange={(e) =>
+                              updateCommissionOption(
+                                0,
+                                "bonusAmount",
+                                e.target.value
+                              )
+                            }
+                            placeholder="0"
+                            className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
+                          />
+                          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
+                            {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Minimum Volume Card */}
+                      <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-100 hover:border-orange-200 group">
+                        <div className="flex items-center mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                            <Gauge className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="ml-4">
+                            <h3 className="text-lg font-bold text-gray-900">Minimum Volume</h3>
+                            <p className="text-sm text-gray-500">Minimum performance threshold</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={
+                                typeof option.minimumVolume?.amount === "number"
+                                  ? option.minimumVolume.amount
+                                  : parseFloat(option.minimumVolume?.amount) || ""
+                              }
+                              onChange={(e) =>
+                                updateCommissionOption(
+                                  0,
+                                  "minimumVolume.amount",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="0"
+                              className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                            />
+                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-orange-600 text-lg font-bold">
+                              {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                            </span>
+                          </div>
+                          
+                          <select
+                            value={option.minimumVolume?.period || ""}
+                            onChange={(e) =>
+                              updateCommissionOption(
+                                0,
+                                "minimumVolume.period",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                          >
+                            <option value="">Select Period</option>
+                            <option value="Daily">Daily</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="Monthly">Monthly</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                        <div className="ml-4">
-                          <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
-                          <p className="text-sm text-gray-500">Performance bonus amount</p>
-                </div>
-                    </div>
-                      
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={
-                            typeof option.bonusAmount === "number"
-                              ? option.bonusAmount
-                              : option.bonusAmount
-                              ? parseFloat(option.bonusAmount)
-                              : ""
-                          }
-                          onChange={(e) =>
-                            updateCommissionOption(
-                              0,
-                              "bonusAmount",
-                              e.target.value
-                            )
-                          }
-                          placeholder="500"
-                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
-                        />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
-                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
-                        </span>
-                      </div>
-                    </div>
 
-                </div>
-
-                  {/* Volume Requirements Section */}
-                  <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
-                    <div className="flex items-center mb-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
-                        <Gauge className="w-6 h-6 text-white" />
-                    </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
-                        <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={
-                          typeof option.minimumVolume?.amount === "number"
-                            ? option.minimumVolume.amount
-                            : parseFloat(option.minimumVolume?.amount) || ""
-                        }
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            0,
-                            "minimumVolume.amount",
-                            e.target.value
-                          )
-                        }
-                          placeholder="100"
-                          className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                      />
-                    </div>
-                      
-                      <select
-                        value={option.minimumVolume?.period || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            0,
-                            "minimumVolume.period",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                      >
-                        <option value="">Select Period</option>
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                      </select>
-                  </div>
-                </div>
 
                   {/* Additional Details Section */}
                   <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
