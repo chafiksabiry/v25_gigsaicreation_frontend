@@ -412,9 +412,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       type="number"
                     min="1"
                       max="24"
-                    value={data.minimumHours?.daily || ''}
+                    value={data.minimumHours?.daily || 0}
                    onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
-                      placeholder="e.g. 8"
+                      placeholder="0"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                     />
                   </div>
@@ -424,9 +424,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       type="number"
                     min="1"
                       max="168"
-                    value={data.minimumHours?.weekly || ''}
+                    value={data.minimumHours?.weekly || 0}
                   onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
-                      placeholder="e.g. 40"
+                      placeholder="0"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                     />
                   </div>
@@ -436,9 +436,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       type="number"
                     min="1"
                       max="744"
-                    value={data.minimumHours?.monthly || ''}
+                    value={data.minimumHours?.monthly || 0}
                   onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
-                      placeholder="e.g. 160"
+                      placeholder="0"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                   />
                 </div>
@@ -473,8 +473,8 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 {timezones.map((timezone) => (
                   <option key={timezone._id} value={timezone._id}>
                     {timezone.zoneName} - {timezone.countryName} (GMT{timezone.gmtOffset >= 0 ? '+' : ''}{timezone.gmtOffset / 3600})
-                  </option>
-                ))}
+                </option>
+              ))}
             </select>
               {timezonesLoading && (
                 <div className="mt-2 flex items-center justify-center">
