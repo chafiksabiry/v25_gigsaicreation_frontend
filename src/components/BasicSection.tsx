@@ -371,47 +371,62 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         </InfoText>
 
         {/* --- Position Details --- */}
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Briefcase className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Position Details</h3>
-              <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                <Briefcase className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Position Details</h3>
+                <p className="text-blue-100 text-sm">Define the role title and main responsibilities</p>
+              </div>
             </div>
           </div>
-          <div className="space-y-6">
+          
+          <div className="p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
-              <input type="text" value={data.title || ''} onChange={(e) => onChange({ ...data, title: e.target.value })}
-                className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.title ? 'border-red-300' : 'border-gray-300'}`}
-                placeholder="e.g., Senior Customer Service Representative" />
-              {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.join(', ')}</p>}
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Job Title</label>
+              <input 
+                type="text" 
+                value={data.title || ''} 
+                onChange={(e) => onChange({ ...data, title: e.target.value })}
+                className={`w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 rounded-xl text-blue-900 font-medium focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all ${errors.title ? 'border-red-300 focus:ring-red-300' : 'border-blue-200'}`}
+                placeholder="e.g., Senior Customer Service Representative" 
+              />
+              {errors.title && <p className="mt-2 text-sm text-red-600 font-medium">{errors.title.join(', ')}</p>}
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <textarea value={data.description || ''} onChange={(e) => onChange({ ...data, description: e.target.value })} rows={4}
-                className={`mt-1 block w-full rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
-                placeholder="Describe the role, key responsibilities, and what success looks like in this position..." />
-              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.join(', ')}</p>}
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Job Description</label>
+              <textarea 
+                value={data.description || ''} 
+                onChange={(e) => onChange({ ...data, description: e.target.value })} 
+                rows={5}
+                className={`w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 rounded-xl text-blue-900 font-medium focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all resize-none ${errors.description ? 'border-red-300 focus:ring-red-300' : 'border-blue-200'}`}
+                placeholder="Describe the role, key responsibilities, and what success looks like in this position. Be specific about daily tasks, required skills, and performance expectations..."
+              />
+              {errors.description && <p className="mt-2 text-sm text-red-600 font-medium">{errors.description.join(', ')}</p>}
             </div>
           </div>
         </div>
 
         {/* --- Role Category --- */}
-        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Target className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Role Category</h3>
-              <p className="text-sm text-gray-500">Select the primary focus area</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 px-6 py-4">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Role Category</h3>
+                <p className="text-purple-100 text-sm">Select the primary focus area</p>
+              </div>
             </div>
           </div>
           
-          {/* Affichage de la catégorie sélectionnée */}
+          <div className="p-6">
+            {/* Affichage de la catégorie sélectionnée */}
           {data.category && (
             <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
               <div className="flex items-center gap-2">
@@ -765,6 +780,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         </button>
       </div>
     </div>
+  </div>
   );
 };
 

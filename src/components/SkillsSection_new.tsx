@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { InfoText } from './InfoText';
-import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight, Plus } from 'lucide-react';
+import { Languages, BookOpen, Laptop, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 import { 
   getLanguageOptions, 
+  getLanguageNameById,
   loadSoftSkills,
   loadTechnicalSkills,
+  loadProfessionalSkills,
   loadLanguages
 } from '../lib/activitiesIndustries';
 import { fetchProfessionalSkills } from '../lib/api';
@@ -69,7 +71,7 @@ const getHeaderGradient = (bgColor: string) => {
   }
 };
 
-export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSectionProps) {
+export function SkillsSection({ data, onChange, errors, onNext, onPrevious }: SkillsSectionProps) {
   // API data states
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
@@ -78,18 +80,8 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
   const [languagesLoading, setLanguagesLoading] = useState(true);
 
   // States for interactive progress bars (like in Suggestions.tsx)
-  const [hoveredExistingLevel, setHoveredExistingLevel] = useState<{[key: string]: {[index: number]: number | null}}>({
-    professional: {},
-    technical: {},
-    soft: {},
-    languages: {}
-  });
-  const [hoveredLevel, setHoveredLevel] = useState<{[key: string]: number | null}>({
-    languages: null,
-    professional: null,
-    technical: null,
-    soft: null
-  });
+  const [editingSkill, setEditingSkill] = useState<{[key: string]: number | null}>({});
+  const [hoveredLevel, setHoveredLevel] = useState<{[key: string]: number | null}>({});
   const [selectedLevelToAdd, setSelectedLevelToAdd] = useState<{[key: string]: number}>({});
   const [selectedExactPosition, setSelectedExactPosition] = useState<{[key: string]: number}>({});
   const [showAddSkillInterface, setShowAddSkillInterface] = useState<{[key: string]: boolean}>({});
@@ -145,6 +137,15 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
     fetchSkillsAndLanguages();
   }, []);
 
+  // Helper: get ObjectId for a skill name and type (from Suggestions.tsx)
+  function getSkillObjectId(skillName: string, type: string): string | undefined {
+    let arr: any[] = [];
+    if (type === 'soft') arr = softSkills;
+    if (type === 'professional') arr = professionalSkills;
+    if (type === 'technical') arr = technicalSkills;
+    const found = arr.find(s => s.name === skillName);
+    return found?._id;
+  }
 
   const addSkill = (skillType: string, skill: string, level: number = 1, exactPosition?: number) => {
     const newData = { ...safeData };
@@ -202,7 +203,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
             skillData.exactPosition = exactPosition;
           }
           (newData as any)[skillType].push(skillData);
-            } else {
+        } else {
           // Don't add skills that don't exist in the database
           return; // Exit early without adding the skill
         }
@@ -223,7 +224,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
           if (selectedLanguage) {
             newData.languages[index].language = selectedLanguage.value; // Store ID
             newData.languages[index].iso639_1 = selectedLanguage.code; // Update code
-      } else {
+          } else {
             console.warn(`Language with ID "${value}" not found. Skipping update.`);
             return;
           }
@@ -261,7 +262,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
           if (skillObject) {
             (newData as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
             (newData as any)[skillType][index].details = skillObject.description || ''; // Update details field
-    } else {
+          } else {
             // Don't update with skills that don't exist in the database
             return; // Exit early without updating the skill
           }
@@ -305,18 +306,11 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
 
     const getLevelLabel = (level: number, type: string) => {
       if (type === "languages") {
-        const labels = ['Beginner', 'Elementary', 'Intermediate', 'Upper Intermediate', 'Advanced', 'Mastery'];
+        const labels = ['Beginner', 'Elementary', 'Intermediate', 'Upper Intermediate', 'Advanced', 'Proficient'];
         return labels[level] || 'Intermediate';
       } else {
-        // Fix: Use same skill level labels as Suggestions.tsx for consistency
         const labels = ['', 'Basic', 'Novice', 'Intermediate', 'Advanced', 'Expert'];
-        // Ensure we have a valid level (1-5)
-        const validLevel = Math.max(1, Math.min(5, level || 1));
-        // Debug only for actual skill rendering, not hover calculations
-        if (level !== 1) {
-          console.log(`getLevelLabel: level=${level}, validLevel=${validLevel}, label=${labels[validLevel]}`);
-        }
-        return labels[validLevel] || 'Basic';
+        return labels[level] || 'Basic';
       }
     };
 
@@ -358,33 +352,26 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
     const skillOptions = getSkillOptions();
 
     return (
-      <div className="space-y-4">
-        {/* Header with title and + button */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {icon}
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <span className="text-sm text-gray-500">
-              {skillOptions.length} available
-            </span>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className={`bg-gradient-to-r ${getHeaderGradient(skillType === 'languages' ? 'blue' : skillType === 'professional' ? 'purple' : skillType === 'technical' ? 'emerald' : 'orange')} px-6 py-4`}>
+          <div className="flex items-center">
+            <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+              {React.cloneElement(icon as React.ReactElement, { className: "w-6 h-6 text-white" })}
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">{title}</h3>
+              <p className="text-white/80 text-sm">
+                {skillType === 'languages' ? 'Specify required languages and proficiency levels' :
+                 skillType === 'professional' ? 'Add required professional and industry-specific skills' :
+                 skillType === 'technical' ? 'Specify required technical tools and software proficiency' :
+                 'Add interpersonal and communication skills'}
+              </p>
+            </div>
           </div>
-          {!showAddSkillInterface[skillType] && (
-            <button
-              onClick={handleShowAddInterface}
-              className={`w-8 h-8 rounded-full ${
-                skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : 
-                skillType === 'technical' ? 'bg-purple-500 hover:bg-purple-600' : 
-                skillType === 'languages' ? 'bg-blue-500 hover:bg-blue-600' : 
-                'bg-orange-500 hover:bg-orange-600'
-              } text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
-              title={`Add ${skillType === "languages" ? "language" : "skill"}`}
-            >
-              <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            </button>
-          )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {currentItems.map((item: any, index: number) => {
               // Get skill name
               let skillName = '';
@@ -395,22 +382,9 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 const language = languages.find(l => l.value === item.language);
                 skillName = language?.label || 'Unknown Language';
                 const levelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
-                const validLevelIndex = levelIndex >= 0 ? levelIndex : 1; // Default to A2 if not found
-                
-                // Use exact position if available, otherwise calculate from level
-                const exactPosition = item.exactPosition;
-                if (exactPosition !== undefined) {
-                  currentPercentage = exactPosition;
-                } else {
-                  currentPercentage = ((validLevelIndex + 1) / 6) * 100;
-                }
-                
-                levelName = LANGUAGE_LEVELS[validLevelIndex]?.label.split(' - ')[1] || 'Elementary';
-                
-                // Debug: Log actual language data structure
-                console.log(`Language data:`, item);
-                console.log(`Calculated: proficiency=${item.proficiency}, levelIndex=${validLevelIndex}, percentage=${currentPercentage}%, name=${skillName}`);
-                    } else {
+                currentPercentage = item.exactPosition || ((levelIndex + 1) / LANGUAGE_LEVELS.length) * 100;
+                levelName = LANGUAGE_LEVELS[levelIndex]?.label.split(' - ')[1] || 'Elementary';
+              } else {
                 const skillId = typeof item.skill === 'string' ? item.skill : (item.skill?.$oid || '');
                 let skillArray: any[] = [];
                 if (skillType === 'professional') skillArray = professionalSkills;
@@ -419,21 +393,8 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 
                 const skill = skillArray.find(s => s._id === skillId);
                 skillName = skill?.name || 'Unknown Skill';
-                const validLevel = item.level && item.level >= 1 && item.level <= 5 ? item.level : 4; // Default to level 4 (Advanced) for better display
-                
-                // Use exact position if available, otherwise calculate from level
-                const exactPosition = item.exactPosition;
-                if (exactPosition !== undefined) {
-                  currentPercentage = exactPosition;
-                } else {
-                  currentPercentage = (validLevel / 5) * 100;
-                }
-                
-                levelName = getLevelLabel(validLevel, skillType);
-                
-                // Debug: Log actual data structure
-                console.log(`${skillType} skill data:`, item);
-                console.log(`Calculated: level=${validLevel}, percentage=${currentPercentage}%, name=${skillName}`);
+                currentPercentage = item.exactPosition || (item.level / 5) * 100;
+                levelName = getLevelLabel(item.level, skillType);
               }
 
               return (
@@ -447,7 +408,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                     {/* Progress Bar */}
                     <div className="relative">
                       <div 
-                        className="h-2 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
+                        className="h-3 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
                         onClick={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const clickX = e.clientX - rect.left;
@@ -455,26 +416,12 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                           const clampedPercentage = Math.max(0, Math.min(100, percentage));
                           
                           if (skillType === 'languages') {
-                            // Determine level based on zones but keep exact position
-                            let levelIndex = 0; // A1
-                            if (clampedPercentage >= 83.33) levelIndex = 5; // C2
-                            else if (clampedPercentage >= 66.67) levelIndex = 4; // C1
-                            else if (clampedPercentage >= 50) levelIndex = 3; // B2
-                            else if (clampedPercentage >= 33.33) levelIndex = 2; // B1
-                            else if (clampedPercentage >= 16.67) levelIndex = 1; // A2
-                            else levelIndex = 0; // A1
-                            
-                            updateSkill(skillType, index, 'proficiency', LANGUAGE_LEVELS[levelIndex].value, clampedPercentage);
+                            const levelIndex = Math.floor((clampedPercentage / 100) * LANGUAGE_LEVELS.length);
+                            const level = Math.min(levelIndex, LANGUAGE_LEVELS.length - 1);
+                            updateSkill(skillType, index, 'proficiency', LANGUAGE_LEVELS[level].value, clampedPercentage);
                           } else {
-                            // 5 zones: 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                            let level = 1; // Basic
-                            if (clampedPercentage >= 80) level = 5; // Expert
-                            else if (clampedPercentage >= 60) level = 4; // Advanced
-                            else if (clampedPercentage >= 40) level = 3; // Intermediate
-                            else if (clampedPercentage >= 20) level = 2; // Novice
-                            else level = 1; // Basic
-                            
-                            updateSkill(skillType, index, 'level', level, clampedPercentage);
+                            const level = Math.ceil((clampedPercentage / 100) * 5);
+                            updateSkill(skillType, index, 'level', Math.max(1, level), clampedPercentage);
                           }
                         }}
                         onMouseMove={(e) => {
@@ -482,47 +429,21 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                           const hoverX = e.clientX - rect.left;
                           const percentage = (hoverX / rect.width) * 100;
                           const clampedPercentage = Math.max(0, Math.min(100, percentage));
-                          setHoveredExistingLevel(prev => ({ 
-                            ...prev, 
-                            [skillType]: { ...prev[skillType], [index]: clampedPercentage }
-                          }));
+                          setHoveredLevel(prev => ({ ...prev, [skillType + '_' + index]: clampedPercentage }));
                         }}
                         onMouseLeave={() => {
-                          setHoveredExistingLevel(prev => ({ 
-                            ...prev, 
-                            [skillType]: { ...prev[skillType], [index]: null }
-                          }));
+                          setHoveredLevel(prev => ({ ...prev, [skillType + '_' + index]: null }));
                         }}
                       >
                         <div 
-                          className="h-2 rounded-full transition-all duration-300"
+                          className={`h-full transition-all duration-200 ${
+                            skillType === 'languages' ? 'bg-gradient-to-r from-blue-400 to-blue-600' :
+                            skillType === 'professional' ? 'bg-gradient-to-r from-green-400 to-green-600' :
+                            skillType === 'technical' ? 'bg-gradient-to-r from-purple-400 to-purple-600' :
+                            'bg-gradient-to-r from-orange-400 to-orange-600'
+                          }`}
                           style={{ 
-                            width: `${(() => {
-                              const hoveredLevel = hoveredExistingLevel[skillType][index];
-                              if (hoveredLevel !== null && hoveredLevel !== undefined) {
-                                return hoveredLevel;
-                              }
-                              return currentPercentage;
-                            })()}%`,
-                            background: (() => {
-                              const hoveredLevel = hoveredExistingLevel[skillType][index];
-                              const percentage = (hoveredLevel !== null && hoveredLevel !== undefined) ? hoveredLevel : currentPercentage;
-                              
-                              // Use same gradient logic as Suggestions.tsx
-                              if (skillType === 'professional') {
-                                // Green gradient to match green icon
-                                return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${percentage * 0.2}%, #86efac ${percentage * 0.4}%, #22c55e ${percentage * 0.6}%, #16a34a ${percentage * 0.8}%, #15803d ${percentage}%, #14532d 100%)`;
-                              } else if (skillType === 'technical') {
-                                // Purple gradient to match purple icon
-                                return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${percentage * 0.2}%, #a78bfa ${percentage * 0.4}%, #8b5cf6 ${percentage * 0.6}%, #7c3aed ${percentage * 0.8}%, #6d28d9 ${percentage}%, #4c1d95 100%)`;
-                              } else if (skillType === 'languages') {
-                                // Blue gradient to match blue icon
-                                return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${percentage * 0.2}%, #93c5fd ${percentage * 0.4}%, #60a5fa ${percentage * 0.6}%, #3b82f6 ${percentage * 0.8}%, #2563eb ${percentage}%, #1d4ed8 100%)`;
-                              } else {
-                                // Orange gradient for soft skills to match orange icon
-                                return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${percentage * 0.2}%, #fb923c ${percentage * 0.4}%, #f97316 ${percentage * 0.6}%, #ea580c ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
-                              }
-                            })()
+                            width: `${hoveredLevel[skillType + '_' + index] !== null ? hoveredLevel[skillType + '_' + index] : currentPercentage}%` 
                           }}
                         />
                       </div>
@@ -530,39 +451,36 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
 
                     {/* Level Name */}
                     <div className="text-xs font-medium text-gray-600 text-right">
-                      {hoveredExistingLevel[skillType][index] !== null && hoveredExistingLevel[skillType][index] !== undefined ? (
+                      {hoveredLevel[skillType + '_' + index] !== null ? (
                         skillType === 'languages' ? (
                           (() => {
-                            const hoverPercentage = hoveredExistingLevel[skillType][index] || 0;
+                            const hoverPercentage = hoveredLevel[skillType + '_' + index] || 0;
                             const levelIndex = Math.floor((hoverPercentage / 100) * LANGUAGE_LEVELS.length);
                             const level = Math.min(levelIndex, LANGUAGE_LEVELS.length - 1);
                             return LANGUAGE_LEVELS[level]?.label.split(' - ')[1] || 'Elementary';
                           })()
                         ) : (
                           (() => {
-                            const hoverPercentage = hoveredExistingLevel[skillType][index];
-                            if (hoverPercentage !== null && hoverPercentage !== undefined) {
-                              const level = Math.max(1, Math.ceil((hoverPercentage / 100) * 5));
-                              return getLevelLabel(level, skillType);
-                            }
-                            return levelName; // Use the already calculated levelName instead of calling getLevelLabel again
+                            const hoverPercentage = hoveredLevel[skillType + '_' + index] || 0;
+                            const level = Math.ceil((hoverPercentage / 100) * 5);
+                            return getLevelLabel(Math.max(1, level), skillType);
                           })()
                         )
                       ) : (
                         <span className="flex items-center gap-1">
                           {levelName}
-                        <button
+                          <button
                             onClick={() => deleteSkill(skillType, index)}
                             className="ml-1 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Remove skill"
-                        >
-                          ×
-                        </button>
+                          >
+                            ×
+                          </button>
                         </span>
-                  )}
+                      )}
+                    </div>
+                  </div>
                 </div>
-        </div>
-          </div>
               );
             })}
 
@@ -572,24 +490,20 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 <div className="grid grid-cols-3 gap-4 items-center">
                   {/* Skill Selection */}
                   <div>
-            <select
+                    <select
                       value={selectedSkillToAdd[skillType] || ''}
                       onChange={(e) => {
                         setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: e.target.value }));
                         if (e.target.value) {
                           // Auto-add skill immediately after selection
-                          const exactPos = selectedExactPosition[skillType] || (skillType === 'languages' ? 83 : 80); // 83% = C1 level for languages, 80% = level 4 for skills
-                          addSkill(skillType, e.target.value, selectedLevelToAdd[skillType] || (skillType === 'languages' ? 4 : 4), exactPos);
+                          const exactPos = selectedExactPosition[skillType] || (skillType === 'languages' ? 50 : 60);
+                          addSkill(skillType, e.target.value, selectedLevelToAdd[skillType] || (skillType === 'languages' ? 2 : 3), exactPos);
                           
                           // Reset states
                           setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
                           setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
                           setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-                          setSelectedExactPosition(prev => {
-                            const newState = { ...prev };
-                            delete newState[skillType];
-                            return newState;
-                          });
+                          setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
                         }
                       }}
                       className="w-full px-2 py-1 text-xs border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -598,46 +512,30 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                       {skillOptions.map(option => (
                         <option key={option.id} value={option.id}>
                           {option.name}
-                  </option>
-                ))}
-              </select>
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* Progress Bar for Level Selection */}
                   <div className="relative">
                     <div 
-                      className="h-2 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
+                      className="h-3 bg-gray-200 rounded-full overflow-hidden cursor-pointer"
                       onClick={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         const clickX = e.clientX - rect.left;
                         const percentage = (clickX / rect.width) * 100;
                         const clampedPercentage = Math.max(0, Math.min(100, percentage));
                         
-                        // Store exact position
-                        setSelectedExactPosition(prev => ({ ...prev, [skillType]: clampedPercentage }));
-                        
                         if (skillType === 'languages') {
-                          // 6 zones: 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                          let levelIndex = 0; // A1
-                          if (clampedPercentage >= 83.33) levelIndex = 5; // C2
-                          else if (clampedPercentage >= 66.67) levelIndex = 4; // C1
-                          else if (clampedPercentage >= 50) levelIndex = 3; // B2
-                          else if (clampedPercentage >= 33.33) levelIndex = 2; // B1
-                          else if (clampedPercentage >= 16.67) levelIndex = 1; // A2
-                          else levelIndex = 0; // A1
-                          
-                          setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: levelIndex }));
-                        } else {
-                          // 5 zones: 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                          let level = 1; // Basic
-                          if (clampedPercentage >= 80) level = 5; // Expert
-                          else if (clampedPercentage >= 60) level = 4; // Advanced
-                          else if (clampedPercentage >= 40) level = 3; // Intermediate
-                          else if (clampedPercentage >= 20) level = 2; // Novice
-                          else level = 1; // Basic
-                          
+                          const levelIndex = Math.floor((clampedPercentage / 100) * LANGUAGE_LEVELS.length);
+                          const level = Math.min(levelIndex, LANGUAGE_LEVELS.length - 1);
                           setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: level }));
+                        } else {
+                          const level = Math.ceil((clampedPercentage / 100) * 5);
+                          setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: Math.max(1, level) }));
                         }
+                        setSelectedExactPosition(prev => ({ ...prev, [skillType]: clampedPercentage }));
                       }}
                       onMouseMove={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
@@ -651,32 +549,18 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                       }}
                     >
                       <div 
-                        className="h-2 rounded-full transition-all duration-300"
+                        className={`h-full transition-all duration-200 ${
+                          skillType === 'languages' ? 'bg-gradient-to-r from-blue-400 to-blue-600' :
+                          skillType === 'professional' ? 'bg-gradient-to-r from-green-400 to-green-600' :
+                          skillType === 'technical' ? 'bg-gradient-to-r from-purple-400 to-purple-600' :
+                          'bg-gradient-to-r from-orange-400 to-orange-600'
+                        }`}
                         style={{ 
                           width: `${hoveredLevel[skillType + '_add'] !== null ? hoveredLevel[skillType + '_add'] : 
-                            selectedExactPosition[skillType] || (skillType === 'languages' ? 83 : 80)}%`,
-                          background: (() => {
-                            const percentage = hoveredLevel[skillType + '_add'] !== null ? hoveredLevel[skillType + '_add'] : 
-                              selectedExactPosition[skillType] || (skillType === 'languages' ? 83 : 80);
-                            
-                            // Use same gradient logic as Suggestions.tsx
-                            if (skillType === 'professional') {
-                              // Green gradient to match green icon
-                              return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${percentage * 0.2}%, #86efac ${percentage * 0.4}%, #22c55e ${percentage * 0.6}%, #16a34a ${percentage * 0.8}%, #15803d ${percentage}%, #14532d 100%)`;
-                            } else if (skillType === 'technical') {
-                              // Purple gradient to match purple icon
-                              return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${percentage * 0.2}%, #a78bfa ${percentage * 0.4}%, #8b5cf6 ${percentage * 0.6}%, #7c3aed ${percentage * 0.8}%, #6d28d9 ${percentage}%, #4c1d95 100%)`;
-                            } else if (skillType === 'languages') {
-                              // Blue gradient to match blue icon
-                              return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${percentage * 0.2}%, #93c5fd ${percentage * 0.4}%, #60a5fa ${percentage * 0.6}%, #3b82f6 ${percentage * 0.8}%, #2563eb ${percentage}%, #1d4ed8 100%)`;
-                            } else {
-                              // Orange gradient for soft skills to match orange icon
-                              return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${percentage * 0.2}%, #fb923c ${percentage * 0.4}%, #f97316 ${percentage * 0.6}%, #ea580c ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
-                            }
-                          })()
+                            selectedExactPosition[skillType] || (skillType === 'languages' ? 50 : 60)}%` 
                         }}
                       />
-          </div>
+                    </div>
                   </div>
 
                   {/* Level Display */}
@@ -692,8 +576,8 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                       ) : (
                         (() => {
                           const hoverPercentage = hoveredLevel[skillType + '_add'] || 0;
-                          const level = Math.max(1, Math.ceil((hoverPercentage / 100) * 5));
-                          return getLevelLabel(level, skillType);
+                          const level = Math.ceil((hoverPercentage / 100) * 5);
+                          return getLevelLabel(Math.max(1, level), skillType);
                         })()
                       )
                     ) : (
@@ -703,11 +587,22 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Add Button */}
+          {!showAddSkillInterface[skillType] && (
+            <button
+              onClick={handleShowAddInterface}
+              className="mt-4 w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-medium"
+            >
+              + Add {title.slice(0, -1)}
+            </button>
+          )}
         </div>
       </div>
     );
   };
-  
+
   return (
     <div className="w-full bg-white p-0">
       <div className="space-y-8">
@@ -723,7 +618,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               'languages',
               safeData.languages,
               'Languages',
-              <Languages className="w-5 h-5 text-blue-500" />
+              <Languages className="w-5 h-5 text-blue-600" />
             )}
 
             {/* Professional Skills */}
@@ -731,7 +626,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               'professional',
               safeData.professional,
               'Professional Skills',
-              <BookOpen className="w-5 h-5 text-green-500" />
+              <BookOpen className="w-5 h-5 text-purple-600" />
             )}
 
             {/* Technical Skills */}
@@ -739,7 +634,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               'technical',
               safeData.technical,
               'Technical Skills',
-              <Laptop className="w-5 h-5 text-purple-500" />
+              <Laptop className="w-5 h-5 text-emerald-600" />
             )}
 
             {/* Soft Skills */}
@@ -747,7 +642,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               'soft',
               safeData.soft,
               'Soft Skills',
-              <Users className="w-5 h-5 text-orange-500" />
+              <Users className="w-5 h-5 text-orange-600" />
             )}
           </div>
 

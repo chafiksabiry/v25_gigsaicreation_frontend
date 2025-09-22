@@ -194,26 +194,21 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           and performance bonus. All components will be displayed together.
         </InfoText>
 
-        {/* Currency Selection */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 shadow-sm border border-green-100">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="w-5 h-5 text-green-600" />
+        {/* Commission Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Currency Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Currency</h3>
-              <p className="text-sm text-gray-600">Select the payment currency</p>
+              <div className="ml-4">
+                <h3 className="text-lg font-bold text-gray-900">Currency</h3>
+                <p className="text-sm text-gray-500">Base currency for payments</p>
             </div>
           </div>
 
-          {/* Currency Selection */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Currency Selection
-              {currenciesLoading && (
-                <Loader2 className="inline w-4 h-4 ml-2 animate-spin text-gray-400" />
-              )}
-            </label>
             <select
               value={data?.commission?.currency || ''}
               onChange={(e) => onChange({ 
@@ -224,214 +219,163 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 } 
               })}
               disabled={currenciesLoading}
-              className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Select a currency</option>
+              <option value="">Select currency...</option>
               {currencies.map((currency) => (
                 <option key={currency._id} value={currency._id}>
                   {currency.symbol} {currency.name} ({currency.code})
                 </option>
               ))}
             </select>
-            {selectedCurrency && (
-              <p className="text-xs text-gray-500 mt-2">
-                Selected: <span className="font-semibold">{selectedCurrency.symbol} {selectedCurrency.name} ({selectedCurrency.code})</span>
-              </p>
+            {currenciesLoading && (
+              <div className="mt-2 flex items-center justify-center">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                <span className="ml-2 text-sm text-blue-600">Loading...</span>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Base Commission */}
-        <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 shadow-lg border border-blue-100">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Coins className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-blue-900">Base Commission</h3>
-              <p className="text-base text-blue-700">Set the fixed base rate and requirements</p>
+          {/* Commission Per Call Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+        </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
+                <p className="text-sm text-gray-500">Base amount per successful call</p>
             </div>
           </div>
           
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Base Amount</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 font-bold text-lg">
                     {getCurrencySymbol()}
                   </span>
                   <input
                     type="number"
-                    className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    placeholder="0.00"
+                step="0.01"
+                min="0"
                     value={data?.commission?.baseAmount || ''}
                     onChange={e => handleBaseChange('baseAmount', e.target.value)}
+                placeholder="100"
+                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
                   />
                 </div>
               </div>
               
-              <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Base Type</label>
-                <select
-                  className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  value={data?.commission?.base || ''}
-                  onChange={e => handleBaseChange('base', e.target.value)}
-                >
-                  <option value="">Select type</option>
-                  {predefinedOptions.commission.baseTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+          {/* Transaction Commission Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
+                <p className="text-sm text-gray-500">Commission per transaction</p>
               </div>
             </div>
 
-            {/* Minimum Volume Requirements */}
-            <div className="bg-white rounded-xl p-6 border border-blue-200 shadow-sm">
-              <div className="flex items-center gap-2 mb-6">
-                <Target className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold text-gray-900 text-lg">Minimum Requirements</h4>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Target Amount</label>
+            <div className="relative">
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-600 font-bold text-lg">
+                {getCurrencySymbol()}
+              </span>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    placeholder="0.00"
-                    value={data?.commission?.minimumVolume?.amount || ''}
-                    onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Unit</label>
-                  <select
-                    className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    value={data?.commission?.minimumVolume?.unit || ''}
-                    onChange={e => handleMinimumVolumeChange('unit', e.target.value)}
-                  >
-                    <option value="">Select unit</option>
-                    {predefinedOptions.commission.minimumVolumeUnits.map((unit) => (
-                      <option key={unit} value={unit}>{unit}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Period</label>
-                  <select
-                    className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                    value={data?.commission?.minimumVolume?.period || ''}
-                    onChange={e => handleMinimumVolumeChange('period', e.target.value)}
-                  >
-                    <option value="">Select period</option>
-                    {predefinedOptions.commission.minimumVolumePeriods?.map((period) => (
-                      <option key={period} value={period}>{period}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Transaction Commission */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8 shadow-lg border border-purple-100">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <Calculator className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-purple-900">Transaction Commission</h3>
-              <p className="text-base text-purple-700">Define per-transaction rewards</p>
+                step="0.01"
+                min="0"
+                value={data?.commission?.transactionCommission?.amount || ''}
+                onChange={e => handleTransactionChange('amount', e.target.value)}
+                placeholder="50"
+                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+              />
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl p-6 border border-purple-200 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Commission Type</label>
-              <select
-                className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                value={data?.commission?.transactionCommission?.type || ''}
-                onChange={e => handleTransactionChange('type', e.target.value)}
-              >
-                <option value="">Select type</option>
-                {predefinedOptions.commission.transactionCommissionTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+          {/* Bonus & Incentives Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <Star className="w-6 h-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
+                <p className="text-sm text-gray-500">Performance bonus amount</p>
+              </div>
             </div>
             
-            <div className="bg-white rounded-xl p-6 border border-purple-200 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Amount/Percentage</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                  {data?.commission?.transactionCommission?.type === 'Percentage' ? '%' : getCurrencySymbol()}
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-600 font-bold text-lg">
+                {getCurrencySymbol()}
                 </span>
                 <input
                   type="number"
-                  className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
-                  placeholder="0.00"
-                  value={data?.commission?.transactionCommission?.amount || ''}
-                  onChange={e => handleTransactionChange('amount', e.target.value)}
-                />
-              </div>
+                step="0.01"
+                min="0"
+                value={data?.commission?.bonusAmount || ''}
+                onChange={e => handleBonusChange('bonusAmount', e.target.value)}
+                placeholder="150"
+                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-amber-400 transition-all"
+              />
             </div>
           </div>
         </div>
 
-        {/* Performance Bonus */}
-        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-8 shadow-lg border border-amber-100">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 bg-amber-100 rounded-xl">
-              <Star className="w-6 h-6 text-amber-600" />
+        {/* Minimum Volume Requirements Section */}
+        <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <div className="flex items-center mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+              <Target className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-amber-900">Performance Bonus</h3>
-              <p className="text-base text-amber-700">Set additional performance-based rewards</p>
+            <div className="ml-4">
+              <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
+              <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl p-6 border border-amber-200 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Bonus Type</label>
-              <select
-                className="w-full py-3 px-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                value={data?.commission?.bonus || ''}
-                onChange={e => handleBonusChange('bonus', e.target.value)}
-              >
-                <option value="">Select bonus type</option>
-                {predefinedOptions.commission.bonusTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="bg-white rounded-xl p-6 border border-amber-200 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Bonus Amount</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
-                  {getCurrencySymbol()}
-                </span>
                 <input
                   type="number"
-                  className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-                  placeholder="0.00"
-                  value={data?.commission?.bonusAmount || ''}
-                  onChange={e => handleBonusChange('bonusAmount', e.target.value)}
-                />
-              </div>
+                step="0.01"
+                min="0"
+                value={data?.commission?.minimumVolume?.amount || ''}
+                onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
+                placeholder="100"
+                className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+              />
             </div>
+            
+            <select
+              value={data?.commission?.minimumVolume?.period || ''}
+              onChange={e => handleMinimumVolumeChange('period', e.target.value)}
+              className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+            >
+              <option value="">Select Period</option>
+              <option value="Daily">Daily</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Monthly">Monthly</option>
+            </select>
           </div>
         </div>
 
-        {/* Additional Details */}
-        <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-200">
-          <label className="block text-lg font-semibold text-gray-800 mb-4">Additional Details</label>
+        {/* Additional Details Section */}
+        <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <div className="flex items-center mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
+              <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
+            </div>
+          </div>
+
           <textarea
-            className="w-full min-h-[120px] rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-4 text-gray-700 transition-all resize-none"
-            placeholder="Add any additional details about the commission structure..."
             value={data?.commission?.additionalDetails || ''}
             onChange={e => onChange({
               ...data,
@@ -440,6 +384,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 additionalDetails: e.target.value
               }
             })}
+            placeholder="Commission details, payment terms, conditions, or special notes..."
+            rows={4}
+            className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-3 focus:ring-gray-300 focus:border-gray-400 transition-all resize-none"
           />
         </div>
 

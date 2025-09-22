@@ -220,6 +220,7 @@ export interface GigSuggestion {
   highlights: string[];
   jobTitles: string[];
   deliverables: string[];
+  selectedJobTitle?: string;
   sectors: string[];
   industries: string[];
   activities: string[];

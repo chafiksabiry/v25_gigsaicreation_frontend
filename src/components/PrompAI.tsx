@@ -131,7 +131,8 @@ const PrompAI: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      setShowAIDialog(true);
+      // Modal disabled - directly proceed to suggestions generation
+      handleGenerateSuggestions();
     }
   };
 
@@ -154,11 +155,14 @@ const PrompAI: React.FC = () => {
     const mappedData = mapGeneratedDataToGigData(suggestions);
     console.log('🔄 PROMP AI - suggestions.destination_zone:', suggestions.destination_zone);
     console.log('🔄 PROMP AI - mappedData.destination_zone:', mappedData.destination_zone);
+    console.log('🔄 PROMP AI - selectedJobTitle:', suggestions.selectedJobTitle);
     
     // Update the gig data with the mapped suggestions
     setGigData((prevData: GigData) => ({
       ...prevData,
       ...mappedData,
+      // Use selected job title as the main title
+      title: suggestions.selectedJobTitle || mappedData.title || prevData.title,
       // Preserve any existing data that wasn't in the suggestions
       userId: prevData.userId,
       companyId: prevData.companyId,
@@ -405,12 +409,7 @@ const PrompAI: React.FC = () => {
         </div>
       </div>
 
-      <AIDialog
-        isOpen={showAIDialog}
-        onClose={() => setShowAIDialog(false)}
-        onProceed={handleGenerateSuggestions}
-        analyzing={isAnalyzing}
-      />
+{/* AIDialog disabled - modal removed */}
     </div>
   );
 };
