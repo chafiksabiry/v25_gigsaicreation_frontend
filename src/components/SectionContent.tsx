@@ -6,7 +6,7 @@ import { ScheduleSection } from "./ScheduleSection";
 import { CommissionSection } from "./CommissionSection";
 import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
-import { GigReview } from "./GigReview";
+import { ReviewPage } from "../pages/ReviewPage";
 import { DaySchedule } from "../lib/scheduleUtils";
 import { saveGigData } from '../lib/api';
 
@@ -332,7 +332,7 @@ export function SectionContent({
 
       case "review":
         return (
-          <GigReview
+          <ReviewPage
             data={{
               ...initializedData,
               seniority: {

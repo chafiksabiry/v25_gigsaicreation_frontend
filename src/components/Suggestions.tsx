@@ -2799,9 +2799,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   type="number"
                   min="0"
                   max="24"
-                  value={suggestions.schedule.minimumHours?.daily || ''}
+                  value={suggestions.schedule.minimumHours?.daily || 0}
                   onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
-                  placeholder="e.g. 8"
+                  placeholder="0"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                 />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
@@ -2818,9 +2818,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   type="number"
                   min="0"
                   max="168"
-                  value={suggestions.schedule.minimumHours?.weekly || ''}
+                  value={suggestions.schedule.minimumHours?.weekly || 0}
                   onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
-                  placeholder="e.g. 40"
+                  placeholder="0"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                 />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
@@ -2837,9 +2837,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   type="number"
                   min="0"
                   max="744"
-                  value={suggestions.schedule.minimumHours?.monthly || ''}
+                  value={suggestions.schedule.minimumHours?.monthly || 0}
                   onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
-                  placeholder="e.g. 160"
+                  placeholder="0"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                 />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
@@ -4029,9 +4029,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </label>
             <input
               type="number"
-              value={suggestions.seniority?.yearsExperience || ""}
+              value={suggestions.seniority?.yearsExperience || 0}
               onChange={(e) => handleYearsExperienceChange(e.target.value)}
-              placeholder="e.g. 5"
+              placeholder="0"
               className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
@@ -4148,7 +4148,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <DollarSign className="w-6 h-6 text-white" />
-                        </div>
+                    </div>
                         <div className="ml-4">
                           <h3 className="text-lg font-bold text-gray-900">Currency</h3>
                           <p className="text-sm text-gray-500">Base currency for payments</p>
@@ -4194,15 +4194,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <div className="ml-4">
                             <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
                             <p className="text-sm text-gray-500">Base amount per successful call</p>
-                          </div>
-                        </div>
+                  </div>
+                </div>
 
                         <div className="relative">
                           <input
                             type="number"
                             step="0.01"
                             min="0"
-                            value={option.baseAmount || ""}
+                            value={option.baseAmount || 0}
                             onChange={(e) => {
                               updateCommissionOption(
                                 0,
@@ -4216,7 +4216,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
                             {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                           </span>
-                        </div>
+                    </div>
                       </div>
 
                       {/* Transaction Commission Card */}
@@ -4231,28 +4231,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           </div>
                         </div>
                         
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={option.transactionCommission?.amount || ""}
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                            value={option.transactionCommission?.amount || 0}
                             onChange={(e) => {
-                              updateCommissionOption(
-                                0,
-                                "transactionCommission.amount",
-                                e.target.value
+                            updateCommissionOption(
+                              0,
+                              "transactionCommission.amount",
+                              e.target.value
                               );
                             }}
                             placeholder="0"
                             className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                           />
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
-                            {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
-                          </span>
-                        </div>
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                        </span>
                       </div>
                     </div>
+                  </div>
 
                     {/* 3. Bonus and Volume Min - Side by Side */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -4261,99 +4261,93 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <div className="flex items-center mb-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                             <Award className="w-6 h-6 text-white" />
-                          </div>
+                </div>
                           <div className="ml-4">
                             <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
                             <p className="text-sm text-gray-500">Performance bonus amount</p>
-                          </div>
+                    </div>
                         </div>
                         
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={
-                              typeof option.bonusAmount === "number"
-                                ? option.bonusAmount
-                                : option.bonusAmount
-                                ? parseFloat(option.bonusAmount)
-                                : ""
-                            }
-                            onChange={(e) =>
-                              updateCommissionOption(
-                                0,
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={option.bonusAmount || 0}
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              0,
                                 "bonusAmount",
-                                e.target.value
-                              )
-                            }
+                              e.target.value
+                            )
+                          }
                             placeholder="0"
                             className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
-                          />
+                        />
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
-                            {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
-                          </span>
-                        </div>
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                        </span>
                       </div>
+                    </div>
 
                       {/* Minimum Volume Card */}
                       <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-100 hover:border-orange-200 group">
                         <div className="flex items-center mb-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                             <Gauge className="w-6 h-6 text-white" />
-                          </div>
+                  </div>
                           <div className="ml-4">
                             <h3 className="text-lg font-bold text-gray-900">Minimum Volume</h3>
                             <p className="text-sm text-gray-500">Minimum performance threshold</p>
-                          </div>
-                        </div>
+                </div>
+                    </div>
                         
-                        <div className="space-y-3">
+                    <div className="space-y-3">
                           <div className="relative">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={
-                                typeof option.minimumVolume?.amount === "number"
-                                  ? option.minimumVolume.amount
-                                  : parseFloat(option.minimumVolume?.amount) || ""
-                              }
-                              onChange={(e) =>
-                                updateCommissionOption(
-                                  0,
-                                  "minimumVolume.amount",
-                                  e.target.value
-                                )
-                              }
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={
+                          typeof option.minimumVolume?.amount === "number"
+                            ? option.minimumVolume.amount
+                            : parseFloat(option.minimumVolume?.amount) || 0
+                        }
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "minimumVolume.amount",
+                            e.target.value
+                          )
+                        }
                               placeholder="0"
                               className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                            />
+                      />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-orange-600 text-lg font-bold">
                               {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                             </span>
-                          </div>
+                    </div>
                           
-                          <select
-                            value={option.minimumVolume?.period || ""}
-                            onChange={(e) =>
-                              updateCommissionOption(
-                                0,
-                                "minimumVolume.period",
-                                e.target.value
-                              )
-                            }
+                      <select
+                        value={option.minimumVolume?.period || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "minimumVolume.period",
+                            e.target.value
+                          )
+                        }
                             className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                          >
+                      >
                             <option value="">Select Period</option>
-                            <option value="Daily">Daily</option>
-                            <option value="Weekly">Weekly</option>
-                            <option value="Monthly">Monthly</option>
-                          </select>
-                        </div>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
                       </div>
                     </div>
                   </div>
+                </div>
 
 
                   {/* Additional Details Section */}
@@ -4361,8 +4355,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     <div className="flex items-center mb-6">
                       <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
                     </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>

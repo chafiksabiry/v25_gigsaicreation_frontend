@@ -327,20 +327,45 @@ export function GigReview({
   //   </div>
   // );
 
+  // Function to get header gradient based on section type
+  const getHeaderGradient = (section: string) => {
+    switch (section) {
+      case 'basic':
+        return 'from-blue-500 via-indigo-500 to-violet-500';
+      case 'commission':
+        return 'from-emerald-500 via-green-500 to-teal-500';
+      case 'schedule':
+        return 'from-purple-500 via-violet-500 to-indigo-500';
+      case 'skills':
+        return 'from-orange-500 via-amber-500 to-yellow-500';
+      case 'team':
+        return 'from-blue-500 via-indigo-500 to-violet-500';
+      default:
+        return 'from-blue-500 via-indigo-500 to-violet-500';
+    }
+  };
+
   const renderEditableSection = (title: string, section: string, icon: React.ReactNode, children: React.ReactNode) => (
-    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300">
-      <div className="border-b border-white/20 px-6 py-5 flex items-center justify-between bg-gradient-to-r from-[#667eea]/5 to-[#764ba2]/5">
-        <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] flex items-center gap-3">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200">
+      <div className={`bg-gradient-to-r ${getHeaderGradient(section)} px-6 py-4`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
           {icon}
-          {title}
-        </h2>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">{title}</h3>
+              <p className="text-white/80 text-sm">Review and edit section details</p>
+            </div>
+          </div>
         <button
           onClick={() => onEdit(section)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#5a6fd8] hover:to-[#6a4190] text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-all duration-200 backdrop-blur-sm border border-white/20"
         >
           <Edit3 className="w-4 h-4" />
           Edit
         </button>
+        </div>
       </div>
       <div className="p-6">
         {children}
@@ -354,26 +379,33 @@ export function GigReview({
   const destinationZoneName = countryName || getTimeZoneName(data.destination_zone);
 
   return (
-    <div className="min-h-screen w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-      <div className="w-full h-full px-8 py-6 max-w-7xl mx-auto">
-  
-        {/* Page Header with Title and Description */}
-        <div className="mb-8">
-          
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex gap-3">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="w-full px-6 py-8 max-w-7xl mx-auto">
+        
+        {/* Modern Header */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-violet-500 rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Review & Publish</h1>
+                <p className="text-gray-600">Review all details before publishing your gig</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
               <button
                 onClick={onBack}
-                className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
               >
                 ← Previous
               </button>
-
-            </div>
             <button
               onClick={handlePublish}
               disabled={isSubmitting}
-              className="px-8 py-3 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#5a6fd8] hover:to-[#6a4190] disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -387,6 +419,7 @@ export function GigReview({
                 </>
               )}
             </button>
+            </div>
           </div>
         </div>
 
@@ -399,7 +432,7 @@ export function GigReview({
             {renderEditableSection(
               "Basic Information",
               "basic",
-              <Briefcase className="w-6 h-6 text-gray-600" />,
+              <Briefcase className="w-6 h-6 text-white" />,
               <div className="space-y-6">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
@@ -409,41 +442,40 @@ export function GigReview({
                   
                   <div className="flex flex-wrap gap-3 mb-6">
                     {data?.category && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
+                      <span className="px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-200">
                         {data.category}
                       </span>
                     )}
                     {data?.seniority?.level && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-[#764ba2]/20 to-[#764ba2]/30 text-[#764ba2] rounded-full text-sm font-semibold border border-[#764ba2]/30">
+                      <span className="px-4 py-2 bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 rounded-full text-sm font-semibold border border-violet-200">
                         {data.seniority.level}
                       </span>
                     )}
                     {data?.seniority?.yearsExperience && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-[#f093fb]/20 to-[#f093fb]/30 text-[#f093fb] rounded-full text-sm font-semibold border border-[#f093fb]/30">
+                      <span className="px-4 py-2 bg-gradient-to-r from-indigo-100 to-blue-100 text-indigo-700 rounded-full text-sm font-semibold border border-indigo-200">
                         {data.seniority.yearsExperience} Years Experience
                       </span>
                     )}
-                    {/* Gig Status display removed */}
                   </div>
 
                   {/* Industries Section */}
                   {data?.industries && data.industries.length > 0 && (
                     <div className="mb-6">
-                      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="p-2 bg-indigo-100 rounded-lg">
-                            <Target className="w-5 h-5 text-indigo-600" />
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Target className="w-5 h-5 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-medium text-indigo-900">Industries</h3>
-                            <p className="text-sm text-indigo-700">Relevant industries for this position</p>
+                            <h3 className="text-lg font-semibold text-blue-900">Industries</h3>
+                            <p className="text-sm text-blue-700">Relevant industries for this position</p>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {data.industries.map((industry, index) => {
                             const industryName = getIndustryNameById(industry);
                             return industryName ? (
-                              <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
+                              <span key={index} className="inline-flex items-center gap-1 px-3 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded-lg border border-blue-200">
                                 {industryName}
                               </span>
                             ) : null;
@@ -457,31 +489,22 @@ export function GigReview({
                 {/* Additional Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {data?.destination_zone && (
-                    <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                       <div className="flex items-center gap-3 mb-2">
-                        <MapPin className="w-5 h-5 text-[#667eea]" />
-                        <h3 className="font-semibold text-[#667eea]">Destination Zone</h3>
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-semibold text-blue-900">Destination Zone</h3>
                       </div>
-                      <p className="text-gray-700">{destinationZoneName}</p>
-                      {/* Show selected schedule time zones if available */}
-                      {/* {scheduleTimeZoneNames.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <span className="text-xs text-gray-500">Schedule Time Zones:</span>
-                          {scheduleTimeZoneNames.map((name, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-gradient-to-r from-[#764ba2]/20 to-[#764ba2]/30 text-[#764ba2] rounded text-xs font-medium border border-[#764ba2]/30">{name}</span>
-                          ))}
-                        </div>
-                      )} */}
+                      <p className="text-gray-700 font-medium">{destinationZoneName}</p>
                     </div>
                   )}
                   
                   {data?.companyId && (
-                    <div className="bg-gradient-to-br from-[#764ba2]/5 to-[#f093fb]/5 rounded-lg p-4 border border-[#764ba2]/20">
+                    <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-4 border border-violet-200">
                       <div className="flex items-center gap-3 mb-2">
-                        <Building className="w-5 h-5 text-[#764ba2]" />
-                        <h3 className="font-semibold text-[#764ba2]">Company</h3>
+                        <Building className="w-5 h-5 text-violet-600" />
+                        <h3 className="font-semibold text-violet-900">Company</h3>
                       </div>
-                      <p className="text-gray-700">{getCompanyName(data.companyId)}</p>
+                      <p className="text-gray-700 font-medium">{getCompanyName(data.companyId)}</p>
                     </div>
                   )}
                 </div>
@@ -492,91 +515,126 @@ export function GigReview({
             {data?.commission && renderEditableSection(
               "Commission Structure",
               "commission",
-              <DollarSign className="w-6 h-6 text-gray-600" />,
+              <DollarSign className="w-6 h-6 text-white" />,
               <div className="space-y-6">
-                {/* Base Commission */}
-                {data.commission.base && (
-                  <div className="bg-gradient-to-r from-[#667eea]/10 to-[#667eea]/20 rounded-xl p-6 border border-[#667eea]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-3">
-                      <CheckCircle className="w-6 h-6 text-[#667eea]" />
-                      Base Commission
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {getCurrencySymbol()}
-                        {data.commission.baseAmount || '0'}
+                
+                {/* 1. Currency - Full Width at Top */}
+                {data.commission.currency && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
+                        <DollarSign className="w-6 h-6 text-blue-600" />
                       </div>
-                      <div className="text-gray-700 text-lg mb-4">
-                        {data.commission.base}
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-900">Currency</h3>
+                        <p className="text-blue-700 text-sm">Commission payment currency</p>
                       </div>
-                      {data.commission.minimumVolume && (
-                        <div className="pt-4 border-t border-[#667eea]/20">
-                          <div className="text-base font-semibold text-gray-700 mb-3">
-                            Minimum Requirements:
                           </div>
-                          <div className="flex items-center gap-4">
-                            <span className="px-4 py-2 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
-                              {data.commission.minimumVolume.amount}{" "}
-                              {data.commission.minimumVolume.unit}
-                            </span>
-                            <span className="text-gray-600 text-sm">
-                              per {data.commission.minimumVolume.period}
-                            </span>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {getCurrencySymbol()} - {data.commission.currency}
                           </div>
                         </div>
                       )}
+
+                {/* 2. Per Call & Transaction Commission - Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Per Call Commission */}
+                  {data.commission.base && data.commission.baseAmount && (
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl p-6 border border-emerald-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-emerald-100 rounded-lg">
+                          <CheckCircle className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-emerald-900">Commission Per Call</h3>
+                          <p className="text-emerald-700 text-sm">Base commission amount</p>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-emerald-900 mb-2">
+                          {getCurrencySymbol()}{data.commission.baseAmount}
+                        </div>
+                        <p className="text-emerald-700 text-sm">{data.commission.base}</p>
                     </div>
                   </div>
                 )}
 
                 {/* Transaction Commission */}
-                {data.commission.transactionCommission?.type && (
-                  <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f093fb] to-[#667eea] mb-4 flex items-center gap-3">
-                      <Coins className="w-6 h-6 text-[#f093fb]" />
-                      Transaction Commission
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {data.commission.transactionCommission.type === "percentage"
-                          ? `${data.commission.transactionCommission.amount}%`
-                          : `${getCurrencySymbol()}${
-                              data.commission.transactionCommission.amount
-                            }`}
+                  {data.commission.transactionCommission?.amount && (
+                    <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-6 border border-purple-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg">
+                          <Coins className="w-6 h-6 text-purple-600" />
                       </div>
-                      <div className="text-gray-700 text-lg">
-                        {data.commission.transactionCommission.type === "percentage"
-                          ? "Per Transaction Value"
-                          : "Per Transaction"}
+                        <div>
+                          <h3 className="text-lg font-semibold text-purple-900">Transaction Commission</h3>
+                          <p className="text-purple-700 text-sm">Per transaction amount</p>
                       </div>
+                    </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-purple-900 mb-2">
+                          {getCurrencySymbol()}{data.commission.transactionCommission.amount}
+                        </div>
+                        <p className="text-purple-700 text-sm">Per Transaction</p>
                     </div>
                   </div>
                 )}
+                </div>
 
+                {/* 3. Bonus & Minimum Volume - Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Performance Bonus */}
-                {data.commission.bonus && data.commission.bonusAmount && (
-                  <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
-                      <Star className="w-6 h-6 text-[#764ba2]" />
-                      Performance Bonus
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {getCurrencySymbol()}
-                        {data.commission.bonusAmount}
+                  {data.commission.bonusAmount && (
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-amber-100 rounded-lg">
+                          <Star className="w-6 h-6 text-amber-600" />
                       </div>
-                      <div className="text-gray-700 text-lg">
-                        {data.commission.bonus}
+                        <div>
+                          <h3 className="text-lg font-semibold text-amber-900">Bonus & Incentives</h3>
+                          <p className="text-amber-700 text-sm">Performance bonus</p>
                       </div>
+                    </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-amber-900 mb-2">
+                          {getCurrencySymbol()}{data.commission.bonusAmount}
+                        </div>
+                        {data.commission.bonus && (
+                          <p className="text-amber-700 text-sm">{data.commission.bonus}</p>
+                        )}
                     </div>
                   </div>
                 )}
 
-                {/* Additional Details */}
+                  {/* Minimum Volume */}
+                  {data.commission.minimumVolume?.amount && (
+                    <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-orange-100 rounded-lg">
+                          <Target className="w-6 h-6 text-orange-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-orange-900">Minimum Volume</h3>
+                          <p className="text-orange-700 text-sm">Required minimum</p>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-orange-900 mb-2">
+                          {getCurrencySymbol()}{data.commission.minimumVolume.amount}
+                        </div>
+                        <p className="text-orange-700 text-sm">
+                          per {data.commission.minimumVolume.period || 'month'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Additional Details - Full Width at Bottom */}
                 {data?.commission?.additionalDetails && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Additional Details</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.additionalDetails}</p>
+                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-3">Additional Details</h4>
+                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{data?.commission?.additionalDetails}</p>
                   </div>
                 )}
               </div>
@@ -586,33 +644,31 @@ export function GigReview({
             {data?.schedule && renderEditableSection(
               "Schedule & Availability",
               "schedule",
-              <Calendar className="w-6 h-6 text-gray-600" />,
+              <Calendar className="w-6 h-6 text-white" />,
               <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {data.schedule.schedules && data.schedule.schedules.length > 0 && (
-                    <>
-                      <div className="bg-gradient-to-r from-[#667eea]/10 to-[#667eea]/20 rounded-xl p-6 border border-[#667eea]/30">
-                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-3">
-                          <Calendar className="w-6 h-6 text-[#667eea]" />
+                  <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-6 border border-purple-200">
+                    <h3 className="text-xl font-bold text-purple-900 mb-4 flex items-center gap-3">
+                      <Calendar className="w-6 h-6 text-purple-600" />
                           Working Days
                         </h3>
                         <div className="space-y-4">
                           {groupSchedules(data.schedule.schedules).map((group, index) => (
                             <div
                               key={`${group.hours.start}-${group.hours.end}-${index}`}
-                              className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20"
+                          className="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
                             >
                               <div className="flex flex-wrap gap-2 mb-3">
                                 {group.days.map((day, dayIndex) => (
                                   <span
                                     key={dayIndex}
-                                    className="px-3 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30"
+                                className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-sm font-semibold border border-purple-200"
                                   >
                                     {day}
                                   </span>
                                 ))}
                               </div>
-                              <div className="flex items-center gap-2 text-[#667eea] font-semibold">
+                          <div className="flex items-center gap-2 text-purple-700 font-semibold">
                                 <Clock className="w-4 h-4" />
                                 {group.hours.start} - {group.hours.end}
                               </div>
@@ -620,40 +676,19 @@ export function GigReview({
                           ))}
                         </div>
                       </div>
-                    </>
-                  )}
-                </div>
-
-                {/* {data.schedule.timeZones && data.schedule.timeZones.length > 0 && (
-                  <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
-                      <Globe2 className="w-6 h-6 text-[#764ba2]" />
-                      Time Zones
-                    </h3>
-                    <div className="flex flex-wrap gap-3">
-                      {data.schedule.timeZones.map((zone) => (
-                        <span
-                          key={zone}
-                          className="px-4 py-2 bg-gradient-to-r from-[#764ba2]/20 to-[#764ba2]/30 text-[#764ba2] rounded-full text-sm font-semibold border border-[#764ba2]/30"
-                        >
-                          {getTimeZoneName(zone)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )} */}
+                )}
 
                 {data.schedule.flexibility && data.schedule.flexibility.length > 0 && (
-                  <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f093fb] to-[#667eea] mb-4 flex items-center gap-3">
-                      <Clock className="w-6 h-6 text-[#f093fb]" />
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-6 border border-indigo-200">
+                    <h3 className="text-xl font-bold text-indigo-900 mb-4 flex items-center gap-3">
+                      <Clock className="w-6 h-6 text-indigo-600" />
                       Flexibility Options
                     </h3>
                     <div className="flex flex-wrap gap-3">
                       {data.schedule.flexibility.map((option) => (
                         <span
                           key={option}
-                          className="px-4 py-2 bg-gradient-to-r from-[#f093fb]/20 to-[#f093fb]/30 text-[#f093fb] rounded-full text-sm font-semibold border border-[#f093fb]/30"
+                          className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold border border-indigo-200"
                         >
                           {option}
                         </span>
@@ -671,23 +706,23 @@ export function GigReview({
             {renderEditableSection(
               "Skills & Qualifications",
               "skills",
-              <Brain className="w-6 h-6 text-gray-600" />,
+              <Brain className="w-6 h-6 text-white" />,
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
-                    <div className="flex items-center justify-between mb-2">
+                {/* Languages */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Languages className="w-5 h-5 text-[#667eea]" />
-                        <span className="text-sm font-semibold text-[#667eea]">Languages:</span>
+                      <Languages className="w-5 h-5 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-900">Languages</span>
                       </div>
-                      <span className="px-3 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold border border-blue-200">
                         {data.skills?.languages?.length || 0}
                       </span>
                     </div>
                     {data.skills?.languages && data.skills.languages.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="flex flex-wrap gap-2">
                         {data.skills.languages.map((lang, index) => (
-                          <span key={index} className="px-2 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded text-xs font-medium border border-[#667eea]/30">
+                        <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium border border-blue-200">
                             {getLanguageName(lang.language)} ({lang.proficiency})
                           </span>
                         ))}
@@ -695,49 +730,58 @@ export function GigReview({
                     )}
                   </div>
                   
-                </div>
-                {/* Actual skill names for each category */}
+                {/* Skills by Category */}
                 <div className="space-y-4">
                   {/* Technical Skills */}
                   {data.skills?.technical && data.skills.technical.length > 0 && (
-                    <div>
-                      <div className="font-semibold text-[#667eea] mb-1">Technical Skills:</div>
-                      <ul className="flex flex-wrap gap-2">
+                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-lg p-4 border border-purple-200">
+                      <div className="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                        <Laptop className="w-4 h-4" />
+                        Technical Skills
+                      </div>
+                      <div className="flex flex-wrap gap-2">
                         {data.skills.technical.map((s, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
+                          <span key={i} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-sm border border-purple-200">
                             {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'technical')}
-                          </li>
+                          </span>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
+
                   {/* Professional Skills */}
                   {data.skills?.professional && data.skills.professional.length > 0 && (
-                    <div>
-                      <div className="font-semibold text-[#764ba2] mb-1">Professional Skills:</div>
-                      <ul className="flex flex-wrap gap-2">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                      <div className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                        <Briefcase className="w-4 h-4" />
+                        Professional Skills
+                      </div>
+                      <div className="flex flex-wrap gap-2">
                         {data.skills.professional.map((s, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#764ba2]/10 rounded text-sm">
+                          <span key={i} className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm border border-green-200">
                             {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'professional')}
-                          </li>
+                          </span>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
+
                   {/* Soft Skills */}
                   {data.skills?.soft && data.skills.soft.length > 0 && (
-                    <div>
-                      <div className="font-semibold text-[#f093fb] mb-1">Soft Skills:</div>
-                      <ul className="flex flex-wrap gap-2">
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-200">
+                      <div className="font-semibold text-orange-900 mb-3 flex items-center gap-2">
+                        <Heart className="w-4 h-4" />
+                        Soft Skills
+                      </div>
+                      <div className="flex flex-wrap gap-2">
                         {data.skills.soft.map((s, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#f093fb]/10 rounded text-sm">
+                          <span key={i} className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-sm border border-orange-200">
                             {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'soft')}
-                          </li>
+                          </span>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
-                  {/* Certifications section removed - no longer part of skills structure */}
                 </div>
               </div>
             )}
@@ -746,39 +790,43 @@ export function GigReview({
             {data.team && renderEditableSection(
               "Team Structure",
               "team",
-              <Users className="w-6 h-6 text-gray-600" />,
+              <Users className="w-6 h-6 text-white" />,
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-6 text-center border border-[#667eea]/30">
-                  <Users className="w-10 h-10 text-[#667eea] mx-auto mb-3" />
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 text-center border border-blue-200">
+                  <Users className="w-10 h-10 text-blue-600 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-gray-900 mb-2">{data.team.size}</div>
-                  <div className="text-base text-gray-600 font-semibold">Team Members</div>
+                  <div className="text-base text-blue-700 font-semibold">Team Members</div>
                 </div>
                 
                 {data.team.structure && data.team.structure.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-2">
-                      <Target className="w-5 h-5 text-[#667eea]" />
+                    <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                      <Target className="w-5 h-5 text-blue-600" />
                       Team Roles
                     </h3>
                     <div className="space-y-3">
                       {data.team.structure.map((role, index) => {
                         const roleInfo = predefinedOptions.team.roles.find(r => r.id === role.roleId);
                         return (
-                          <div key={index} className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
+                          <div key={index} className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-lg p-4 border border-violet-200">
                             <div className="flex items-center justify-between mb-2">
                               <div className="font-semibold text-gray-900">
                                 {roleInfo ? roleInfo.name : role.roleId}
                               </div>
-                              <div className="text-sm text-gray-600 font-semibold">
-                                Count: {role.count}
+                              <div className="px-3 py-1 bg-violet-100 text-violet-700 rounded-lg text-sm font-semibold border border-violet-200">
+                                {role.count}
                               </div>
                             </div>
-                            <div className="text-sm text-gray-600 mb-2">
+                            <div className="text-sm text-gray-600 mb-3 leading-relaxed">
                               {roleInfo ? roleInfo.description : ''}
                             </div>
-                            <div className="flex items-center gap-4 text-xs text-gray-600">
-                              <span className="font-semibold">Seniority:</span> {role.seniority.level}
-                              <span className="font-semibold">Experience:</span> {role.seniority.yearsExperience} years
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium border border-indigo-200">
+                                {role.seniority.level}
+                              </span>
+                              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium border border-blue-200">
+                                {role.seniority.yearsExperience} years exp.
+                              </span>
                             </div>
                           </div>
                         );
