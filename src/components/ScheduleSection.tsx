@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Clock, 
   Calendar, 
@@ -9,7 +9,7 @@ import {
   ArrowRight, 
   Loader2
 } from "lucide-react";
-import { fetchAllTimezones } from "../lib/api";
+import { fetchAllTimezones, Timezone } from "../lib/api";
 
 interface DaySchedule {
   day: string;
@@ -88,7 +88,7 @@ const formatTime24 = (time: string) => {
 };
 
 export function ScheduleSection({ data, onChange, onNext, onPrevious }: ScheduleSectionProps) {
-  const [timezones, setTimezones] = useState<any[]>([]);
+  const [timezones, setTimezones] = useState<Timezone[]>([]);
   const [timezonesLoading, setTimezonesLoading] = useState(true);
 
   // Load timezones from API
@@ -472,9 +472,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 </option>
                 {timezones.map((timezone) => (
                   <option key={timezone._id} value={timezone._id}>
-                    {timezone.name} ({timezone.abbreviation}) UTC{timezone.offset >= 0 ? '+' : ''}{timezone.offset}
-                </option>
-              ))}
+                    {timezone.zoneName} - {timezone.countryName} (GMT{timezone.gmtOffset >= 0 ? '+' : ''}{timezone.gmtOffset / 3600})
+                  </option>
+                ))}
             </select>
               {timezonesLoading && (
                 <div className="mt-2 flex items-center justify-center">

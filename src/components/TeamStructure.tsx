@@ -68,7 +68,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
         // Create a mapping of country IDs to names for quick lookup
         const nameMapping: {[key: string]: string} = {};
         countries.forEach(country => {
-          nameMapping[country._id] = country.name;
+          nameMapping[country._id] = country.name.common;
         });
         setTerritoryNames(nameMapping);
         
@@ -344,7 +344,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                     .filter(country => !(data.team?.territories || []).includes(country._id))
                     .map((country) => (
                       <option key={country._id} value={country._id}>
-                        {country.name}
+                        {country.name.common}
                       </option>
                     ))}
                 </select>
