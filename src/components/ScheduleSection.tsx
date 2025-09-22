@@ -1,19 +1,26 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { 
   Clock, 
-  Sunrise, 
-  Sunset, 
-  Sun, 
-  Moon, 
+  Calendar, 
+  Globe,
   Plus, 
   Trash2, 
   ArrowLeft, 
   ArrowRight, 
-  Calendar, 
-  Loader2,
+  Loader2
 } from "lucide-react";
-import { DaySchedule, GroupedSchedule } from "../lib/scheduleUtils";
-import { fetchAllTimezones, fetchTimezonesByCountry } from "../lib/api";
+import { fetchAllTimezones } from "../lib/api";
+
+interface DaySchedule {
+  day: string;
+  hours: { start: string; end: string };
+  _id?: { $oid: string };
+}
+
+interface GroupedSchedule {
+  hours: { start: string; end: string };
+  days: string[];
+}
 
 interface ScheduleSectionProps {
   data: {
@@ -32,14 +39,6 @@ interface ScheduleSectionProps {
   onPrevious?: () => void;
 }
 
-const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-const flexibilityOptions = [
-  'Remote Work Available', 'Flexible Hours', 'Weekend Rotation', 
-  'Night Shift Available', 'Split Shifts', 'Part-Time Options', 
-  'Compressed Work Week', 'Shift Swapping Allowed'
-];
-
 const allWeekDays = [
   "Monday",
   "Tuesday", 
@@ -50,748 +49,506 @@ const allWeekDays = [
   "Sunday",
 ];
 
-// Group schedules by identical hours
-const groupSchedulesByHours = (schedules: DaySchedule[]): GroupedSchedule[] => {
-  const groups: Record<string, GroupedSchedule> = {};
-  schedules.forEach((schedule) => {
-    const key = `${schedule.hours.start}-${schedule.hours.end}`;
-    if (!groups[key]) {
-      groups[key] = { hours: { ...schedule.hours }, days: [] };
-    }
-    groups[key].days.push(schedule.day);
-  });
-  return Object.values(groups);
+const flexibilityOptions = [
+  'Remote Work Available', 'Flexible Hours', 'Weekend Rotation', 
+  'Night Shift Available', 'Split Shifts', 'Part-Time Options', 
+  'Compressed Work Week', 'Shift Swapping Allowed'
+];
+
+const timePresets = [
+  { label: "Morning", start: "09:00", end: "17:00" },
+  { label: "Afternoon", start: "13:00", end: "21:00" },
+  { label: "Evening", start: "17:00", end: "01:00" },
+  { label: "Night", start: "21:00", end: "05:00" },
+  { label: "Full Day", start: "00:00", end: "23:59" },
+];
+
+// Function to get header gradient based on section type
+const getHeaderGradient = (bgColor: string) => {
+  switch (bgColor) {
+    case 'blue':
+      return 'from-blue-500 via-indigo-500 to-violet-500';
+    case 'purple':
+      return 'from-purple-500 via-violet-500 to-indigo-500';
+    case 'emerald':
+      return 'from-emerald-500 via-green-500 to-teal-500';
+    case 'orange':
+      return 'from-orange-500 via-amber-500 to-yellow-500';
+    default:
+      return 'from-gray-500 to-gray-600';
+  }
 };
 
-const getUnusedDay = (schedules: DaySchedule[]): string | undefined => {
-  const used = schedules.map((s) => s.day);
-  return allWeekDays.find((d) => !used.includes(d));
+const formatTime24 = (time: string) => {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':');
+  const hoursStr = hours.padStart(2, '0');
+  const minutesStr = minutes?.padStart(2, '0') || '00';
+  return `${hoursStr}h${minutesStr}`;
 };
 
-const getCountryName = (countryCode: string): string => {
-  const countryNames: { [key: string]: string } = {
-    'US': 'United States',
-    'FR': 'France',
-    'GB': 'United Kingdom',
-    'DE': 'Germany',
-    'CA': 'Canada',
-    'AU': 'Australia',
-    'JP': 'Japan',
-    'IN': 'India',
-    'BR': 'Brazil',
-    'MX': 'Mexico',
-    'ES': 'Spain',
-    'IT': 'Italy',
-    'NL': 'Netherlands',
-    'SE': 'Sweden',
-    'NO': 'Norway',
-    'DK': 'Denmark',
-    'FI': 'Finland',
-    'CH': 'Switzerland',
-    'AT': 'Austria',
-    'BE': 'Belgium',
-    'PT': 'Portugal',
-    'IE': 'Ireland',
-    'NZ': 'New Zealand',
-    'SG': 'Singapore',
-    'KR': 'South Korea',
-    'CN': 'China',
-    'RU': 'Russia',
-    'ZA': 'South Africa',
-    'AR': 'Argentina',
-    'CL': 'Chile',
-    'CO': 'Colombia',
-    'PE': 'Peru',
-    'VE': 'Venezuela',
-    'UY': 'Uruguay',
-    'PY': 'Paraguay',
-    'BO': 'Bolivia',
-    'EC': 'Ecuador',
-    'GY': 'Guyana',
-    'SR': 'Suriname',
-    'GF': 'French Guiana',
-    'TN': 'Tunisia',
-  };
-  return countryNames[countryCode] || countryCode;
-}
+export function ScheduleSection({ data, onChange, onNext, onPrevious }: ScheduleSectionProps) {
+  const [timezones, setTimezones] = useState<any[]>([]);
+  const [timezonesLoading, setTimezonesLoading] = useState(true);
 
-const ScheduleSection = (props: ScheduleSectionProps) => {
-  // Use flat schedules as source of truth
-  const [schedules, setSchedules] = useState<DaySchedule[]>(props.data.schedules);
-  // Track empty groups that haven't been populated yet
-  const [emptyGroups, setEmptyGroups] = useState<Array<{id: string, hours: {start: string, end: string}}>>([]);
-
-  // Timezone states
-  const [availableTimezones, setAvailableTimezones] = useState<any[]>([]);
-  const [timezoneLoading, setTimezoneLoading] = useState(false);
-  const [timezonesLoaded, setTimezonesLoaded] = useState(false);
-  const [timezoneSearch, setTimezoneSearch] = useState("");
-  const [showAllTimezones, setShowAllTimezones] = useState(false);
-
-  useEffect(() => {
-    props.onChange({ ...props.data, schedules });
-  }, [schedules]);
-
-  // Fetch timezones when destination zone changes
+  // Load timezones from API
   useEffect(() => {
     const fetchTimezones = async () => {
-      setTimezoneLoading(true);
       try {
-        let timezoneData: any[] = [];
-        if (!showAllTimezones && props.destination_zone && props.destination_zone.length === 2) {
-          const { data, error } = await fetchTimezonesByCountry(props.destination_zone);
-          if (!error && data.length > 0) {
-            timezoneData = data;
-          }
-        }
-        if (showAllTimezones || !timezoneData.length) {
-          const { data, error } = await fetchAllTimezones();
-          if (!error && data.length > 0) {
-            timezoneData = data;
-          }
-        }
-        const processedTimezones = timezoneData
-          .map(tz => ({
-            _id: tz._id,
-            name: tz.zoneName,
-            offset: tz.gmtOffset / 3600,
-            abbreviation: tz.zoneName.split('/').pop() || '',
-            countryName: tz.countryName
-          }))
-          .sort((a, b) => a.offset - b.offset);
-        setAvailableTimezones(processedTimezones);
-        if (processedTimezones.length > 0 && !props.data.time_zone) {
-          props.onChange({ ...props.data, time_zone: processedTimezones[0]._id });
-        }
+        setTimezonesLoading(true);
+        const timezonesData = await fetchAllTimezones();
+        setTimezones(timezonesData);
+        setTimezonesLoading(false);
       } catch (error) {
-        setAvailableTimezones([]);
-      } finally {
-        setTimezoneLoading(false);
-        setTimezonesLoaded(true);
+        console.error('Error fetching timezones:', error);
+        setTimezonesLoading(false);
       }
     };
-    fetchTimezones();
-  }, [props.destination_zone, showAllTimezones]);
 
-  // Group for display
-  const groupedSchedules = groupSchedulesByHours(schedules);
-  // Vérifier si tous les jours sont déjà sélectionnés
-  const selectedDays = schedules.map(schedule => schedule.day);
-  const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
-  // Toggle a day in/out of a group
-  const handleDayToggle = (day: string, groupHours: { start: string; end: string }, groupId?: string) => {
-    if (groupId && groupId.startsWith('empty_')) {
-      // This is an empty group, add the day to schedules and remove from empty groups
-      setSchedules((prev) => [...prev, { day, hours: groupHours }]);
-      setEmptyGroups((prev) => prev.filter(g => g.id !== groupId));
-    } else {
-      // Normal group logic
-      setSchedules((prev) => {
-        const idx = prev.findIndex((s) => s.day === day);
-        if (idx > -1) {
-          // If same hours, remove; else, update hours
-          if (
-            prev[idx].hours.start === groupHours.start &&
-            prev[idx].hours.end === groupHours.end
-          ) {
-            return prev.filter((s, i) => i !== idx);
-          } else {
-            const updated = [...prev];
-            updated[idx] = { ...updated[idx], hours: { ...groupHours } };
-            return updated;
-          }
-        } else {
-          // Add new day with these hours
-          return [...prev, { day, hours: { ...groupHours } }];
-        }
-      });
-    }
-  };
-  // Change hours for all days in a group
-  const handleHoursChange = (group: GroupedSchedule, field: "start" | "end", value: string) => {
-    setSchedules((prev) =>
-      prev.map((s) =>
-        group.days.includes(s.day)
-          ? { ...s, hours: { ...s.hours, [field]: value } }
-          : s
-      )
-    );
-  };
-  // Rename this function to avoid conflict
-  const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
-    props.onChange({
-      ...props.data,
-      minimumHours: { ...props.data.minimumHours, [field]: value ? parseInt(value, 10) : undefined }
-    });
-  };
-  // Preset buttons
-  const handlePresetClick = (group: GroupedSchedule, preset: string) => {
-    let newHours;
-    switch (preset) {
-      case "9-5":
-        newHours = { start: "09:00", end: "17:00" };
-        break;
-      case "Early":
-        newHours = { start: "07:00", end: "15:00" };
-        break;
-      case "Late":
-        newHours = { start: "11:00", end: "19:00" };
-        break;
-      case "Evening":
-        newHours = { start: "13:00", end: "21:00" };
-        break;
-      default:
-        newHours = group.hours;
-    }
-    setSchedules((prev) =>
-      prev.map((s) =>
-        group.days.includes(s.day)
-          ? { ...s, hours: { ...newHours } }
-          : s
-      )
-    );
-  };
-  const handleTimezoneChange = (value: string | React.ChangeEvent<HTMLSelectElement>) => {
-    const timezoneValue = typeof value === 'string' ? value : value.target.value;
-    
-        if (timezoneValue) {
-      // Find the selected timezone to get the _id
-      const selectedTimezone = filteredTimezones.find(tz => tz._id === timezoneValue);
-      if (selectedTimezone) {
-        props.onChange({ ...props.data, time_zone: selectedTimezone._id });
-      } else {
-        props.onChange({ ...props.data, time_zone: timezoneValue }); // Fallback to string
+    fetchTimezones();
+  }, []);
+
+  // Group schedules by hours (same logic as Suggestions.tsx)
+  const groupedSchedules = (data.schedules || []).reduce(
+    (groups, schedule) => {
+      // Ignorer les schedules avec des jours vides
+      if (!schedule.day || schedule.day.trim() === "") return groups;
+      
+      const key = `${schedule.hours.start}-${schedule.hours.end}`;
+      if (!groups[key]) {
+        groups[key] = { hours: schedule.hours, days: [] };
       }
-    } else {
-      props.onChange({ ...props.data, time_zone: undefined });
-    }
-  };
-  // Filter timezones based on search
-  const filteredTimezones = availableTimezones.filter(tz =>
-    tz.name && tz._id && (
-      tz.name.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
-      tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
-    )
+      groups[key].days.push(schedule.day);
+      return groups;
+    },
+    {} as Record<string, GroupedSchedule>
   );
 
-  const handleFlexibilityChange = (option: string) => {
-    const newFlexibility = props.data.flexibility.includes(option)
-      ? props.data.flexibility.filter((o: string) => o !== option)
-      : [...props.data.flexibility, option];
-    props.onChange({ ...props.data, flexibility: newFlexibility });
-  };
-  const formatTime = (time: string): string => {
-    if (!time) return "Invalid Time";
-    const [hour, minute] = time.split(":");
-    if (isNaN(parseInt(hour)) || isNaN(parseInt(minute))) return "Invalid Time";
-    return `${hour}h${minute}`;
-  };
-  // Add a new group with an unused day
-  const handleAddScheduleGroup = () => {
-    // Get all existing hours from grouped schedules
-    const existingHours = groupedSchedules.map(group => `${group.hours.start}-${group.hours.end}`);
-        // Define possible default hours
-    const possibleDefaults = [
-      { start: "09:00", end: "17:00" },
-      { start: "08:00", end: "16:00" },
-      { start: "10:00", end: "18:00" },
-      { start: "07:00", end: "15:00" },
-      { start: "11:00", end: "19:00" },
-      { start: "12:00", end: "20:00" },
-      { start: "06:00", end: "14:00" },
-      { start: "13:00", end: "21:00" }
-    ];
-        // Find the first default that doesn't conflict with existing hours
-    let defaultHours = possibleDefaults[0]; // fallback
-    for (const hours of possibleDefaults) {
-      const hoursString = `${hours.start}-${hours.end}`;
-      if (!existingHours.includes(hoursString)) {
-        defaultHours = hours;
-        break;
-      }
-    }
-        const emptyGroupId = `empty_${Date.now()}`;
-        setEmptyGroups((prev) => [
-      ...prev,
-      { id: emptyGroupId, hours: defaultHours },
-    ]);
-  };
-  // Remove a group (remove all its days)
-  const handleRemoveScheduleGroup = (group: GroupedSchedule) => {
-    setSchedules((prev) => prev.filter((s) => !group.days.includes(s.day)));
-  };
-  // Sécurise time_zone pour l'affichage
-  const timeZone = props.data.time_zone;
-  // Get readable name for selected time zone
-  const selectedTimezoneObj = availableTimezones.find(tz => tz._id === timeZone);
-  const selectedTimezoneName = selectedTimezoneObj ? `${selectedTimezoneObj.name} (GMT${selectedTimezoneObj.offset >= 0 ? '+' : ''}${selectedTimezoneObj.offset})` : timeZone;
 
+  // Vérifier si tous les jours sont déjà sélectionnés
+  const selectedDays = data.schedules
+    .filter(schedule => schedule.day && schedule.day.trim() !== "")
+    .map(schedule => schedule.day);
+  
+  const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
+
+  const addNewScheduleGroup = () => {
+    const newSchedule: DaySchedule = {
+      day: "", // Empty day will be filled when user selects days
+      hours: { start: "09:00", end: "17:00" },
+    };
+
+    onChange({
+      ...data,
+      schedules: [...data.schedules, newSchedule]
+    });
+  };
+
+  const handleDayToggle = (
+    dayToToggle: string,
+    groupHours: { start: string; end: string }
+  ) => {
+    const updatedSchedules = [...data.schedules];
+    const existingScheduleIndex = updatedSchedules.findIndex(
+      schedule => schedule.day === dayToToggle
+    );
+
+    if (existingScheduleIndex !== -1) {
+      // Remove the day
+      updatedSchedules.splice(existingScheduleIndex, 1);
+    } else {
+      // Add the day with the group's hours
+      updatedSchedules.push({
+        day: dayToToggle,
+        hours: { ...groupHours },
+      });
+    }
+
+    onChange({
+      ...data,
+      schedules: updatedSchedules
+    });
+  };
+
+  const handleHoursChange = (
+    group: GroupedSchedule,
+    field: "start" | "end",
+    value: string
+  ) => {
+    const updatedSchedules = data.schedules.map(schedule => {
+      if (group.days.includes(schedule.day) && 
+          schedule.hours.start === group.hours.start && 
+          schedule.hours.end === group.hours.end) {
+        return {
+          ...schedule,
+          hours: { ...schedule.hours, [field]: value }
+        };
+      }
+      return schedule;
+    });
+
+    onChange({
+      ...data,
+      schedules: updatedSchedules
+    });
+  };
+
+  const handlePresetClick = (group: GroupedSchedule, preset: string) => {
+    const presetData = timePresets.find(p => p.label === preset);
+    if (!presetData) return;
+
+    const updatedSchedules = data.schedules.map(schedule => {
+      if (group.days.includes(schedule.day) && 
+          schedule.hours.start === group.hours.start && 
+          schedule.hours.end === group.hours.end) {
+        return {
+          ...schedule,
+          hours: { start: presetData.start, end: presetData.end }
+        };
+      }
+      return schedule;
+    });
+
+    onChange({
+      ...data,
+      schedules: updatedSchedules
+    });
+  };
+
+  const deleteScheduleGroup = (groupHours: { start: string; end: string }) => {
+    const updatedSchedules = data.schedules.filter(schedule => 
+      !(schedule.hours.start === groupHours.start && 
+        schedule.hours.end === groupHours.end)
+    );
+
+    onChange({
+      ...data,
+      schedules: updatedSchedules
+    });
+  };
+
+  const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
+    onChange({
+      ...data,
+      minimumHours: {
+        ...data.minimumHours,
+        [field]: value ? parseInt(value) : undefined
+      }
+    });
+  };
+
+  const handleTimezoneChange = (timezoneId: string) => {
+    onChange({
+      ...data,
+      time_zone: timezoneId
+    });
+  };
+
+  const handleFlexibilityToggle = (option: string) => {
+    const currentFlexibility = data.flexibility || [];
+    const isSelected = currentFlexibility.includes(option);
+    
+    const updatedFlexibility = isSelected
+      ? currentFlexibility.filter(item => item !== option)
+      : [...currentFlexibility, option];
+
+    onChange({
+      ...data,
+      flexibility: updatedFlexibility
+    });
+  };
+  
   return (
-    <div className="w-full bg-white py-6">
-      
+    <div className="w-full bg-white p-0">
+      <div className="space-y-8">
+        <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
+          
+          {/* Schedule Groups Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`bg-gradient-to-r ${getHeaderGradient('blue')} px-6 py-4`}>
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <div>
+                  <h3 className="text-xl font-bold text-white">Work Schedule</h3>
+                  <p className="text-white/80 text-sm">Define working days and hours</p>
+            </div>
+          </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">Schedule Groups</span>
+                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                    {Object.keys(groupedSchedules).length}
+                  </span>
+          </div>
+                {!allDaysSelected && (
+                  <button
+                    onClick={addNewScheduleGroup}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Schedule
+                  </button>
+                )}
+      </div>
+
+              {Object.entries(groupedSchedules).length > 0 ? (
       <div className="space-y-4">
-        {/* Display normal groups */}
-        {groupedSchedules.map((group, index) => (
-          <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm relative">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-800 flex items-center">
-                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                Working Days
+                  {Object.entries(groupedSchedules).map(([key, group]) => (
+                    <div
+                      key={key}
+                      className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-semibold text-blue-800">
+                          {formatTime24(group.hours.start)} - {formatTime24(group.hours.end)}
               </h4>
               <button
-                onClick={() => handleRemoveScheduleGroup(group)}
-                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete schedule group"
+                          onClick={() => deleteScheduleGroup(group.hours)}
+                          className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
-                  {workingDays.map((day: string) => {
+
+                      {/* Days Selection */}
+                      <div className="mb-4">
+                        <label className="block text-xs font-medium text-gray-700 mb-2">Working Days</label>
+                        <div className="grid grid-cols-7 gap-1">
+                          {allWeekDays.map(day => {
                     const isSelected = group.days.includes(day);
-                    const isInOtherGroup = !isSelected && schedules.some(s => s.day === day);
+                            const isAlreadySelected = selectedDays.includes(day) && !isSelected;
+                            
                     return (
                       <button
                         key={day}
-                        onClick={() => handleDayToggle(day, group.hours)}
-                        disabled={isInOtherGroup}
-                        className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                          ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
-                        `}
-                        title={isInOtherGroup ? `${day} is already selected in another schedule group` : undefined}
-                      >
-                        {day}
+                                onClick={() => !isAlreadySelected && handleDayToggle(day, group.hours)}
+                                disabled={isAlreadySelected}
+                                className={`px-2 py-1 text-xs font-medium rounded-md transition-all ${
+                                  isSelected
+                                    ? 'bg-blue-500 text-white'
+                                    : isAlreadySelected
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                }`}
+                              >
+                                {day.slice(0, 3)}
                       </button>
                     );
                   })}
                 </div>
               </div>
+
+                      {/* Time Selection */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                  <Clock className="w-4 h-4 mr-2 text-gray-500" />
-                  Working Hours
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-500 flex items-center">
-                      <Sunrise className="w-3 h-3 mr-1 text-gray-400" />
-                      Start Time
-                    </label>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Start Time</label>
                     <input
                       type="time"
                       value={group.hours.start}
                       onChange={(e) => handleHoursChange(group, 'start', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-500 flex items-center">
-                      <Sunset className="w-3 h-3 mr-1 text-gray-400" />
-                      End Time
-                    </label>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">End Time</label>
                     <input
                       type="time"
                       value={group.hours.end}
                       onChange={(e) => handleHoursChange(group, 'end', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
-                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-semibold text-gray-800 text-sm">
-                  {formatTime(group.hours.start)} - {formatTime(group.hours.end)}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                  <button onClick={() => handlePresetClick(group, '9-5')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
-                      <Sun className="w-4 h-4 text-orange-400"/>
-                      <span className="text-xs font-medium">9-5</span>
+
+                      {/* Time Presets */}
+                      <div className="flex flex-wrap gap-2">
+                        {timePresets.map(preset => (
+                          <button
+                            key={preset.label}
+                            onClick={() => handlePresetClick(group, preset.label)}
+                            className="px-2 py-1 text-xs bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                          >
+                            {preset.label}
                   </button>
-                  <button onClick={() => handlePresetClick(group, 'Early')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
-                      <Sunrise className="w-4 h-4 text-yellow-400"/>
-                      <span className="text-xs font-medium">Early</span>
-                  </button>
-                  <button onClick={() => handlePresetClick(group, 'Late')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
-                      <Clock className="w-4 h-4 text-sky-400"/>
-                      <span className="text-xs font-medium">Late</span>
-                  </button>
-                  <button onClick={() => handlePresetClick(group, 'Evening')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1 transition-all">
-                      <Moon className="w-4 h-4 text-indigo-400"/>
-                      <span className="text-xs font-medium">Evening</span>
-                  </button>
-              </div>
+                        ))}
             </div>
           </div>
         ))}
-        {/* Display empty groups */}
-        {emptyGroups.map((emptyGroup) => (
-          <div key={emptyGroup.id} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm relative">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-800 flex items-center">
-                <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                Working Days (No days selected)
-              </h4>
-              <button
-                onClick={() => setEmptyGroups(prev => prev.filter(g => g.id !== emptyGroup.id))}
-                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete empty schedule group"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex gap-1">
-                  {workingDays.map((day: string) => {
-                    const isSelected = false; // Un groupe vide n'a pas de jour sélectionné
-                    const isInOtherGroup = schedules.some(s => s.day === day);
-                    return (
-                      <button
-                        key={day}
-                        onClick={() => handleDayToggle(day, emptyGroup.hours, emptyGroup.id)}
-                        disabled={isInOtherGroup}
-                        className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                          ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
-                        `}
-                        title={isInOtherGroup ? `${day} is already selected in another schedule group` : undefined}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
                 </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                  <Clock className="w-4 h-4 mr-2 text-gray-500" />
-                  Working Hours
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-500 flex items-center">
-                      <Sunrise className="w-3 h-3 mr-1 text-gray-400" />
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      value={emptyGroup.hours.start}
-                      onChange={(e) => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {...g.hours, start: e.target.value}} : g))}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-500 flex items-center">
-                      <Sunset className="w-3 h-3 mr-1 text-gray-400" />
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      value={emptyGroup.hours.end}
-                      onChange={(e) => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {...g.hours, end: e.target.value}} : g))}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm">No schedule groups defined</p>
+                  <p className="text-xs text-gray-400">Click "Add Schedule" to get started</p>
                 </div>
-                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg text-center font-semibold text-gray-800 text-sm">
-                  {formatTime(emptyGroup.hours.start)} - {formatTime(emptyGroup.hours.end)}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-3">
-                  <button onClick={() => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {start: "09:00", end: "17:00"}} : g))} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Sun className="w-5 h-5 text-orange-400"/>
-                      <span className="text-xs font-medium">9-5</span>
-                  </button>
-                  <button onClick={() => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {start: "07:00", end: "15:00"}} : g))} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Sunrise className="w-5 h-5 text-yellow-400"/>
-                      <span className="text-xs font-medium">Early</span>
-                  </button>
-                  <button onClick={() => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {start: "11:00", end: "19:00"}} : g))} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Clock className="w-5 h-5 text-sky-400"/>
-                      <span className="text-xs font-medium">Late</span>
-                  </button>
-                  <button onClick={() => setEmptyGroups(prev => prev.map(g => g.id === emptyGroup.id ? {...g, hours: {start: "13:00", end: "21:00"}} : g))} className="p-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-300 flex flex-col items-center gap-1.5 transition-all">
-                      <Moon className="w-5 h-5 text-indigo-400"/>
-                      <span className="text-xs font-medium">Evening</span>
-                  </button>
-              </div>
+              )}
             </div>
           </div>
-        ))}
-        <div className="pt-4">
-          {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés ET qu'il n'y a pas de groupes vides */}
-          {!allDaysSelected && emptyGroups.length === 0 && (
-            <button
-              onClick={handleAddScheduleGroup}
-              className="w-full flex justify-center items-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition-all duration-200"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="font-semibold text-sm">Add Schedule Group</span>
-            </button>
-          )}
-          {/* Message quand tous les jours sont sélectionnés */}
-          {allDaysSelected && (
-            <div className="text-center p-4 bg-green-50 border border-green-200 rounded-xl">
-              <div className="flex items-center justify-center space-x-2 text-green-700 mb-2">
-                <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">✓</span>
+
+          {/* Minimum Hours Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`bg-gradient-to-r ${getHeaderGradient('purple')} px-6 py-4`}>
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Clock className="w-6 h-6 text-white" />
                 </div>
-                <span className="font-semibold text-sm">All week days are scheduled!</span>
-              </div>
-              <p className="text-xs text-green-600">
-                You can still modify existing schedules or remove days to add new groups.
-              </p>
-            </div>
-          )}
-        </div>
-        {/* Minimum Hours, Timezones, and Flexibility Section */}
-        <div className="space-y-8">
-                    {/* Minimum Hours Requirements */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="w-5 h-5 text-orange-600" />
+                <div>
+                  <h3 className="text-xl font-bold text-white">Minimum Hours</h3>
+                  <p className="text-white/80 text-sm">Set minimum working hour requirements</p>
                 </div>
-                <h4 className="text-lg font-bold text-gray-800">Minimum Hours Requirements</h4>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 border-2 border-orange-100">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-gray-700 flex items-center">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                    Daily Hours
-                  </label>
-                  <div className="relative">
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Daily Hours</label>
                     <input
                       type="number"
-                      min="0"
+                    min="1"
                       max="24"
-                   value={props.data.minimumHours.daily || ''}
+                    value={data.minimumHours?.daily || ''}
                    onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
                       placeholder="e.g. 8"
-                      className="w-full p-4 pr-12 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                     />
-                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                      hrs
-                    </span>
                   </div>
-                  <p className="text-xs text-gray-600">Minimum hours per day</p>
-              </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-gray-700 flex items-center">
-                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
-                    Weekly Hours
-                  </label>
-                  <div className="relative">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Weekly Hours</label>
                     <input
                       type="number"
-                      min="0"
+                    min="1"
                       max="168"
-                   value={props.data.minimumHours.weekly || ''}
+                    value={data.minimumHours?.weekly || ''}
                   onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
                       placeholder="e.g. 40"
-                      className="w-full p-4 pr-12 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white transition-all duration-200 hover:border-amber-300"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                     />
-                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                      hrs
-                    </span>
                   </div>
-                  <p className="text-xs text-gray-600">Minimum hours per week</p>
-              </div>
-
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-gray-700 flex items-center">
-                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                    Monthly Hours
-                  </label>
-                  <div className="relative">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Hours</label>
                     <input
                       type="number"
-                      min="0"
+                    min="1"
                       max="744"
-                   value={props.data.minimumHours.monthly || ''}
+                    value={data.minimumHours?.monthly || ''}
                   onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
                       placeholder="e.g. 160"
-                      className="w-full p-4 pr-12 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white transition-all duration-200 hover:border-red-300"
-                    />
-                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                      hrs
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600">Minimum hours per month</p>
-                </div>
-              </div>
-
-              {/* Summary Card */}
-              <div className="mt-6 p-4 bg-white rounded-lg border border-orange-200">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {props.data.minimumHours.daily || 0}
-                    </div>
-                    <div className="text-xs text-gray-500">Daily</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-amber-600">
-                      {props.data.minimumHours.weekly || 0}
-                    </div>
-                    <div className="text-xs text-gray-500">Weekly</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-red-600">
-                      {props.data.minimumHours.monthly || 0}
-                    </div>
-                    <div className="text-xs text-gray-500">Monthly</div>
-                  </div>
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                  />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Time Zone */}
-          <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
-            <div className="flex items-center justify-between mb-4">
+          {/* Timezone Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`bg-gradient-to-r ${getHeaderGradient('emerald')} px-6 py-4`}>
               <div className="flex items-center">
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
-                <div>
-                  <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
-                  {props.destination_zone && (
-                  <p className="text-sm text-green-700">
-                      Based on destination: <span className="font-semibold">{getCountryName(props.destination_zone)} ({props.destination_zone})</span>
-                    </p>
-                  )}
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Globe className="w-6 h-6 text-white" />
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                {timezoneLoading && (
-                  <div className="flex items-center">
-                    <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                    <span className="text-sm text-green-600 ml-1">Loading...</span>
-                  </div>
-                )}
-                {availableTimezones.length > 0 && (
-                  <button
-                    onClick={() => setShowAllTimezones((v) => !v)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                      showAllTimezones
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    }`}
-                  >
-                    {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
-                  </button>
-                )}
+                <div>
+                  <h3 className="text-xl font-bold text-white">Time Zone</h3>
+                  <p className="text-white/80 text-sm">Select the primary working timezone</p>
+                </div>
               </div>
             </div>
             
-            {/* Search input */}
-            {availableTimezones.length > 0 && (
-              <div className="mb-3">
-                <input
-                  type="text"
-                  placeholder="Search timezones by name, country, or abbreviation..."
-                  value={timezoneSearch}
-                  onChange={(e) => setTimezoneSearch(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 focus:outline-none focus:ring-2 focus:ring-green-400"
-                />
-              </div>
-            )}
-            
+            <div className="p-6">
             <select
-              className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
-              value={props.data.time_zone || ''}
-              onChange={handleTimezoneChange}
-              disabled={timezoneLoading}
-            >
-              <option value="">Select a timezone...</option>
-              {filteredTimezones.map((tz) => (
-                <option key={tz._id} value={tz._id}>
-                  {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
+                value={data.time_zone || ''}
+                onChange={(e) => handleTimezoneChange(e.target.value)}
+                disabled={timezonesLoading}
+                className="w-full px-4 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl text-emerald-900 font-medium focus:outline-none focus:ring-3 focus:ring-emerald-300 focus:border-emerald-400 transition-all disabled:opacity-50"
+              >
+                <option value="">
+                  {timezonesLoading ? 'Loading timezones...' : 'Select a timezone'}
+                </option>
+                {timezones.map((timezone) => (
+                  <option key={timezone._id} value={timezone._id}>
+                    {timezone.name} ({timezone.abbreviation}) UTC{timezone.offset >= 0 ? '+' : ''}{timezone.offset}
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-500 italic text-center mt-2">
-              {timezoneLoading 
-                ? 'Loading timezones from API...'
-                : availableTimezones.length > 0
-                 ? timezoneSearch
-                   ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${props.destination_zone ? ` for ${getCountryName(props.destination_zone)}` : ''}`
-                  : `${availableTimezones.length} timezones available${props.destination_zone ? ` for ${getCountryName(props.destination_zone)}` : ' worldwide'}`
-                  : 'No timezones available'
-              }
-            </p>
-            {props.data.time_zone && (
-              <p className="text-xs text-green-600 mt-1">
-                Selected: <span className="font-semibold">{selectedTimezoneName}</span>
-              </p>
-            )}
+              {timezonesLoading && (
+                <div className="mt-2 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                  <span className="ml-2 text-sm text-emerald-600">Loading timezones...</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Schedule Flexibility */}
-          <div className="mb-8 p-6 rounded-xl border border-purple-200 bg-purple-50">
-            <div className="flex items-center mb-4">
-              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-500 text-white font-bold mr-3">F</div>
-              <h4 className="text-xl font-bold text-purple-900">Schedule Flexibility</h4>
+          {/* Flexibility Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className={`bg-gradient-to-r ${getHeaderGradient('orange')} px-6 py-4`}>
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Schedule Flexibility</h3>
+                  <p className="text-white/80 text-sm">Define flexible working arrangements</p>
+                </div>
               </div>
-            {/* Badges sélectionnés */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {props.data.flexibility.map(option => (
-                <span key={option} className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-                  {option}
-                  <button
-                    type="button"
-                    onClick={() => handleFlexibilityChange(option)}
-                    className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
-                    title="Remove"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </span>
-              ))}
             </div>
-            {/* Select pour ajouter */}
-            <select
-              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
-              defaultValue=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  handleFlexibilityChange(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-            >
-              <option value="" disabled>Add flexibility option...</option>
-              {flexibilityOptions.filter(opt => !props.data.flexibility.includes(opt)).map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 italic text-center mt-2">
-              Select all applicable schedule flexibility options
-            </p>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {flexibilityOptions.map((option) => {
+                  const isSelected = (data.flexibility || []).includes(option);
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => handleFlexibilityToggle(option)}
+                      className={`p-3 rounded-xl border-2 text-left transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800'
+                          : 'bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                          isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+                        }`}>
+                          {isSelected && <span className="text-white text-xs">✓</span>}
+                        </div>
+                        <span className="text-sm font-medium">{option}</span>
+                      </div>
+                    </button>
+                  );
+                })}
           </div>
         </div>
       </div>
-      <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-        <div className="flex items-center gap-3">
-          <button onClick={props.onPrevious} disabled={!props.onPrevious}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-            Previous
-          </button>
+
+          {/* Navigation Buttons */}
+        <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center gap-3">
+              <button
+                onClick={onPrevious}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              Previous
+              </button>
+            </div>
+            <button
+              onClick={onNext}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Next
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <button onClick={props.onNext}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-          Next
-          <ArrowRight className="w-5 h-5" />
-        </button>
       </div>
     </div>
   );
-};
-
-export default ScheduleSection;
-export { ScheduleSection }; 
+}

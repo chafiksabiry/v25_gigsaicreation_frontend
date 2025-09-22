@@ -26,13 +26,12 @@ import {
   Moon,
   Calendar,
 } from "lucide-react";
-import OpenAI from "openai";
 import type { GigSuggestion } from "../types";
 import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchAllTimezones, fetchTimezonesByCountry, fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills } from "../lib/api";
+import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone, getCountryNameById, fetchAllCurrencies, Currency } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import { 
   loadActivities, 
@@ -45,6 +44,8 @@ import {
   getIndustryNameById,
   getLanguageNameById} from '../lib/activitiesIndustries';
 import Logo from "./Logo";
+import { useLanguage } from '../contexts/LanguageContext';
+import { LanguageSelector } from './LanguageSelector';
 
 type ScheduleEntry = {
   day: string;
@@ -101,17 +102,7 @@ interface SuggestionsProps {
   initialSuggestions?: GigSuggestion | null;
 }
 
-let openai: OpenAI | null = null;
-try {
-  if (import.meta.env.VITE_OPENAI_API_KEY) {
-    openai = new OpenAI({
-      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-      dangerouslyAllowBrowser: true,
-    });
-  }
-} catch (error) {
-  console.error("Error initializing OpenAI client:", error);
-}
+// OpenAI functionality has been moved to backend API
 
 
 // Major countries with their alpha-2 codes
@@ -249,18 +240,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [timezoneLoading, setTimezoneLoading] = useState(false);
   const [timezonesLoaded, setTimezonesLoaded] = useState(false);
   const [allCountries, setAllCountries] = useState<CountryData[]>([]);
-  const [countriesLoading, setCountriesLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<CountryData[]>([]);
   const [searching, setSearching] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
-  const [showAllTimezones, setShowAllTimezones] = useState(false);
   const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [skillsLoading, setSkillsLoading] = useState(false);
-  const [territories, setTerritories] = useState<string[]>([]);
+  const [territoriesFromAPI, setTerritoriesFromAPI] = useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
-  const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<CountryData[]>([]);
+  const [territoryNames, setTerritoryNames] = useState<{[key: string]: string}>({});
+  const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<Country[]>([]);
   const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
   const isGeneratingRef = useRef(false);
   const lastProcessedInputRef = useRef<string>("");
@@ -268,12 +258,183 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [activities, setActivities] = useState<Array<{ value: string; label: string; category: string }>>([]);
   const [industries, setIndustries] = useState<Array<{ value: string; label: string }>>([]);
   const [languages, setLanguages] = useState<Array<{ value: string; label: string; code: string }>>([]);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [industriesLoading, setIndustriesLoading] = useState(true);
   const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [currenciesLoading, setCurrenciesLoading] = useState(false);
+  
+  // States for textarea inputs
+  const [newJobTitle, setNewJobTitle] = useState('');
+  const [newHighlight, setNewHighlight] = useState('');
+  const [newDeliverable, setNewDeliverable] = useState('');
+  
+  // States for showing add forms
+  const [showJobTitleForm, setShowJobTitleForm] = useState(false);
+  const [showHighlightForm, setShowHighlightForm] = useState(false);
+  const [showDeliverableForm, setShowDeliverableForm] = useState(false);
+  
+  // States for editing existing items
+  const [editingJobTitleIndex, setEditingJobTitleIndex] = useState<number | null>(null);
+  const [editingHighlightIndex, setEditingHighlightIndex] = useState<number | null>(null);
+  const [editingDeliverableIndex, setEditingDeliverableIndex] = useState<number | null>(null);
+  
+  // States for selection
+  const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
+  
+  // States for skill adding interface
+  const [showAddSkillInterface, setShowAddSkillInterface] = useState<{[key: string]: boolean}>({
+    languages: false,
+    professional: false,
+    technical: false,
+    soft: false
+  });
+  const [selectedSkillToAdd, setSelectedSkillToAdd] = useState<{[key: string]: string}>({
+    languages: '',
+    professional: '',
+    technical: '',
+    soft: ''
+  });
+  const [selectedLevelToAdd, setSelectedLevelToAdd] = useState<{[key: string]: number}>({
+    languages: 2, // B1 par défaut
+    professional: 1,
+    technical: 1,
+    soft: 1
+  });
+  const [selectedExactPosition, setSelectedExactPosition] = useState<{[key: string]: number | undefined}>({
+    languages: undefined,
+    professional: undefined,
+    technical: undefined,
+    soft: undefined
+  });
+  const [hoveredLevel, setHoveredLevel] = useState<{[key: string]: number | null}>({
+    languages: null,
+    professional: null,
+    technical: null,
+    soft: null
+  });
+  // Plus besoin de searchTerm car on utilise uniquement des sélecteurs
+
+  // États pour l'édition des langues existantes
+  const [editingSkill, setEditingSkill] = useState<{[key: string]: number | null}>({
+    professional: null,
+    technical: null,
+    soft: null,
+    languages: null
+  });
+  // Plus besoin de editSearchTerm car on utilise uniquement des sélecteurs
+
+  // État pour le hover sur les niveaux des cartes existantes
+  const [hoveredExistingLevel, setHoveredExistingLevel] = useState<{[key: string]: {[index: number]: number | null}}>({
+    professional: {},
+    technical: {},
+    soft: {},
+    languages: {}
+  });
+
+  // Ref pour gérer le clic dehors
+  const addInterfaceRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
+
+  // Gestion du clic dehors pour fermer l'interface d'ajout
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      Object.keys(showAddSkillInterface).forEach(skillType => {
+        if (showAddSkillInterface[skillType] && addInterfaceRefs.current[skillType]) {
+          if (!addInterfaceRefs.current[skillType]!.contains(event.target as Node)) {
+            // Fermer l'interface sans sauvegarder
+            setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+            setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+            setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+            setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
+            // Plus besoin de reset searchTerm
+          }
+        }
+      });
+
+      // Gérer aussi le clic dehors pour l'édition
+      const target = event.target as HTMLElement;
+      const isClickInsideEditDropdown = target.closest('.edit-dropdown');
+      const isClickInsideEditInput = target.closest('input[type="text"]');
+      const isClickInsideEditSelect = target.closest('select') || target.closest('.edit-select');
+      
+      if (!isClickInsideEditDropdown && !isClickInsideEditInput && !isClickInsideEditSelect) {
+        // Annuler toute édition en cours
+        setEditingSkill({
+          professional: null,
+          technical: null,
+          soft: null,
+          languages: null
+        });
+        // Plus besoin de reset editSearchTerm
+        // Reset hover states
+        setHoveredExistingLevel({
+          professional: {},
+          technical: {},
+          soft: {},
+          languages: {}
+        });
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAddSkillInterface, selectedSkillToAdd, selectedLevelToAdd]);
+  
+  
+  // Helper function to get currency symbol by ID
+  const getCurrencySymbol = (currencyId: string): string => {
+    const currency = currencies.find(c => c._id === currencyId);
+    return currency?.symbol || '€';
+  };
+  
+  // Helper function to get default currency (EUR if available, otherwise first in list)
+  const getDefaultCurrencyId = (): string => {
+    if (currencies.length === 0) return '';
+    const eurCurrency = currencies.find(c => c.code === 'EUR');
+    return eurCurrency?._id || currencies[0]._id;
+  };
 
 
+
+  // Load currencies from API
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      setCurrenciesLoading(true);
+      try {
+        console.log('💰 SUGGESTIONS - Loading currencies from API...');
+        const fetchedCurrencies = await fetchAllCurrencies();
+        setCurrencies(fetchedCurrencies);
+        console.log('💰 SUGGESTIONS - Loaded currencies:', fetchedCurrencies.length);
+      } catch (error) {
+        console.error('❌ Error loading currencies in Suggestions:', error);
+      } finally {
+        setCurrenciesLoading(false);
+      }
+    };
+    
+    loadCurrencies();
+  }, []);
+
+  // Set default currency when currencies are loaded and suggestions exist
+  useEffect(() => {
+    if (currencies.length > 0 && suggestions?.commission) {
+      const defaultCurrencyId = getDefaultCurrencyId();
+      
+      // Set default currency for main commission if not already set
+      if (!suggestions.commission.currency) {
+        setSuggestions(prev => prev ? {
+          ...prev,
+          commission: {
+            ...prev.commission,
+            currency: defaultCurrencyId
+          }
+        } : null);
+      }
+      
+      console.log('💰 SUGGESTIONS - Set default currency:', defaultCurrencyId);
+    }
+  }, [currencies, suggestions?.commission]);
 
   // Load activities, industries, and languages from external API
   useEffect(() => {
@@ -284,11 +445,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setIndustriesLoading(true);
         setLanguagesLoading(true);
         
-        const activitiesData = await loadActivities();
+        await loadActivities();
         
-        const industriesData = await loadIndustries();
+        await loadIndustries();
         
-        const languagesData = await loadLanguages();
+        await loadLanguages();
         
         // Get options for UI components
         const activityOptions = getActivityOptions();
@@ -308,7 +469,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setActivities(activityOptions);
         setIndustries(industryOptions);
         setLanguages(languageOptions);
-        setIsDataLoaded(true);
         
         
         
@@ -327,18 +487,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Fetch all countries from API for destination zones
   useEffect(() => {
-    const fetchAllCountries = async () => {
+    const loadAllCountries = async () => {
       setDestinationCountriesLoading(true);
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-        if (response.ok) {
-          const data: CountryData[] = await response.json();
-          // Sort countries alphabetically by common name
-          const sortedData = data.sort((a, b) => a.name.common.localeCompare(b.name.common));
-          setAllCountriesFromAPI(sortedData);
-        } else {
-          console.error('Failed to fetch countries from API');
-        }
+        const countries = await fetchAllCountries();
+        // Sort countries alphabetically by common name
+        const sortedData = countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+        setAllCountriesFromAPI(sortedData);
       } catch (error) {
         console.error('Error fetching countries:', error);
       } finally {
@@ -346,7 +501,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       }
     };
 
-    fetchAllCountries();
+    loadAllCountries();
   }, []);
 
   // Ensure all team roles have valid seniority structure
@@ -431,94 +586,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const fetchAllData = async () => {
       // Fetch countries
       if (allCountries.length === 0) {
-        setCountriesLoading(true);
         try {
-          const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-          if (response.ok) {
-            const countriesData: CountryData[] = await response.json();
-            setAllCountries(countriesData);
-          } else {
-            console.error('❌ Failed to fetch countries');
-          }
+          const countries = await fetchAllCountries();
+          const countriesData = countries.map(country => ({
+            name: {
+              common: country.name.common,
+              official: country.name.official
+            },
+            cca2: country.cca2
+          }));
+          setAllCountries(countriesData);
         } catch (error) {
           console.error('❌ Error fetching countries:', error);
-        } finally {
-          setCountriesLoading(false);
         }
       }
 
-      // Fetch territories
-      if (territories.length === 0) {
+      // Fetch territories (countries) from API
+      if (territoriesFromAPI.length === 0) {
         setTerritoriesLoading(true);
         try {
-          const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2');
-          if (response.ok) {
-            const countriesData = await response.json();
-            const countryNames = countriesData.map((country: any) => country.name.common).sort();
-            setTerritories(countryNames);
-          } else {
-            console.error('❌ Failed to fetch territories');
-            // Fallback to basic territories
-            setTerritories([
-              "North America",
-              "Europe",
-              "Asia Pacific",
-              "Latin America",
-              "Middle East & Africa",
-              "Global",
-              "United States",
-              "Canada",
-              "United Kingdom",
-              "France",
-              "Germany",
-              "Spain",
-              "Italy",
-              "Netherlands",
-              "Belgium",
-              "Switzerland",
-              "Austria",
-              "Scandinavia",
-              "Eastern Europe",
-              "Australia",
-              "New Zealand",
-              "Japan",
-              "South Korea",
-              "China",
-              "India",
-              "Southeast Asia",
-            ]);
-          }
+          const countries = await fetchAllCountries();
+          const sortedCountries = countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+          setTerritoriesFromAPI(sortedCountries);
         } catch (error) {
           console.error('❌ Error fetching territories:', error);
-          // Fallback to basic territories
-          setTerritories([
-            "North America",
-            "Europe",
-            "Asia Pacific",
-            "Latin America",
-            "Middle East & Africa",
-            "Global",
-            "United States",
-            "Canada",
-            "United Kingdom",
-            "France",
-            "Germany",
-            "Spain",
-            "Italy",
-            "Netherlands",
-            "Belgium",
-            "Switzerland",
-            "Austria",
-            "Scandinavia",
-            "Eastern Europe",
-            "Australia",
-            "New Zealand",
-            "Japan",
-            "South Korea",
-            "China",
-            "India",
-            "Southeast Asia",
-          ]);
+          // Fallback to empty array - will show loading state
+          setTerritoriesFromAPI([]);
         } finally {
           setTerritoriesLoading(false);
         }
@@ -528,12 +621,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!timezonesLoaded) {
       setTimezoneLoading(true);
       try {
-        const { data, error } = await fetchAllTimezones();
-        if (!error && data.length > 0) {
+        const data = await fetchAllTimezonesNew();
+        if (data.length > 0) {
           setAllTimezones(data);
           setTimezonesLoaded(true);
         } else {
-            console.error('❌ Failed to fetch timezones:', error);
+            console.error('❌ No timezones received from API');
             // Fallback to default timezones
             setAllTimezones([]);
             setTimezonesLoaded(true);
@@ -587,95 +680,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
   }, [allTimezones, timezonesLoaded]);
 
-  // Fetch country-specific timezones when destination changes
+  // No longer fetch country-specific timezones - we show all timezones available
+
+  // Effect to show all timezones from API (no longer filtering by country)
   useEffect(() => {
-    const fetchCountryTimezones = async () => {
-      if (!suggestions?.destinationZones || suggestions.destinationZones.length === 0) {
-        return;
-      }
-
-      const firstDestination = suggestions.destinationZones[0];
-      if (!firstDestination || firstDestination.length !== 2) {
-        return;
-      }
-
-      // Only fetch if we're not showing all timezones
-      if (showAllTimezones) {
-        return;
-      }
-
-      setTimezoneLoading(true);
-      
-      try {
-        const { data, error } = await fetchTimezonesByCountry(firstDestination);
-        if (!error && data.length > 0) {
-          
-          // Process timezones for the specific country
-          const processedTimezones = data
-            .map(tz => ({
-              _id: tz._id,
-              name: tz.zoneName,
-              offset: tz.gmtOffset / 3600, // Convert seconds to hours
-              abbreviation: tz.zoneName.split('/').pop() || '',
-              countryName: tz.countryName
-            }))
-            .sort((a, b) => a.offset - b.offset);
-
-          setAvailableTimezones(processedTimezones);
-          
-          // Set the first timezone as default
-          if (processedTimezones.length > 0) {
-            const newSuggestions = { ...suggestions };
-            if (!newSuggestions.schedule) {
-              newSuggestions.schedule = { schedules: [], timeZones: [], flexibility: [], minimumHours: {} };
-            }
-            newSuggestions.schedule.timeZones = [processedTimezones[0]._id];
-            newSuggestions.schedule.time_zone = processedTimezones[0]._id;
-            setSuggestions(newSuggestions);
-          }
-        } else {
-          console.error('❌ Failed to fetch timezones for country:', error);
-          // Keep current timezones if country-specific fetch fails
-        }
-      } catch (error) {
-        console.error('❌ Error fetching timezones for country:', error);
-        // Keep current timezones if fetch fails
-      } finally {
-        setTimezoneLoading(false);
-      }
-    };
-
-    fetchCountryTimezones();
-  }, [suggestions?.destinationZones?.[0], showAllTimezones]); // Only depend on first destination and showAllTimezones
-
-  // Effect to handle switching between country-specific and all timezones
-  useEffect(() => {
-    if (showAllTimezones) {
-      // Show all timezones from API
-      if (allTimezones && allTimezones.length > 0) {
-        const processedTimezones = allTimezones
-          .map(tz => ({
-            _id: tz._id,
-            name: tz.zoneName,
-            offset: tz.gmtOffset / 3600,
-            abbreviation: tz.zoneName.split('/').pop() || '',
-            countryName: tz.countryName
-          }))
-          .sort((a, b) => a.offset - b.offset);
-        setAvailableTimezones(processedTimezones);
-      } else {
-        // Fallback to default timezones if API data is not available
-        setAvailableTimezones(Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
-          _id: `default_${code}`,
-          name,
-          offset,
-          abbreviation: code.split('(')[1]?.split(')')[0] || '',
-          countryName: ''
-        })));
-      }
+    if (allTimezones && allTimezones.length > 0 && availableTimezones.length === 0) {
+      const processedTimezones = allTimezones
+        .map(tz => ({
+          _id: tz._id,
+          name: tz.zoneName,
+          offset: tz.gmtOffset / 3600,
+          abbreviation: tz.zoneName.split('/').pop() || '',
+          countryName: tz.countryName
+        }))
+        .sort((a, b) => a.offset - b.offset);
+      setAvailableTimezones(processedTimezones);
     }
-    // If not showing all timezones, the country-specific effect will handle it
-  }, [showAllTimezones, allTimezones]);
+  }, [allTimezones, availableTimezones.length]);
 
   // Fetch skills from API
   useEffect(() => {
@@ -836,6 +857,30 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
   }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
 
+  // Load territory names when suggestions change
+  useEffect(() => {
+    const loadTerritoryNames = async () => {
+      if (!suggestions?.team?.territories || suggestions.team.territories.length === 0) {
+        setTerritoryNames({});
+        return;
+      }
+      
+      const names: {[key: string]: string} = {};
+      for (const territoryId of suggestions.team.territories) {
+        try {
+          const name = await getCountryNameById(territoryId);
+          names[territoryId] = name;
+        } catch (error) {
+          console.error(`Error loading territory name for ${territoryId}:`, error);
+          names[territoryId] = territoryId; // Fallback to ID
+        }
+      }
+      setTerritoryNames(names);
+    };
+
+    loadTerritoryNames();
+  }, [suggestions?.team?.territories]);
+
   // Force migration on component mount - only run once
   useEffect(() => {
     const forceMigration = () => {
@@ -946,38 +991,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           result.schedule.schedules = convertedSchedules;
         }
 
-        // Convert commission structure to options format if needed
-        if (result.commission && !(result.commission as any).options) {
-          // Convert old structure to new options structure
-          const oldCommission = result.commission as any;
-          const commissionOption = {
-            base: oldCommission.base || "Base + Commission",
-            baseAmount:
-              typeof oldCommission.baseAmount === "string"
-                ? parseFloat(oldCommission.baseAmount) || 0
-                : oldCommission.baseAmount || 0,
-            bonus: "Performance Bonus",
-            bonusAmount:
-              typeof oldCommission.bonusAmount === "string"
-                ? parseFloat(oldCommission.bonusAmount) || 0
-                : oldCommission.bonusAmount || 0,
-            structure: oldCommission.structure,
-            currency: oldCommission.currency || "EUR",
-            minimumVolume: oldCommission.minimumVolume || {
-              amount: 0,
-              period: "Monthly",
-              unit: "Sales",
-            },
-            transactionCommission: oldCommission.transactionCommission || {
-              type: "Fixed Amount",
-              amount: 0,
-            },
-          };
-
-          result.commission = {
-            options: [commissionOption],
-          };
-        }
+        // Commission data is now used directly as an object (no options array needed)
 
         // Validate and filter sectors to only allow predefined ones
         if (result.sectors && result.sectors.length > 0) {
@@ -1097,24 +1111,38 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           }
         }
 
-        // Convert destination zones from country names to alpha-2 codes
+        // Convert destination zones from country names to MongoDB ObjectIds
         if (result.destinationZones && result.destinationZones.length > 0) {
           
           const convertedZones = await Promise.all(result.destinationZones.map(async (zone) => {
-            // If it's already an alpha-2 code (2 letters), keep it
-            if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
+            // If it's already a MongoDB ObjectId (24 characters), keep it
+            if (typeof zone === 'string' && zone.length === 24) {
               return zone;
             }
             
-            // If it's "Global", replace with "France" (FR)
+            // If it's "Global", replace with France's MongoDB ObjectId
             if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
-              return 'FR';
+              // Find France in allCountriesFromAPI
+              const franceCountry = allCountriesFromAPI.find(c => 
+                c.name.common.toLowerCase() === 'france' || 
+                c.cca2 === 'FR'
+              );
+              return franceCountry ? franceCountry._id : zone;
             }
             
-            // If it's a country name, convert to alpha-2 code
+            // If it's an alpha-2 code, convert to MongoDB ObjectId
+            if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
+              const country = allCountriesFromAPI.find(c => c.cca2 === zone);
+              return country ? country._id : zone;
+            }
+            
+            // If it's a country name, convert to MongoDB ObjectId
             if (typeof zone === 'string') {
-              const alpha2Code = await getAlpha2Code(zone);
-              return alpha2Code;
+              const country = allCountriesFromAPI.find(c => 
+                c.name.common.toLowerCase() === zone.toLowerCase() ||
+                c.name.official.toLowerCase() === zone.toLowerCase()
+              );
+              return country ? country._id : zone;
             }
             
             return zone;
@@ -1122,8 +1150,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           
           result.destinationZones = convertedZones;
         } else {
-          // If no destination zones are provided, default to France
-          result.destinationZones = ['FR'];
+          // If no destination zones are provided, default to France's MongoDB ObjectId
+          const franceCountry = allCountriesFromAPI.find(c => 
+            c.name.common.toLowerCase() === 'france' || 
+            c.cca2 === 'FR'
+          );
+          result.destinationZones = franceCountry ? [franceCountry._id] : [];
         }
 
         setSuggestions(result);
@@ -1180,6 +1212,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       };
     });
   }, [availableTimezones]); // Only depend on availableTimezones
+
+  // Auto-select first job title when suggestions are loaded (only on initial load)
+  useEffect(() => {
+    if (suggestions?.jobTitles && suggestions.jobTitles.length > 0 && !selectedJobTitle) {
+      // Only auto-select if no manual selection has been made
+      setSelectedJobTitle(suggestions.jobTitles[0]);
+    }
+  }, [suggestions?.jobTitles]); // Remove selectedJobTitle from dependencies to prevent re-triggering
 
   // Re-validate skills when they are loaded from API
   useEffect(() => {
@@ -1358,25 +1398,57 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       };
       
       const finalSuggestions = finalMigration();
-      props.onConfirm(finalSuggestions);
+      
+      // Add selected job title to the final suggestions
+      const suggestionsWithSelectedTitle: GigSuggestion = {
+        ...finalSuggestions,
+        selectedJobTitle: selectedJobTitle || undefined
+      };
+      
+      props.onConfirm(suggestionsWithSelectedTitle);
     }
   };
 
-  // Helper function to get country name from alpha-2 code
-  const getCountryName = (alpha2Code: string): string => {
-    
-    // First check our predefined list
-    if (DESTINATION_ZONES[alpha2Code]) {
-      return DESTINATION_ZONES[alpha2Code];
+  // Helper function to get country name from API ID or alpha-2 code
+  const getCountryName = (countryId: string): string => {
+    // First check if it's an API ID (MongoDB ObjectId format)
+    if (countryId && countryId.length === 24) {
+      const country = allCountriesFromAPI.find(c => c._id === countryId);
+      if (country) {
+        return country.name.common;
+      }
     }
     
-    // Then check the fetched countries
-    const country = allCountries.find(c => c.cca2 === alpha2Code);
+    // Then check our predefined list (for backward compatibility)
+    if (DESTINATION_ZONES[countryId]) {
+      return DESTINATION_ZONES[countryId];
+    }
+    
+    // Then check the fetched countries by cca2 (for backward compatibility)
+    const country = allCountries.find(c => c.cca2 === countryId);
     if (country) {
       return country.name.common;
     }
     
-    return alpha2Code;
+    return countryId;
+  };
+
+  // Helper function to get territory name by ID
+  const getTerritoryName = (territoryId: string): string => {
+    // First check if we have the name in our resolved names cache
+    if (territoryNames[territoryId]) {
+      return territoryNames[territoryId];
+    }
+    
+    // Then check if it's an API ID (MongoDB ObjectId format) in loaded territories
+    if (territoryId && territoryId.length === 24) {
+      const country = territoriesFromAPI.find(c => c._id === territoryId);
+      if (country) {
+        return country.name.common;
+      }
+    }
+    // Fallback to display the ID as-is (for backward compatibility)
+    return territoryId;
   };
 
   // Helper function to search for countries by name
@@ -1385,14 +1457,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     
     setSearching(true);
     try {
-      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(searchTerm)}?fields=name,cca2`);
-      if (response.ok) {
-        const data: CountryData[] = await response.json();
-        return data;
-      } else {
-      }
+      const countries = await fetchAllCountries();
+      // Filter countries by search term
+      const filtered = countries.filter(country => 
+        country.name.common.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        country.name.official.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      // Convert to expected format
+      const data = filtered.map(country => ({
+        name: {
+          common: country.name.common,
+          official: country.name.official
+        },
+        cca2: country.cca2
+      }));
+      
+      return data;
     } catch (error) {
       console.error('❌ Error searching countries:', error);
+      return [];
     } finally {
       setSearching(false);
     }
@@ -1436,15 +1520,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       return country.cca2;
     }
     
-    // If not found, try to fetch from API
+    // If not found, try to fetch from our API
     try {
-      const response = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fields=name,cca2`);
-      if (response.ok) {
-        const data: CountryData[] = await response.json();
-        if (data.length > 0) {
-          const alpha2Code = data[0].cca2;
-          return alpha2Code;
-        }
+      const countries = await fetchAllCountries();
+      const country = countries.find(c => 
+        c.name.common.toLowerCase() === countryName.toLowerCase() ||
+        c.name.official.toLowerCase() === countryName.toLowerCase()
+      );
+      
+      if (country) {
+        return country.cca2;
       }
     } catch (error) {
       console.error('❌ Error fetching from API:', error);
@@ -1513,18 +1598,31 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
         break;
       case "destinationZones":
-        // For destination zones, we store the alpha-2 code
+        // For destination zones, we store the MongoDB ObjectId
         
         // If someone tries to add "Global", replace with "France"
         if (item.toLowerCase() === 'global') {
           item = 'France';
         }
         
-        const alpha2Code = getAlpha2CodeSync(item);
+        // Find the country by name or code and get its MongoDB ObjectId
+        let countryId = item;
+        if (item.length === 2) {
+          // It's an alpha-2 code, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => c.cca2 === item);
+          countryId = country ? country._id : item;
+        } else {
+          // It's a country name, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => 
+            c.name.common.toLowerCase() === item.toLowerCase() ||
+            c.name.official.toLowerCase() === item.toLowerCase()
+          );
+          countryId = country ? country._id : item;
+        }
         
         newSuggestions.destinationZones = [
           ...(newSuggestions.destinationZones || []),
-          alpha2Code,
+          countryId,
         ];
         
         break;
@@ -1605,15 +1703,29 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
         break;
       case "destinationZones":
-        // For destination zones, we store the alpha-2 code
+        // For destination zones, we store the MongoDB ObjectId
         
         // If someone tries to update to "Global", replace with "France"
         if (newValue.toLowerCase() === 'global') {
           newValue = 'France';
         }
         
-        const alpha2Code = getAlpha2CodeSync(newValue);
-        newSuggestions.destinationZones[index] = alpha2Code;
+        // Find the country by name or code and get its MongoDB ObjectId
+        let countryId = newValue;
+        if (newValue.length === 2) {
+          // It's an alpha-2 code, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => c.cca2 === newValue);
+          countryId = country ? country._id : newValue;
+        } else {
+          // It's a country name, find the corresponding MongoDB ObjectId
+          const country = allCountriesFromAPI.find(c => 
+            c.name.common.toLowerCase() === newValue.toLowerCase() ||
+            c.name.official.toLowerCase() === newValue.toLowerCase()
+          );
+          countryId = country ? country._id : newValue;
+        }
+        
+        newSuggestions.destinationZones[index] = countryId;
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential[index] = newValue;
@@ -1795,8 +1907,30 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               setSearchResults([]);
                             }
                           }}
+                          onBlur={() => {
+                            if (editValue.trim()) {
+                              updateItem(section, index, editValue);
+                            }
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                            setEditValue("");
+                            setSearchResults([]);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (editValue.trim()) {
+                                updateItem(section, index, editValue);
+                              }
+                              setEditingSection(null);
+                              setEditingIndex(null);
+                              setEditValue("");
+                              setSearchResults([]);
+                            } else if (e.key === 'Escape') {
+                              cancelEditing();
+                            }
+                          }}
                           placeholder="Type to search countries..."
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         autoFocus
                         />
                         {searching && (
@@ -1814,6 +1948,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                 onClick={() => {
                                   setEditValue(country.name.common);
                                   setSearchResults([]);
+                                  updateItem(section, index, country.name.common);
+                                  setEditingSection(null);
+                                  setEditingIndex(null);
+                                  setEditValue("");
                                 }}
                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
                               >
@@ -1827,8 +1965,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     ) : section === "sectors" || section === "industries" || section === "activities" ? (
                       <select
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setEditValue(value);
+                          if (value) {
+                            updateItem(section, index, value);
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                            setEditValue("");
+                          }
+                        }}
+                        onBlur={() => {
+                          setEditingSection(null);
+                          setEditingIndex(null);
+                          setEditValue("");
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         autoFocus
                       >
                         <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
@@ -1850,32 +2002,44 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         type="text"
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                        onBlur={() => {
+                          if (editValue.trim()) {
+                        updateItem(section, index, editValue);
+                          }
+                        setEditingSection(null);
+                        setEditingIndex(null);
+                        setEditValue("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            if (editValue.trim()) {
+                              updateItem(section, index, editValue);
+                            }
+                            setEditingSection(null);
+                            setEditingIndex(null);
+                            setEditValue("");
+                          } else if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         autoFocus
                       />
                     )}
                     <button
-                      onClick={() => {
-                        updateItem(section, index, editValue);
-                        setEditingSection(null);
-                        setEditingIndex(null);
-                        setEditValue("");
-                        setSearchResults([]);
-                      }}
-                      className="text-green-700 hover:text-green-800 p-1"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                    <button
                       onClick={cancelEditing}
                       className="text-gray-500 hover:text-gray-700 p-1"
+                      title="Cancel (Esc)"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
                 ) : (
                   <>
-                    <span className="text-gray-700 flex-1 font-medium">
+                    <div 
+                      className="text-gray-700 flex-1 font-medium cursor-pointer hover:bg-gray-50 rounded p-2 -m-2 transition-colors"
+                      onClick={() => startEditing(section, index, item)}
+                    >
                       {typeof item === "string"
                         ? section === "destinationZones" 
                           ? (() => {
@@ -1891,14 +2055,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             })()
                           : item
                         : item?.skill || item?.language || ""}
-                    </span>
+                    </div>
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => startEditing(section, index, item)}
-                        className="text-blue-900 hover:text-blue-700 p-1"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
                       <button
                         onClick={() => deleteItem(section, index)}
                         className="text-red-600 hover:text-red-700 p-1"
@@ -1932,8 +2090,30 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       setSearchResults([]);
                     }
                   }}
+                  onBlur={() => {
+                    if (editValue.trim()) {
+                      addItem(section, editValue.trim());
+                    }
+                    setEditValue("");
+                    setEditingSection(null);
+                    setEditingIndex(null);
+                    setSearchResults([]);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (editValue.trim()) {
+                        addItem(section, editValue.trim());
+                      }
+                      setEditValue("");
+                      setEditingSection(null);
+                      setEditingIndex(null);
+                      setSearchResults([]);
+                    } else if (e.key === 'Escape') {
+                      cancelEditing();
+                    }
+                  }}
                   placeholder="Type to search countries..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autoFocus
                 />
                 {searching && (
@@ -1949,7 +2129,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         key={country.cca2}
                         type="button"
                         onClick={() => {
-                          setEditValue(country.name.common);
+                          addItem(section, country.name.common);
+                          setEditValue("");
+                          setEditingSection(null);
+                          setEditingIndex(null);
                           setSearchResults([]);
                         }}
                         className="w-full px-4 py-3 text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
@@ -1964,8 +2147,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ) : section === "sectors" || section === "industries" || section === "activities" ? (
               <select
                 value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEditValue(value);
+                  if (value) {
+                    addItem(section, value);
+                    setEditValue("");
+                    setEditingSection(null);
+                    setEditingIndex(null);
+                  }
+                }}
+                onBlur={() => {
+                  setEditingSection(null);
+                  setEditingIndex(null);
+                  setEditValue("");
+                }}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autoFocus
               >
                 <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
@@ -1989,28 +2186,35 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 type="text"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => {
+                if (editValue.trim()) {
+                  addItem(section, editValue.trim());
+                  }
+                  setEditValue("");
+                  setEditingSection(null);
+                  setEditingIndex(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (editValue.trim()) {
+                      addItem(section, editValue.trim());
+                    }
+                    setEditValue("");
+                    setEditingSection(null);
+                    setEditingIndex(null);
+                  } else if (e.key === 'Escape') {
+                    cancelEditing();
+                  }
+                }}
                 placeholder={`Add a new ${title.toLowerCase()}`}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 focus:border-blue-700"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 autoFocus
               />
             )}
             <button
-              onClick={() => {
-                if (editValue.trim()) {
-                  addItem(section, editValue.trim());
-                  setEditValue("");
-                  setEditingSection(null);
-                  setEditingIndex(null);
-                  setSearchResults([]);
-                }
-              }}
-              className="text-green-700 hover:text-green-800 p-2"
-            >
-              <Check className="w-5 h-5" />
-            </button>
-            <button
               onClick={cancelEditing}
               className="text-gray-500 hover:text-gray-700 p-2"
+              title="Cancel (Esc)"
             >
               <X className="w-5 h-5" />
             </button>
@@ -2299,7 +2503,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       onClick={() => handleDayToggle(day, group.hours)}
                       disabled={isInOtherGroup}
                       className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                        ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                        ${isSelected ? 'bg-purple-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'}
                       `}
                     >
                       {day}
@@ -2355,7 +2559,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <button
                     onClick={() => handlePresetClick(group, "9-5")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                   >
                     <Sun className="w-4 h-4 text-yellow-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
@@ -2364,7 +2568,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Early")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                   >
                     <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
@@ -2373,7 +2577,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Late")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                   >
                     <Clock className="w-4 h-4 text-indigo-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
@@ -2382,7 +2586,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Evening")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                   >
                     <Moon className="w-4 h-4 text-purple-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
@@ -2479,7 +2683,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "9-5")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                 >
                   <Sun className="w-4 h-4 text-yellow-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
@@ -2488,7 +2692,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Early")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                 >
                   <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
@@ -2497,7 +2701,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Late")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                 >
                   <Clock className="w-4 h-4 text-indigo-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
@@ -2506,7 +2710,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Evening")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
                 >
                   <Moon className="w-4 h-4 text-purple-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
@@ -2527,13 +2731,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés ET qu'il n'y a pas de groupes vides */}
         {!allDaysSelected && emptySchedules.length === 0 && (
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-center mt-8">
             <button
               onClick={addNewScheduleGroup}
-              className="flex items-center space-x-2 px-5 py-2 border-2 border-dashed border-blue-400 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+              className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-300 focus:ring-opacity-50"
             >
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
               <Plus className="w-5 h-5" />
-              <span>Add Schedule Group</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-bold">Add Schedule Group</div>
+                  <div className="text-xs text-purple-100 opacity-90">Create a new time slot</div>
+                </div>
+              </div>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
           </div>
         )}
@@ -2570,22 +2782,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     return (
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Gauge className="w-5 h-5 text-orange-600" />
-            </div>
-            <h4 className="text-lg font-bold text-gray-800">Minimum Hours Requirements</h4>
-          </div>
+        <div className="flex items-center space-x-2 mb-4">
+          <Clock className="w-5 h-5 text-purple-500" />
+          <h4 className="text-lg font-semibold text-gray-900">Minimum Hours Requirements</h4>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-6 border-2 border-orange-100">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-gray-700 flex items-center">
-                <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-                Daily Hours
-              </label>
+        <div className="space-y-4">
+          {/* Hours Input Cards - Horizontal Layout */}
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Daily Hours */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Daily Hours</label>
               <div className="relative">
                 <input
                   type="number"
@@ -2594,20 +2802,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   value={suggestions.schedule.minimumHours?.daily || ''}
                   onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
                   placeholder="e.g. 8"
-                  className="w-full p-4 pr-12 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                 />
-                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
                   hrs
                 </span>
               </div>
-              <p className="text-xs text-gray-600">Minimum hours per day</p>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-gray-700 flex items-center">
-                <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
-                Weekly Hours
-              </label>
+              {/* Weekly Hours */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Weekly Hours</label>
               <div className="relative">
                 <input
                   type="number"
@@ -2616,20 +2821,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   value={suggestions.schedule.minimumHours?.weekly || ''}
                   onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
                   placeholder="e.g. 40"
-                  className="w-full p-4 pr-12 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white transition-all duration-200 hover:border-amber-300"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                 />
-                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
                   hrs
                 </span>
               </div>
-              <p className="text-xs text-gray-600">Minimum hours per week</p>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-sm font-semibold text-gray-700 flex items-center">
-                <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                Monthly Hours
-              </label>
+              {/* Monthly Hours */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Monthly Hours</label>
               <div className="relative">
                 <input
                   type="number"
@@ -2638,39 +2840,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   value={suggestions.schedule.minimumHours?.monthly || ''}
                   onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
                   placeholder="e.g. 160"
-                  className="w-full p-4 pr-12 border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white transition-all duration-200 hover:border-red-300"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                 />
-                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
                   hrs
                 </span>
               </div>
-              <p className="text-xs text-gray-600">Minimum hours per month</p>
+              </div>
             </div>
           </div>
 
-          {/* Summary Card */}
-          <div className="mt-6 p-4 bg-white rounded-lg border border-orange-200">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-orange-600">
-                  {suggestions.schedule.minimumHours?.daily || 0}
-                </div>
-                <div className="text-xs text-gray-500">Daily</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-amber-600">
-                  {suggestions.schedule.minimumHours?.weekly || 0}
-                </div>
-                <div className="text-xs text-gray-500">Weekly</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-red-600">
-                  {suggestions.schedule.minimumHours?.monthly || 0}
-                </div>
-                <div className="text-xs text-gray-500">Monthly</div>
-              </div>
-          </div>
-                  </div>
         </div>
       </div>
     );
@@ -2711,47 +2890,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     // Get the first destination zone for display
     const firstDestination = suggestions.destinationZones?.[0];
-    const destinationCountryName = firstDestination ? getCountryName(firstDestination) : 'Unknown';
+    firstDestination ? getCountryName(firstDestination) : 'Unknown';
 
     return (
-      <div className="mb-8 p-6 rounded-xl border border-green-200 bg-green-50">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">TZ</div>
-            <div>
-              <h4 className="text-xl font-bold text-green-900">Time Zone</h4>
-              {firstDestination && !showAllTimezones && (
-                <p className="text-sm text-green-700">
-                  Based on destination: <span className="font-semibold">{destinationCountryName} ({firstDestination})</span>
-                </p>
-              )}
-              {showAllTimezones && (
-                <p className="text-sm text-green-700">
-                  Showing <span className="font-semibold">all available timezones</span>
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            {timezoneLoading && (
-              <div className="flex items-center">
-                <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                <span className="text-sm text-green-600 ml-1">Loading...</span>
-              </div>
-            )}
-            {firstDestination && (
-              <button
-                onClick={() => setShowAllTimezones(!showAllTimezones)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  showAllTimezones
-                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-              >
-                {showAllTimezones ? 'Show Country Only' : 'Show All Timezones'}
-              </button>
-            )}
-          </div>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <Globe2 className="w-5 h-5 text-purple-500" />
+          <h4 className="text-lg font-semibold text-gray-900">Time Zone</h4>
         </div>
         
         {/* Search input */}
@@ -2762,13 +2907,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               placeholder="Search timezones by name, country, or abbreviation..."
               value={timezoneSearch}
               onChange={(e) => setTimezoneSearch(e.target.value)}
-              className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
         )}
         
         <select
-          className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
           value={suggestions.schedule.time_zone || ''}
           onChange={handleTimezoneChange}
           disabled={timezoneLoading}
@@ -2783,8 +2928,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {availableTimezones.length > 0 
             ? timezoneSearch 
-              ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ''}`
-              : `${availableTimezones.length} timezones available${!showAllTimezones && firstDestination ? ` for ${destinationCountryName}` : ' worldwide'}`
+              ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones`
+              : `${availableTimezones.length} timezones available worldwide`
             : timezoneLoading 
               ? 'Loading timezones from API...'
               : 'No timezones available'
@@ -2796,9 +2941,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const renderDestinationZonesSection = () => {
     if (!suggestions) return null;
-
+    
     const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+      const value = e.target.value; // This is the MongoDB ObjectId
       if (!value) return;
       
       // Use the existing addItem logic for destination zones
@@ -2818,41 +2963,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     
     // Get all available countries from API, excluding already selected ones
     const availableCountries = allCountriesFromAPI
-      .filter(country => !selected.includes(country.cca2))
+      .filter(country => !selected.includes(country._id))
       .map(country => ({ 
-        code: country.cca2, 
+        code: country._id,  // Use MongoDB ObjectId as the value
         name: country.name.common 
       }));
 
     return (
-      <div className="mb-8 p-6 rounded-xl border border-amber-200 bg-amber-50">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-amber-500 text-white font-bold mr-3">D</div>
-          <h4 className="text-xl font-bold text-amber-900">Destination Zones</h4>
-        </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(zone => (
-            <span key={zone} className="flex items-center bg-amber-100 text-amber-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              <span>{getCountryName(zone)}</span>
-              <span className="ml-1 text-xs text-amber-600 bg-amber-200 px-1 rounded">
-                {zone}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleRemoveDestinationZone(zone)}
-                className="ml-2 text-amber-600 hover:text-amber-800 rounded-full focus:outline-none focus:bg-amber-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Destination Zones</h4>
         </div>
         
         {/* Select pour ajouter */}
         <select
-          className="w-full p-3 rounded-lg border border-amber-300 bg-white text-amber-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-400 mb-2"
+          className="w-full p-3 rounded-lg border border-blue-300 bg-white text-blue-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
           defaultValue=""
           onChange={handleAddDestinationZone}
           disabled={destinationCountriesLoading}
@@ -2861,15 +2987,662 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
           </option>
           {availableCountries.map(({ code, name }) => (
-            <option key={code} value={name}>{name} ({code})</option>
+            <option key={code} value={code}>{name}</option>
           ))}
         </select>
+        
+        {/* Badges sélectionnés - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
+            {selected.map(zone => (
+              <span key={zone} className="group relative flex items-center bg-blue-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-blue-800 transition-colors">
+                <span>{getCountryName(zone)}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDestinationZone(zone)}
+                  className="ml-2 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        
         <p className="text-xs text-gray-500 italic text-center mt-2">
           {destinationCountriesLoading 
             ? 'Loading countries from API...' 
             : `${availableCountries.length} countries available for selection`
           }
         </p>
+      </div>
+    );
+  };
+
+  const renderJobTitlesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddJobTitle = () => {
+      const value = newJobTitle.trim();
+      if (!value) return;
+      
+      // Add the job title if it's not already in the list
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.jobTitles) newSuggestions.jobTitles = [];
+      if (!newSuggestions.jobTitles.includes(value)) {
+        newSuggestions.jobTitles = [...newSuggestions.jobTitles, value];
+        setSuggestions(newSuggestions);
+        // Auto-select the newly added job title
+        setSelectedJobTitle(value);
+        setNewJobTitle('');
+        setShowJobTitleForm(false);
+      }
+    };
+
+    const handleUpdateJobTitle = (index: number) => {
+      const value = newJobTitle.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.jobTitles) {
+        const oldTitle = newSuggestions.jobTitles[index];
+        newSuggestions.jobTitles[index] = value;
+        setSuggestions(newSuggestions);
+        // If the old title was selected, update selection to the new title
+        if (selectedJobTitle === oldTitle) {
+          setSelectedJobTitle(value);
+        }
+        setNewJobTitle('');
+        setEditingJobTitleIndex(null);
+      }
+    };
+
+    const handleRemoveJobTitle = (jobTitle: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.jobTitles = newSuggestions.jobTitles.filter(jt => jt !== jobTitle);
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEditClick = (title: string, index: number) => {
+      setNewJobTitle(title);
+      setEditingJobTitleIndex(index);
+      setShowJobTitleForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewJobTitle('');
+      setEditingJobTitleIndex(null);
+      setShowJobTitleForm(false);
+    };
+
+    const selected = suggestions.jobTitles || [];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-sm">
+            <Briefcase className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Position Details</h4>
+            <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
+          </div>
+        </div>
+        
+        {/* Instructions */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-start space-x-3">
+            <div className="p-1 bg-blue-100 rounded-full mt-0.5">
+              <AlertCircle className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Start by providing the basic information about the contact center role. Be specific and clear about the position's requirements and responsibilities.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Job titles list */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h5 className="text-lg font-semibold text-gray-900">Available Job Titles</h5>
+            <span className="text-sm text-gray-500">Click to select your main position</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+          {selected.map((title, index) => (
+            <span key={index}>
+              {editingJobTitleIndex === index ? (
+                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
+                  <input
+                    type="text"
+                    value={newJobTitle}
+                    onChange={(e) => setNewJobTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleUpdateJobTitle(index);
+                      } else if (e.key === 'Escape') {
+                        handleCancelEdit();
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newJobTitle.trim()) {
+                        handleUpdateJobTitle(index);
+                      } else {
+                        handleCancelEdit();
+                      }
+                    }}
+                      className="bg-transparent border-none outline-none text-sm font-semibold text-blue-800 min-w-0 flex-1"
+                    style={{ width: `${Math.max(newJobTitle.length, 10)}ch` }}
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleUpdateJobTitle(index)}
+                      className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                    title="Save"
+                  >
+                      <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                      className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Cancel"
+                  >
+                      <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <span 
+                    className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${
+                    selectedJobTitle === title 
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105' 
+                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedJobTitle(selectedJobTitle === title ? null : title);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Disable double-click functionality
+                  }}
+                  title={selectedJobTitle === title ? "Selected as main job title" : "Click to select as main job title"}
+                >
+                  {selectedJobTitle === title && (
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                  )}
+                  {title}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(title, index);
+                    }}
+                      className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${
+                        selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100'
+                    }`}
+                    title="Click to edit"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveJobTitle(title);
+                      if (selectedJobTitle === title) {
+                        setSelectedJobTitle(null);
+                      }
+                    }}
+                    className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${
+                      selectedJobTitle === title 
+                        ? 'text-white hover:bg-blue-700' 
+                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                    }`}
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </span>
+          ))}
+          
+          {/* Add button/input at the end */}
+          {showJobTitleForm ? (
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full">
+              <input
+                type="text"
+                value={newJobTitle}
+                onChange={(e) => setNewJobTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddJobTitle();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+                onBlur={() => {
+                  if (newJobTitle.trim()) {
+                    handleAddJobTitle();
+                  } else {
+                    handleCancelEdit();
+                  }
+                }}
+                placeholder="Enter job title..."
+                className="bg-transparent border-none outline-none text-sm font-medium text-blue-800 min-w-0 flex-1"
+                style={{ width: `${Math.max(newJobTitle.length || 15, 15)}ch` }}
+                autoFocus
+              />
+              <button
+                onClick={handleAddJobTitle}
+                disabled={!newJobTitle.trim()}
+                className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                title="Add"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-500 hover:text-gray-700"
+                title="Cancel"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowJobTitleForm(true)}
+              className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Add</span>
+            </button>
+          )}
+        </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderHighlightsSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddHighlight = () => {
+      const value = newHighlight.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.highlights) newSuggestions.highlights = [];
+      if (!newSuggestions.highlights.includes(value)) {
+        newSuggestions.highlights = [...newSuggestions.highlights, value];
+        setSuggestions(newSuggestions);
+        setNewHighlight('');
+        setShowHighlightForm(false);
+      }
+    };
+
+    const handleUpdateHighlight = (index: number) => {
+      const value = newHighlight.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.highlights) {
+        newSuggestions.highlights[index] = value;
+        setSuggestions(newSuggestions);
+        setNewHighlight('');
+        setEditingHighlightIndex(null);
+      }
+    };
+
+    const handleRemoveHighlight = (highlight: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.highlights = newSuggestions.highlights.filter(h => h !== highlight);
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEditClick = (highlight: string, index: number) => {
+      setNewHighlight(highlight);
+      setEditingHighlightIndex(index);
+      setShowHighlightForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewHighlight('');
+      setEditingHighlightIndex(null);
+      setShowHighlightForm(false);
+    };
+
+    const selected = suggestions.highlights || [];
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
+        </div>
+        
+        
+        {/* Highlights list */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+          {selected.map((highlight, index) => (
+            <span key={index}>
+              {editingHighlightIndex === index ? (
+                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
+                  <input
+                    type="text"
+                    value={newHighlight}
+                    onChange={(e) => setNewHighlight(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleUpdateHighlight(index);
+                      } else if (e.key === 'Escape') {
+                        handleCancelEdit();
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newHighlight.trim()) {
+                        handleUpdateHighlight(index);
+                      } else {
+                        handleCancelEdit();
+                      }
+                    }}
+                    className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
+                    style={{ width: `${Math.max(newHighlight.length, 10)}ch` }}
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleUpdateHighlight(index)}
+                    className="text-green-600 hover:text-green-800"
+                    title="Save"
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-500 hover:text-gray-700"
+                    title="Cancel"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <span 
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+                  {highlight}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(highlight, index);
+                    }}
+                    className="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20 text-white"
+                    title="Click to edit"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveHighlight(highlight)}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </span>
+          ))}
+          
+          {/* Add button/input at the end */}
+          {showHighlightForm ? (
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
+              <input
+                type="text"
+                value={newHighlight}
+                onChange={(e) => setNewHighlight(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddHighlight();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+                onBlur={() => {
+                  if (newHighlight.trim()) {
+                    handleAddHighlight();
+                  } else {
+                    handleCancelEdit();
+                  }
+                }}
+                placeholder="Enter highlight..."
+                className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
+                style={{ width: `${Math.max(newHighlight.length || 15, 15)}ch` }}
+                autoFocus
+              />
+              <button
+                onClick={handleAddHighlight}
+                disabled={!newHighlight.trim()}
+                className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                title="Add"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-500 hover:text-gray-700"
+                title="Cancel"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowHighlightForm(true)}
+              className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Add</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDeliverablesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddDeliverable = () => {
+      const value = newDeliverable.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.deliverables) newSuggestions.deliverables = [];
+      if (!newSuggestions.deliverables.includes(value)) {
+        newSuggestions.deliverables = [...newSuggestions.deliverables, value];
+        setSuggestions(newSuggestions);
+        setNewDeliverable('');
+        setShowDeliverableForm(false);
+      }
+    };
+
+    const handleUpdateDeliverable = (index: number) => {
+      const value = newDeliverable.trim();
+      if (!value) return;
+      
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.deliverables) {
+        newSuggestions.deliverables[index] = value;
+        setSuggestions(newSuggestions);
+        setNewDeliverable('');
+        setEditingDeliverableIndex(null);
+      }
+    };
+
+    const handleRemoveDeliverable = (deliverable: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.deliverables = newSuggestions.deliverables.filter(d => d !== deliverable);
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEditClick = (deliverable: string, index: number) => {
+      setNewDeliverable(deliverable);
+      setEditingDeliverableIndex(index);
+      setShowDeliverableForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewDeliverable('');
+      setEditingDeliverableIndex(null);
+      setShowDeliverableForm(false);
+    };
+
+    const selected = suggestions.deliverables || [];
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
+        </div>
+        
+        
+        {/* Deliverables list */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+          {selected.map((deliverable, index) => (
+            <span key={index}>
+              {editingDeliverableIndex === index ? (
+                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
+                  <input
+                    type="text"
+                    value={newDeliverable}
+                    onChange={(e) => setNewDeliverable(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleUpdateDeliverable(index);
+                      } else if (e.key === 'Escape') {
+                        handleCancelEdit();
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newDeliverable.trim()) {
+                        handleUpdateDeliverable(index);
+                      } else {
+                        handleCancelEdit();
+                      }
+                    }}
+                    className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
+                    style={{ width: `${Math.max(newDeliverable.length, 10)}ch` }}
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleUpdateDeliverable(index)}
+                    className="text-purple-600 hover:text-purple-800"
+                    title="Save"
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-500 hover:text-gray-700"
+                    title="Cancel"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <span 
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+                  {deliverable}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(deliverable, index);
+                    }}
+                    className="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20 text-white"
+                    title="Click to edit"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDeliverable(deliverable)}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+            </span>
+          ))}
+          
+          {/* Add button/input at the end */}
+          {showDeliverableForm ? (
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
+              <input
+                type="text"
+                value={newDeliverable}
+                onChange={(e) => setNewDeliverable(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddDeliverable();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+                onBlur={() => {
+                  if (newDeliverable.trim()) {
+                    handleAddDeliverable();
+                  } else {
+                    handleCancelEdit();
+                  }
+                }}
+                placeholder="Enter deliverable..."
+                className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
+                style={{ width: `${Math.max(newDeliverable.length || 15, 15)}ch` }}
+                autoFocus
+              />
+              <button
+                onClick={handleAddDeliverable}
+                disabled={!newDeliverable.trim()}
+                className="text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                title="Add"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-500 hover:text-gray-700"
+                title="Cancel"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowDeliverableForm(true)}
+              className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Add</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -2900,46 +3673,53 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-orange-500 text-white font-bold mr-3">S</div>
-          <h4 className="text-xl font-bold text-orange-900">Sectors</h4>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(sector => (
-            <span key={sector} className="flex items-center bg-orange-100 text-orange-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {sector}
-              <button
-                type="button"
-                onClick={() => handleRemoveSector(sector)}
-                className="ml-2 text-orange-600 hover:text-orange-800 rounded-full focus:outline-none focus:bg-orange-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
-        </div>
-        {/* Select pour ajouter */}
+        
+        {/* Add selector */}
         <select
-          className="w-full p-3 rounded-lg border border-orange-300 bg-white text-orange-900 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400 mb-2"
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
           defaultValue=""
           onChange={handleAddSector}
         >
-          <option value="" disabled>Add sector...</option>
+          <option value="" disabled>Select a sector...</option>
           {available.map(sector => (
             <option key={sector} value={sector}>{sector}</option>
           ))}
         </select>
+        
+        {/* Available sectors */}
+        {selected.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+          {selected.map(sector => (
+                <span 
+                  key={sector} 
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+              {sector}
+              <button
+                type="button"
+                onClick={() => handleRemoveSector(sector)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Remove"
+              >
+                    <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+          </div>
+        )}
       </div>
     );
   };
 
   const renderActivitiesSection = () => {
     if (!suggestions) return null;
-
-
 
     const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
@@ -2970,55 +3750,62 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     const selected = suggestions.activities || [];
     const available = activities.filter(activity => !selected.includes(activity.value));
-    
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-bold mr-3">A</div>
-          <h4 className="text-xl font-bold text-green-900">Activities</h4>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Activities</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(activityId => {
-            const activityName = getActivityNameById(activityId);
-            return activityName ? (
-              <span key={activityId} className="flex items-center bg-green-100 text-green-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-                {activityName}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveActivity(activityId)}
-                  className="ml-2 text-green-600 hover:text-green-800 rounded-full focus:outline-none focus:bg-green-200"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </span>
-            ) : null;
-          })}
-        </div>
-        {/* Select pour ajouter */}
+        
+        {/* Add selector */}
         {activitiesLoading ? (
-          <div className="w-full p-3 rounded-lg border border-green-300 bg-gray-50 text-gray-500 text-center">
+          <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
             <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
             Loading activities from API...
           </div>
         ) : (
           <select
-            className="w-full p-3 rounded-lg border border-green-300 bg-white text-green-900 font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 mb-2"
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             defaultValue=""
             onChange={handleAddActivity}
           >
-            <option value="" disabled>Add activity...</option>
+            <option value="" disabled>Select an activity...</option>
             {available.map(activity => (
               <option key={activity.value} value={activity.label}>{activity.label}</option>
             ))}
           </select>
         )}
+        
         {!activitiesLoading && activities.length === 0 && (
-          <p className="text-xs text-red-500 italic text-center mt-2">
+          <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
             ⚠️ No activities available. Please check API connection.
-          </p>
+          </div>
+        )}
+        
+        {/* Available activities */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map(activityId => {
+                const activityName = getActivityNameById(activityId);
+                return activityName ? (
+                  <span 
+                    key={activityId} 
+                    className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  >
+                    {activityName}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveActivity(activityId)}
+                      className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ) : null;
+              })}
+          </div>
         )}
       </div>
     );
@@ -3026,8 +3813,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const renderIndustriesSection = () => {
     if (!suggestions) return null;
-
-
 
     const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
@@ -3058,55 +3843,62 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     const selected = suggestions.industries || [];
     const available = industries.filter(industry => !selected.includes(industry.value));
-    
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 text-white font-bold mr-3">I</div>
-          <h4 className="text-xl font-bold text-indigo-900">Industries</h4>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Industries</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(industryId => {
-            const industryName = getIndustryNameById(industryId);
-            return industryName ? (
-              <span key={industryId} className="flex items-center bg-indigo-100 text-indigo-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-                {industryName}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveIndustry(industryId)}
-                  className="ml-2 text-indigo-600 hover:text-indigo-800 rounded-full focus:outline-none focus:bg-indigo-200"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </span>
-            ) : null;
-          })}
-        </div>
-        {/* Select pour ajouter */}
+        
+        {/* Add selector */}
         {industriesLoading ? (
-          <div className="w-full p-3 rounded-lg border border-indigo-300 bg-gray-50 text-gray-500 text-center">
+          <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
             <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
             Loading industries from API...
           </div>
         ) : (
           <select
-            className="w-full p-3 rounded-lg border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 mb-2"
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             defaultValue=""
             onChange={handleAddIndustry}
           >
-            <option value="" disabled>Add industry...</option>
+            <option value="" disabled>Select an industry...</option>
             {available.map(industry => (
               <option key={industry.value} value={industry.label}>{industry.label}</option>
             ))}
           </select>
         )}
+        
         {!industriesLoading && industries.length === 0 && (
-          <p className="text-xs text-red-500 italic text-center mt-2">
+          <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
             ⚠️ No industries available. Please check API connection.
-          </p>
+          </div>
+        )}
+        
+        {/* Selected badges - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map(industryId => {
+                const industryName = getIndustryNameById(industryId);
+                return industryName ? (
+                  <span 
+                    key={industryId} 
+                    className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  >
+                    {industryName}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveIndustry(industryId)}
+                      className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ) : null;
+              })}
+          </div>
         )}
       </div>
     );
@@ -3138,27 +3930,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const available = FLEXIBILITY_SELECT_OPTIONS.filter(opt => !selected.includes(opt));
 
     return (
-      <div className="mb-8 p-6 rounded-xl border border-purple-200 bg-purple-50">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-purple-500 text-white font-bold mr-3">F</div>
-          <h4 className="text-xl font-bold text-purple-900">Schedule Flexibility</h4>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <Gauge className="w-5 h-5 text-purple-500" />
+          <h4 className="text-lg font-semibold text-gray-900">Schedule Flexibility</h4>
         </div>
-        {/* Badges sélectionnés */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(option => (
-            <span key={option} className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full">
-              {option}
-              <button
-                type="button"
-                onClick={() => handleRemoveFlexibility(option)}
-                className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
-        </div>
+        
         {/* Select pour ajouter */}
         <select
           className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
@@ -3170,6 +3947,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={option} value={option}>{option}</option>
           ))}
         </select>
+        
+        {/* Badges sélectionnés - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
+          {selected.map(option => (
+              <span key={option} className="group relative flex items-center bg-purple-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
+              {option}
+              <button
+                type="button"
+                onClick={() => handleRemoveFlexibility(option)}
+                  className="ml-2 text-white hover:text-purple-200 rounded-full focus:outline-none focus:bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Remove"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </span>
+          ))}
+        </div>
+        )}
+        
         <p className="text-xs text-gray-500 italic text-center mt-2">
           Select all applicable schedule flexibility options
         </p>
@@ -3202,11 +3999,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     return (
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-lg font-semibold text-blue-900">
-            Seniority Level
-          </h4>
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Seniority Level</h4>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3217,7 +4013,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <select
               value={suggestions.seniority?.level || ""}
               onChange={(e) => handleSeniorityLevelChange(e.target.value)}
-              className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               <option value="">Select level...</option>
               {predefinedOptions.basic.seniorityLevels.map((level) => (
@@ -3236,7 +4032,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               value={suggestions.seniority?.yearsExperience || ""}
               onChange={(e) => handleYearsExperienceChange(e.target.value)}
               placeholder="e.g. 5"
-              className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
         </div>
@@ -3278,44 +4074,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const renderCommissionSection = () => {
     if (!suggestions) return null;
 
-    const addCommissionOption = () => {
-      const newSuggestions = { ...suggestions };
-      if (!newSuggestions.commission) {
-        newSuggestions.commission = { options: [] };
-      }
-
-      const newOption = {
-        base: "Base + Commission",
-        baseAmount: 0,
-        bonus: "Performance Bonus",
-        bonusAmount: 0,
-        structure: "Fixed",
-        currency: "EUR",
-        minimumVolume: {
-          amount: 0,
-          period: "Monthly",
-          unit: "Sales",
-        },
-        transactionCommission: {
-          type: "Fixed Amount",
-          amount: 0,
-        },
-      };
-
-      newSuggestions.commission.options.push(newOption);
-      setSuggestions(newSuggestions);
-    };
 
     const updateCommissionOption = (
-      index: number,
+      _index: number,
       field: string,
       value: string | number
     ) => {
       const newSuggestions = { ...suggestions };
-      if (
-        newSuggestions.commission &&
-        newSuggestions.commission.options[index]
-      ) {
+      if (newSuggestions.commission) {
         // Correction : parser uniquement les champs numériques
         const numericFields = [
           'amount', 'baseAmount', 'bonusAmount'
@@ -3324,250 +4090,179 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           const [parent, child] = field.split(".");
           if (numericFields.includes(child)) {
             const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-            (newSuggestions.commission.options[index] as any)[parent][child] = numericValue;
+            (newSuggestions.commission as any)[parent][child] = numericValue;
           } else {
-            (newSuggestions.commission.options[index] as any)[parent][child] = value;
+            (newSuggestions.commission as any)[parent][child] = value;
           }
         } else {
           if (numericFields.includes(field)) {
             const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-            (newSuggestions.commission.options[index] as any)[field] = numericValue;
+            (newSuggestions.commission as any)[field] = numericValue;
           } else {
-            (newSuggestions.commission.options[index] as any)[field] = value;
+            (newSuggestions.commission as any)[field] = value;
           }
         }
         setSuggestions(newSuggestions);
       }
     };
 
-    const deleteCommissionOption = (index: number) => {
-      const newSuggestions = { ...suggestions };
-      if (newSuggestions.commission) {
-        newSuggestions.commission.options.splice(index, 1);
-        setSuggestions(newSuggestions);
-      }
-    };
 
     return (
       <div className="mb-8">
-        {/* Enhanced Header */}
-        <div className="flex items-center justify-between mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
+        {/* Commission Header */}
+        {/* <div className="flex items-center mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-md">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
-                <DollarSign className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Commission Structure</h3>
-                <p className="text-sm text-gray-600">
-                  Configure compensation structure and performance incentives
-                </p>
-              </div>
+            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <button
-              onClick={addCommissionOption}
-              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Option</span>
-            </button>
+            <div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent">Commission Structure</h3>
+              <p className="text-sm text-green-600 font-medium">Compensation details and performance incentives</p>
+            </div>
           </div>
-        </div>
+        </div> */}
 
-        {suggestions.commission?.options &&
-        suggestions.commission.options.length > 0 ? (
-          <div className="space-y-8">
-            {suggestions.commission.options.map((option, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                {/* Enhanced Header with delete button */}
-                <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-                    <h4 className="text-lg font-bold text-gray-800">Commission Option #{index + 1}</h4>
+        {suggestions.commission ? (
+          <div className="rounded-3xl overflow-hidden">
+            {(() => {
+              const option = suggestions.commission;
+              const index = 0;
+              return (
+                <div className="p-8">
+                  {/* Header Section */}
+                  {/* <div className="text-center mb-8 pb-6 border-b border-gray-200">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg mb-4">
+                      <DollarSign className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">
+                      Commission Structure
+                    </h2>
+                    <p className="text-gray-500 text-sm">Configure compensation and performance incentives</p>
+                  </div> */}
+
+                  {/* Commission Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    {/* Currency Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <DollarSign className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Currency</h3>
+                          <p className="text-sm text-gray-500">Base currency for payments</p>
+                        </div>
+                      </div>
+                      
+                      <select
+                        value={option.currency || getDefaultCurrencyId()}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "currency",
+                            e.target.value
+                          )
+                        }
+                        disabled={currenciesLoading}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all"
+                      >
+                        <option value="">Select currency...</option>
+                        {currencies.map((currency) => (
+                          <option key={currency._id} value={currency._id}>
+                            {currency.symbol} {currency.name} ({currency.code})
+                          </option>
+                        ))}
+                      </select>
+                      
+                      {currenciesLoading && (
+                        <div className="flex items-center mt-3 text-sm text-blue-600">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Loading currencies...
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Commission Per Call Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <Briefcase className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
+                          <p className="text-sm text-gray-500">Base amount per successful call</p>
                   </div>
-                  <button
-                    onClick={() => deleteCommissionOption(index)}
-                    className="p-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-200 group"
-                    title="Delete option"
-                  >
-                    <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  </button>
                 </div>
 
-                {/* Base Configuration */}
-                <div className="mb-8">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                      <Briefcase className="w-5 h-5 text-blue-600" />
-                    </div>
-                    Base Configuration
-                  </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                        Base Type
-                      </label>
-                      <select
-                        value={option.base || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(index, "base", e.target.value)
-                        }
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-gray-300"
-                      >
-                        <option value="">Select base type...</option>
-                        <option value="Fixed Salary">Fixed Salary</option>
-                        <option value="Base + Commission">
-                          Base + Commission
-                        </option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center">
-                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                        Base Amount
-                      </label>
                       <div className="relative">
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={
-                            typeof option.baseAmount === "number"
-                              ? option.baseAmount
-                              : option.baseAmount
-                              ? parseFloat(option.baseAmount)
-                              : ""
-                          }
-                          onChange={(e) =>
+                          value={option.baseAmount || ""}
+                          onChange={(e) => {
                             updateCommissionOption(
-                              index,
+                              0,
                               "baseAmount",
                               e.target.value
-                            )
-                          }
-                          placeholder="e.g. 2500"
-                          className="w-full p-4 pr-16 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                            );
+                          }}
+                          placeholder="2500"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
                         />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                        </span>
+                    </div>
+                    </div>
+
+                    {/* Transaction Commission Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <DollarSign className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
+                          <p className="text-sm text-gray-500">Commission per transaction</p>
+                        </div>
+                      </div>
+                      
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={option.transactionCommission?.amount || ""}
+                          onChange={(e) => {
+                            updateCommissionOption(
+                              0,
+                              "transactionCommission.amount",
+                              e.target.value
+                            );
+                          }}
+                          placeholder="25.50"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Minimum Volume */}
-                <div className="mb-8 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border-2 border-orange-100">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-orange-100 rounded-lg mr-3">
-                      <Gauge className="w-5 h-5 text-orange-600" />
-                    </div>
-                    Minimum Volume Requirements
-                  </h6>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Target Amount
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={
-                          typeof option.minimumVolume?.amount === "number"
-                            ? option.minimumVolume.amount
-                            : parseFloat(option.minimumVolume?.amount) || ""
-                        }
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "minimumVolume.amount",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g. 100"
-                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Unit Type
-                      </label>
-                      <select
-                        value={option.minimumVolume?.unit || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "minimumVolume.unit",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
-                      >
-                        <option value="">Select unit...</option>
-                        <option value="Calls">Calls</option>
-                        <option value="Sales">Sales</option>
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Period
-                      </label>
-                      <select
-                        value={option.minimumVolume?.period || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "minimumVolume.period",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all duration-200 hover:border-orange-300"
-                      >
-                        <option value="">Select period...</option>
-                        <option value="Daily">Daily</option>
-                        <option value="Weekly">Weekly</option>
-                        <option value="Monthly">Monthly</option>
-                      </select>
-                    </div>
+                    {/* Bonus & Incentives Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-yellow-100 hover:border-yellow-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <Award className="w-6 h-6 text-white" />
                   </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
+                          <p className="text-sm text-gray-500">Performance bonus amount</p>
                 </div>
-
-                {/* Bonus Configuration */}
-                <div className="mb-8 p-6 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl border-2 border-yellow-100">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-yellow-100 rounded-lg mr-3">
-                      <Award className="w-5 h-5 text-yellow-600" />
                     </div>
-                    Bonus & Incentives
-                  </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Bonus Type
-                      </label>
-                      <select
-                        value={option.bonus || "Performance Bonus"}
-                        onChange={(e) =>
-                          updateCommissionOption(index, "bonus", e.target.value)
-                        }
-                        className="w-full p-4 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white transition-all duration-200 hover:border-yellow-300"
-                      >
-                        {BONUS_TYPES.map((bonusType) => (
-                          <option key={bonusType} value={bonusType}>
-                            {bonusType}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Bonus Amount
-                      </label>
+                      
                       <div className="relative">
                         <input
                           type="number"
@@ -3582,125 +4277,108 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           }
                           onChange={(e) =>
                             updateCommissionOption(
-                              index,
+                              0,
                               "bonusAmount",
                               e.target.value
                             )
                           }
-                          placeholder="e.g. 500"
-                          className="w-full p-4 pr-16 border-2 border-yellow-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 hover:border-yellow-300"
+                          placeholder="500"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
                         />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
+                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
-                  </div>
+
                 </div>
 
-                {/* Currency */}
-                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-100">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                      <Globe2 className="w-5 h-5 text-blue-600" />
+                  {/* Volume Requirements Section */}
+                  <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
+                    <div className="flex items-center mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
+                        <Gauge className="w-6 h-6 text-white" />
                     </div>
-                    Currency Settings
-                  </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Currency
-                      </label>
-                      <select
-                        value={option.currency || ""}
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "currency",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-blue-300"
-                      >
-                        <option value="EUR">EUR (€)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="CAD">CAD (C$)</option>
-                        <option value="AUD">AUD (A$)</option>
-                      </select>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
+                        <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Transaction Commission */}
-                <div className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl border-2 border-purple-100">
-                  <h6 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
-                      <DollarSign className="w-5 h-5 text-purple-600" />
-                    </div>
-                    Transaction Commission
-                  </h6>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Commission Type
-                      </label>
-                      <select
-                        value={
-                          option.transactionCommission?.type || "Fixed Amount"
-                        }
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            index,
-                            "transactionCommission.type",
-                            e.target.value
-                          )
-                        }
-                        className="w-full p-4 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200 hover:border-purple-300"
-                      >
-                        {TRANSACTION_TYPES.map((transactionType) => (
-                          <option key={transactionType} value={transactionType}>
-                            {transactionType}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Commission Amount
-                      </label>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="relative">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={
-                            typeof option.transactionCommission?.amount ===
-                            "number"
-                              ? option.transactionCommission.amount
-                              : parseFloat(
-                                  option.transactionCommission?.amount
-                                ) || ""
-                          }
-                          onChange={(e) =>
-                            updateCommissionOption(
-                              index,
-                              "transactionCommission.amount",
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. 25.50"
-                          className="w-full p-4 pr-16 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 hover:border-purple-300"
-                        />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-sm">
-                          {option.currency || "EUR"}
-                        </span>
-                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={
+                          typeof option.minimumVolume?.amount === "number"
+                            ? option.minimumVolume.amount
+                            : parseFloat(option.minimumVolume?.amount) || ""
+                        }
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "minimumVolume.amount",
+                            e.target.value
+                          )
+                        }
+                          placeholder="100"
+                          className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                      />
                     </div>
+                      
+                      <select
+                        value={option.minimumVolume?.period || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "minimumVolume.period",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                      >
+                        <option value="">Select Period</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
                   </div>
                 </div>
+
+                  {/* Additional Details Section */}
+                  <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex items-center mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
+                        <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
+                  </div>
+                </div>
+
+                    <textarea
+                      value={option.additionalDetails || ""}
+                      onChange={(e) =>
+                        updateCommissionOption(
+                          0,
+                          "additionalDetails",
+                          e.target.value
+                        )
+                      }
+                      placeholder="Commission details, payment terms, conditions, or special notes..."
+                      rows={4}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-3 focus:ring-gray-300 focus:border-gray-400 transition-all resize-none"
+                    />
+                      </div>
+
               </div>
-            ))}
+              );
+            })()}
           </div>
         ) : (
           <div className="text-center py-16 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 shadow-lg">
@@ -3708,19 +4386,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <DollarSign className="w-10 h-10 text-green-600" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">
-              No Commission Options
+              No Commission Data
             </h3>
             <p className="text-gray-600 mb-8 w-full mx-auto text-lg leading-relaxed">
-              Create commission options to define how your team will be
-              compensated for their performance and achievements.
+              Commission data will be populated automatically from AI suggestions.
             </p>
-            <button
-              onClick={addCommissionOption}
-              className="flex items-center space-x-3 mx-auto px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-lg transform hover:scale-105"
-            >
-              <Plus className="w-6 h-6" />
-              <span>Add Commission Option</span>
-            </button>
           </div>
         )}
       </div>
@@ -3754,7 +4424,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       });
     });
 
-    const addSkill = (skillType: string, skill: string, level: number = 1) => {
+    const addSkill = (skillType: string, skill: string, level: number = 1, exactPosition?: number) => {
       
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) {
@@ -3772,11 +4442,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           // Find the language by ID to get the code
           const selectedLanguage = languages.find(l => l.value === skill);
           if (selectedLanguage) {
-            newSuggestions.skills.languages.push({
+            const newLanguage: any = {
               language: selectedLanguage.value, // Store ID
-              proficiency: LANGUAGE_LEVELS[level - 1]?.value || "B1",
+              proficiency: LANGUAGE_LEVELS[level]?.value || "B1", // level est maintenant l'index
               iso639_1: selectedLanguage.code, // Use correct code
-            });
+            };
+            // Ajouter la position exacte si fournie
+            if (exactPosition !== undefined) {
+              newLanguage.exactPosition = exactPosition;
+            }
+            newSuggestions.skills.languages.push(newLanguage);
           } else {
             console.warn(`Language with ID "${skill}" not found. Skipping addition.`);
             return; // Exit early without adding the skill
@@ -3805,11 +4480,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           const skillObject = skillArray.find(s => s._id === skill);
           
           if (skillObject) {
-            const skillData = { 
+            const skillData: any = { 
               skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
               level,
               details: skillObject.description || '' // Add details field
             };
+            // Ajouter la position exacte si fournie
+            if (exactPosition !== undefined) {
+              skillData.exactPosition = exactPosition;
+            }
             (newSuggestions.skills as any)[skillType].push(skillData);
           } else {
             // Don't add skills that don't exist in the database
@@ -3821,7 +4500,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       setSuggestions(newSuggestions);
     };
 
-    const updateSkill = (skillType: string, index: number, field: string, value: string | number) => {
+    const updateSkill = (skillType: string, index: number, field: string, value: string | number, exactPosition?: number) => {
       
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) return;
@@ -3840,6 +4519,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
           } else if (field === "proficiency") {
             newSuggestions.skills.languages[index].proficiency = value as string;
+            // Stocker la position exacte si fournie
+            if (exactPosition !== undefined) {
+              (newSuggestions.skills.languages[index] as any).exactPosition = exactPosition;
+            }
           }
           break;
         case "soft":
@@ -3875,6 +4558,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
           } else if (field === "level") {
             (newSuggestions.skills as any)[skillType][index].level = value as number;
+            // Stocker la position exacte si fournie
+            if (exactPosition !== undefined) {
+              ((newSuggestions.skills as any)[skillType][index] as any).exactPosition = exactPosition;
+            }
           }
           break;
       }
@@ -3912,360 +4599,377 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const renderSkillCard = (skillType: string, items: any[], title: string, icon: React.ReactNode) => {
       const currentItems = items || [];
 
-      const getSkillOptions = (skillType: string) => {
+      const handleShowAddInterface = () => {
+        setShowAddSkillInterface(prev => ({ ...prev, [skillType]: true }));
+      };
+
+      const handleConfirmAddSkill = () => {
+        const skillId = selectedSkillToAdd[skillType];
+        if (!skillId) return;
+        
+        const exactPos = selectedExactPosition[skillType];
+        addSkill(skillType, skillId, selectedLevelToAdd[skillType], exactPos);
+        
+        // Reset states
+        setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+        setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+        setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+        setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+      };
+
+      const handleCancelAddSkill = () => {
+        setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+        setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+        setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+        setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+      };
+
+      // Fonction pour commencer l'édition d'une compétence existante
+      const handleStartEditSkill = (index: number) => {
+        setEditingSkill(prev => ({ ...prev, [skillType]: index }));
+        
+        // Pré-remplir le terme de recherche avec le nom actuel
+        if (currentItems && currentItems[index]) {
+          const item = currentItems[index];
+          let skillName = '';
+          
+          if (skillType === 'languages') {
+            const languageItem = item as any;
+            const language = languages.find(l => l.value === languageItem.language);
+            skillName = language?.label || '';
+          } else {
+            const skillItem = item as any;
+            // Utiliser la liste complète selon le type de compétence
+            let allSkills: any[] = [];
+            if (skillType === 'professional') {
+              allSkills = professionalSkills.map(s => ({ id: s._id, name: s.name }));
+            } else if (skillType === 'technical') {
+              allSkills = technicalSkills.map(s => ({ id: s._id, name: s.name }));
+            } else if (skillType === 'soft') {
+              allSkills = softSkills.map(s => ({ id: s._id, name: s.name }));
+            }
+            
+            const skillId = typeof skillItem.skill === 'string' 
+              ? skillItem.skill 
+              : (skillItem.skill && typeof skillItem.skill === 'object' && skillItem.skill.$oid 
+                  ? skillItem.skill.$oid 
+                  : null);
+            
+            const skill = allSkills.find(s => s.id === skillId);
+            skillName = skill?.name || '';
+          }
+          
+          // Plus besoin de pré-remplir car on utilise un sélecteur
+        }
+      };
+
+      // Fonction pour confirmer l'édition d'une compétence
+      const handleConfirmEditSkill = (index: number, newSkillId: string) => {
+        if (skillType === 'languages') {
+          const currentLanguage = suggestions?.skills?.languages?.[index];
+          if (currentLanguage) {
+            const updatedLanguages = [...(suggestions?.skills?.languages || [])];
+            updatedLanguages[index] = {
+              ...currentLanguage,
+              language: newSkillId
+            };
+            setSuggestions(prev => prev ? ({
+              ...prev,
+              skills: {
+                ...prev.skills,
+              languages: updatedLanguages
+              }
+            }) : null);
+          }
+        } else {
+          const currentSkills = suggestions?.skills?.[skillType as keyof typeof suggestions.skills] as any[];
+          if (currentSkills && currentSkills[index]) {
+            const updatedSkills = [...currentSkills];
+            updatedSkills[index] = {
+              ...updatedSkills[index],
+              skill: newSkillId
+            };
+            setSuggestions(prev => prev ? ({
+              ...prev,
+              skills: {
+                ...prev.skills,
+              [skillType]: updatedSkills
+              }
+            }) : null);
+          }
+        }
+
+        // Reset editing state
+        setEditingSkill(prev => ({ ...prev, [skillType]: null }));
+      };
+
+      // Fonction pour annuler l'édition
+      const handleCancelEditSkill = () => {
+        setEditingSkill(prev => ({ ...prev, [skillType]: null }));
+      };
+
+
+      const handleRemoveSkill = (index: number) => {
+        deleteSkill(skillType, index);
+      };
+
+      const getLevelLabel = (level: number, type: string) => {
+        if (type === "languages") {
+          const labels = ['Beginner', 'Elementary', 'Intermediate', 'Upper Intermediate', 'Advanced', 'Mastery'];
+          return labels[level] || 'Intermediate';
+        } else {
+          const labels = ['', 'Basic', 'Novice', 'Intermediate', 'Advanced', 'Expert'];
+          return labels[level] || 'Basic';
+        }
+      };
+
+      // Helper function to get progressive colors for skill levels
+      const getProgressiveColor = (levelIndex: number, isActive: boolean): string => {
+        if (!isActive) {
+          return 'bg-white border-gray-300 hover:border-gray-400';
+        }
+
+        // Couleurs progressives selon le type de compétence
+        const colorSchemes = {
+          languages: [
+            'bg-blue-200 border-blue-300',    // A1 - Très clair
+            'bg-blue-300 border-blue-400',    // A2 - Clair
+            'bg-blue-400 border-blue-500',    // B1 - Moyen clair
+            'bg-blue-500 border-blue-600',    // B2 - Moyen
+            'bg-blue-600 border-blue-700',    // C1 - Foncé
+            'bg-blue-700 border-blue-800'     // C2 - Très foncé
+          ],
+          professional: [
+            'bg-green-200 border-green-300',  // Niveau 1
+            'bg-green-300 border-green-400',  // Niveau 2
+            'bg-green-400 border-green-500',  // Niveau 3
+            'bg-green-500 border-green-600',  // Niveau 4
+            'bg-green-600 border-green-700'   // Niveau 5
+          ],
+          technical: [
+            'bg-purple-200 border-purple-300', // Niveau 1
+            'bg-purple-300 border-purple-400', // Niveau 2
+            'bg-purple-400 border-purple-500', // Niveau 3
+            'bg-purple-500 border-purple-600', // Niveau 4
+            'bg-purple-600 border-purple-700'  // Niveau 5
+          ],
+          soft: [
+            'bg-orange-200 border-orange-300', // Niveau 1
+            'bg-orange-300 border-orange-400', // Niveau 2
+            'bg-orange-400 border-orange-500', // Niveau 3
+            'bg-orange-500 border-orange-600', // Niveau 4
+            'bg-orange-600 border-orange-700'  // Niveau 5
+          ]
+        };
+
+        const colors = colorSchemes[skillType as keyof typeof colorSchemes];
+        return colors[levelIndex] || colors[colors.length - 1];
+      };
+
+      const getSkillOptions = (editingIndex?: number) => {
         switch (skillType) {
           case "languages":
             return languages
-              .filter(lang => !currentItems.some(item => item.language === lang.value))
+              .filter(lang => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].language === lang.value) {
+                  return true;
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => item.language === lang.value);
+              })
               .map(lang => ({ id: lang.value, name: lang.label }));
           case "professional":
             return professionalSkills
-              .filter(skill => !currentItems.some(item => {
+              .filter(skill => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string' 
+                    ? currentItems[editingIndex].skill 
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid 
+                        ? currentItems[editingIndex].skill.$oid 
+                        : null);
+                  if (currentSkillId === skill._id) {
+                    return true;
+                  }
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => {
                 if (!item || !item.skill) return false;
                 const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
                 return skillId === skill._id;
-              }))
+                });
+              })
               .map(skill => ({ id: skill._id, name: skill.name }));
           case "technical":
             return technicalSkills
-              .filter(skill => !currentItems.some(item => {
+              .filter(skill => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string' 
+                    ? currentItems[editingIndex].skill 
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid 
+                        ? currentItems[editingIndex].skill.$oid 
+                        : null);
+                  if (currentSkillId === skill._id) {
+                    return true;
+                  }
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => {
                 if (!item || !item.skill) return false;
                 const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
                 return skillId === skill._id;
-              }))
+                });
+              })
               .map(skill => ({ id: skill._id, name: skill.name }));
           case "soft":
             return softSkills
-              .filter(skill => !currentItems.some(item => {
+              .filter(skill => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string' 
+                    ? currentItems[editingIndex].skill 
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid 
+                        ? currentItems[editingIndex].skill.$oid 
+                        : null);
+                  if (currentSkillId === skill._id) {
+                    return true;
+                  }
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => {
                 if (!item || !item.skill) return false;
                 const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
                 return skillId === skill._id;
-              }))
+                });
+              })
               .map(skill => ({ id: skill._id, name: skill.name }));
           default:
             return [];
         }
       };
 
-      const skillOptions = getSkillOptions(skillType);
+      const skillOptions = getSkillOptions();
+      const editSkillOptions = getSkillOptions(editingSkill[skillType] ?? undefined);
+
+      // Get colors for each skill type
+      const getColors = () => {
+        switch (skillType) {
+          case "languages":
+            return {
+              border: "border-blue-200",
+              focus: "focus:ring-indigo-400 focus:border-indigo-400",
+              bg: "bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100",
+              text: "text-indigo-900",
+              hover: "hover:from-indigo-100 hover:to-blue-100 hover:shadow-lg hover:shadow-indigo-100",
+              shadow: "shadow-md shadow-indigo-50"
+            };
+          case "professional":
+            return {
+              border: "border-blue-200",
+              focus: "focus:ring-emerald-400 focus:border-emerald-400",
+              bg: "bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100",
+              text: "text-emerald-900",
+              hover: "hover:from-emerald-100 hover:to-green-100 hover:shadow-lg hover:shadow-emerald-100",
+              shadow: "shadow-md shadow-emerald-50"
+            };
+          case "technical":
+            return {
+              border: "border-violet-200",
+              focus: "focus:ring-violet-400 focus:border-violet-400",
+              bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100",
+              text: "text-violet-900",
+              hover: "hover:from-violet-100 hover:to-purple-100 hover:shadow-lg hover:shadow-violet-100",
+              shadow: "shadow-md shadow-violet-50"
+            };
+          case "soft":
+            return {
+              border: "border-amber-200",
+              focus: "focus:ring-amber-400 focus:border-amber-400",
+              bg: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100",
+              text: "text-amber-900",
+              hover: "hover:from-amber-100 hover:to-orange-100 hover:shadow-lg hover:shadow-amber-100",
+              shadow: "shadow-md shadow-amber-50"
+            };
+          default:
+            return {
+              border: "border-slate-200",
+              focus: "focus:ring-slate-400 focus:border-slate-400",
+              bg: "bg-gradient-to-br from-slate-50 to-gray-100",
+              text: "text-slate-900",
+              hover: "hover:from-slate-100 hover:to-gray-100 hover:shadow-lg hover:shadow-slate-100",
+              shadow: "shadow-md shadow-slate-50"
+            };
+        }
+      };
+
+      const colors = getColors();
 
       return (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                {icon}
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-800">{title}</h4>
-                <p className="text-sm text-gray-600">
-                  {skillType === "languages" && `${languages.length} available`}
-                  {skillType === "professional" && `${professionalSkills.length} available`}
-                  {skillType === "technical" && `${technicalSkills.length} available`}
-                  {skillType === "soft" && `${softSkills.length} available`}
-                </p>
-              </div>
+        <div className="space-y-4">
+          {/* Header avec titre et bouton + */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {icon}
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <span className="text-sm text-gray-500">
+                {skillOptions.length} available
+              </span>
             </div>
-            <button
-              onClick={() => {
-                setEditingSection(skillType);
-                setEditingIndex(-1);
-                setEditValue("");
-              }}
-              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add</span>
-            </button>
+            {!showAddSkillInterface[skillType] && (
+              <button
+                onClick={handleShowAddInterface}
+                className={`w-8 h-8 rounded-full ${skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : skillType === 'technical' ? 'bg-purple-500 hover:bg-purple-600' : skillType === 'languages' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'} text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
+                title={`Add ${skillType === "languages" ? "language" : "skill"}`}
+              >
+                <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
+            )}
           </div>
 
-          {currentItems.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {currentItems
-                .map((item, index) => {
-                  let skillName = '';
-                  if (skillType === "languages") {
-                    skillName = getLanguageNameById(item.language);
-                  } else {
-                    let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                    switch (skillType) {
-                      case "soft":
-                        skillArray = softSkills;
-                        break;
-                      case "professional":
-                        skillArray = professionalSkills;
-                        break;
-                      case "technical":
-                        skillArray = technicalSkills;
-                        break;
-                      default:
-                        skillArray = [];
-                    }
-                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                    if (skillId) {
-                      const skillObject = skillArray.find(s => s._id === skillId);
-                      skillName = skillObject ? skillObject.name : '';
-                    } else if (item.skill && typeof item.skill === 'object' && item.skill.name) {
-                      skillName = item.skill.name;
-                    }
-                  }
-                  if (!skillName) return null;
-                  return (
-                    <div
-                      key={index}
-                      className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      {editingSection === skillType && editingIndex === index ? (
-                        <div className="space-y-3">
-                          <select
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            autoFocus
-                          >
-                            <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
-                            {skillType === "languages" 
-                              ? languages.map((lang) => (
-                                  <option key={lang.value} value={lang.value}>
-                                    {lang.label}
-                                  </option>
-                                ))
-                              : skillType === "professional"
-                              ? professionalSkills.map((skill) => (
-                                  <option key={skill._id} value={skill.name}>
-                                    {skill.name}
-                                  </option>
-                                ))
-                              : skillType === "technical"
-                              ? technicalSkills.map((skill) => (
-                                  <option key={skill._id} value={skill.name}>
-                                    {skill.name}
-                                  </option>
-                                ))
-                              : softSkills.map((skill) => (
-                                  <option key={skill._id} value={skill.name}>
-                                    {skill.name}
-                                  </option>
-                                ))
-                            }
-                          </select>
-                          {skillType === "languages" ? (
-                            <select
-                              value={item.proficiency || "B1"}
-                              onChange={(e) => updateSkill(skillType, index, "proficiency", e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              {LANGUAGE_LEVELS.map((level) => (
-                                <option key={level.value} value={level.value}>
-                                  {level.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <select
-                              value={item.level || 1}
-                              onChange={(e) => updateSkill(skillType, index, "level", parseInt(e.target.value))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              {SKILL_LEVELS.map((level) => (
-                                <option key={level.value} value={level.value}>
-                                  {level.label}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                if (editValue.trim()) {
-                                  updateSkill(skillType, index, skillType === "languages" ? "language" : "skill", editValue.trim());
-                                  setEditingSection(null);
-                                  setEditingIndex(null);
-                                  setEditValue("");
-                                }
-                              }}
-                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              className="flex-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-semibold text-gray-800">{skillName}</h5>
-                            <div className="flex space-x-1">
-                              <button
-                                onClick={() => {
-                                  setEditingSection(skillType);
-                                  setEditingIndex(index);
+          {/* Add interface */}
+          {skillsLoading && (
+            <div className={`w-full px-4 py-3 rounded-lg border ${colors.border} bg-gray-50 text-gray-500 text-center text-sm`}>
+              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+              Loading {skillType} from API...
+            </div>
+          )}
+          
+          
+          {!skillsLoading && !showAddSkillInterface[skillType] && currentItems.length === 0 && (
+            // Message when no skills
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">
+                No {skillType === "languages" ? "languages" : "skills"} added yet. 
+                <br />
+                Click the + button above to add your first {skillType === "languages" ? "language" : "skill"}.
+              </p>
+            </div>
+          )}
+          
+          {/* Selected badges - displayed below the select */}
+          {(currentItems.length > 0 || showAddSkillInterface[skillType]) && (
+            <div className="pt-2 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {currentItems.map((item, index) => {
+                let skillName = '';
+                let levelDisplay = null;
+                
                                   if (skillType === "languages") {
-                                    // Find the language name by ID for display
-                                    const languageObj = languages.find(l => l.value === item.language);
-                                    setEditValue(languageObj ? languageObj.value : item.language);
-                                  } else {
-                                    let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                                    switch (skillType) {
-                                      case "soft":
-                                        skillArray = softSkills;
-                                        break;
-                                      case "professional":
-                                        skillArray = professionalSkills;
-                                        break;
-                                      case "technical":
-                                        skillArray = technicalSkills;
-                                        break;
-                                      default:
-                                        skillArray = [];
-                                    }
-                                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                                    const skillObject = skillArray.find(s => s._id === skillId);
-                                    setEditValue(skillObject ? skillObject.name : skillId);
-                                  }
-                                }}
-                                className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => deleteSkill(skillType, index)}
-                                className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-600">Level:</span>
+                  skillName = getLanguageNameById(item.language);
+                  levelDisplay = (
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              skillType === "languages" 
-                                ? item.proficiency?.includes("C") 
+                      item.proficiency?.includes("C") 
                                   ? "bg-green-100 text-green-800"
                                   : item.proficiency?.includes("B") 
                                   ? "bg-blue-100 text-blue-800"
                                   : "bg-yellow-100 text-yellow-800"
-                                : item.level >= 4 
-                                ? "bg-purple-100 text-purple-800"
-                                : item.level >= 3 
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-gray-100 text-gray-800"
                             }`}>
-                              {skillType === "languages" 
-                                ? LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1 - Intermediate"
-                                : SKILL_LEVELS.find(l => l.value === item.level)?.label || "Basic"
-                              }
+                      {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
                             </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   );
-                })}
-            </div>
-          )}
-
-          {editingSection === skillType && editingIndex === -1 && (
-            <div className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
-              <div className="space-y-4">
-                {skillsLoading ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
-                    <span className="text-gray-600">Loading skills from API...</span>
-                  </div>
-                ) : (
-                  <select
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    autoFocus
-                  >
-                    <option value="">Select {skillType === "languages" ? "language" : "skill"}...</option>
-                    {skillType === "languages" 
-                      ? skillOptions.map((option: any) => (
-                          <option key={option.id} value={option.id}>
-                            {option.name}
-                          </option>
-                        ))
-                      : skillType === "professional"
-                      ? professionalSkills
-                          .filter(skill => !currentItems.some(item => {
-                            if (!item || !item.skill) return false;
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            return skillId === skill._id;
-                          }))
-                          .map((skill) => (
-                            <option key={skill._id} value={skill._id}>
-                              {skill.name}
-                            </option>
-                          ))
-                      : skillType === "technical"
-                      ? technicalSkills
-                          .filter(skill => !currentItems.some(item => {
-                            if (!item || !item.skill) return false;
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            return skillId === skill._id;
-                          }))
-                          .map((skill) => (
-                            <option key={skill._id} value={skill._id}>
-                              {skill.name}
-                            </option>
-                          ))
-                      : softSkills
-                          .filter(skill => !currentItems.some(item => {
-                            if (!item || !item.skill) return false;
-                            const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                            return skillId === skill._id;
-                          }))
-                          .map((skill) => (
-                            <option key={skill._id} value={skill._id}>
-                              {skill.name}
-                            </option>
-                          ))
-                    }
-                  </select>
-                )}
-                {skillType === "languages" ? (
-                  <select
-                    defaultValue="B1"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {LANGUAGE_LEVELS.map((level) => (
-                      <option key={level.value} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <select
-                    defaultValue={1}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {SKILL_LEVELS.map((level) => (
-                      <option key={level.value} value={level.value}>
-                        {level.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => {
-                      if (editValue.trim()) {
-                        if (skillType === "languages") {
-                          const level = 2; // Default to B1 for languages (index 2)
-                          addSkill(skillType, editValue.trim(), level);
-                          setEditValue("");
-                          setEditingSection(null);
-                          setEditingIndex(null);
                         } else {
-                          // For skills, editValue should already be the ObjectId
-                          // Verify that the skill exists in the database before adding
                           let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
                           switch (skillType) {
                             case "soft":
@@ -4280,32 +4984,497 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             default:
                               skillArray = [];
                           }
-                          
-                          const skillExists = skillArray.some(s => s._id === editValue.trim());
-                          if (skillExists) {
-                            const level = 1; // Default to Basic for skills
-                            addSkill(skillType, editValue.trim(), level);
-                            setEditValue("");
-                            setEditingSection(null);
-                            setEditingIndex(null);
-                          }
-                        }
-                      }
-                    }}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Add {skillType === "languages" ? "Language" : "Skill"}
-                  </button>
-                  <button
-                    onClick={cancelEditing}
-                    className="flex-1 px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                  >
-                    Cancel
-                  </button>
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  if (skillId) {
+                    const skillObject = skillArray.find(s => s._id === skillId);
+                    skillName = skillObject ? skillObject.name : '';
+                  }
+                  
+                  levelDisplay = (
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          className={`w-3 h-3 ${
+                            star <= (item.level || 1) 
+                              ? "text-yellow-400 fill-current" 
+                              : "text-gray-300"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                  );
+                }
+                
+                if (!skillName) return null;
+                
+
+                  return (
+                   <div key={index} className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}>
+                     {/* 3 equal columns layout: Name - Progress bar - Level */}
+                     <div className="grid grid-cols-3 gap-4 items-center w-full">
+                       {/* Column 1: Skill name */}
+                       <div className="flex items-center">
+                       {editingSkill[skillType] === index ? (
+                           // Edit mode: selector
+                           <select
+                             value={(() => {
+                               const currentItem = currentItems[index] as any;
+                               if (skillType === 'languages') {
+                                 return currentItem?.language || '';
+                               } else {
+                                 const skillId = typeof currentItem?.skill === 'string' 
+                                   ? currentItem.skill 
+                                   : (currentItem?.skill && typeof currentItem.skill === 'object' && currentItem.skill.$oid 
+                                       ? currentItem.skill.$oid 
+                                       : '');
+                                 return skillId;
+                               }
+                             })()}
+                             onChange={(e) => {
+                               if (e.target.value) {
+                                 handleConfirmEditSkill(index, e.target.value);
+                               }
+                             }}
+                             onKeyDown={(e) => {
+                               if (e.key === 'Escape') {
+                                 handleCancelEditSkill();
+                               }
+                             }}
+                             className={`edit-select w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                             autoFocus
+                           >
+                             <option value="">
+                               {skillType === 'languages' ? 'Select a language...' : 
+                                skillType === 'professional' ? 'Select a professional skill...' :
+                                skillType === 'technical' ? 'Select a technical skill...' :
+                                'Select a soft skill...'}
+                             </option>
+                             {editSkillOptions.map(option => (
+                               <option key={option.id} value={option.id}>
+                                     {option.name}
+                               </option>
+                             ))}
+                           </select>
+                       ) : (
+                         // Normal mode: clickable name
+                         <button
+                           onClick={() => handleStartEditSkill(index)}
+                            className="font-medium text-xs truncate text-left hover:underline cursor-pointer w-full"
+                           title="Click to edit"
+                         >
+                           {skillName}
+                         </button>
+                       )}
+                       </div>
+                       
+                       {/* Column 2: Progress bar (100 segments) */}
+                       <div className="flex items-center justify-center">
+                         <div className="relative w-full max-w-xs">
+                           <div className="w-full bg-gray-200 rounded-full h-2">
+                             <div 
+                               className="h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(() => {
+                                  const hoveredLevel = hoveredExistingLevel[skillType][index];
+                                  if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                    return hoveredLevel;
+                                  }
+                                  
+                                  // Utiliser la position exacte stockée ou calculer la position par défaut
+                                  if (skillType === "languages") {
+                                    // Vérifier si on a une position exacte stockée
+                                    const exactPosition = item.exactPosition;
+                                    if (exactPosition !== undefined) {
+                                      return exactPosition;
+                                    }
+                                    // Sinon, utiliser la position par défaut basée sur le niveau
+                             const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
+                                    return ((currentLevelIndex + 1) / 6) * 100;
+                                  } else {
+                                    // Vérifier si on a une position exacte stockée
+                                    const exactPosition = item.exactPosition;
+                                    if (exactPosition !== undefined) {
+                                      return exactPosition;
+                                    }
+                                    // Sinon, utiliser la position par défaut basée sur le niveau
+                                    const currentLevel = item.level || 1;
+                                    return (currentLevel / 5) * 100;
+                                  }
+                                })()}%`,
+                                background: (() => {
+                             const hoveredLevel = hoveredExistingLevel[skillType][index];
+                                  let currentPercentage;
+                             
+                             if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                    currentPercentage = hoveredLevel;
+                             } else {
+                                    // Calculer le pourcentage actuel
+                                    if (skillType === "languages") {
+                                      const exactPosition = item.exactPosition;
+                                      if (exactPosition !== undefined) {
+                                        currentPercentage = exactPosition;
+                                      } else {
+                                        const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
+                                        currentPercentage = ((currentLevelIndex + 1) / 6) * 100;
+                                      }
+                                    } else {
+                                      const exactPosition = item.exactPosition;
+                                      if (exactPosition !== undefined) {
+                                        currentPercentage = exactPosition;
+                                      } else {
+                                        const currentLevel = item.level || 1;
+                                        currentPercentage = (currentLevel / 5) * 100;
+                                      }
+                                    }
+                                  }
+                                  
+                                  // Créer une couleur unie avec opacité par paliers croissants
+                                  // Dégradés correspondant aux couleurs des sections
+                                  if (skillType === 'professional') {
+                                    // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
+                                    return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
+                                  } else if (skillType === 'technical') {
+                                    // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
+                                    return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
+                                  } else if (skillType === 'languages') {
+                                    // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
+                                    return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
+                                  } else {
+                                    // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
+                                    return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
+                                  }
+                                })()
+                              }}
+                             />
+                           </div>
+                           <div 
+                             className="absolute inset-0 h-2 cursor-pointer"
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const clickX = e.clientX - rect.left;
+                              const percentage = (clickX / rect.width) * 100;
+                              
+                              if (skillType === "languages") {
+                                // 6 zones égales : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                let languageLevel = 'A1';
+                                if (percentage >= 83.33) languageLevel = 'C2';
+                                else if (percentage >= 66.67) languageLevel = 'C1';
+                                else if (percentage >= 50) languageLevel = 'B2';
+                                else if (percentage >= 33.33) languageLevel = 'B1';
+                                else if (percentage >= 16.67) languageLevel = 'A2';
+                                else languageLevel = 'A1';
+                                
+                                // Mettre à jour le niveau ET stocker la position exacte
+                                updateSkill(skillType, index, 'proficiency', languageLevel, percentage);
+                             } else {
+                                // 5 zones égales : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                let level = 1;
+                                if (percentage >= 80) level = 5;
+                                else if (percentage >= 60) level = 4;
+                                else if (percentage >= 40) level = 3;
+                                else if (percentage >= 20) level = 2;
+                                else level = 1;
+                                
+                                // Mettre à jour le niveau ET stocker la position exacte
+                                updateSkill(skillType, index, 'level', level, percentage);
+                              }
+                            }}
+                             onMouseMove={(e) => {
+                               const rect = e.currentTarget.getBoundingClientRect();
+                               const mouseX = e.clientX - rect.left;
+                               const percentage = (mouseX / rect.width) * 100;
+                               
+                               setHoveredExistingLevel(prev => ({
+                                   ...prev,
+                                 [skillType]: { ...prev[skillType], [index]: Math.round(percentage) }
+                               }));
+                             }}
+                                  onMouseLeave={(e) => {
+                                    // Reset le hover seulement (pas de sauvegarde automatique)
+                                    setHoveredExistingLevel(prev => ({
+                                   ...prev,
+                                   [skillType]: { ...prev[skillType], [index]: null }
+                                    }));
+                                  }}
+                           />
+                       </div>
+                     </div>
+                     
+                       {/* Column 3: Level name + Delete button */}
+                       <div className="flex items-center justify-between">
+                       <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                         {(() => {
+                           const hoveredLevel = hoveredExistingLevel[skillType][index];
+                           
+                             if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                              // Convertir le pourcentage en description du niveau
+                              if (skillType === "languages") {
+                                // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                let languageLevel;
+                                if (hoveredLevel >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
+                                else if (hoveredLevel >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
+                                else if (hoveredLevel >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
+                                else if (hoveredLevel >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
+                                else if (hoveredLevel >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
+                                else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
+                                // Extraire seulement la description après le " - "
+                                const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
+                                return description;
+                           } else {
+                                // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                let level = 1;
+                                if (hoveredLevel >= 80) level = 5;
+                                else if (hoveredLevel >= 60) level = 4;
+                                else if (hoveredLevel >= 40) level = 3;
+                                else if (hoveredLevel >= 20) level = 2;
+                                else level = 1;
+                                return getLevelLabel(level, skillType);
+                              }
+                            }
+                             
+                            if (skillType === "languages") {
+                              const currentLevel = LANGUAGE_LEVELS.find(l => l.value === item.proficiency);
+                              const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
+                              return description;
+                            } else {
+                             return getLevelLabel(item.level || 1, skillType);
+                           }
+                         })()}
+                       </span>
+                         
+                         {/* Delete button */}
+                         <button
+                           type="button"
+                           onClick={() => handleRemoveSkill(index)}
+                           className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-indigo-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
+                           title="Remove"
+                         >
+                           <X className="w-3 h-3" />
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                );
+              })}
+              
+              {/* Interface d'ajout intégrée dans la grille */}
+              {!skillsLoading && showAddSkillInterface[skillType] && (
+                <div 
+                  ref={(el) => { addInterfaceRefs.current[skillType] = el; }}
+                  className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}
+                >
+                  {/* 3 equal columns layout: Selector - Progress bar - Level */}
+                  <div className="grid grid-cols-3 gap-4 items-center w-full">
+                    {/* Column 1: Selector */}
+                    <div className="flex items-center">
+                        <select
+                          value={selectedSkillToAdd[skillType] || ''}
+                        onChange={(e) => {
+                            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: e.target.value }));
+                            // Sauvegarder automatiquement dès la sélection
+                            if (e.target.value) {
+                              // Utiliser le niveau par défaut et la position par défaut
+                              const defaultLevel = selectedLevelToAdd[skillType];
+                              const defaultPosition = selectedExactPosition[skillType];
+                              addSkill(skillType, e.target.value, defaultLevel, defaultPosition);
+                              
+                              // Reset states après ajout
+                              setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+                              setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+                              setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+                            }
+                          }}
+                     className={`w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                      >
+                        <option value="">
+                          {skillType === "languages" ? "Select a language..." : 
+                           skillType === "professional" ? "Select a professional skill..." :
+                           skillType === "technical" ? "Select a technical skill..." :
+                           "Select a soft skill..."}
+                        </option>
+                        {skillOptions.map(option => (
+                          <option key={option.id} value={option.id}>
+                              {option.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Column 2: Progress bar (100 segments) */}
+                    <div className="flex items-center justify-center">
+                      <div className="relative w-full max-w-xs">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${(() => {
+                                if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                                  return hoveredLevel[skillType];
+                                }
+                                
+                                // Utiliser la position exacte stockée ou calculer la position par défaut
+                                const exactPosition = selectedExactPosition[skillType];
+                                if (exactPosition !== undefined) {
+                                  return exactPosition;
+                                }
+                                
+                                if (skillType === "languages") {
+                                  // 6 zones égales : chaque niveau = 16.67%
+                                  return ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
+                                } else {
+                                  // 5 zones égales : chaque niveau = 20%
+                                  return (selectedLevelToAdd[skillType] / 5) * 100;
+                                }
+                              })()}%`,
+                              background: (() => {
+                                let currentPercentage;
+                                
+                              if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                                  currentPercentage = hoveredLevel[skillType];
+                              } else {
+                                  // Utiliser la position exacte stockée ou calculer la position par défaut
+                                  const exactPosition = selectedExactPosition[skillType];
+                                  if (exactPosition !== undefined) {
+                                    currentPercentage = exactPosition;
+                                  } else {
+                                    if (skillType === "languages") {
+                                      // 6 zones égales : chaque niveau = 16.67%
+                                      currentPercentage = ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
+                                    } else {
+                                      // 5 zones égales : chaque niveau = 20%
+                                      currentPercentage = (selectedLevelToAdd[skillType] / 5) * 100;
+                                    }
+                                  }
+                                }
+                                
+                                // Dégradés correspondant aux couleurs des sections
+                                if (skillType === 'professional') {
+                                  // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
+                                  return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
+                                } else if (skillType === 'technical') {
+                                  // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
+                                  return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
+                                } else if (skillType === 'languages') {
+                                  // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
+                                  return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
+                                } else {
+                                  // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
+                                  return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
+                                }
+                              })()
+                            }}
+                          />
+                        </div>
+                        <div 
+                          className="absolute inset-0 h-2 cursor-pointer"
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const clickX = e.clientX - rect.left;
+                            const percentage = (clickX / rect.width) * 100;
+                            
+                            // Stocker la position exacte du clic
+                            setSelectedExactPosition(prev => ({ ...prev, [skillType]: percentage }));
+                            
+                            if (skillType === "languages") {
+                              // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                              let levelIndex = 0; // A1
+                              if (percentage >= 83.33) levelIndex = 5; // C2
+                              else if (percentage >= 66.67) levelIndex = 4; // C1
+                              else if (percentage >= 50) levelIndex = 3; // B2
+                              else if (percentage >= 33.33) levelIndex = 2; // B1
+                              else if (percentage >= 16.67) levelIndex = 1; // A2
+                              else levelIndex = 0; // A1
+                              
+                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: levelIndex }));
+                              } else {
+                              // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                              let level = 1;
+                              if (percentage >= 80) level = 5;
+                              else if (percentage >= 60) level = 4;
+                              else if (percentage >= 40) level = 3;
+                              else if (percentage >= 20) level = 2;
+                              else level = 1;
+                              
+                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: level }));
+                            }
+                            
+                            // Note: La compétence est déjà ajoutée dès la sélection dans le dropdown
+                          }}
+                          onMouseMove={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const mouseX = e.clientX - rect.left;
+                            const percentage = (mouseX / rect.width) * 100;
+                            
+                            setHoveredLevel(prev => ({ ...prev, [skillType]: Math.round(percentage) }));
+                          }}
+                             onMouseLeave={(e) => {
+                               // Reset le hover seulement (pas de sauvegarde automatique)
+                               setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
+                             }}
+                        />
+                    </div>
+                  </div>
+                  
+                    {/* Column 3: Level name */}
+                    <div className="flex items-center">
+                    <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                       {(() => {
+                         if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                           // Convertir le pourcentage en description du niveau
+                           if (skillType === "languages") {
+                             // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                             let languageLevel;
+                             if (hoveredLevel[skillType] >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
+                             else if (hoveredLevel[skillType] >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
+                             else if (hoveredLevel[skillType] >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
+                             else if (hoveredLevel[skillType] >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
+                             else if (hoveredLevel[skillType] >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
+                             else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
+                             // Extraire seulement la description après le " - "
+                             const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
+                             return description;
+                           } else {
+                             // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                             let level = 1;
+                             if (hoveredLevel[skillType] >= 80) level = 5;
+                             else if (hoveredLevel[skillType] >= 60) level = 4;
+                             else if (hoveredLevel[skillType] >= 40) level = 3;
+                             else if (hoveredLevel[skillType] >= 20) level = 2;
+                             else level = 1;
+                             return getLevelLabel(level, skillType);
+                           }
+                         }
+                         
+                         if (skillType === "languages") {
+                           const currentLevel = LANGUAGE_LEVELS[selectedLevelToAdd[skillType]];
+                           const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
+                           return description;
+                         } else {
+                           return getLevelLabel(selectedLevelToAdd[skillType] || 1, skillType);
+                         }
+                       })()}
+                    </span>
+                    </div>
+                  </div>
                 </div>
+              )}
+              
               </div>
             </div>
           )}
+          
+          {!skillsLoading && skillOptions.length === 0 && currentItems.length === 0 && (
+            <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+              ⚠️ No {skillType} available. Please check API connection.
+            </div>
+          )}
+
         </div>
       );
     };
@@ -4349,7 +5518,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.team = {
           size: 1,
           structure: [],
-          territories: ["Global"],
+          territories: [],
           reporting: {
             to: "Project Manager",
             frequency: "Weekly",
@@ -4511,160 +5680,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     return (
-      <div className="space-y-8">
-        {/* Team Size Summary */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-800">Team Size</h4>
-                <p className="text-sm text-gray-600">
-                  Total members: {suggestions.team?.size || 0}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="flex items-center space-x-3">
-                <div className="text-center">
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Total Size</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={suggestions.team?.size || 0}
-                    onChange={(e) => {
-                      const newSize = parseInt(e.target.value) || 0;
-                      const newSuggestions = { ...suggestions };
-                      if (!newSuggestions.team) {
-                        newSuggestions.team = {
-                          size: newSize,
-                          structure: [],
-                          territories: ["Global"],
-                          reporting: {
-                            to: "Project Manager",
-                            frequency: "Weekly",
-                          },
-                          collaboration: ["Daily standups", "Weekly reviews"],
-                        };
-                      } else {
-                        newSuggestions.team.size = newSize;
-                        // Adjust the first role's count to match the new total size
-                        if (newSuggestions.team.structure.length > 0) {
-                          newSuggestions.team.structure[0].count = newSize;
-                        } else {
-                          // If no roles exist, create a default role
-                          newSuggestions.team.structure.push({
-                            roleId: "Agent",
-                            count: newSize,
-                            seniority: {
-                              level: "Mid-Level",
-                              yearsExperience: 3,
-                            },
-                          });
-                        }
-                      }
-                      setSuggestions(newSuggestions);
-                    }}
-                    className="w-20 text-center text-2xl font-bold text-blue-600 bg-white border-2 border-blue-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Team Size Breakdown */}
-          {suggestions.team?.structure && suggestions.team.structure.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-blue-200">
-              <h5 className="text-sm font-semibold text-gray-700 mb-3">Team Breakdown:</h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {suggestions.team.structure.map((role, index) => {
-                  // Handle case where role might be a string
-                  const roleId = typeof role === 'string' ? role : (role?.roleId || 'Unknown');
-                  const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-                  const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Not specified') : 'Not specified';
-                  
-                  return (
-                    <div key={index} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-gray-700">
-                          {roleId}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">
-                          {roleCount} {roleCount === 1 ? 'member' : 'members'}
-                        </span>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                          {seniorityLevel}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          
-          {/* Team Size Statistics */}
-          <div className="mt-4 pt-4 border-t border-blue-200">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">
-                  {suggestions.team?.structure?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500">Different Roles</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-green-600">
-                  {suggestions.team?.structure?.filter(role => {
-                    if (typeof role === 'string') return false;
-                    if (typeof role !== 'object' || role === null) return false;
-                    return role.seniority?.level?.includes('Senior') || role.seniority?.level?.includes('Lead') || role.seniority?.level?.includes('Manager');
-                  }).reduce((sum, role) => {
-                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-                    return sum + roleCount;
-                  }, 0) || 0}
-                </div>
-                <div className="text-xs text-gray-500">Senior Members</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">
-                  {suggestions.team?.structure?.filter(role => {
-                    if (typeof role === 'string') return false;
-                    if (typeof role !== 'object' || role === null) return false;
-                    return role.seniority?.level?.includes('Junior') || role.seniority?.level?.includes('Entry') || role.seniority?.level?.includes('Trainee');
-                  }).reduce((sum, role) => {
-                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-                    return sum + roleCount;
-                  }, 0) || 0}
-                </div>
-                <div className="text-xs text-gray-500">Junior Members</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-purple-600">
-                  {suggestions.team?.territories?.length || 0}
-                </div>
-                <div className="text-xs text-gray-500">Territories</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="space-y-4">
         {/* Team Roles */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Briefcase className="w-5 h-5 text-green-600" />
-              </div>
-              <h4 className="text-lg font-bold text-gray-800">Team Roles</h4>
+              <div>
+          <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+              <h4 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Team Roles</h4>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm font-medium text-blue-600">Total:</span>
+                <span className="text-md font-bold text-indigo-700 bg-white border border-blue-300 rounded-md px-2 py-1">
+                  {suggestions.team?.size || 0}
+                        </span>
+                      </div>
             </div>
             <button
               onClick={addTeamRole}
-              className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
+              className="flex items-center space-x-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-3 py-1 rounded-md shadow-md hover:shadow-lg transition-all transform hover:scale-105"
             >
               <Plus className="w-4 h-4" />
               <span>Add Role</span>
@@ -4672,7 +5703,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
 
           {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
               {suggestions.team.structure.map((role, index) => {
                 // Handle case where role might be a string
                 const roleId = typeof role === 'string' ? role : (role?.roleId || 'Agent');
@@ -4683,27 +5714,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 return (
                   <div
                     key={index}
-                    className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg p-2 border border-blue-100 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] hover:border-indigo-300"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <h5 className="font-semibold text-gray-800">Role #{index + 1}</h5>
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-md font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Role #{index + 1}</h5>
                       <button
                         onClick={() => deleteTeamRole(index)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all transform hover:scale-110 shadow-sm"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        <label className="text-xs font-bold text-indigo-700 mb-1 block">
                           Role Type
                         </label>
                         <select
                           value={roleId}
                           onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                         >
                           {TEAM_ROLES.map((teamRole) => (
                             <option key={teamRole} value={teamRole}>
@@ -4714,7 +5745,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        <label className="text-xs font-bold text-indigo-700 mb-1 block">
                           Number of Members
                         </label>
                         <input
@@ -4722,16 +5753,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           min="1"
                           value={roleCount}
                           onChange={(e) => updateTeamRole(index, "count", e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
+                          <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                            Seniority Level
+                          </label>
                           <select
                             value={seniorityLevel}
                             onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                           >
                             {predefinedOptions.basic.seniorityLevels.map((level) => (
                               <option key={level} value={level}>
@@ -4742,15 +5776,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium text-gray-700 mb-2 block">
+                          <label className="text-xs font-bold text-indigo-700 mb-1 block">
                             Years Experience
                           </label>
                           <input
                             type="number"
                             min="0"
+                            max="50"
                             value={yearsExperience}
                             onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            placeholder="e.g. 3"
+                            className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                           />
                         </div>
                       </div>
@@ -4760,19 +5796,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
-              <div className="p-4 bg-white rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-sm">
-                <Users className="w-8 h-8 text-gray-400" />
+            <div className="text-center py-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-xl border-2 border-dashed border-indigo-300">
+              <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 bg-clip-text text-transparent mb-2">
                 No Team Roles Defined
               </h3>
-              <p className="text-gray-500 mb-6 w-full mx-auto">
+              <p className="text-indigo-600 font-medium mb-4 max-w-md mx-auto text-sm">
                 Add team roles to define the structure and responsibilities of your team members.
               </p>
               <button
                 onClick={addTeamRole}
-                className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Team Role</span>
@@ -4782,30 +5818,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
 
         {/* Territories */}
-        <div>
-          <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg mr-3">
-              <Globe2 className="w-5 h-5 text-purple-600" />
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-lg p-3 border border-blue-200 shadow-md mb-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <h4 className="text-md font-semibold text-gray-900">Territories</h4>
             </div>
-            Territories
-          </h4>
-          
-          <div className="flex flex-wrap gap-2 mb-4">
-            {suggestions.team?.territories?.map((territory) => (
-              <div
-                key={territory}
-                className="flex items-center bg-purple-100 text-purple-800 text-sm font-medium pl-3 pr-2 py-1 rounded-full"
-              >
-                {territory}
-                <button
-                  onClick={() => removeTerritory(territory)}
-                  className="ml-2 text-purple-600 hover:text-purple-800 rounded-full focus:outline-none focus:bg-purple-200"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
           
           <select
             onChange={(e) => {
@@ -4814,21 +5830,51 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 e.target.value = ""; // Reset select
               }
             }}
-            className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            className="w-full p-2 rounded-md border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-1 text-sm"
             defaultValue=""
             disabled={territoriesLoading}
           >
             <option value="" disabled>
-              {territoriesLoading ? "Loading territories..." : "Add a territory..."}
+              {territoriesLoading ? "Loading territories..." : "Add territory..."}
             </option>
-            {territories.filter(
-              (territory: string) => !suggestions.team?.territories?.includes(territory)
-            ).map((territory: string) => (
-              <option key={territory} value={territory}>
-                {territory}
+            {territoriesFromAPI.filter(
+              (country: Country) => !suggestions.team?.territories?.includes(country._id)
+            ).map((country: Country) => (
+              <option key={country._id} value={country._id}>
+                {country.name.common}
               </option>
             ))}
           </select>
+          
+          {/* Territories badges - displayed below the select */}
+          {suggestions.team?.territories && suggestions.team.territories.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-1 border-t border-blue-200">
+              {suggestions.team.territories.map((territory) => (
+                <span
+                  key={territory}
+                  className="group relative flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-medium pl-2 pr-1 py-1 rounded-full cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                >
+                  <span>{getTerritoryName(territory)}</span>
+                  <button
+                    onClick={() => removeTerritory(territory)}
+                    className="ml-1 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          
+          <p className="text-xs text-gray-500 italic text-center mt-1">
+            {territoriesLoading 
+              ? 'Loading countries from API...' 
+              : `${territoriesFromAPI.filter((country: Country) => !suggestions.team?.territories?.includes(country._id)).length} countries available for selection`
+            }
+          </p>
         </div>
       </div>
     );
@@ -4836,31 +5882,24 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (loading && !props.initialSuggestions) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen from-slate-50 via-blue-50 to-indigo-50">
-        <div className="text-center max-w-md">
-          <Logo className="mb-6" />
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 animate-fade-in">
-              Processing Your Request
-            </h2>
-            <p className="text-gray-600 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              Our AI is analyzing your requirements and generating personalized suggestions...
-            </p>
-            {/* Professional loading dots */}
-            <div className="flex justify-center space-x-2 mt-6">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-professional-dots"></div>
-              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-professional-dots"></div>
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-professional-dots"></div>
-            </div>
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-8">
+          {/* Logo */}
+          <div className="animate-fade-in">
+            <Logo />
           </div>
-          <div className="mt-8">
-            <button
-              onClick={props.onBack}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-            >
-              <X className="w-4 h-4" />
-              <span>Cancel</span>
-            </button>
+          
+          {/* AI Loading Animation */}
+          <div className="relative flex items-center justify-center">
+            {/* Animated rings */}
+            <div className="absolute w-16 h-16 border-4 border-blue-300/30 rounded-full animate-ping"></div>
+            <div className="absolute w-14 h-14 border-4 border-indigo-400/40 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute w-12 h-12 border-4 border-violet-500/50 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+            
+            {/* Central AI icon */}
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
+              <Brain className="w-8 h-8 text-white animate-pulse" />
+            </div>
           </div>
         </div>
       </div>
@@ -4869,177 +5908,303 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-red-50 text-red-800 p-8">
-        <AlertCircle className="w-16 h-16 mb-4 text-red-600" />
-        <h2 className="text-2xl font-bold mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
           Error Generating Suggestions
         </h2>
-        <p className="text-center mb-6">{error}</p>
+              <p className="text-gray-600 leading-relaxed">
+                {error}
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
         <button
           onClick={props.onBack}
-          className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-700 text-white font-semibold rounded-lg shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-colors"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Input
         </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!suggestions) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 text-gray-700 p-8">
-        <Brain className="w-16 h-16 mb-4 text-gray-400" />
-        <h2 className="text-2xl font-bold mb-2">No Suggestions Available</h2>
-        <p className="text-center mb-6">
-          We couldn't generate suggestions based on your input. Please try
-          again.
-        </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+              <Brain className="w-8 h-8 text-gray-400" />
+            </div>
+            
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
+                No Suggestions Available
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                We couldn't generate suggestions based on your input. Please try again with different requirements.
+              </p>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-100">
         <button
           onClick={props.onBack}
-          className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
         >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Input
         </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="w-full h-full px-4 py-8">
-        <div className="w-full h-full">
-          {/* AI Mode Title with HARX Logo */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-violet-50 border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-8">
             <Logo className="mb-6" />
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <h1 className="text-4xl font-bold text-center ...">AI-Powered Gig Creation</h1>
-            </div>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight">
+                AI-Powered Gig Creation
+              </h1>
+              <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
               Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
             </p>
+            </div>
           </div>
 
-          <div className="flex justify-between items-center mb-8">
+          {/* Navigation Bar */}
+          <div className="flex items-center justify-between bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
             <button
               onClick={props.onBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              className="group inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+              Back to Input
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">
+            
+            <div className="text-center">
+              <h2 className="text-lg font-semibold text-gray-900">
               Review & Refine Suggestions
             </h2>
+              {/* Mock Data Indicator */}
+              {import.meta.env.VITE_USE_MOCK_DATA === 'true' && (
+                <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  🎭 Mock Mode Active
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={handleConfirm}
-              className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-lg transition-colors shadow-sm"
             >
-              <span>Confirm & Continue</span>
-              <ArrowRight className="w-5 h-5" />
+              Confirm & Continue
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
             </button>
           </div>
+        </div>
+          </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-8 space-y-12">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto py-8">
+        <div className="space-y-8">
 
-            {/* Basic Section */}
-            <div className="p-3 rounded-2xl border-2 border-blue-200 bg-blue-50">
-              <div className="flex justify-center mb-8">
-                <div className="relative">
-                  {/* No logo related state, logic, or JSX */}
+          {/* Basic Information Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Briefcase className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Basic Information</h3>
+                  <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
+                </div>
                 </div>
               </div>
 
-              <div className="flex items-center mb-3">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white mr-2">
-                  <Briefcase className="w-5 h-5" />
-                </span>
-                <h3 className="text-lg font-extrabold text-blue-900 tracking-tight">Basic Information</h3>
-              </div>
-              <div className="space-y-2">
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Job Titles</h4>
-                  {renderEditableList(
-                    "jobTitles",
-                    suggestions.jobTitles,
-                    "Job Titles"
-                  )}
+            <div className="p-3 space-y-6">
+              {/* Job Titles */}
+              <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg p-3 border border-blue-200 shadow-md">
+                <div className="space-y-2">
+                {renderJobTitlesSection()}
                 </div>
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Job Description</h4>
+              </div>
+
+              {/* Highlights */}
+              <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-lg p-3 border border-green-200 shadow-md">
+                <div className="space-y-2">
+                {renderHighlightsSection()}
+                </div>
+                </div>
+
+              {/* Job Description - Full Width */}
+              <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-lg p-3 border border-orange-200 shadow-md">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
+                </div>
                   {renderDescriptionSection()}
                 </div>
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Highlights</h4>
-                  {renderEditableList(
-                    "highlights",
-                    suggestions.highlights,
-                    "Highlights"
-                  )}
                 </div>
+
+              {/* Sectors - After Description */}
+              <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 rounded-lg p-3 border border-purple-200 shadow-md">
+                <div className="space-y-2">
+                {renderSectorsSection()}
+                </div>
+                </div>
+
+              {/* Industries */}
+              <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 rounded-lg p-3 border border-rose-200 shadow-md">
                 <div>
                   {renderIndustriesSection()}
                 </div>
+                </div>
+
+              {/* Activities */}
+              <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-lg p-3 border border-cyan-200 shadow-md">
                 <div>
                   {renderActivitiesSection()}
                 </div>
-                <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-1">Deliverables</h4>
-                  {renderEditableList(
-                    "deliverables",
-                    suggestions.deliverables,
-                    "Deliverables"
-                  )}
                 </div>
-                <div>
-                  {renderSectorsSection()}
+
+              {/* Deliverables */}
+              <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 rounded-lg p-3 border border-blue-200 shadow-md">
+                <div className="space-y-2">
+                {renderDeliverablesSection()}
                 </div>
+                </div>
+
+              {/* Destination Zones */}
+              <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 rounded-lg p-3 border border-slate-200 shadow-md">
                 <div>
                   {renderDestinationZonesSection()}
                 </div>
+                </div>
+
+              {/* Seniority */}
+              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-lg p-3 border border-amber-200 shadow-md">
                 <div>
                   {renderSenioritySection()}
                 </div>
+                </div>
+
               </div>
             </div>
 
             {/* Schedule Section */}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Clock className="w-7 h-7 mr-3 text-blue-700" />
-                Schedule
-              </h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-700 to-indigo-700 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Schedule & Availability</h3>
+                  <p className="text-purple-100 text-sm">Working hours, timezones, and flexibility options</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 space-y-4">
+              <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200 shadow-md">
               {renderEditableSchedules()}
+              </div>
+              
+              <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-50 rounded-lg p-3 border border-teal-200 shadow-md">
               {renderMinimumHoursSection()}
+              </div>
+              
+              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-lg p-3 border border-violet-200 shadow-md">
               {renderTimezoneSection()}
+              </div>
+              
+              <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 rounded-lg p-3 border border-yellow-200 shadow-md">
               {renderFlexibilitySection()}
+              </div>
+            </div>
             </div>
 
             {/* Commission Section */}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <DollarSign className="w-7 h-7 mr-3 text-blue-700" />
-                Commission
-              </h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Commission Structure</h3>
+                  <p className="text-green-100 text-sm">Compensation details and performance incentives</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
               {renderCommissionSection()}
+            </div>
             </div>
 
             {/* Skills Section */}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Award className="w-7 h-7 mr-3 text-blue-700" />
-                Skills
-              </h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Skills & Qualifications</h3>
+                  <p className="text-purple-100 text-sm">Required technical, professional, and soft skills</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
               {renderSkillsSection()}
+            </div>
             </div>
 
             {/* Team Section */}
-            <div className="p-6 rounded-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-blue-900 mb-6 flex items-center">
-                <Users className="w-7 h-7 mr-3 text-blue-700" />
-                Team Structure
-              </h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Team Structure</h3>
+                  <p className="text-blue-100 text-sm">Team composition, roles, and territories</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
               {renderTeamSection()}
             </div>
           </div>

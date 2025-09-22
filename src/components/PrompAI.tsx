@@ -1,86 +1,73 @@
-import React, { useState, useEffect } from "react";
-import Cookies from 'js-cookie';
-import {
-  Brain,
-  HelpCircle,
-  Briefcase,
-  FileText,
-  Globe2,
-  DollarSign,
-  Users,
-  PlusCircle,
-} from "lucide-react";
-import { AIDialog } from "./AIDialog";
-import { Suggestions } from "./Suggestions";
-import { SectionContent } from "./SectionContent";
-import Logo from "./Logo";
-import type { GigData, GigSuggestion } from "../types";
-import { predefinedOptions } from "../lib/guidance";
+import React, { useState, useEffect } from 'react';
+import { Brain, HelpCircle, PlusCircle } from 'lucide-react';
+import { Suggestions } from './Suggestions';
+import { SectionContent } from './SectionContent';
+import Logo from './Logo';
+import { AIDialog } from './AIDialog';
+import { GigData, GigSuggestion } from '../types';
+import { predefinedOptions } from '../lib/guidance';
 import { mapGeneratedDataToGigData } from '../lib/ai';
+import Cookies from 'js-cookie';
+import { 
+  Briefcase, 
+  Calendar, 
+  DollarSign, 
+  Users, 
+  Award,
+  ClipboardList
+} from "lucide-react";
 
 const sections = [
-  { id: "basic", label: "Basic Info", icon: Briefcase },
-  { id: "schedule", label: "Schedule", icon: Globe2 },
-  { id: "commission", label: "Commission", icon: DollarSign },
-  // { id: "leads", label: "Leads", icon: Target },
-  { id: "skills", label: "Skills", icon: Brain },
-  { id: "team", label: "Team", icon: Users },
+  { id: 'basic', label: 'Basic Information', icon: Briefcase },
+  { id: 'schedule', label: 'Schedule', icon: Calendar },
+  { id: 'commission', label: 'Commission', icon: DollarSign },
+  { id: 'skills', label: 'Skills', icon: Award },
+  { id: 'team', label: 'Team', icon: Users },
+  { id: 'review', label: 'Review', icon: ClipboardList }
 ];
 
 const PrompAI: React.FC = () => {
   const [input, setInput] = useState("");
   const [showAIDialog, setShowAIDialog] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showGuidance, setShowGuidance] = useState(false);
-  const [confirmedSuggestions, setConfirmedSuggestions] =
-    useState<GigSuggestion | null>(null);
-  const [currentSection, setCurrentSection] = useState("basic");
-  const [isManualMode, setIsManualMode] = useState(false);
+  const [confirmedSuggestions, setConfirmedSuggestions] = useState<GigSuggestion | null>(null);
+  const [currentSection, setCurrentSection] = useState<string>("basic");
   const [showReview, setShowReview] = useState(false);
+  const [isManualMode, setIsManualMode] = useState(false);
+
   const [gigData, setGigData] = useState<GigData>({
     userId: Cookies.get('userId') || "",
     companyId: Cookies.get('companyId') || "",
+    title: "",
+    description: "",
+    category: "",
     destination_zone: "",
     destinationZones: [],
     callTypes: [],
     highlights: [],
+    industries: [],
+    activities: [],
+    status: 'to_activate',
     requirements: {
       essential: [],
       preferred: []
     },
     benefits: [],
-    title: "",
-    description: "",
-    category: "",
-    industries: [],
-    activities: [],
-    activity: { options: [] },
-    status: 'to_activate',
     availability: {
-      schedule: [{
-        day: "",
-        hours: {
-          start: "",
-          end: ""
-        }
-      }],
+      schedule: [],
       timeZones: [],
       time_zone: "",
       flexibility: [],
-      minimumHours: {},
+      minimumHours: {}
     },
     schedule: {
-      schedules: [{
-        day: "",
-        hours: {
-          start: "",
-          end: ""
-        }
-      }],
+      schedules: [],
       timeZones: [],
+      time_zone: "",
       flexibility: [],
-      minimumHours: {},
+      minimumHours: {}
     },
     commission: {
       base: "",
@@ -144,7 +131,8 @@ const PrompAI: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      setShowAIDialog(true);
+      // Modal disabled - directly proceed to suggestions generation
+      handleGenerateSuggestions();
     }
   };
 
@@ -165,77 +153,40 @@ const PrompAI: React.FC = () => {
 
     // Map the generated data to the initialized structure
     const mappedData = mapGeneratedDataToGigData(suggestions);
+    console.log('🔄 PROMP AI - suggestions.destination_zone:', suggestions.destination_zone);
+    console.log('🔄 PROMP AI - mappedData.destination_zone:', mappedData.destination_zone);
+    console.log('🔄 PROMP AI - selectedJobTitle:', suggestions.selectedJobTitle);
     
     // Update the gig data with the mapped suggestions
     setGigData((prevData: GigData) => ({
       ...prevData,
       ...mappedData,
+      // Use selected job title as the main title
+      title: suggestions.selectedJobTitle || mappedData.title || prevData.title,
       // Preserve any existing data that wasn't in the suggestions
       userId: prevData.userId,
       companyId: prevData.companyId,
-      // Ensure destination_zone is set correctly
-      destination_zone: suggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : prevData.destination_zone
+      // Use the destination_zone from mappedData (which comes from AI suggestions)
+      destination_zone: mappedData.destination_zone || prevData.destination_zone
     }));
   };
 
   const handleSectionChange = (sectionId: string) => {
-    // Si onSectionChange est appelé avec 'suggestions', revenir aux suggestions
-    if (sectionId === 'suggestions') {
-      // Si on est en mode manuel, revenir au mode AI
-      if (isManualMode) {
-        setIsManualMode(false);
-        setShowSuggestions(true);
-        return;
-      }
-      
-      // Si on a des suggestions confirmées, revenir aux suggestions
-      if (confirmedSuggestions) {
-        setShowSuggestions(true);
-        return;
-      }
-      
-      // Sinon, revenir à l'écran initial des suggestions
-      setShowSuggestions(true);
-      return;
-    }
-    
-    // Si onSectionChange est appelé avec 'review', afficher le review
-    if (sectionId === 'review') {
-      setShowReview(true);
-      return;
-    }
-    
-    // Pour les autres sections, mettre à jour la section courante et masquer le review
+    console.log(`🔄 PROMP AI - Section change to: ${sectionId}`);
+    console.log('🔄 PROMP AI - gigData.schedule:', gigData.schedule);
+    console.log('🔄 PROMP AI - gigData.availability:', gigData.availability);
     setCurrentSection(sectionId);
-    setShowReview(false);
   };
 
   const handleGigDataChange = (newData: GigData) => {
-    
-    // If we have confirmed suggestions, merge them with the new data
-    if (confirmedSuggestions) {
-      const updatedData = {
-        ...newData,
-        // Preserve destinationZones from suggestions if they exist
-        destinationZones: confirmedSuggestions.destinationZones || newData.destinationZones,
-        // Allow industries and activities to be modified - don't preserve from suggestions
-        // industries: confirmedSuggestions.industries || newData.industries,
-        // activities: confirmedSuggestions.activities || newData.activities,
-        // If we have a destination_zone from suggestions, use it
-        destination_zone: newData.destination_zone || (confirmedSuggestions.destinationZones?.[0] === 'Tunisia' ? 'TN' : '')
-      };
-      
-      setGigData(updatedData);
-    } else {
-      setGigData(newData);
-    }
+    console.log('🔄 PROMP AI - Gig data changed:', newData);
+    setGigData(newData);
   };
 
   const handleManualMode = () => {
     setIsManualMode(true);
     setCurrentSection("basic");
   };
-
 
   if (showSuggestions) {
     return (
@@ -458,12 +409,7 @@ const PrompAI: React.FC = () => {
         </div>
       </div>
 
-      <AIDialog
-        isOpen={showAIDialog}
-        onClose={() => setShowAIDialog(false)}
-        onProceed={handleGenerateSuggestions}
-        analyzing={isAnalyzing}
-      />
+{/* AIDialog disabled - modal removed */}
     </div>
   );
 };

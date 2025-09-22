@@ -18,7 +18,9 @@ ENV VITE_API_URL_ONBOARDING=https://preprod-api-companysearchwizard.harx.ai/api
 ENV VITE_STANDALONE=true
 ENV VITE_USER_ID=680a27ffefa3d29d628d0016
 ENV VITE_COMPANY_ID=684ace43641398dc582f1acc
-ENV VITE_OPENAI_API_KEY=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
+
+ENV VITE_USE_MOCK_DATA=false
+
 RUN npm install
 
 COPY . .
