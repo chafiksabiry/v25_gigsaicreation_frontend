@@ -136,11 +136,18 @@ const PrompAI: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const editParam = urlParams.get('edit');
     const gigIdParam = urlParams.get('gigId');
+    const sectionParam = urlParams.get('section');
     
     if (editParam === 'true' && gigIdParam) {
       setIsEditMode(true);
       setEditGigId(gigIdParam);
       loadGigForEdit(gigIdParam);
+      
+      // Si une section est spécifiée, aller directement au formulaire
+      if (sectionParam) {
+        setCurrentSection(sectionParam);
+        setIsManualMode(true);
+      }
     }
   }, []);
 
@@ -148,13 +155,18 @@ const PrompAI: React.FC = () => {
   const loadGigForEdit = async (gigId: string) => {
     setIsLoadingGig(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL_GIGS}/gigs/${gigId}`);
+      console.log('🔄 EDIT MODE - Fetching gig data from:', `${import.meta.env.VITE_API_URL}/gigs/${gigId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs/${gigId}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch gig data');
+        console.error('🔄 EDIT MODE - API Error:', response.status, response.statusText);
+        throw new Error(`Failed to fetch gig data: ${response.status} ${response.statusText}`);
       }
       
-      const { data } = await response.json();
+      const responseData = await response.json();
+      console.log('🔄 EDIT MODE - API Response:', responseData);
+      
+      const { data } = responseData;
       
       if (data) {
         // Map the fetched gig data to our GigData format
@@ -173,64 +185,71 @@ const PrompAI: React.FC = () => {
           status: data.status || 'to_activate',
           requirements: data.requirements || { essential: [], preferred: [] },
           benefits: data.benefits || [],
-          availability: data.availability || {
-            schedule: [],
-            timeZones: [],
-            time_zone: "",
-            flexibility: [],
-            minimumHours: {}
+          availability: {
+            schedule: data.availability?.schedule || data.schedule?.schedules || [],
+            timeZones: data.availability?.timeZones || data.schedule?.timeZones || [],
+            time_zone: data.availability?.time_zone || data.schedule?.time_zone || "",
+            flexibility: data.availability?.flexibility || data.schedule?.flexibility || [],
+            minimumHours: data.availability?.minimumHours || data.schedule?.minimumHours || {}
           },
-          schedule: data.schedule || {
-            schedules: [],
-            timeZones: [],
-            time_zone: "",
-            flexibility: [],
-            minimumHours: {}
+          schedule: {
+            schedules: data.schedule?.schedules || data.availability?.schedule || [],
+            timeZones: data.schedule?.timeZones || data.availability?.timeZones || [],
+            time_zone: data.schedule?.time_zone || data.availability?.time_zone || "",
+            flexibility: data.schedule?.flexibility || data.availability?.flexibility || [],
+            minimumHours: data.schedule?.minimumHours || data.availability?.minimumHours || {}
           },
-          commission: data.commission || {
-            base: "",
-            baseAmount: 0,
-            bonus: "",
-            bonusAmount: 0,
-            structure: "",
-            currency: "",
-            minimumVolume: { amount: 0, period: "", unit: "" },
-            transactionCommission: { type: "", amount: 0 },
-            kpis: []
+          commission: {
+            base: data.commission?.base || "",
+            baseAmount: data.commission?.baseAmount || 0,
+            bonus: data.commission?.bonus || "",
+            bonusAmount: data.commission?.bonusAmount || 0,
+            structure: data.commission?.structure || data.commission?.additionalDetails || "",
+            currency: data.commission?.currency || "",
+            minimumVolume: data.commission?.minimumVolume || { amount: 0, period: "", unit: "" },
+            transactionCommission: data.commission?.transactionCommission || { type: "", amount: 0 },
+            kpis: data.commission?.kpis || []
           },
-          leads: data.leads || {
-            types: [],
-            sources: [],
-            distribution: { method: "", rules: [] },
-            qualificationCriteria: []
+          leads: {
+            types: data.leads?.types || [],
+            sources: data.leads?.sources || [],
+            distribution: data.leads?.distribution || { method: "", rules: [] },
+            qualificationCriteria: data.leads?.qualificationCriteria || []
           },
-          skills: data.skills || {
-            languages: [],
-            soft: [],
-            professional: [],
-            technical: []
+          skills: {
+            languages: data.skills?.languages || [],
+            soft: data.skills?.soft || [],
+            professional: data.skills?.professional || [],
+            technical: data.skills?.technical || []
           },
-          seniority: data.seniority || {
-            level: "",
-            yearsExperience: 0
+          seniority: {
+            level: data.seniority?.level || "",
+            yearsExperience: data.seniority?.yearsExperience || 0
           },
-          team: data.team || {
-            size: 0,
-            structure: [],
-            territories: [],
-            reporting: { to: "", frequency: "" },
-            collaboration: []
+          team: {
+            size: data.team?.size || 0,
+            structure: data.team?.structure || [],
+            territories: data.team?.territories || [],
+            reporting: data.team?.reporting || { to: "", frequency: "" },
+            collaboration: data.team?.collaboration || []
           },
-          documentation: data.documentation || {
-            training: [],
-            product: [],
-            process: []
+          documentation: {
+            training: data.documentation?.training || [],
+            product: data.documentation?.product || [],
+            process: data.documentation?.process || []
           }
         };
         
+        console.log('🔄 EDIT MODE - Loaded gig data:', data);
+        console.log('🔄 EDIT MODE - Mapped gig data:', mappedGigData);
+        
         setGigData(mappedGigData);
         setIsManualMode(true); // Activer le mode manuel pour l'édition
-        setCurrentSection("basic");
+        
+        // Vérifier si une section spécifique est demandée dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sectionParam = urlParams.get('section');
+        setCurrentSection(sectionParam || "basic");
       }
     } catch (error) {
       console.error('Error loading gig for edit:', error);
