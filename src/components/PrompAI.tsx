@@ -182,8 +182,20 @@ const PrompAI: React.FC = () => {
           destinationZones: data.destinationZones || [],
           callTypes: data.callTypes || [],
           highlights: data.highlights || [],
-          industries: data.industries || [],
-          activities: data.activities || [],
+          industries: Array.isArray(data.industries) 
+            ? data.industries.map(industry => 
+                typeof industry === 'object' && industry?._id 
+                  ? industry._id 
+                  : industry
+              )
+            : [],
+          activities: Array.isArray(data.activities) 
+            ? data.activities.map(activity => 
+                typeof activity === 'object' && activity?._id 
+                  ? activity._id 
+                  : activity
+              )
+            : [],
           status: data.status || 'to_activate',
           requirements: data.requirements || { essential: [], preferred: [] },
           benefits: data.benefits || [],
@@ -253,7 +265,11 @@ const PrompAI: React.FC = () => {
         };
         
         console.log('🔄 EDIT MODE - Loaded gig data:', data);
+        console.log('🔄 EDIT MODE - Raw industries:', data.industries);
+        console.log('🔄 EDIT MODE - Raw activities:', data.activities);
         console.log('🔄 EDIT MODE - Mapped gig data:', mappedGigData);
+        console.log('🔄 EDIT MODE - Mapped industries (IDs):', mappedGigData.industries);
+        console.log('🔄 EDIT MODE - Mapped activities (IDs):', mappedGigData.activities);
         console.log('🔄 EDIT MODE - destination_zone ID:', mappedGigData.destination_zone);
         console.log('🔄 EDIT MODE - time_zone ID:', mappedGigData.schedule.time_zone);
         console.log('🔄 EDIT MODE - currency ID:', mappedGigData.commission.currency);
