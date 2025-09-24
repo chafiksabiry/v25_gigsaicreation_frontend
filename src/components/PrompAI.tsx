@@ -248,10 +248,42 @@ const PrompAI: React.FC = () => {
             qualificationCriteria: data.leads?.qualificationCriteria || []
           },
           skills: {
-            languages: data.skills?.languages || [],
-            soft: data.skills?.soft || [],
-            professional: data.skills?.professional || [],
-            technical: data.skills?.technical || []
+            languages: Array.isArray(data.skills?.languages) 
+              ? data.skills.languages.map(lang => ({
+                  language: typeof lang.language === 'object' && lang.language?._id 
+                    ? lang.language._id 
+                    : lang.language || '',
+                  proficiency: lang.proficiency || '',
+                  iso639_1: lang.iso639_1 || ''
+                }))
+              : [],
+            soft: Array.isArray(data.skills?.soft) 
+              ? data.skills.soft.map(skill => ({
+                  skill: typeof skill.skill === 'object' && skill.skill?._id 
+                    ? { $oid: skill.skill._id }
+                    : skill.skill || { $oid: '' },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                }))
+              : [],
+            professional: Array.isArray(data.skills?.professional) 
+              ? data.skills.professional.map(skill => ({
+                  skill: typeof skill.skill === 'object' && skill.skill?._id 
+                    ? { $oid: skill.skill._id }
+                    : skill.skill || { $oid: '' },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                }))
+              : [],
+            technical: Array.isArray(data.skills?.technical) 
+              ? data.skills.technical.map(skill => ({
+                  skill: typeof skill.skill === 'object' && skill.skill?._id 
+                    ? { $oid: skill.skill._id }
+                    : skill.skill || { $oid: '' },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                }))
+              : []
           },
           seniority: {
             level: data.seniority?.level || "",
@@ -297,6 +329,14 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Mapped professional skills:', mappedGigData.skills.professional);
         console.log('🔄 EDIT MODE - Mapped technical skills:', mappedGigData.skills.technical);
         console.log('🔄 EDIT MODE - Mapped soft skills:', mappedGigData.skills.soft);
+        
+        // Debug: Vérifier la structure des skills mappés
+        if (mappedGigData.skills.languages.length > 0) {
+          console.log('🔄 EDIT MODE - First language structure:', mappedGigData.skills.languages[0]);
+        }
+        if (mappedGigData.skills.professional.length > 0) {
+          console.log('🔄 EDIT MODE - First professional skill structure:', mappedGigData.skills.professional[0]);
+        }
         console.log('🔄 EDIT MODE - Raw team territories:', data.team?.territories);
         console.log('🔄 EDIT MODE - Mapped team territories:', mappedGigData.team.territories);
         

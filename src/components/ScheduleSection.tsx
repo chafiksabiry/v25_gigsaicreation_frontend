@@ -470,11 +470,17 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 <option value="">
                   {timezonesLoading ? 'Loading timezones...' : 'Select a timezone'}
                 </option>
-                {timezones.map((timezone) => (
-                  <option key={timezone._id} value={timezone._id}>
-                    {timezone.zoneName} ({timezone.countryName}) UTC{timezone.gmtOffset >= 0 ? '+' : ''}{timezone.gmtOffset}
-                </option>
-              ))}
+                {timezones.map((timezone) => {
+                  // Convertir gmtOffset (probablement en secondes) en heures
+                  const offsetHours = timezone.gmtOffset / 3600;
+                  const offsetString = offsetHours >= 0 ? `+${offsetHours}` : `${offsetHours}`;
+                  
+                  return (
+                    <option key={timezone._id} value={timezone._id}>
+                      {timezone.zoneName} ({timezone.countryName}) UTC{offsetString}
+                    </option>
+                  );
+                })}
             </select>
               {timezonesLoading && (
                 <div className="mt-2 flex items-center justify-center">
