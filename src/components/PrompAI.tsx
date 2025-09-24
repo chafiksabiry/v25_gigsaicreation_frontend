@@ -176,7 +176,9 @@ const PrompAI: React.FC = () => {
           title: data.title || "",
           description: data.description || "",
           category: data.category || "",
-          destination_zone: data.destination_zone || "",
+          destination_zone: typeof data.destination_zone === 'object' && data.destination_zone?._id 
+            ? data.destination_zone._id 
+            : data.destination_zone || "",
           destinationZones: data.destinationZones || [],
           callTypes: data.callTypes || [],
           highlights: data.highlights || [],
@@ -188,14 +190,22 @@ const PrompAI: React.FC = () => {
           availability: {
             schedule: data.availability?.schedule || data.schedule?.schedules || [],
             timeZones: data.availability?.timeZones || data.schedule?.timeZones || [],
-            time_zone: data.availability?.time_zone || data.schedule?.time_zone || "",
+            time_zone: typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
+              ? data.availability.time_zone._id
+              : typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
+              ? data.schedule.time_zone._id
+              : data.availability?.time_zone || data.schedule?.time_zone || "",
             flexibility: data.availability?.flexibility || data.schedule?.flexibility || [],
             minimumHours: data.availability?.minimumHours || data.schedule?.minimumHours || {}
           },
           schedule: {
             schedules: data.schedule?.schedules || data.availability?.schedule || [],
             timeZones: data.schedule?.timeZones || data.availability?.timeZones || [],
-            time_zone: data.schedule?.time_zone || data.availability?.time_zone || "",
+            time_zone: typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
+              ? data.schedule.time_zone._id
+              : typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
+              ? data.availability.time_zone._id
+              : data.schedule?.time_zone || data.availability?.time_zone || "",
             flexibility: data.schedule?.flexibility || data.availability?.flexibility || [],
             minimumHours: data.schedule?.minimumHours || data.availability?.minimumHours || {}
           },
@@ -205,7 +215,9 @@ const PrompAI: React.FC = () => {
             bonus: data.commission?.bonus || "",
             bonusAmount: data.commission?.bonusAmount || 0,
             structure: data.commission?.structure || data.commission?.additionalDetails || "",
-            currency: data.commission?.currency || "",
+            currency: typeof data.commission?.currency === 'object' && data.commission?.currency?._id
+              ? data.commission.currency._id
+              : data.commission?.currency || "",
             minimumVolume: data.commission?.minimumVolume || { amount: 0, period: "", unit: "" },
             transactionCommission: data.commission?.transactionCommission || { type: "", amount: 0 },
             kpis: data.commission?.kpis || []
@@ -242,6 +254,9 @@ const PrompAI: React.FC = () => {
         
         console.log('🔄 EDIT MODE - Loaded gig data:', data);
         console.log('🔄 EDIT MODE - Mapped gig data:', mappedGigData);
+        console.log('🔄 EDIT MODE - destination_zone ID:', mappedGigData.destination_zone);
+        console.log('🔄 EDIT MODE - time_zone ID:', mappedGigData.schedule.time_zone);
+        console.log('🔄 EDIT MODE - currency ID:', mappedGigData.commission.currency);
         
         setGigData(mappedGigData);
         setIsManualMode(true); // Activer le mode manuel pour l'édition
