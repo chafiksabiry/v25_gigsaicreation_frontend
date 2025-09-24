@@ -242,7 +242,7 @@ export function GigReview({
         if (isEditMode) {
           window.location.href = "/app7";
         } else {
-          window.location.href = "/app11";
+        window.location.href = "/app11";
         }
       }
     } catch (error) {
