@@ -221,12 +221,19 @@ const PrompAI: React.FC = () => {
             flexibility: data.schedule?.flexibility || data.availability?.flexibility || [],
             minimumHours: data.schedule?.minimumHours || data.availability?.minimumHours || {}
           },
+          // Ajouter time_zone au niveau racine pour ScheduleSection
+          time_zone: typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
+            ? data.schedule.time_zone._id
+            : typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
+            ? data.availability.time_zone._id
+            : data.schedule?.time_zone || data.availability?.time_zone || "",
           commission: {
             base: data.commission?.base || "",
             baseAmount: data.commission?.baseAmount || 0,
             bonus: data.commission?.bonus || "",
             bonusAmount: data.commission?.bonusAmount || 0,
-            structure: data.commission?.structure || data.commission?.additionalDetails || "",
+            structure: data.commission?.structure || "",
+            additionalDetails: data.commission?.additionalDetails || "",
             currency: typeof data.commission?.currency === 'object' && data.commission?.currency?._id
               ? data.commission.currency._id
               : data.commission?.currency || "",
@@ -253,7 +260,13 @@ const PrompAI: React.FC = () => {
           team: {
             size: data.team?.size || 0,
             structure: data.team?.structure || [],
-            territories: data.team?.territories || [],
+            territories: Array.isArray(data.team?.territories)
+              ? data.team.territories.map(territory =>
+                  typeof territory === 'object' && territory?._id
+                    ? territory._id
+                    : territory
+                )
+              : [],
             reporting: data.team?.reporting || { to: "", frequency: "" },
             collaboration: data.team?.collaboration || []
           },
@@ -271,8 +284,16 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Mapped industries (IDs):', mappedGigData.industries);
         console.log('🔄 EDIT MODE - Mapped activities (IDs):', mappedGigData.activities);
         console.log('🔄 EDIT MODE - destination_zone ID:', mappedGigData.destination_zone);
-        console.log('🔄 EDIT MODE - time_zone ID:', mappedGigData.schedule.time_zone);
+        console.log('🔄 EDIT MODE - time_zone ID (schedule):', mappedGigData.schedule.time_zone);
+        console.log('🔄 EDIT MODE - time_zone ID (root):', mappedGigData.time_zone);
         console.log('🔄 EDIT MODE - currency ID:', mappedGigData.commission.currency);
+        console.log('🔄 EDIT MODE - Raw skills data:', data.skills);
+        console.log('🔄 EDIT MODE - Raw languages:', data.skills?.languages);
+        console.log('🔄 EDIT MODE - Raw professional skills:', data.skills?.professional);
+        console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
+        console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
+        console.log('🔄 EDIT MODE - Raw team territories:', data.team?.territories);
+        console.log('🔄 EDIT MODE - Mapped team territories:', mappedGigData.team.territories);
         
         setGigData(mappedGigData);
         setIsManualMode(true); // Activer le mode manuel pour l'édition

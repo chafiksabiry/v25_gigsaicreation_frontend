@@ -48,6 +48,7 @@ export interface GigData {
   industries: string[]; // Array of industry IDs
   activities: string[]; // Array of activity IDs
   status?: 'to_activate' | 'active' | 'inactive' | 'archived';
+  time_zone?: string; // Timezone ID for ScheduleSection
   requirements: {
     essential: string[];
     preferred: string[];
