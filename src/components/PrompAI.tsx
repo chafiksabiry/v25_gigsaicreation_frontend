@@ -36,6 +36,9 @@ const PrompAI: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<string>("basic");
   const [showReview, setShowReview] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editGigId, setEditGigId] = useState<string | null>(null);
+  const [isLoadingGig, setIsLoadingGig] = useState(false);
 
   const [gigData, setGigData] = useState<GigData>({
     userId: Cookies.get('userId') || "",
@@ -128,6 +131,115 @@ const PrompAI: React.FC = () => {
     window.scrollTo(0, 0);
   }, [currentSection]);
 
+  // Check for edit mode parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editParam = urlParams.get('edit');
+    const gigIdParam = urlParams.get('gigId');
+    
+    if (editParam === 'true' && gigIdParam) {
+      setIsEditMode(true);
+      setEditGigId(gigIdParam);
+      loadGigForEdit(gigIdParam);
+    }
+  }, []);
+
+  // Function to load gig data for editing
+  const loadGigForEdit = async (gigId: string) => {
+    setIsLoadingGig(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL_GIGS}/gigs/${gigId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch gig data');
+      }
+      
+      const { data } = await response.json();
+      
+      if (data) {
+        // Map the fetched gig data to our GigData format
+        const mappedGigData: GigData = {
+          userId: data.userId || Cookies.get('userId') || "",
+          companyId: data.companyId || Cookies.get('companyId') || "",
+          title: data.title || "",
+          description: data.description || "",
+          category: data.category || "",
+          destination_zone: data.destination_zone || "",
+          destinationZones: data.destinationZones || [],
+          callTypes: data.callTypes || [],
+          highlights: data.highlights || [],
+          industries: data.industries || [],
+          activities: data.activities || [],
+          status: data.status || 'to_activate',
+          requirements: data.requirements || { essential: [], preferred: [] },
+          benefits: data.benefits || [],
+          availability: data.availability || {
+            schedule: [],
+            timeZones: [],
+            time_zone: "",
+            flexibility: [],
+            minimumHours: {}
+          },
+          schedule: data.schedule || {
+            schedules: [],
+            timeZones: [],
+            time_zone: "",
+            flexibility: [],
+            minimumHours: {}
+          },
+          commission: data.commission || {
+            base: "",
+            baseAmount: 0,
+            bonus: "",
+            bonusAmount: 0,
+            structure: "",
+            currency: "",
+            minimumVolume: { amount: 0, period: "", unit: "" },
+            transactionCommission: { type: "", amount: 0 },
+            kpis: []
+          },
+          leads: data.leads || {
+            types: [],
+            sources: [],
+            distribution: { method: "", rules: [] },
+            qualificationCriteria: []
+          },
+          skills: data.skills || {
+            languages: [],
+            soft: [],
+            professional: [],
+            technical: []
+          },
+          seniority: data.seniority || {
+            level: "",
+            yearsExperience: 0
+          },
+          team: data.team || {
+            size: 0,
+            structure: [],
+            territories: [],
+            reporting: { to: "", frequency: "" },
+            collaboration: []
+          },
+          documentation: data.documentation || {
+            training: [],
+            product: [],
+            process: []
+          }
+        };
+        
+        setGigData(mappedGigData);
+        setIsManualMode(true); // Activer le mode manuel pour l'édition
+        setCurrentSection("basic");
+      }
+    } catch (error) {
+      console.error('Error loading gig for edit:', error);
+      // En cas d'erreur, on peut afficher un message ou rediriger
+    } finally {
+      setIsLoadingGig(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
@@ -207,6 +319,18 @@ const PrompAI: React.FC = () => {
     );
   }
 
+  // Show loading state when loading gig for edit
+  if (isLoadingGig) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading gig data for editing...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (confirmedSuggestions || isManualMode) {
     // S'assurer que currentSection est valide
     const validSections = sections.map(s => s.id);
@@ -232,6 +356,8 @@ const PrompAI: React.FC = () => {
                   constants={predefinedOptions}
                   onSectionChange={handleSectionChange}
                   isAIMode={!!confirmedSuggestions}
+                  isEditMode={isEditMode}
+                  editGigId={editGigId}
                 />
               </div>
             </div>
@@ -267,7 +393,7 @@ const PrompAI: React.FC = () => {
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Back to AI Assistant
+                  {isEditMode ? 'Back to Dashboard' : 'Back to AI Assistant'}
                 </button>
                 <div className="flex-1 flex justify-center items-center">
                   <Logo />
@@ -277,10 +403,12 @@ const PrompAI: React.FC = () => {
               <div className="text-center mt-2">
                 <div className="flex items-center justify-center space-x-3 mb-2">
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    Create Gig Manually
+                    {isEditMode ? 'Edit Gig' : 'Create Gig Manually'}
                   </h1>
                 </div>
-                <p className="text-lg text-gray-600">Fill out the sections below to create your gig</p>
+                <p className="text-lg text-gray-600">
+                  {isEditMode ? 'Modify the sections below to update your gig' : 'Fill out the sections below to create your gig'}
+                </p>
               </div>
             </div>
           )}
@@ -321,6 +449,8 @@ const PrompAI: React.FC = () => {
                 constants={predefinedOptions}
                 onSectionChange={handleSectionChange}
                 isAIMode={!!confirmedSuggestions}
+                isEditMode={isEditMode}
+                editGigId={editGigId}
               />
             </div>
           </div>
