@@ -1,4 +1,16 @@
+# Try different registries if Docker Hub fails
 FROM node:18
+# Alternative registries (uncomment if needed):
+# FROM registry.hub.docker.com/library/node:18
+# FROM public.ecr.aws/docker/library/node:18
+# FROM quay.io/node/node:18
+
+# If all registries fail, use Ubuntu and install Node manually:
+# FROM ubuntu:20.04
+# RUN apt-get update && apt-get install -y curl
+# RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+# RUN apt-get install -y nodejs
+
 
 WORKDIR /app
 

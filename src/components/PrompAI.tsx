@@ -353,7 +353,6 @@ const PrompAI: React.FC = () => {
           console.log('🔄 EDIT MODE - First professional skill raw structure:', data.skills.professional[0]);
           console.log('🔄 EDIT MODE - First professional skill.skill type:', typeof data.skills.professional[0].skill);
           console.log('🔄 EDIT MODE - First professional skill.skill value:', data.skills.professional[0].skill);
-          console.log('🔄 EDIT MODE - First professional skill.skill._id:', data.skills.professional[0].skill?._id);
         }
         console.log('🔄 EDIT MODE - Mapped skills data:', mappedGigData.skills);
         console.log('🔄 EDIT MODE - Mapped languages:', mappedGigData.skills.languages);
