@@ -7,6 +7,7 @@ import { AIDialog } from './AIDialog';
 import { GigData, GigSuggestion } from '../types';
 import { predefinedOptions } from '../lib/guidance';
 import { mapGeneratedDataToGigData } from '../lib/ai';
+import { getGig } from '../lib/api';
 import Cookies from 'js-cookie';
 import { 
   Briefcase, 
@@ -148,13 +149,13 @@ const PrompAI: React.FC = () => {
   const loadGigForEdit = async (gigId: string) => {
     setIsLoadingGig(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL_GIGS}/gigs/${gigId}`);
+      const result = await getGig(gigId);
       
-      if (!response.ok) {
+      if (result.error) {
         throw new Error('Failed to fetch gig data');
       }
       
-      const { data } = await response.json();
+      const data = result.data[0];
       
       if (data) {
         // Map the fetched gig data to our GigData format
