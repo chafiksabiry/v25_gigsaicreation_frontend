@@ -258,54 +258,31 @@ const PrompAI: React.FC = () => {
                 }))
               : [],
             soft: Array.isArray(data.skills?.soft) 
-              ? data.skills.soft.map(skill => {
-                  console.log('🔄 EDIT MODE - Mapping soft skill:', skill);
-                  const mappedSkill = {
-                    skill: typeof skill.skill === 'object' && skill.skill?._id 
-                      ? { $oid: skill.skill._id }
-                      : typeof skill.skill === 'string'
-                      ? skill.skill
-                      : { $oid: '' },
-                    level: skill.level || 1,
-                    details: skill.details || ''
-                  };
-                  console.log('🔄 EDIT MODE - Mapped soft skill result:', mappedSkill);
-                  return mappedSkill;
-                })
+              ? data.skills.soft.map(skill => ({
+                  skill: typeof skill.skill === 'object' && skill.skill?._id 
+                    ? { $oid: skill.skill._id }
+                    : skill.skill || { $oid: '' },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                }))
               : [],
             professional: Array.isArray(data.skills?.professional) 
-              ? data.skills.professional.map(skill => {
-                  console.log('🔄 EDIT MODE - Mapping professional skill:', skill);
-                  console.log('🔄 EDIT MODE - skill.skill type:', typeof skill.skill);
-                  console.log('🔄 EDIT MODE - skill.skill._id:', skill.skill?._id);
-                  const mappedSkill = {
-                    skill: typeof skill.skill === 'object' && skill.skill?._id 
-                      ? { $oid: skill.skill._id }
-                      : typeof skill.skill === 'string'
-                      ? skill.skill
-                      : { $oid: '' },
-                    level: skill.level || 1,
-                    details: skill.details || ''
-                  };
-                  console.log('🔄 EDIT MODE - Mapped professional skill result:', mappedSkill);
-                  return mappedSkill;
-                })
+              ? data.skills.professional.map(skill => ({
+                  skill: typeof skill.skill === 'object' && skill.skill?._id 
+                    ? { $oid: skill.skill._id }
+                    : skill.skill || { $oid: '' },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                }))
               : [],
             technical: Array.isArray(data.skills?.technical) 
-              ? data.skills.technical.map(skill => {
-                  console.log('🔄 EDIT MODE - Mapping technical skill:', skill);
-                  const mappedSkill = {
-                    skill: typeof skill.skill === 'object' && skill.skill?._id 
-                      ? { $oid: skill.skill._id }
-                      : typeof skill.skill === 'string'
-                      ? skill.skill
-                      : { $oid: '' },
-                    level: skill.level || 1,
-                    details: skill.details || ''
-                  };
-                  console.log('🔄 EDIT MODE - Mapped technical skill result:', mappedSkill);
-                  return mappedSkill;
-                })
+              ? data.skills.technical.map(skill => ({
+                  skill: typeof skill.skill === 'object' && skill.skill?._id 
+                    ? { $oid: skill.skill._id }
+                    : skill.skill || { $oid: '' },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                }))
               : []
           },
           seniority: {
@@ -348,23 +325,24 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
         console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
         
-        // Debug: Log individual skill structures
+        // Debug: Check the structure of individual skill objects
         if (data.skills?.professional && data.skills.professional.length > 0) {
           console.log('🔄 EDIT MODE - First professional skill raw structure:', data.skills.professional[0]);
-          console.log('🔄 EDIT MODE - First professional skill.skill type:', typeof data.skills.professional[0].skill);
-          console.log('🔄 EDIT MODE - First professional skill.skill value:', data.skills.professional[0].skill);
+          console.log('🔄 EDIT MODE - First professional skill.skill structure:', data.skills.professional[0].skill);
+        }
+        if (data.skills?.technical && data.skills.technical.length > 0) {
+          console.log('🔄 EDIT MODE - First technical skill raw structure:', data.skills.technical[0]);
+          console.log('🔄 EDIT MODE - First technical skill.skill structure:', data.skills.technical[0].skill);
+        }
+        if (data.skills?.soft && data.skills.soft.length > 0) {
+          console.log('🔄 EDIT MODE - First soft skill raw structure:', data.skills.soft[0]);
+          console.log('🔄 EDIT MODE - First soft skill.skill structure:', data.skills.soft[0].skill);
         }
         console.log('🔄 EDIT MODE - Mapped skills data:', mappedGigData.skills);
         console.log('🔄 EDIT MODE - Mapped languages:', mappedGigData.skills.languages);
         console.log('🔄 EDIT MODE - Mapped professional skills:', mappedGigData.skills.professional);
         console.log('🔄 EDIT MODE - Mapped technical skills:', mappedGigData.skills.technical);
         console.log('🔄 EDIT MODE - Mapped soft skills:', mappedGigData.skills.soft);
-        
-        // Debug: Log mapped skill structures
-        if (mappedGigData.skills.professional.length > 0) {
-          console.log('🔄 EDIT MODE - First mapped professional skill structure:', mappedGigData.skills.professional[0]);
-          console.log('🔄 EDIT MODE - First mapped professional skill.skill:', mappedGigData.skills.professional[0].skill);
-        }
         
         // Debug: Vérifier la structure des skills mappés
         if (mappedGigData.skills.languages.length > 0) {

@@ -433,6 +433,8 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 
                 // Debug: Log actual data structure
                 console.log(`${skillType} skill data:`, item);
+                console.log(`Raw skill object:`, item.skill);
+                console.log(`Extracted skillId:`, skillId);
                 console.log(`Calculated: level=${validLevel}, percentage=${currentPercentage}%, name=${skillName}`);
                 console.log(`Available ${skillType} skills:`, skillArray.length);
                 console.log(`Looking for skill ID: ${skillId}`);
