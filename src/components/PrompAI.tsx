@@ -292,6 +292,11 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Raw professional skills:', data.skills?.professional);
         console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
         console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
+        console.log('🔄 EDIT MODE - Mapped skills data:', mappedGigData.skills);
+        console.log('🔄 EDIT MODE - Mapped languages:', mappedGigData.skills.languages);
+        console.log('🔄 EDIT MODE - Mapped professional skills:', mappedGigData.skills.professional);
+        console.log('🔄 EDIT MODE - Mapped technical skills:', mappedGigData.skills.technical);
+        console.log('🔄 EDIT MODE - Mapped soft skills:', mappedGigData.skills.soft);
         console.log('🔄 EDIT MODE - Raw team territories:', data.team?.territories);
         console.log('🔄 EDIT MODE - Mapped team territories:', mappedGigData.team.territories);
         

@@ -472,7 +472,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 </option>
                 {timezones.map((timezone) => (
                   <option key={timezone._id} value={timezone._id}>
-                    {timezone.name} ({timezone.abbreviation}) UTC{timezone.offset >= 0 ? '+' : ''}{timezone.offset}
+                    {timezone.zoneName} ({timezone.countryName}) UTC{timezone.gmtOffset >= 0 ? '+' : ''}{timezone.gmtOffset}
                 </option>
               ))}
             </select>

@@ -176,6 +176,16 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
   };
 
   const getTerritoryName = (territoryId: string): string => {
+    // Handle case where territoryId might be a full country object
+    if (typeof territoryId === 'object' && territoryId !== null) {
+      const countryObj = territoryId as any;
+      if (countryObj.name && typeof countryObj.name === 'object') {
+        return countryObj.name.common || countryObj.name.official || 'Unknown Country';
+      }
+      return countryObj.name || 'Unknown Country';
+    }
+    
+    // Handle case where territoryId is a string ID
     return territoryNames[territoryId] || territoryId;
   };
 
