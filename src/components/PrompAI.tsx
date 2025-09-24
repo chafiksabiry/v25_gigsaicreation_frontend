@@ -261,7 +261,9 @@ const PrompAI: React.FC = () => {
               ? data.skills.soft.map(skill => ({
                   skill: typeof skill.skill === 'object' && skill.skill?._id 
                     ? { $oid: skill.skill._id }
-                    : skill.skill || { $oid: '' },
+                    : typeof skill.skill === 'string'
+                    ? skill.skill
+                    : { $oid: '' },
                   level: skill.level || 1,
                   details: skill.details || ''
                 }))
@@ -270,7 +272,9 @@ const PrompAI: React.FC = () => {
               ? data.skills.professional.map(skill => ({
                   skill: typeof skill.skill === 'object' && skill.skill?._id 
                     ? { $oid: skill.skill._id }
-                    : skill.skill || { $oid: '' },
+                    : typeof skill.skill === 'string'
+                    ? skill.skill
+                    : { $oid: '' },
                   level: skill.level || 1,
                   details: skill.details || ''
                 }))
@@ -279,7 +283,9 @@ const PrompAI: React.FC = () => {
               ? data.skills.technical.map(skill => ({
                   skill: typeof skill.skill === 'object' && skill.skill?._id 
                     ? { $oid: skill.skill._id }
-                    : skill.skill || { $oid: '' },
+                    : typeof skill.skill === 'string'
+                    ? skill.skill
+                    : { $oid: '' },
                   level: skill.level || 1,
                   details: skill.details || ''
                 }))
@@ -324,6 +330,13 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Raw professional skills:', data.skills?.professional);
         console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
         console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
+        
+        // Debug: Log individual skill structures
+        if (data.skills?.professional && data.skills.professional.length > 0) {
+          console.log('🔄 EDIT MODE - First professional skill raw structure:', data.skills.professional[0]);
+          console.log('🔄 EDIT MODE - First professional skill.skill type:', typeof data.skills.professional[0].skill);
+          console.log('🔄 EDIT MODE - First professional skill.skill value:', data.skills.professional[0].skill);
+        }
         console.log('🔄 EDIT MODE - Mapped skills data:', mappedGigData.skills);
         console.log('🔄 EDIT MODE - Mapped languages:', mappedGigData.skills.languages);
         console.log('🔄 EDIT MODE - Mapped professional skills:', mappedGigData.skills.professional);
