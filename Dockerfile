@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ ENV VITE_API_URL_ONBOARDING=https://api-companysearchwizard.harx.ai/api
 ENV VITE_STANDALONE=true
 ENV VITE_USER_ID=680a27ffefa3d29d628d0016
 ENV VITE_COMPANY_ID=684ace43641398dc582f1acc
-ENV VITE_USE_MOCK_DATA=true
+ENV VITE_USE_MO CK_DATA=true
 
 RUN npm install
 
