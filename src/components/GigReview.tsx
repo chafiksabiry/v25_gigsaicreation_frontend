@@ -242,9 +242,12 @@ export function GigReview({
       if (result.isConfirmed) {
         // Rediriger vers le dashboard en mode édition
         if (isEditMode && editGigId) {
-          window.location.href = `company#/gigs/${editGigId}`;
+          // Redirection vers la page de détails du gig
+          const gigUrl = `company#/gigs/${editGigId}`;
+          console.log('Redirecting to:', gigUrl);
+          window.location.href = gigUrl;
         } else {
-        window.location.href = "/app11";
+          window.location.href = "/app11";
         }
       }
     } catch (error) {
