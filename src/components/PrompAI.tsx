@@ -258,31 +258,67 @@ const PrompAI: React.FC = () => {
                 }))
               : [],
             soft: Array.isArray(data.skills?.soft) 
-              ? data.skills.soft.map(skill => ({
-                  skill: typeof skill.skill === 'object' && skill.skill?._id 
-                    ? { $oid: skill.skill._id }
-                    : skill.skill || { $oid: '' },
-                  level: skill.level || 1,
-                  details: skill.details || ''
-                }))
+              ? data.skills.soft.map(skill => {
+                  // Extract the actual ID string from the skill object
+                  let skillId = '';
+                  if (typeof skill.skill === 'object' && skill.skill) {
+                    if (skill.skill._id) {
+                      skillId = skill.skill._id;
+                    } else if (skill.skill.$oid) {
+                      skillId = skill.skill.$oid;
+                    }
+                  } else if (typeof skill.skill === 'string') {
+                    skillId = skill.skill;
+                  }
+                  
+                  return {
+                    skill: { $oid: skillId },
+                    level: skill.level || 1,
+                    details: skill.details || ''
+                  };
+                })
               : [],
             professional: Array.isArray(data.skills?.professional) 
-              ? data.skills.professional.map(skill => ({
-                  skill: typeof skill.skill === 'object' && skill.skill?._id 
-                    ? { $oid: skill.skill._id }
-                    : skill.skill || { $oid: '' },
-                  level: skill.level || 1,
-                  details: skill.details || ''
-                }))
+              ? data.skills.professional.map(skill => {
+                  // Extract the actual ID string from the skill object
+                  let skillId = '';
+                  if (typeof skill.skill === 'object' && skill.skill) {
+                    if (skill.skill._id) {
+                      skillId = skill.skill._id;
+                    } else if (skill.skill.$oid) {
+                      skillId = skill.skill.$oid;
+                    }
+                  } else if (typeof skill.skill === 'string') {
+                    skillId = skill.skill;
+                  }
+                  
+                  return {
+                    skill: { $oid: skillId },
+                    level: skill.level || 1,
+                    details: skill.details || ''
+                  };
+                })
               : [],
             technical: Array.isArray(data.skills?.technical) 
-              ? data.skills.technical.map(skill => ({
-                  skill: typeof skill.skill === 'object' && skill.skill?._id 
-                    ? { $oid: skill.skill._id }
-                    : skill.skill || { $oid: '' },
-                  level: skill.level || 1,
-                  details: skill.details || ''
-                }))
+              ? data.skills.technical.map(skill => {
+                  // Extract the actual ID string from the skill object
+                  let skillId = '';
+                  if (typeof skill.skill === 'object' && skill.skill) {
+                    if (skill.skill._id) {
+                      skillId = skill.skill._id;
+                    } else if (skill.skill.$oid) {
+                      skillId = skill.skill.$oid;
+                    }
+                  } else if (typeof skill.skill === 'string') {
+                    skillId = skill.skill;
+                  }
+                  
+                  return {
+                    skill: { $oid: skillId },
+                    level: skill.level || 1,
+                    details: skill.details || ''
+                  };
+                })
               : []
           },
           seniority: {
@@ -337,6 +373,20 @@ const PrompAI: React.FC = () => {
         if (data.skills?.soft && data.skills.soft.length > 0) {
           console.log('🔄 EDIT MODE - First soft skill raw structure:', data.skills.soft[0]);
           console.log('🔄 EDIT MODE - First soft skill.skill structure:', data.skills.soft[0].skill);
+        }
+        
+        // Debug: Check the mapped skill structure
+        if (mappedGigData.skills.professional.length > 0) {
+          console.log('🔄 EDIT MODE - Mapped professional skill structure:', mappedGigData.skills.professional[0]);
+          console.log('🔄 EDIT MODE - Mapped professional skill.skill:', mappedGigData.skills.professional[0].skill);
+        }
+        if (mappedGigData.skills.technical.length > 0) {
+          console.log('🔄 EDIT MODE - Mapped technical skill structure:', mappedGigData.skills.technical[0]);
+          console.log('🔄 EDIT MODE - Mapped technical skill.skill:', mappedGigData.skills.technical[0].skill);
+        }
+        if (mappedGigData.skills.soft.length > 0) {
+          console.log('🔄 EDIT MODE - Mapped soft skill structure:', mappedGigData.skills.soft[0]);
+          console.log('🔄 EDIT MODE - Mapped soft skill.skill:', mappedGigData.skills.soft[0].skill);
         }
         console.log('🔄 EDIT MODE - Mapped skills data:', mappedGigData.skills);
         console.log('🔄 EDIT MODE - Mapped languages:', mappedGigData.skills.languages);

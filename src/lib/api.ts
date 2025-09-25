@@ -349,34 +349,28 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
     const formattedSkills = {
       ...fixedGigData.skills,
       languages: fixedGigData.skills.languages.map(lang => ({
-        language: lang.language,
+        language: typeof lang.language === 'object' && (lang.language as any).$oid ? (lang.language as any).$oid : lang.language,
         proficiency: lang.proficiency,
         iso639_1: lang.iso639_1
       })),
       soft: fixedGigData.skills.soft.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: typeof skill.skill === 'object' && (skill.skill as any).$oid ? (skill.skill as any).$oid : skill.skill,
+        level: skill.level,
+        details: (skill as any).details || ''
       })),
       professional: fixedGigData.skills.professional.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: typeof skill.skill === 'object' && (skill.skill as any).$oid ? (skill.skill as any).$oid : skill.skill,
+        level: skill.level,
+        details: (skill as any).details || ''
       })),
       technical: fixedGigData.skills.technical.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: typeof skill.skill === 'object' && (skill.skill as any).$oid ? (skill.skill as any).$oid : skill.skill,
+        level: skill.level,
+        details: (skill as any).details || ''
       }))
     };
 
-    // Format schedule data to remove invalid ObjectId references
-    const formattedSchedule = {
-      ...fixedGigData.schedule,
-      schedules: fixedGigData.schedule.schedules.map(schedule => ({
-        day: schedule.day, // Use 'day' (singular) instead of 'days'
-        hours: schedule.hours
-      }))
-    };
-
-    // Format availability data
+    // Format availability data with proper schedule nesting
     const formattedAvailability = {
       ...fixedGigData.availability,
       time_zone: (() => {
@@ -386,10 +380,14 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
         }
         return fixedGigData.availability.time_zone || 'UTC';
       })(),
-      schedule: fixedGigData.availability.schedule.map(schedule => ({
-        day: schedule.day, // Use 'day' (singular) instead of converting to array
-        hours: schedule.hours
-      }))
+      schedule: (() => {
+        // Use schedule from availability if available, otherwise use top-level schedule
+        const scheduleData = fixedGigData.availability?.schedule || fixedGigData.schedule?.schedules || [];
+        return scheduleData.map(schedule => ({
+          day: schedule.day, // Use 'day' (singular) instead of converting to array
+          hours: schedule.hours
+        }));
+      })()
     };
 
     // Keep destination zone as MongoDB ObjectId if it's valid, otherwise omit it
@@ -407,15 +405,22 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
       return undefined; // Don't send default value
     })();
 
+    // Remove the schedule field and other fields that shouldn't be sent to backend
+    const { schedule, time_zone, destinationZones, ...cleanGigData } = fixedGigData;
+    
     const gigDataWithIds = {
-      ...fixedGigData,
+      ...cleanGigData,
       userId,
       companyId,
       skills: formattedSkills,
-      schedule: formattedSchedule,
       availability: formattedAvailability,
       ...(formattedDestinationZone && { destination_zone: formattedDestinationZone })
     };
+
+    // Debug: Log the data being sent
+    console.log('🔍 UPDATE GIG - Data being sent to backend:', JSON.stringify(gigDataWithIds, null, 2));
+    console.log('🔍 UPDATE GIG - Gig ID:', gigId);
+    console.log('🔍 UPDATE GIG - API URL:', `${API_URL}/gigs/${gigId}`);
 
     const response = await fetch(`${API_URL}/gigs/${gigId}`, {
       method: 'PUT',
@@ -467,36 +472,30 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     const formattedSkills = {
       ...fixedGigData.skills,
       languages: fixedGigData.skills.languages.map(lang => ({
-        language: lang.language,
+        language: typeof lang.language === 'object' && (lang.language as any).$oid ? (lang.language as any).$oid : lang.language,
         proficiency: lang.proficiency,
         iso639_1: lang.iso639_1
       })),
       soft: fixedGigData.skills.soft.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: typeof skill.skill === 'object' && (skill.skill as any).$oid ? (skill.skill as any).$oid : skill.skill,
+        level: skill.level,
+        details: (skill as any).details || ''
       })),
       professional: fixedGigData.skills.professional.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: typeof skill.skill === 'object' && (skill.skill as any).$oid ? (skill.skill as any).$oid : skill.skill,
+        level: skill.level,
+        details: (skill as any).details || ''
       })),
       technical: fixedGigData.skills.technical.map(skill => ({
-        skill: skill.skill,
-        level: skill.level
+        skill: typeof skill.skill === 'object' && (skill.skill as any).$oid ? (skill.skill as any).$oid : skill.skill,
+        level: skill.level,
+        details: (skill as any).details || ''
       }))
     };
 
 
 
-    // Format schedule data to remove invalid ObjectId references
-    const formattedSchedule = {
-      ...fixedGigData.schedule,
-      schedules: fixedGigData.schedule.schedules.map(schedule => ({
-        day: schedule.day, // Use 'day' (singular) instead of 'days'
-        hours: schedule.hours
-      }))
-    };
-
-    // Format availability data
+    // Format availability data with proper schedule nesting
     const formattedAvailability = {
       ...fixedGigData.availability,
       time_zone: (() => {
@@ -506,10 +505,14 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         }
         return fixedGigData.availability.time_zone || 'UTC';
       })(),
-      schedule: fixedGigData.availability.schedule.map(schedule => ({
-        day: schedule.day, // Use 'day' (singular) instead of converting to array
-        hours: schedule.hours
-      }))
+      schedule: (() => {
+        // Use schedule from availability if available, otherwise use top-level schedule
+        const scheduleData = fixedGigData.availability?.schedule || fixedGigData.schedule?.schedules || [];
+        return scheduleData.map(schedule => ({
+          day: schedule.day, // Use 'day' (singular) instead of converting to array
+          hours: schedule.hours
+        }));
+      })()
     };
 
     // Keep destination zone as MongoDB ObjectId if it's valid, otherwise omit it
@@ -527,12 +530,14 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       return undefined; // Don't send default value
     })();
 
+    // Remove the schedule field and other fields that shouldn't be sent to backend
+    const { schedule, time_zone, destinationZones, ...cleanGigData } = fixedGigData;
+    
     const gigDataWithIds = {
-      ...fixedGigData,
+      ...cleanGigData,
       userId,
       companyId,
       skills: formattedSkills,
-      schedule: formattedSchedule,
       availability: formattedAvailability,
       ...(formattedDestinationZone && { destination_zone: formattedDestinationZone })
     };
@@ -883,7 +888,7 @@ interface Industry {
 interface Language {
   _id: string;
   code: string;
-  name: string;
+  name: string | { common: string; official: string; nativeName?: { [key: string]: { common: string; official: string } } };
   nativeName: string;
   __v: number;
   createdAt: string;

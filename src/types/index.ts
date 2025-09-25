@@ -23,7 +23,7 @@ export interface Industry {
 export interface Language {
   _id: string;
   code: string;
-  name: string;
+  name: string | { common: string; official: string; nativeName?: { [key: string]: { common: string; official: string } } };
   nativeName: string;
   __v: number;
   createdAt: string;
