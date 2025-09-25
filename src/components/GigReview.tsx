@@ -239,8 +239,8 @@ export function GigReview({
       
       if (result.isConfirmed) {
         // Rediriger vers le dashboard en mode édition
-        if (isEditMode) {
-          window.location.href = "/app7";
+        if (isEditMode && editGigId) {
+          window.location.href = `company#/gigs/${editGigId}`;
         } else {
         window.location.href = "/app11";
         }
