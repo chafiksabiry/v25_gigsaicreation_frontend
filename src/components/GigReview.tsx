@@ -235,6 +235,8 @@ export function GigReview({
         cancelButtonText: "Cancel",
         confirmButtonColor: "#667eea",
         cancelButtonColor: "#6b7280",
+
+        
       });
       
       if (result.isConfirmed) {
