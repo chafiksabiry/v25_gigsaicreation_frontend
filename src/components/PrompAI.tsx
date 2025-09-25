@@ -36,6 +36,9 @@ const PrompAI: React.FC = () => {
   const [currentSection, setCurrentSection] = useState<string>("basic");
   const [showReview, setShowReview] = useState(false);
   const [isManualMode, setIsManualMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editGigId, setEditGigId] = useState<string | null>(null);
+  const [isLoadingGig, setIsLoadingGig] = useState(false);
 
   const [gigData, setGigData] = useState<GigData>({
     userId: Cookies.get('userId') || "",
@@ -128,6 +131,295 @@ const PrompAI: React.FC = () => {
     window.scrollTo(0, 0);
   }, [currentSection]);
 
+  // Check for edit mode parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editParam = urlParams.get('edit');
+    const gigIdParam = urlParams.get('gigId');
+    const sectionParam = urlParams.get('section');
+    
+    if (editParam === 'true' && gigIdParam) {
+      setIsEditMode(true);
+      setEditGigId(gigIdParam);
+      loadGigForEdit(gigIdParam);
+      
+      // Si une section est spécifiée, aller directement au formulaire
+      if (sectionParam) {
+        setCurrentSection(sectionParam);
+        setIsManualMode(true);
+      }
+    }
+  }, []);
+
+  // Function to load gig data for editing
+  const loadGigForEdit = async (gigId: string) => {
+    setIsLoadingGig(true);
+    try {
+      console.log('🔄 EDIT MODE - Fetching gig data from:', `${import.meta.env.VITE_API_URL}/gigs/${gigId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs/${gigId}`);
+      
+      if (!response.ok) {
+        console.error('🔄 EDIT MODE - API Error:', response.status, response.statusText);
+        throw new Error(`Failed to fetch gig data: ${response.status} ${response.statusText}`);
+      }
+      
+      const responseData = await response.json();
+      console.log('🔄 EDIT MODE - API Response:', responseData);
+      
+      const { data } = responseData;
+      
+      if (data) {
+        // Map the fetched gig data to our GigData format
+        const mappedGigData: GigData = {
+          userId: data.userId || Cookies.get('userId') || "",
+          companyId: data.companyId || Cookies.get('companyId') || "",
+          title: data.title || "",
+          description: data.description || "",
+          category: data.category || "",
+          destination_zone: typeof data.destination_zone === 'object' && data.destination_zone?._id 
+            ? data.destination_zone._id 
+            : data.destination_zone || "",
+          destinationZones: data.destinationZones || [],
+          callTypes: data.callTypes || [],
+          highlights: data.highlights || [],
+          industries: Array.isArray(data.industries) 
+            ? data.industries.map(industry => 
+                typeof industry === 'object' && industry?._id 
+                  ? industry._id 
+                  : industry
+              )
+            : [],
+          activities: Array.isArray(data.activities) 
+            ? data.activities.map(activity => 
+                typeof activity === 'object' && activity?._id 
+                  ? activity._id 
+                  : activity
+              )
+            : [],
+          status: data.status || 'to_activate',
+          requirements: data.requirements || { essential: [], preferred: [] },
+          benefits: data.benefits || [],
+          availability: {
+            schedule: data.availability?.schedule || data.schedule?.schedules || [],
+            timeZones: data.availability?.timeZones || data.schedule?.timeZones || [],
+            time_zone: typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
+              ? data.availability.time_zone._id
+              : typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
+              ? data.schedule.time_zone._id
+              : data.availability?.time_zone || data.schedule?.time_zone || "",
+            flexibility: data.availability?.flexibility || data.schedule?.flexibility || [],
+            minimumHours: data.availability?.minimumHours || data.schedule?.minimumHours || {}
+          },
+          schedule: {
+            schedules: data.schedule?.schedules || data.availability?.schedule || [],
+            timeZones: data.schedule?.timeZones || data.availability?.timeZones || [],
+            time_zone: typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
+              ? data.schedule.time_zone._id
+              : typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
+              ? data.availability.time_zone._id
+              : data.schedule?.time_zone || data.availability?.time_zone || "",
+            flexibility: data.schedule?.flexibility || data.availability?.flexibility || [],
+            minimumHours: data.schedule?.minimumHours || data.availability?.minimumHours || {}
+          },
+          // Ajouter time_zone au niveau racine pour ScheduleSection
+          time_zone: typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
+            ? data.schedule.time_zone._id
+            : typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
+            ? data.availability.time_zone._id
+            : data.schedule?.time_zone || data.availability?.time_zone || "",
+          commission: {
+            base: data.commission?.base || "",
+            baseAmount: data.commission?.baseAmount || 0,
+            bonus: data.commission?.bonus || "",
+            bonusAmount: data.commission?.bonusAmount || 0,
+            structure: data.commission?.structure || "",
+            additionalDetails: data.commission?.additionalDetails || "",
+            currency: typeof data.commission?.currency === 'object' && data.commission?.currency?._id
+              ? data.commission.currency._id
+              : data.commission?.currency || "",
+            minimumVolume: data.commission?.minimumVolume || { amount: 0, period: "", unit: "" },
+            transactionCommission: data.commission?.transactionCommission || { type: "", amount: 0 },
+            kpis: data.commission?.kpis || []
+          },
+          leads: {
+            types: data.leads?.types || [],
+            sources: data.leads?.sources || [],
+            distribution: data.leads?.distribution || { method: "", rules: [] },
+            qualificationCriteria: data.leads?.qualificationCriteria || []
+          },
+          skills: {
+            languages: Array.isArray(data.skills?.languages) 
+              ? data.skills.languages.map(lang => ({
+                  language: typeof lang.language === 'object' && lang.language?._id 
+                    ? lang.language._id 
+                    : lang.language || '',
+                  proficiency: lang.proficiency || '',
+                  iso639_1: lang.iso639_1 || ''
+                }))
+              : [],
+            soft: Array.isArray(data.skills?.soft) 
+              ? data.skills.soft.map(skill => {
+                  // Extract the actual ID string from the skill object
+                  let skillId = '';
+                  if (typeof skill.skill === 'object' && skill.skill) {
+                    if (skill.skill._id) {
+                      skillId = skill.skill._id;
+                    } else if (skill.skill.$oid) {
+                      skillId = skill.skill.$oid;
+                    }
+                  } else if (typeof skill.skill === 'string') {
+                    skillId = skill.skill;
+                  }
+                  
+                  return {
+                    skill: { $oid: skillId },
+                    level: skill.level || 1,
+                    details: skill.details || ''
+                  };
+                })
+              : [],
+            professional: Array.isArray(data.skills?.professional) 
+              ? data.skills.professional.map(skill => {
+                  // Extract the actual ID string from the skill object
+                  let skillId = '';
+                  if (typeof skill.skill === 'object' && skill.skill) {
+                    if (skill.skill._id) {
+                      skillId = skill.skill._id;
+                    } else if (skill.skill.$oid) {
+                      skillId = skill.skill.$oid;
+                    }
+                  } else if (typeof skill.skill === 'string') {
+                    skillId = skill.skill;
+                  }
+                  
+                  return {
+                    skill: { $oid: skillId },
+                    level: skill.level || 1,
+                    details: skill.details || ''
+                  };
+                })
+              : [],
+            technical: Array.isArray(data.skills?.technical) 
+              ? data.skills.technical.map(skill => {
+                  // Extract the actual ID string from the skill object
+                  let skillId = '';
+                  if (typeof skill.skill === 'object' && skill.skill) {
+                    if (skill.skill._id) {
+                      skillId = skill.skill._id;
+                    } else if (skill.skill.$oid) {
+                      skillId = skill.skill.$oid;
+                    }
+                  } else if (typeof skill.skill === 'string') {
+                    skillId = skill.skill;
+                  }
+                  
+                  return {
+                    skill: { $oid: skillId },
+                    level: skill.level || 1,
+                    details: skill.details || ''
+                  };
+                })
+              : []
+          },
+          seniority: {
+            level: data.seniority?.level || "",
+            yearsExperience: data.seniority?.yearsExperience || 0
+          },
+          team: {
+            size: data.team?.size || 0,
+            structure: data.team?.structure || [],
+            territories: Array.isArray(data.team?.territories)
+              ? data.team.territories.map(territory =>
+                  typeof territory === 'object' && territory?._id
+                    ? territory._id
+                    : territory
+                )
+              : [],
+            reporting: data.team?.reporting || { to: "", frequency: "" },
+            collaboration: data.team?.collaboration || []
+          },
+          documentation: {
+            training: data.documentation?.training || [],
+            product: data.documentation?.product || [],
+            process: data.documentation?.process || []
+          }
+        };
+        
+        console.log('🔄 EDIT MODE - Loaded gig data:', data);
+        console.log('🔄 EDIT MODE - Raw industries:', data.industries);
+        console.log('🔄 EDIT MODE - Raw activities:', data.activities);
+        console.log('🔄 EDIT MODE - Mapped gig data:', mappedGigData);
+        console.log('🔄 EDIT MODE - Mapped industries (IDs):', mappedGigData.industries);
+        console.log('🔄 EDIT MODE - Mapped activities (IDs):', mappedGigData.activities);
+        console.log('🔄 EDIT MODE - destination_zone ID:', mappedGigData.destination_zone);
+        console.log('🔄 EDIT MODE - time_zone ID (schedule):', mappedGigData.schedule.time_zone);
+        console.log('🔄 EDIT MODE - time_zone ID (root):', mappedGigData.time_zone);
+        console.log('🔄 EDIT MODE - currency ID:', mappedGigData.commission.currency);
+        console.log('🔄 EDIT MODE - Raw skills data:', data.skills);
+        console.log('🔄 EDIT MODE - Raw languages:', data.skills?.languages);
+        console.log('🔄 EDIT MODE - Raw professional skills:', data.skills?.professional);
+        console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
+        console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
+        
+        // Debug: Check the structure of individual skill objects
+        if (data.skills?.professional && data.skills.professional.length > 0) {
+          console.log('🔄 EDIT MODE - First professional skill raw structure:', data.skills.professional[0]);
+          console.log('🔄 EDIT MODE - First professional skill.skill structure:', data.skills.professional[0].skill);
+        }
+        if (data.skills?.technical && data.skills.technical.length > 0) {
+          console.log('🔄 EDIT MODE - First technical skill raw structure:', data.skills.technical[0]);
+          console.log('🔄 EDIT MODE - First technical skill.skill structure:', data.skills.technical[0].skill);
+        }
+        if (data.skills?.soft && data.skills.soft.length > 0) {
+          console.log('🔄 EDIT MODE - First soft skill raw structure:', data.skills.soft[0]);
+          console.log('🔄 EDIT MODE - First soft skill.skill structure:', data.skills.soft[0].skill);
+        }
+        
+        // Debug: Check the mapped skill structure
+        if (mappedGigData.skills.professional.length > 0) {
+          console.log('🔄 EDIT MODE - Mapped professional skill structure:', mappedGigData.skills.professional[0]);
+          console.log('🔄 EDIT MODE - Mapped professional skill.skill:', mappedGigData.skills.professional[0].skill);
+        }
+        if (mappedGigData.skills.technical.length > 0) {
+          console.log('🔄 EDIT MODE - Mapped technical skill structure:', mappedGigData.skills.technical[0]);
+          console.log('🔄 EDIT MODE - Mapped technical skill.skill:', mappedGigData.skills.technical[0].skill);
+        }
+        if (mappedGigData.skills.soft.length > 0) {
+          console.log('🔄 EDIT MODE - Mapped soft skill structure:', mappedGigData.skills.soft[0]);
+          console.log('🔄 EDIT MODE - Mapped soft skill.skill:', mappedGigData.skills.soft[0].skill);
+        }
+        console.log('🔄 EDIT MODE - Mapped skills data:', mappedGigData.skills);
+        console.log('🔄 EDIT MODE - Mapped languages:', mappedGigData.skills.languages);
+        console.log('🔄 EDIT MODE - Mapped professional skills:', mappedGigData.skills.professional);
+        console.log('🔄 EDIT MODE - Mapped technical skills:', mappedGigData.skills.technical);
+        console.log('🔄 EDIT MODE - Mapped soft skills:', mappedGigData.skills.soft);
+        
+        // Debug: Vérifier la structure des skills mappés
+        if (mappedGigData.skills.languages.length > 0) {
+          console.log('🔄 EDIT MODE - First language structure:', mappedGigData.skills.languages[0]);
+        }
+        if (mappedGigData.skills.professional.length > 0) {
+          console.log('🔄 EDIT MODE - First professional skill structure:', mappedGigData.skills.professional[0]);
+        }
+        console.log('🔄 EDIT MODE - Raw team territories:', data.team?.territories);
+        console.log('🔄 EDIT MODE - Mapped team territories:', mappedGigData.team.territories);
+        
+        setGigData(mappedGigData);
+        setIsManualMode(true); // Activer le mode manuel pour l'édition
+        
+        // Vérifier si une section spécifique est demandée dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sectionParam = urlParams.get('section');
+        setCurrentSection(sectionParam || "basic");
+      }
+    } catch (error) {
+      console.error('Error loading gig for edit:', error);
+      // En cas d'erreur, on peut afficher un message ou rediriger
+    } finally {
+      setIsLoadingGig(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
@@ -207,6 +499,18 @@ const PrompAI: React.FC = () => {
     );
   }
 
+  // Show loading state when loading gig for edit
+  if (isLoadingGig) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading gig data for editing...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (confirmedSuggestions || isManualMode) {
     // S'assurer que currentSection est valide
     const validSections = sections.map(s => s.id);
@@ -232,6 +536,8 @@ const PrompAI: React.FC = () => {
                   constants={predefinedOptions}
                   onSectionChange={handleSectionChange}
                   isAIMode={!!confirmedSuggestions}
+                  isEditMode={isEditMode}
+                  editGigId={editGigId}
                 />
               </div>
             </div>
@@ -267,7 +573,7 @@ const PrompAI: React.FC = () => {
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Back to AI Assistant
+                  {isEditMode ? 'Back to Dashboard' : 'Back to AI Assistant'}
                 </button>
                 <div className="flex-1 flex justify-center items-center">
                   <Logo />
@@ -277,10 +583,12 @@ const PrompAI: React.FC = () => {
               <div className="text-center mt-2">
                 <div className="flex items-center justify-center space-x-3 mb-2">
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    Create Gig Manually
+                    {isEditMode ? 'Edit Gig' : 'Create Gig Manually'}
                   </h1>
                 </div>
-                <p className="text-lg text-gray-600">Fill out the sections below to create your gig</p>
+                <p className="text-lg text-gray-600">
+                  {isEditMode ? 'Modify the sections below to update your gig' : 'Fill out the sections below to create your gig'}
+                </p>
               </div>
             </div>
           )}
@@ -321,6 +629,8 @@ const PrompAI: React.FC = () => {
                 constants={predefinedOptions}
                 onSectionChange={handleSectionChange}
                 isAIMode={!!confirmedSuggestions}
+                isEditMode={isEditMode}
+                editGigId={editGigId}
               />
             </div>
           </div>

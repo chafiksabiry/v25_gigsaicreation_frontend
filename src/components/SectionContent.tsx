@@ -8,7 +8,7 @@ import { SkillsSection } from "./SkillsSection";
 import { TeamStructure } from "./TeamStructure";
 import { ReviewPage } from "../pages/ReviewPage";
 import { DaySchedule } from "../lib/scheduleUtils";
-import { saveGigData } from '../lib/api';
+import { saveGigData, updateGigData } from '../lib/api';
 
 interface SectionContentProps {
   section: string;
@@ -18,6 +18,8 @@ interface SectionContentProps {
   constants: any;
   onSectionChange?: (section: string) => void;
   isAIMode?: boolean;
+  isEditMode?: boolean;
+  editGigId?: string | null;
 }
 
 export function SectionContent({
@@ -27,6 +29,8 @@ export function SectionContent({
   errors,
   onSectionChange,
   isAIMode = false,
+  isEditMode = false,
+  editGigId = null,
 }: SectionContentProps) {
 
   // Log section data when component renders
@@ -351,17 +355,21 @@ export function SectionContent({
             onSubmit={async () => {
               
               try {
-                // Save gig data to API
-                const result = await saveGigData(initializedData);
+                // Save or update gig data to API based on mode
+                const result = isEditMode && editGigId 
+                  ? await updateGigData(editGigId, initializedData)
+                  : await saveGigData(initializedData);
                 
                 if (result.error) {
-                  console.error('Error saving gig:', result.error);
+                  console.error('Error saving/updating gig:', result.error);
                   return;
                 }
               } catch (error) {
                 console.error('Error in gig submission:', error);
               }
             }}
+            isEditMode={isEditMode}
+            editGigId={editGigId}
           />
         );
 

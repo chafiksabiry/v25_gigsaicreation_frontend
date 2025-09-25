@@ -9,7 +9,7 @@ import {
   ArrowRight, 
   Loader2
 } from "lucide-react";
-import { fetchAllTimezones, Timezone } from "../lib/api";
+import { fetchAllTimezones } from "../lib/api";
 
 interface DaySchedule {
   day: string;
@@ -88,7 +88,7 @@ const formatTime24 = (time: string) => {
 };
 
 export function ScheduleSection({ data, onChange, onNext, onPrevious }: ScheduleSectionProps) {
-  const [timezones, setTimezones] = useState<Timezone[]>([]);
+  const [timezones, setTimezones] = useState<any[]>([]);
   const [timezonesLoading, setTimezonesLoading] = useState(true);
 
   // Load timezones from API
@@ -412,9 +412,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       type="number"
                     min="1"
                       max="24"
-                    value={data.minimumHours?.daily || 0}
+                    value={data.minimumHours?.daily || ''}
                    onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
-                      placeholder="0"
+                      placeholder="e.g. 8"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                     />
                   </div>
@@ -424,9 +424,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       type="number"
                     min="1"
                       max="168"
-                    value={data.minimumHours?.weekly || 0}
+                    value={data.minimumHours?.weekly || ''}
                   onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
-                      placeholder="0"
+                      placeholder="e.g. 40"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                     />
                   </div>
@@ -436,9 +436,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       type="number"
                     min="1"
                       max="744"
-                    value={data.minimumHours?.monthly || 0}
+                    value={data.minimumHours?.monthly || ''}
                   onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
-                      placeholder="0"
+                      placeholder="e.g. 160"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                   />
                 </div>
@@ -470,11 +470,17 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 <option value="">
                   {timezonesLoading ? 'Loading timezones...' : 'Select a timezone'}
                 </option>
-                {timezones.map((timezone) => (
-                  <option key={timezone._id} value={timezone._id}>
-                    {timezone.zoneName} - {timezone.countryName} (GMT{timezone.gmtOffset >= 0 ? '+' : ''}{timezone.gmtOffset / 3600})
-                </option>
-              ))}
+                {timezones.map((timezone) => {
+                  // Convertir gmtOffset (probablement en secondes) en heures
+                  const offsetHours = timezone.gmtOffset / 3600;
+                  const offsetString = offsetHours >= 0 ? `+${offsetHours}` : `${offsetHours}`;
+                  
+                  return (
+                    <option key={timezone._id} value={timezone._id}>
+                      {timezone.zoneName} ({timezone.countryName}) UTC{offsetString}
+                    </option>
+                  );
+                })}
             </select>
               {timezonesLoading && (
                 <div className="mt-2 flex items-center justify-center">

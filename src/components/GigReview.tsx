@@ -41,6 +41,8 @@ interface GigReviewProps {
   isSubmitting: boolean;
   onBack: () => void;
   skipValidation?: boolean;
+  isEditMode?: boolean;
+  editGigId?: string | null;
 }
 
 export function GigReview({
@@ -50,6 +52,8 @@ export function GigReview({
   isSubmitting,
   onBack,
   skipValidation = false,
+  isEditMode = false,
+  editGigId = null,
 }: GigReviewProps) {
   const validation = skipValidation ? { isValid: true, errors: {}, warnings: {} } : validateGigData(data);
 
@@ -224,17 +228,24 @@ export function GigReview({
       
       const result = await Swal.fire({
         title: "Success!",
-        text: "Your gig has been published successfully.",
+        text: isEditMode ? "Your gig has been updated successfully." : "Your gig has been published successfully.",
         icon: "success",
         showCancelButton: true,
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
         confirmButtonColor: "#667eea",
         cancelButtonColor: "#6b7280",
+
+        
       });
       
       if (result.isConfirmed) {
+        // Rediriger vers le dashboard en mode édition
+        if (isEditMode && editGigId) {
+          window.location.href = `company#/gigs/${editGigId}`;
+        } else {
         window.location.href = "/app11";
+        }
       }
     } catch (error) {
       console.error('Error publishing gig:', error);
@@ -410,12 +421,12 @@ export function GigReview({
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Publishing...
+                  {isEditMode ? 'Updating...' : 'Publishing...'}
                 </>
               ) : (
                 <>
                   <Zap className="w-4 h-4" />
-                  Publish Gig
+                  {isEditMode ? 'Update Gig' : 'Publish Gig'}
                 </>
               )}
             </button>

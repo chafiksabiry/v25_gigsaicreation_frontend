@@ -68,7 +68,14 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
         // Create a mapping of country IDs to names for quick lookup
         const nameMapping: {[key: string]: string} = {};
         countries.forEach(country => {
-          nameMapping[country._id] = country.name.common;
+          // If country.name is an object, try to use .common or .official, else fallback to string
+          if (typeof country.name === 'string') {
+            nameMapping[country._id] = country.name;
+          } else if (country.name && typeof country.name === 'object') {
+            nameMapping[country._id] = country.name.common || country.name.official || '';
+          } else {
+            nameMapping[country._id] = '';
+          }
         });
         setTerritoryNames(nameMapping);
         
@@ -176,6 +183,16 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
   };
 
   const getTerritoryName = (territoryId: string): string => {
+    // Handle case where territoryId might be a full country object
+    if (typeof territoryId === 'object' && territoryId !== null) {
+      const countryObj = territoryId as any;
+      if (countryObj.name && typeof countryObj.name === 'object') {
+        return countryObj.name.common || countryObj.name.official || 'Unknown Country';
+      }
+      return countryObj.name || 'Unknown Country';
+    }
+    
+    // Handle case where territoryId is a string ID
     return territoryNames[territoryId] || territoryId;
   };
 

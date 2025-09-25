@@ -23,7 +23,7 @@ export interface Industry {
 export interface Language {
   _id: string;
   code: string;
-  name: string;
+  name: string | { common: string; official: string; nativeName?: { [key: string]: { common: string; official: string } } };
   nativeName: string;
   __v: number;
   createdAt: string;
@@ -48,6 +48,7 @@ export interface GigData {
   industries: string[]; // Array of industry IDs
   activities: string[]; // Array of activity IDs
   status?: 'to_activate' | 'active' | 'inactive' | 'archived';
+  time_zone?: string; // Timezone ID for ScheduleSection
   requirements: {
     essential: string[];
     preferred: string[];

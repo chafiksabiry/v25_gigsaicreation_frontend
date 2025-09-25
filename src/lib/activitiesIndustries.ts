@@ -145,7 +145,15 @@ export function getLanguageById(id: string): Language | undefined {
 
 export function getLanguageNameById(id: string): string {
   const language = languagesCache.find(language => language._id === id);
-  return language ? language.name : '';
+  if (!language) return '';
+  
+  // Handle case where name might be an object with common/official properties
+  if (typeof language.name === 'object' && language.name !== null) {
+    // If name is an object, try to get the common name first, then official, then fallback to nativeName
+    return (language.name as any).common || (language.name as any).official || language.nativeName || 'Unknown Language';
+  }
+  
+  return language.name;
 }
 
 export function getLanguageCodeById(id: string): string {
@@ -167,11 +175,20 @@ export function convertLanguageNamesToIds(names: string[]): string[] {
 }
 
 export function getLanguageOptions(): Array<{ value: string; label: string; code: string }> {
-  const options = languagesCache.map(language => ({
-    value: language._id,
-    label: language.name,
-    code: language.code
-  }));
+  const options = languagesCache.map(language => {
+    // Handle case where name might be an object with common/official properties
+    let languageName = language.name;
+    if (typeof language.name === 'object' && language.name !== null) {
+      // If name is an object, try to get the common name first, then official, then fallback to nativeName
+      languageName = (language.name as any).common || (language.name as any).official || language.nativeName || 'Unknown Language';
+    }
+    
+    return {
+      value: language._id,
+      label: languageName,
+      code: language.code
+    };
+  });
   return options;
 }
 

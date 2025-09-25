@@ -363,13 +363,13 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {icon}
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <span className="text-sm text-gray-500">
               {skillOptions.length} available
             </span>
-                </div>
+          </div>
           {!showAddSkillInterface[skillType] && (
-                  <button
+            <button
               onClick={handleShowAddInterface}
               className={`w-8 h-8 rounded-full ${
                 skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : 
@@ -380,9 +380,9 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               title={`Add ${skillType === "languages" ? "language" : "skill"}`}
             >
               <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  </button>
-              )}
-            </div>
+            </button>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {currentItems.map((item: any, index: number) => {
@@ -401,7 +401,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 const exactPosition = item.exactPosition;
                 if (exactPosition !== undefined) {
                   currentPercentage = exactPosition;
-                    } else {
+                } else {
                   currentPercentage = ((validLevelIndex + 1) / 6) * 100;
                 }
                 
@@ -410,8 +410,76 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 // Debug: Log actual language data structure
                 console.log(`Language data:`, item);
                 console.log(`Calculated: proficiency=${item.proficiency}, levelIndex=${validLevelIndex}, percentage=${currentPercentage}%, name=${skillName}`);
-              } else {
-                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill?.$oid || '');
+                    } else {
+                // Extract the actual string ID from the skill object
+                let skillId = '';
+                if (typeof item.skill === 'string') {
+                  skillId = item.skill;
+                } else if (typeof item.skill === 'object' && item.skill) {
+                  // Handle various MongoDB ObjectId formats
+                  if (item.skill.$oid) {
+                    if (typeof item.skill.$oid === 'string') {
+                      // Direct string: { $oid: 'id_string' }
+                      skillId = item.skill.$oid;
+                    } else if (typeof item.skill.$oid === 'object' && item.skill.$oid.$oid) {
+                      // Nested object: { $oid: { $oid: 'id_string' } }
+                      skillId = item.skill.$oid.$oid;
+                    } else if (typeof item.skill.$oid === 'object') {
+                      // Try to find any string property that looks like an ID
+                      const keys = Object.keys(item.skill.$oid);
+                      for (const key of keys) {
+                        const value = item.skill.$oid[key];
+                        if (typeof value === 'string' && value.length > 10) {
+                          skillId = value;
+                          break;
+                        }
+                      }
+                    }
+                  } else if (item.skill._id) {
+                    skillId = item.skill._id;
+                  } else if (item.skill.id) {
+                    skillId = item.skill.id;
+                  } else if (item.skill.toString) {
+                    // Fallback to toString if available
+                    skillId = item.skill.toString();
+                  }
+                }
+                
+                // Additional debugging for skill ID extraction
+                console.log(`Skill ID extraction debug:`);
+                console.log(`- item.skill:`, item.skill);
+                console.log(`- item.skill.$oid:`, item.skill?.$oid);
+                console.log(`- item.skill.$oid.$oid:`, item.skill?.$oid?.$oid);
+                console.log(`- item.skill.$oid type:`, typeof item.skill?.$oid);
+                console.log(`- item.skill.$oid keys:`, item.skill?.$oid ? Object.keys(item.skill.$oid) : 'N/A');
+                console.log(`- item.skill.$oid.$oid type:`, typeof item.skill?.$oid?.$oid);
+                
+                // Let's try a more direct approach to extract the ID
+                if (!skillId && item.skill?.$oid) {
+                  // Try to access the $oid property directly
+                  if (typeof item.skill.$oid === 'string') {
+                    skillId = item.skill.$oid;
+                    console.log(`Direct string extraction:`, skillId);
+                  } else if (typeof item.skill.$oid === 'object' && item.skill.$oid.$oid) {
+                    skillId = item.skill.$oid.$oid;
+                    console.log(`Nested $oid extraction:`, skillId);
+                  } else if (typeof item.skill.$oid === 'object') {
+                    // Try to find any string property that looks like an ID
+                    const keys = Object.keys(item.skill.$oid);
+                    console.log(`Available keys in $oid object:`, keys);
+                    for (const key of keys) {
+                      const value = item.skill.$oid[key];
+                      console.log(`Checking key '${key}':`, value, typeof value);
+                      if (typeof value === 'string' && value.length > 10) {
+                        skillId = value;
+                        console.log(`Found ID in key '${key}':`, skillId);
+                        break;
+                      }
+                    }
+                  }
+                }
+                
+                console.log(`- Final skillId:`, skillId);
                 let skillArray: any[] = [];
                 if (skillType === 'professional') skillArray = professionalSkills;
                 else if (skillType === 'technical') skillArray = technicalSkills;
@@ -433,7 +501,16 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                 
                 // Debug: Log actual data structure
                 console.log(`${skillType} skill data:`, item);
+                console.log(`Raw skill object:`, item.skill);
+                console.log(`item.skill type:`, typeof item.skill);
+                console.log(`item.skill.$oid:`, item.skill?.$oid);
+                console.log(`item.skill.$oid type:`, typeof item.skill?.$oid);
+                console.log(`item.skill.$oid.$oid:`, item.skill?.$oid?.$oid);
+                console.log(`Extracted skillId:`, skillId);
+                console.log(`Extracted skillId type:`, typeof skillId);
                 console.log(`Calculated: level=${validLevel}, percentage=${currentPercentage}%, name=${skillName}`);
+                console.log(`Available ${skillType} skills:`, skillArray.length);
+                console.log(`Looking for skill ID: ${skillId}`);
               }
 
               return (
@@ -465,7 +542,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                             else levelIndex = 0; // A1
                             
                             updateSkill(skillType, index, 'proficiency', LANGUAGE_LEVELS[levelIndex].value, clampedPercentage);
-                            } else {
+                          } else {
                             // 5 zones: 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
                             let level = 1; // Basic
                             if (clampedPercentage >= 80) level = 5; // Expert
@@ -518,7 +595,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                               } else if (skillType === 'languages') {
                                 // Blue gradient to match blue icon
                                 return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${percentage * 0.2}%, #93c5fd ${percentage * 0.4}%, #60a5fa ${percentage * 0.6}%, #3b82f6 ${percentage * 0.8}%, #2563eb ${percentage}%, #1d4ed8 100%)`;
-                                              } else {
+                              } else {
                                 // Orange gradient for soft skills to match orange icon
                                 return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${percentage * 0.2}%, #fb923c ${percentage * 0.4}%, #f97316 ${percentage * 0.6}%, #ea580c ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
                               }
