@@ -560,6 +560,8 @@ export function GigCreator({ children }: GigCreatorProps) {
           setIsReviewing(false);
         }}
         skipValidation={skipValidation}
+        isEditMode={false}
+        editGigId={null}
       />
     );
   }
