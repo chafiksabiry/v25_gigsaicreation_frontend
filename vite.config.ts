@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    base: 'https://preprod-gigsai.harx.ai/',
+    base: 'https://prod-gigsai.harx.ai/',
     plugins: [
       react({
         jsxRuntime: 'classic',
