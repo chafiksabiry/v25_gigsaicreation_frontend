@@ -117,17 +117,17 @@ export async function getGigHistory(gigId: string) {
 export async function fetchAllCountries(): Promise<Country[]> {
   try {
     const response = await fetch(`${API_URL}/countries`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch countries: ${response.status} ${response.statusText}`);
     }
-    
+
     const data: CountriesResponse = await response.json();
-    
+
     if (!data.success) {
       throw new Error('Failed to fetch countries');
     }
-    
+
     return data.data;
   } catch (error) {
     console.error('Error fetching countries:', error);
@@ -138,17 +138,17 @@ export async function fetchAllCountries(): Promise<Country[]> {
 export async function fetchCountryById(countryId: string): Promise<Country> {
   try {
     const response = await fetch(`${API_URL}/countries/${countryId}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch country: ${response.status} ${response.statusText}`);
     }
-    
+
     const data: CountryResponse = await response.json();
-    
+
     if (!data.success) {
       throw new Error('Failed to fetch country');
     }
-    
+
     return data.data;
   } catch (error) {
     console.error('Error fetching country:', error);
@@ -169,19 +169,19 @@ export async function getCountryNameById(countryId: string): Promise<string> {
 // Timezones API functions
 export async function fetchAllTimezones(): Promise<Timezone[]> {
   try {
-    const TIMEZONE_API_URL = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const TIMEZONE_API_URL = import.meta.env.VITE_REP_URL || '/api';
     const response = await fetch(`${TIMEZONE_API_URL}/timezones/`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch timezones: ${response.status} ${response.statusText}`);
     }
-    
+
     const data: TimezonesResponse = await response.json();
-    
+
     if (!data.success) {
       throw new Error('Failed to fetch timezones');
     }
-    
+
     return data.data;
   } catch (error) {
     console.error('Error fetching timezones:', error);
@@ -191,19 +191,19 @@ export async function fetchAllTimezones(): Promise<Timezone[]> {
 
 export async function fetchTimezoneById(timezoneId: string): Promise<Timezone> {
   try {
-    const TIMEZONE_API_URL = import.meta.env.VITE_REP_URL || 'https://api-repcreationwizard.harx.ai/api';
+    const TIMEZONE_API_URL = import.meta.env.VITE_REP_URL || '/api';
     const response = await fetch(`${TIMEZONE_API_URL}/timezones/${timezoneId}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch timezone: ${response.status} ${response.statusText}`);
     }
-    
+
     const data: TimezoneResponse = await response.json();
-    
+
     if (!data.success) {
       throw new Error('Failed to fetch timezone');
     }
-    
+
     return data.data;
   } catch (error) {
     console.error('Error fetching timezone:', error);
@@ -223,19 +223,19 @@ export async function getTimezoneNameById(timezoneId: string): Promise<string> {
 
 export async function fetchCompanies() {
   try {
-    const url = `${import.meta.env.VITE_API_URL_ONBOARDING}/companies`;    
+    const url = `${import.meta.env.VITE_API_URL_ONBOARDING}/companies`;
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch companies: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       throw new Error(data.message || 'Failed to fetch companies');
     }
-    
+
     return data.data;
   } catch (error) {
     console.error('❌ API: Error fetching companies:', error);
@@ -246,19 +246,19 @@ export async function fetchCompanies() {
 export async function fetchCompanyById(companyId: string) {
   try {
     const url = `${import.meta.env.VITE_API_URL_ONBOARDING}/companies/${companyId}`;
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch company: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       throw new Error(data.message || 'Failed to fetch company');
     }
-    
+
     return data.data;
   } catch (error) {
     console.error('❌ API: Error fetching company:', error);
@@ -281,11 +281,11 @@ interface Company {
 //       company.userId === userId || 
 //       (typeof company.userId === 'object' && company.userId.$oid === userId)
 //     );
-    
+
 //     if (!company) {
 //       throw new Error(`No company found for userId: ${userId}`);
 //     }
-    
+
 //     return company._id;
 //   } catch (error) {
 //     console.error('Error getting companyId by userId:', error);
@@ -296,7 +296,7 @@ interface Company {
 // Fonction pour corriger automatiquement les données de schedule
 function fixScheduleData(data: GigData): GigData {
   const workingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  
+
   // Corriger availability.schedule
   if (data.availability && data.availability.schedule) {
     const fixedAvailabilitySchedule = data.availability.schedule.map((schedule, index) => {
@@ -309,10 +309,10 @@ function fixScheduleData(data: GigData): GigData {
       }
       return schedule;
     });
-    
+
     data.availability.schedule = fixedAvailabilitySchedule;
   }
-  
+
   // Corriger schedule.schedules
   if (data.schedule && data.schedule.schedules) {
     const fixedScheduleSchedules = data.schedule.schedules.map((schedule, index) => {
@@ -325,17 +325,17 @@ function fixScheduleData(data: GigData): GigData {
       }
       return schedule;
     });
-    
+
     data.schedule.schedules = fixedScheduleSchedules;
   }
-  
+
   return data;
 }
 
 export async function updateGigData(gigId: string, gigData: GigData): Promise<{ data: any; error?: Error }> {
   try {
     const userId = Cookies.get('userId') ?? "";
-    
+
     if (!userId) {
       throw new Error('User ID not found in cookies');
     }
@@ -344,7 +344,7 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
     const companyId = Cookies.get('companyId') ?? "";
     // Corriger automatiquement les données de schedule
     const fixedGigData = fixScheduleData(gigData);
-    
+
     // Format skills data to ensure proper structure
     const formattedSkills = {
       ...fixedGigData.skills,
@@ -407,7 +407,7 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
 
     // Remove the schedule field and other fields that shouldn't be sent to backend
     const { schedule, time_zone, destinationZones, ...cleanGigData } = fixedGigData;
-    
+
     const gigDataWithIds = {
       ...cleanGigData,
       userId,
@@ -441,7 +441,7 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
         return { data: null, error: new Error(`Failed to update gig data: ${responseText}`) };
       }
     }
-    
+
     try {
       const data = JSON.parse(responseText);
       return { data, error: undefined };
@@ -458,7 +458,7 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
 export async function saveGigData(gigData: GigData): Promise<{ data: any; error?: Error }> {
   try {
     const userId = Cookies.get('userId') ?? "";
-    
+
     if (!userId) {
       throw new Error('User ID not found in cookies');
     }
@@ -467,7 +467,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
     const companyId = Cookies.get('companyId') ?? "";
     // Corriger automatiquement les données de schedule
     const fixedGigData = fixScheduleData(gigData);
-    
+
     // Format skills data to ensure proper structure
     const formattedSkills = {
       ...fixedGigData.skills,
@@ -532,7 +532,7 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
 
     // Remove the schedule field and other fields that shouldn't be sent to backend
     const { schedule, time_zone, destinationZones, ...cleanGigData } = fixedGigData;
-    
+
     const gigDataWithIds = {
       ...cleanGigData,
       userId,
@@ -561,15 +561,15 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
         return { data: null, error: new Error(`Failed to save gig data: ${responseText}`) };
       }
     }
-    
+
     try {
       const data = JSON.parse(responseText);
-      
+
       // Save gig ID using the new utility function
       if (data && data._id) {
         // Gig ID saved successfully
       }
-      
+
       return { data, error: undefined };
     } catch (parseError) {
       console.error('Error parsing success response:', parseError);
@@ -605,22 +605,22 @@ export async function getGig(gigId: string | null) {
 export async function fetchSoftSkills() {
   try {
     const url = `${import.meta.env.VITE_REP_URL}/skills/soft`;
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Soft skills API error:', response.status, errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       console.error('❌ Soft skills API error:', data.message);
       return { data: [], error: data.message || 'API returned error' };
     }
-    
+
     return { data: data.data || [], error: null };
   } catch (error) {
     console.error('❌ Error fetching soft skills:', error);
@@ -631,22 +631,22 @@ export async function fetchSoftSkills() {
 export async function fetchTechnicalSkills() {
   try {
     const url = `${import.meta.env.VITE_REP_URL}/skills/technical`;
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Technical skills API error:', response.status, errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       console.error('❌ Technical skills API error:', data.message);
       return { data: [], error: data.message || 'API returned error' };
     }
-    
+
     return { data: data.data || [], error: null };
   } catch (error) {
     console.error('❌ Error fetching technical skills:', error);
@@ -657,22 +657,22 @@ export async function fetchTechnicalSkills() {
 export async function fetchProfessionalSkills() {
   try {
     const url = `${import.meta.env.VITE_REP_URL}/skills/professional`;
-    
+
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Professional skills API error:', response.status, errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       console.error('❌ Professional skills API error:', data.message);
       return { data: [], error: data.message || 'API returned error' };
     }
-    
+
     return { data: data.data || [], error: null };
   } catch (error) {
     console.error('❌ Error fetching professional skills:', error);
@@ -710,15 +710,15 @@ export async function saveSkillToDatabase(skillData: {
     return { data: data.data, error: undefined };
   } catch (error) {
     console.error('Error saving skill to database:', error);
-    return { 
-      data: null, 
-      error: error instanceof Error ? error : new Error('Failed to save skill') 
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to save skill')
     };
   }
 }
 
 export async function updateSkillInDatabase(
-  skillId: string, 
+  skillId: string,
   skillData: {
     name?: string;
     description?: string;
@@ -744,9 +744,9 @@ export async function updateSkillInDatabase(
     return { data: data.data, error: undefined };
   } catch (error) {
     console.error('Error updating skill in database:', error);
-    return { 
-      data: null, 
-      error: error instanceof Error ? error : new Error('Failed to update skill') 
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to update skill')
     };
   }
 }
@@ -769,9 +769,9 @@ export async function deleteSkillFromDatabase(skillId: string): Promise<{ data: 
     return { data: data.data, error: undefined };
   } catch (error) {
     console.error('Error deleting skill from database:', error);
-    return { 
-      data: null, 
-      error: error instanceof Error ? error : new Error('Failed to delete skill') 
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to delete skill')
     };
   }
 }
@@ -795,7 +795,7 @@ export async function searchSkillsByName(name: string, category?: 'soft' | 'tech
   try {
     const categoryParam = category ? `&category=${category}` : '';
     const response = await fetch(`${import.meta.env.VITE_REP_URL}/skills/search?name=${encodeURIComponent(name)}${categoryParam}`);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Failed to search skills: ${errorText}`);
@@ -805,9 +805,9 @@ export async function searchSkillsByName(name: string, category?: 'soft' | 'tech
     return { data: data.data || [], error: undefined };
   } catch (error) {
     console.error('Error searching skills:', error);
-    return { 
-      data: [], 
-      error: error instanceof Error ? error : new Error('Failed to search skills') 
+    return {
+      data: [],
+      error: error instanceof Error ? error : new Error('Failed to search skills')
     };
   }
 }
@@ -821,12 +821,12 @@ export async function syncSkillsToDatabase(skills: Array<{
 }>): Promise<{ data: any[]; error?: Error }> {
   try {
     const results = [];
-    
+
     for (const skill of skills) {
       try {
         // Check if skill already exists
         const searchResult = await searchSkillsByName(skill.name, skill.category);
-        
+
         if (searchResult.data.length > 0) {
           // Skill exists, update if needed
           const existingSkill = searchResult.data[0];
@@ -852,13 +852,13 @@ export async function syncSkillsToDatabase(skills: Array<{
         // Continue with other skills even if one fails
       }
     }
-    
+
     return { data: results, error: undefined };
   } catch (error) {
     console.error('Error syncing skills to database:', error);
-    return { 
-      data: [], 
-      error: error instanceof Error ? error : new Error('Failed to sync skills') 
+    return {
+      data: [],
+      error: error instanceof Error ? error : new Error('Failed to sync skills')
     };
   }
 }
@@ -958,20 +958,20 @@ export async function fetchLanguages(): Promise<{ data: Language[]; error?: Erro
 export async function fetchAllCurrencies(): Promise<Currency[]> {
   try {
     console.log('💰 Fetching all currencies from API...');
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://v25gigsmanualcreationbackend-production.up.railway.app/api';
     const response = await fetch(`${apiUrl}/currencies`);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const result: CurrenciesResponse = await response.json();
     console.log('💰 Currencies API response:', result);
-    
+
     if (!result.success) {
       throw new Error(result.message || 'Failed to fetch currencies');
     }
-    
+
     return result.data;
   } catch (error) {
     console.error('❌ Error fetching currencies:', error);
@@ -982,20 +982,20 @@ export async function fetchAllCurrencies(): Promise<Currency[]> {
 export async function fetchCurrencyById(currencyId: string): Promise<Currency | null> {
   try {
     console.log(`💰 Fetching currency by ID: ${currencyId}`);
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://v25gigsmanualcreationbackend-production.up.railway.app/api';
     const response = await fetch(`${apiUrl}/currencies/id/${currencyId}`);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const result: CurrencyResponse = await response.json();
     console.log('💰 Currency by ID API response:', result);
-    
+
     if (!result.success) {
       throw new Error(result.message || 'Failed to fetch currency');
     }
-    
+
     return result.data;
   } catch (error) {
     console.error(`❌ Error fetching currency ${currencyId}:`, error);

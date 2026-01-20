@@ -1,7 +1,7 @@
 import { GigData, GigSuggestion } from '../types';
 import { generateMockGigSuggestions } from './mockData';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-gigsmanual.harx.ai/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://v25gigsmanualcreationbackend-production.up.railway.app/api';
 
 // Configuration pour activer/désactiver le mode mock
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false;
@@ -10,7 +10,7 @@ const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false;
 // Removes timezone IDs that might have been incorrectly included in territories
 function validateTerritories(territories: string[], timezoneId?: string): string[] {
   if (!territories || !Array.isArray(territories)) return [];
-  
+
   // Filter out timezone ID if it appears in territories
   return territories.filter(territoryId => {
     // Remove the timezone ID if it appears in territories
@@ -50,22 +50,22 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
     }
 
     const data = await response.json();
-    
+
     // Log the backend response for debugging
     console.log('Backend API Response:', data);
-    
+
     // Transform the backend response to match our GigSuggestion type
     const timezoneId = data.availability?.time_zone;
     const originalTerritories = data.team?.territories || [];
     const cleanedTerritories = validateTerritories(originalTerritories, timezoneId);
-    
+
     // Log if territories were cleaned
     if (originalTerritories.length !== cleanedTerritories.length) {
       console.log(`🧹 Cleaned territories: ${originalTerritories.length} → ${cleanedTerritories.length}`);
       console.log('Original:', originalTerritories);
       console.log('Cleaned:', cleanedTerritories);
     }
-    
+
     const transformedData = {
       jobTitles: data.jobTitles || [],
       jobDescription: data.jobDescription || '',
@@ -83,7 +83,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
         structure: data.team?.structure || [],
         territories: cleanedTerritories
       },
-      
+
       // Additional fields that might be expected by the UI
       description: data.jobDescription || '',
       sectors: data.category ? [data.category] : [],
@@ -92,7 +92,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
       highlights: data.highlights || [],
       deliverables: data.deliverables || [],
       requirements: { essential: [], preferred: [] }, // Backend doesn't provide this yet
-      
+
       // Schedule mapping
       schedule: {
         schedules: data.availability?.schedule ? data.availability.schedule.map((sched: any) => ({
@@ -119,7 +119,7 @@ export function mapGigDataToSuggestions(gigData: GigData): any {
   console.log('🔄 REVERSE MAPPING - Converting gigData back to suggestions format');
   console.log('🔄 REVERSE MAPPING - gigData.schedule:', gigData.schedule);
   console.log('🔄 REVERSE MAPPING - gigData.availability:', gigData.availability);
-  
+
   return {
     jobTitles: gigData.title ? [gigData.title] : [],
     description: gigData.description || '',
@@ -158,10 +158,10 @@ export function mapGeneratedDataToGigData(generatedData: any): Partial<GigData> 
   console.log('🗺️ MAPPING - generatedData.availability:', generatedData.availability);
   console.log('🗺️ MAPPING - generatedData.destination_zone:', generatedData.destination_zone);
   console.log('🗺️ MAPPING - generatedData.destinationZones:', generatedData.destinationZones);
-  
+
   const mappedDestinationZone = generatedData.destination_zone || generatedData.destinationZones?.[0] || '';
   console.log('🗺️ MAPPING - Final destination_zone:', mappedDestinationZone);
-  
+
   return {
     title: generatedData.jobTitles?.[0] || '',
     description: generatedData.description || '',
