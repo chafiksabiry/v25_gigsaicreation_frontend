@@ -405,6 +405,37 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
       return undefined; // Don't send default value
     })();
 
+    // Format commission data to ensure currency is a MongoDB ObjectId
+    const formattedCommission = (() => {
+      if (!fixedGigData.commission) return undefined;
+
+      const commission = { ...fixedGigData.commission };
+
+      // Handle currency field - ensure it's a MongoDB ObjectId
+      if (commission.currency) {
+        const currencyValue = commission.currency as any;
+
+        // If it's already a valid MongoDB ObjectId (24 hex characters), keep it
+        if (typeof currencyValue === 'string' && currencyValue.length === 24 && /^[a-f0-9]{24}$/i.test(currencyValue)) {
+          console.log('💾 UPDATE GIG - Using MongoDB ObjectId for commission.currency:', currencyValue);
+          commission.currency = currencyValue;
+        }
+        // If it's an object with $oid, extract the ObjectId
+        else if (typeof currencyValue === 'object' && currencyValue.$oid) {
+          console.log('💾 UPDATE GIG - Extracting ObjectId from commission.currency.$oid:', currencyValue.$oid);
+          commission.currency = currencyValue.$oid;
+        }
+        // If it's a currency code (like "EUR"), we need to handle it
+        else if (typeof currencyValue === 'string' && currencyValue.length < 24) {
+          console.error('⚠️ UPDATE GIG - commission.currency is a currency code, not an ObjectId:', currencyValue);
+          console.error('⚠️ UPDATE GIG - This will cause a validation error. Please ensure currency is set to a valid ObjectId.');
+          // Keep it as is - the backend will return a proper error message
+        }
+      }
+
+      return commission;
+    })();
+
     // Remove the schedule field and other fields that shouldn't be sent to backend
     const { schedule, time_zone, destinationZones, ...cleanGigData } = fixedGigData;
 
@@ -414,7 +445,8 @@ export async function updateGigData(gigId: string, gigData: GigData): Promise<{ 
       companyId,
       skills: formattedSkills,
       availability: formattedAvailability,
-      ...(formattedDestinationZone && { destination_zone: formattedDestinationZone })
+      ...(formattedDestinationZone && { destination_zone: formattedDestinationZone }),
+      ...(formattedCommission && { commission: formattedCommission })
     };
 
     // Debug: Log the data being sent
@@ -530,6 +562,37 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       return undefined; // Don't send default value
     })();
 
+    // Format commission data to ensure currency is a MongoDB ObjectId
+    const formattedCommission = (() => {
+      if (!fixedGigData.commission) return undefined;
+
+      const commission = { ...fixedGigData.commission };
+
+      // Handle currency field - ensure it's a MongoDB ObjectId
+      if (commission.currency) {
+        const currencyValue = commission.currency as any;
+
+        // If it's already a valid MongoDB ObjectId (24 hex characters), keep it
+        if (typeof currencyValue === 'string' && currencyValue.length === 24 && /^[a-f0-9]{24}$/i.test(currencyValue)) {
+          console.log('💾 SAVE GIG - Using MongoDB ObjectId for commission.currency:', currencyValue);
+          commission.currency = currencyValue;
+        }
+        // If it's an object with $oid, extract the ObjectId
+        else if (typeof currencyValue === 'object' && currencyValue.$oid) {
+          console.log('💾 SAVE GIG - Extracting ObjectId from commission.currency.$oid:', currencyValue.$oid);
+          commission.currency = currencyValue.$oid;
+        }
+        // If it's a currency code (like "EUR"), we need to handle it
+        else if (typeof currencyValue === 'string' && currencyValue.length < 24) {
+          console.error('⚠️ SAVE GIG - commission.currency is a currency code, not an ObjectId:', currencyValue);
+          console.error('⚠️ SAVE GIG - This will cause a validation error. Please ensure currency is set to a valid ObjectId.');
+          // Keep it as is - the backend will return a proper error message
+        }
+      }
+
+      return commission;
+    })();
+
     // Remove the schedule field and other fields that shouldn't be sent to backend
     const { schedule, time_zone, destinationZones, ...cleanGigData } = fixedGigData;
 
@@ -539,7 +602,8 @@ export async function saveGigData(gigData: GigData): Promise<{ data: any; error?
       companyId,
       skills: formattedSkills,
       availability: formattedAvailability,
-      ...(formattedDestinationZone && { destination_zone: formattedDestinationZone })
+      ...(formattedDestinationZone && { destination_zone: formattedDestinationZone }),
+      ...(formattedCommission && { commission: formattedCommission })
     };
 
     const response = await fetch(`${API_URL}/gigs`, {
