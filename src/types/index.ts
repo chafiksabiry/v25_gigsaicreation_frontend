@@ -33,8 +33,6 @@ export interface Language {
 
 export interface GigData {
   documentation: any;
-  documentation: any;
-  documentation: any;
   userId: string;
   companyId: string;
   title: string;
@@ -97,21 +95,15 @@ export interface GigData {
     }[];
   };
   commission: {
-    base: string;
-    baseAmount: number;
-    bonus: string;
-    bonusAmount: number;
-    structure: string;
+    commission_per_call: number;
+    bonusAmount: string;
     currency: string;
     minimumVolume: {
-      amount: number;
+      amount: string;
       period: string;
       unit: string;
     };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
+    transactionCommission: number;
     kpis: {
       target: string;
       reward: string;
@@ -172,24 +164,7 @@ export interface GigData {
     };
     collaboration: string[];
   };
-  commission: {
-    base: string;
-    baseAmount: number;
-    bonus?: string;
-    bonusAmount?: number;
-    structure?: string;
-    currency: string;
-    minimumVolume: {
-      amount: number;
-      period: string;
-      unit: string;
-    };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
-    additionalDetails?: string;
-  };
+
   activity: {
     options: Array<{
       type: string;
@@ -197,20 +172,7 @@ export interface GigData {
       requirements: string[];
     }>;
   };
-  leads: {
-    types: Array<{
-      type: 'hot' | 'warm' | 'cold';
-      percentage: number;
-      description: string;
-      conversionRate?: number;
-    }>;
-    sources: string[];
-    distribution: {
-      method: string;
-      rules: string[];
-    };
-    qualificationCriteria: string[];
-  };
+
 
 }
 
@@ -218,6 +180,7 @@ export interface GigSuggestion {
   title: string;
   description: string;
   category: string;
+  destination_zone?: string;
   highlights: string[];
   jobTitles: string[];
   deliverables: string[];
@@ -276,8 +239,8 @@ export interface GigSuggestion {
     description: string;
   }[];
   skills: {
-    languages: Array<{ 
-      language: string; 
+    languages: Array<{
+      language: string;
       proficiency: string;
       iso639_1: string;
     }>;
@@ -323,21 +286,15 @@ export interface GigSuggestion {
     collaboration: string[];
   };
   commission: {
-    base: string;
-    baseAmount: number;
-    bonus?: string;
-    bonusAmount?: number;
-    structure?: string;
+    commission_per_call: number;
+    bonusAmount?: string;
     currency: string;
     minimumVolume: {
-      amount: number;
+      amount: string;
       period: string;
       unit: string;
     };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
+    transactionCommission: number;
     additionalDetails?: string;
   };
   activity: {

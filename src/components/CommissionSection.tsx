@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import { fetchAllCurrencies, fetchCurrencyById, Currency } from "../lib/api";
-import { 
-  DollarSign, Target, AlertCircle, Coins, 
-  Star, Calculator, ArrowLeft, ArrowRight, Loader2
+import {
+  DollarSign, Target, AlertCircle, Coins,
+  Star, ArrowLeft, ArrowRight, Loader2
 } from 'lucide-react';
 import { GigData } from '../types';
 
@@ -36,7 +36,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         setCurrenciesLoading(false);
       }
     };
-    
+
     loadCurrencies();
   }, []);
 
@@ -77,14 +77,12 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   useEffect(() => {
   }, [data.commission, data.seniority, errors, warnings]);
 
-  const handleBaseChange = (field: string, value: string | number) => {
+  const handleCommissionPerCallChange = (value: string | number) => {
     onChange({
       ...data,
       commission: {
         ...data.commission,
-        [field]: field === 'baseAmount'
-          ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
-          : value, // pour les selects, garder la string
+        commission_per_call: typeof value === 'string' ? parseFloat(value) || 0 : value,
       },
     });
   };
@@ -96,55 +94,31 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         ...data.commission,
         minimumVolume: {
           ...data.commission?.minimumVolume,
-          [field]: field === 'amount'
-            ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
-            : value, // pour unit et period, garder la string
+          [field]: value.toString(), // Store as string
         },
       },
     });
   };
 
-  const handleTransactionChange = (field: string, value: string | number) => {
+  const handleTransactionChange = (value: string | number) => {
     onChange({
       ...data,
       commission: {
         ...data.commission,
-        transactionCommission: {
-          ...data.commission?.transactionCommission,
-          [field]: field === 'amount'
-            ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
-            : value, // pour type, garder la string
-        },
+        transactionCommission: typeof value === 'string' ? parseFloat(value) || 0 : value,
       },
     });
   };
 
-  const handleBonusChange = (field: string, value: string | number) => {
+  const handleBonusChange = (value: string | number) => {
     onChange({
       ...data,
       commission: {
         ...data.commission,
-        [field]: field === 'bonusAmount'
-          ? (typeof value === 'string' ? parseFloat(value) || 0 : value)
-          : value, // pour bonus, garder la string
+        bonusAmount: value.toString(), // Store as string
       },
     });
   };
-
-
-  // Add new base type if it doesn't exist
-  useEffect(() => {
-    if (data?.commission?.base && !predefinedOptions.commission.baseTypes.includes(data.commission.base)) {
-      predefinedOptions.commission.baseTypes.push(data.commission.base);
-    }
-  }, [data?.commission?.base]);
-
-  // Add new bonus type if it doesn't exist
-  useEffect(() => {
-    if (data?.commission?.bonus && !predefinedOptions.commission.bonusTypes.includes(data.commission.bonus)) {
-      predefinedOptions.commission.bonusTypes.push(data.commission.bonus);
-    }
-  }, [data?.commission?.bonus]);
 
   // Add new unit type if it doesn't exist
   useEffect(() => {
@@ -163,31 +137,19 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
     }
   }, [data?.commission?.minimumVolume?.period]);
 
-  // Add new transaction commission type if it doesn't exist
-  useEffect(() => {
-    if (data?.commission?.transactionCommission?.type && !predefinedOptions.commission.transactionCommissionTypes?.includes(data.commission.transactionCommission.type)) {
-      if (!predefinedOptions.commission.transactionCommissionTypes) {
-        predefinedOptions.commission.transactionCommissionTypes = [];
-      }
-      predefinedOptions.commission.transactionCommissionTypes.push(data.commission.transactionCommission.type);
-    }
-  }, [data?.commission?.transactionCommission?.type]);
-
   console.log('💰 COMMISSION SECTION - Rendering CommissionSection component');
   console.log('💰 COMMISSION SECTION - data.commission:', data.commission);
   console.log('💰 COMMISSION SECTION - currency:', data?.commission?.currency);
-  console.log('💰 COMMISSION SECTION - baseAmount:', data?.commission?.baseAmount);
-  console.log('💰 COMMISSION SECTION - base:', data?.commission?.base);
+  console.log('💰 COMMISSION SECTION - commission_per_call:', data?.commission?.commission_per_call);
   console.log('💰 COMMISSION SECTION - minimumVolume:', data?.commission?.minimumVolume);
   console.log('💰 COMMISSION SECTION - transactionCommission:', data?.commission?.transactionCommission);
-  console.log('💰 COMMISSION SECTION - bonus:', data?.commission?.bonus);
   console.log('💰 COMMISSION SECTION - bonusAmount:', data?.commission?.bonusAmount);
   console.log('💰 COMMISSION SECTION - errors:', errors);
   console.log('💰 COMMISSION SECTION - warnings:', warnings);
-  
+
   return (
     <div className="w-full bg-white p-0">
-      
+
       <div className="space-y-8">
         <InfoText>
           Define the complete commission structure including base rate, transaction commission,
@@ -196,27 +158,27 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
 
         {/* Commission Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
+
           {/* Currency Card */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <DollarSign className="w-6 h-6 text-white" />
-            </div>
+              </div>
               <div className="ml-4">
                 <h3 className="text-lg font-bold text-gray-900">Currency</h3>
                 <p className="text-sm text-gray-500">Base currency for payments</p>
+              </div>
             </div>
-          </div>
 
             <select
               value={data?.commission?.currency || ''}
-              onChange={(e) => onChange({ 
-                ...data, 
-                commission: { 
+              onChange={(e) => onChange({
+                ...data,
+                commission: {
                   ...data.commission,
                   currency: e.target.value
-                } 
+                }
               })}
               disabled={currenciesLoading}
               className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -243,34 +205,34 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-        </div>
+              </div>
               <div className="ml-4">
-                <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
-                <p className="text-sm text-gray-500">Base amount per successful call</p>
+                <h3 className="text-lg font-bold text-gray-900">Per call compensation</h3>
+                <p className="text-sm text-gray-500">Amount per completed call</p>
+              </div>
             </div>
-          </div>
-          
-                <div className="relative">
+
+            <div className="relative">
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 font-bold text-lg">
-                    {getCurrencySymbol()}
-                  </span>
-                  <input
-                    type="number"
+                {getCurrencySymbol()}
+              </span>
+              <input
+                type="number"
                 step="0.01"
                 min="0"
-                    value={data?.commission?.baseAmount || ''}
-                    onChange={e => handleBaseChange('baseAmount', e.target.value)}
+                value={data?.commission?.commission_per_call || ''}
+                onChange={e => handleCommissionPerCallChange(e.target.value)}
                 placeholder="100"
                 className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
-                  />
-                </div>
-              </div>
-              
+              />
+            </div>
+          </div>
+
           {/* Transaction Commission Card */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                <DollarSign className="w-6 h-6 text-white" />
+                <Coins className="w-6 h-6 text-white" />
               </div>
               <div className="ml-4">
                 <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
@@ -282,18 +244,18 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-600 font-bold text-lg">
                 {getCurrencySymbol()}
               </span>
-                  <input
-                    type="number"
+              <input
+                type="number"
                 step="0.01"
                 min="0"
-                value={data?.commission?.transactionCommission?.amount || ''}
-                onChange={e => handleTransactionChange('amount', e.target.value)}
+                value={data?.commission?.transactionCommission || ''}
+                onChange={e => handleTransactionChange(e.target.value)}
                 placeholder="50"
                 className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
               />
             </div>
           </div>
-          
+
           {/* Bonus & Incentives Card */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
             <div className="flex items-center mb-4">
@@ -305,17 +267,17 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 <p className="text-sm text-gray-500">Performance bonus amount</p>
               </div>
             </div>
-            
-              <div className="relative">
+
+            <div className="relative">
               <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-600 font-bold text-lg">
                 {getCurrencySymbol()}
-                </span>
-                <input
-                  type="number"
+              </span>
+              <input
+                type="number"
                 step="0.01"
                 min="0"
                 value={data?.commission?.bonusAmount || ''}
-                onChange={e => handleBonusChange('bonusAmount', e.target.value)}
+                onChange={e => handleBonusChange(e.target.value)}
                 placeholder="150"
                 className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-amber-400 transition-all"
               />
@@ -334,11 +296,11 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <input
-                  type="number"
+            <div className="relative">
+              <input
+                type="number"
                 step="0.01"
                 min="0"
                 value={data?.commission?.minimumVolume?.amount || ''}
@@ -347,7 +309,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
               />
             </div>
-            
+
             <select
               value={data?.commission?.minimumVolume?.period || ''}
               onChange={e => handleMinimumVolumeChange('period', e.target.value)}

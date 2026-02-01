@@ -3,16 +3,15 @@ import { Brain, HelpCircle, PlusCircle } from 'lucide-react';
 import { Suggestions } from './Suggestions';
 import { SectionContent } from './SectionContent';
 import Logo from './Logo';
-import { AIDialog } from './AIDialog';
 import { GigData, GigSuggestion } from '../types';
 import { predefinedOptions } from '../lib/guidance';
 import { mapGeneratedDataToGigData } from '../lib/ai';
 import Cookies from 'js-cookie';
-import { 
-  Briefcase, 
-  Calendar, 
-  DollarSign, 
-  Users, 
+import {
+  Briefcase,
+  Calendar,
+  DollarSign,
+  Users,
   Award,
   ClipboardList
 } from "lucide-react";
@@ -73,22 +72,17 @@ const PrompAI: React.FC = () => {
       minimumHours: {}
     },
     commission: {
-      base: "",
-      baseAmount: 0,
-      bonus: "",
-      bonusAmount: 0,
-      structure: "",
+      commission_per_call: 0,
+      bonusAmount: "0",
       currency: "",
       minimumVolume: {
-        amount: 0,
+        amount: "0",
         period: "",
         unit: ""
       },
-      transactionCommission: {
-        type: "",
-        amount: 0
-      },
-      kpis: []
+      transactionCommission: 0,
+      kpis: [],
+      additionalDetails: ""
     },
     leads: {
       types: [],
@@ -119,6 +113,9 @@ const PrompAI: React.FC = () => {
       },
       collaboration: []
     },
+    activity: {
+      options: []
+    },
     documentation: {
       training: [],
       product: [],
@@ -137,12 +134,12 @@ const PrompAI: React.FC = () => {
     const editParam = urlParams.get('edit');
     const gigIdParam = urlParams.get('gigId');
     const sectionParam = urlParams.get('section');
-    
+
     if (editParam === 'true' && gigIdParam) {
       setIsEditMode(true);
       setEditGigId(gigIdParam);
       loadGigForEdit(gigIdParam);
-      
+
       // Si une section est spécifiée, aller directement au formulaire
       if (sectionParam) {
         setCurrentSection(sectionParam);
@@ -157,17 +154,17 @@ const PrompAI: React.FC = () => {
     try {
       console.log('🔄 EDIT MODE - Fetching gig data from:', `${import.meta.env.VITE_API_URL}/gigs/${gigId}`);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/gigs/${gigId}`);
-      
+
       if (!response.ok) {
         console.error('🔄 EDIT MODE - API Error:', response.status, response.statusText);
         throw new Error(`Failed to fetch gig data: ${response.status} ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
       console.log('🔄 EDIT MODE - API Response:', responseData);
-      
+
       const { data } = responseData;
-      
+
       if (data) {
         // Map the fetched gig data to our GigData format
         const mappedGigData: GigData = {
@@ -176,25 +173,25 @@ const PrompAI: React.FC = () => {
           title: data.title || "",
           description: data.description || "",
           category: data.category || "",
-          destination_zone: typeof data.destination_zone === 'object' && data.destination_zone?._id 
-            ? data.destination_zone._id 
+          destination_zone: typeof data.destination_zone === 'object' && data.destination_zone?._id
+            ? data.destination_zone._id
             : data.destination_zone || "",
           destinationZones: data.destinationZones || [],
           callTypes: data.callTypes || [],
           highlights: data.highlights || [],
-          industries: Array.isArray(data.industries) 
-            ? data.industries.map(industry => 
-                typeof industry === 'object' && industry?._id 
-                  ? industry._id 
-                  : industry
-              )
+          industries: Array.isArray(data.industries)
+            ? data.industries.map(industry =>
+              typeof industry === 'object' && industry?._id
+                ? industry._id
+                : industry
+            )
             : [],
-          activities: Array.isArray(data.activities) 
-            ? data.activities.map(activity => 
-                typeof activity === 'object' && activity?._id 
-                  ? activity._id 
-                  : activity
-              )
+          activities: Array.isArray(data.activities)
+            ? data.activities.map(activity =>
+              typeof activity === 'object' && activity?._id
+                ? activity._id
+                : activity
+            )
             : [],
           status: data.status || 'to_activate',
           requirements: data.requirements || { essential: [], preferred: [] },
@@ -205,8 +202,8 @@ const PrompAI: React.FC = () => {
             time_zone: typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
               ? data.availability.time_zone._id
               : typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
-              ? data.schedule.time_zone._id
-              : data.availability?.time_zone || data.schedule?.time_zone || "",
+                ? data.schedule.time_zone._id
+                : data.availability?.time_zone || data.schedule?.time_zone || "",
             flexibility: data.availability?.flexibility || data.schedule?.flexibility || [],
             minimumHours: data.availability?.minimumHours || data.schedule?.minimumHours || {}
           },
@@ -216,8 +213,8 @@ const PrompAI: React.FC = () => {
             time_zone: typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
               ? data.schedule.time_zone._id
               : typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
-              ? data.availability.time_zone._id
-              : data.schedule?.time_zone || data.availability?.time_zone || "",
+                ? data.availability.time_zone._id
+                : data.schedule?.time_zone || data.availability?.time_zone || "",
             flexibility: data.schedule?.flexibility || data.availability?.flexibility || [],
             minimumHours: data.schedule?.minimumHours || data.availability?.minimumHours || {}
           },
@@ -225,20 +222,23 @@ const PrompAI: React.FC = () => {
           time_zone: typeof data.schedule?.time_zone === 'object' && data.schedule?.time_zone?._id
             ? data.schedule.time_zone._id
             : typeof data.availability?.time_zone === 'object' && data.availability?.time_zone?._id
-            ? data.availability.time_zone._id
-            : data.schedule?.time_zone || data.availability?.time_zone || "",
+              ? data.availability.time_zone._id
+              : data.schedule?.time_zone || data.availability?.time_zone || "",
           commission: {
-            base: data.commission?.base || "",
-            baseAmount: data.commission?.baseAmount || 0,
-            bonus: data.commission?.bonus || "",
-            bonusAmount: data.commission?.bonusAmount || 0,
-            structure: data.commission?.structure || "",
-            additionalDetails: data.commission?.additionalDetails || "",
+            commission_per_call: data.commission?.commission_per_call || data.commission?.baseAmount || 0,
+            bonusAmount: (data.commission?.bonusAmount || "0").toString(),
             currency: typeof data.commission?.currency === 'object' && data.commission?.currency?._id
               ? data.commission.currency._id
               : data.commission?.currency || "",
-            minimumVolume: data.commission?.minimumVolume || { amount: 0, period: "", unit: "" },
-            transactionCommission: data.commission?.transactionCommission || { type: "", amount: 0 },
+            minimumVolume: {
+              amount: (data.commission?.minimumVolume?.amount || "0").toString(),
+              period: data.commission?.minimumVolume?.period || "",
+              unit: data.commission?.minimumVolume?.unit || ""
+            },
+            transactionCommission: typeof data.commission?.transactionCommission === 'object'
+              ? (data.commission.transactionCommission?.amount || 0)
+              : (data.commission?.transactionCommission || 0),
+            additionalDetails: data.commission?.additionalDetails || "",
             kpis: data.commission?.kpis || []
           },
           leads: {
@@ -248,77 +248,77 @@ const PrompAI: React.FC = () => {
             qualificationCriteria: data.leads?.qualificationCriteria || []
           },
           skills: {
-            languages: Array.isArray(data.skills?.languages) 
+            languages: Array.isArray(data.skills?.languages)
               ? data.skills.languages.map(lang => ({
-                  language: typeof lang.language === 'object' && lang.language?._id 
-                    ? lang.language._id 
-                    : lang.language || '',
-                  proficiency: lang.proficiency || '',
-                  iso639_1: lang.iso639_1 || ''
-                }))
+                language: typeof lang.language === 'object' && lang.language?._id
+                  ? lang.language._id
+                  : lang.language || '',
+                proficiency: lang.proficiency || '',
+                iso639_1: lang.iso639_1 || ''
+              }))
               : [],
-            soft: Array.isArray(data.skills?.soft) 
+            soft: Array.isArray(data.skills?.soft)
               ? data.skills.soft.map(skill => {
-                  // Extract the actual ID string from the skill object
-                  let skillId = '';
-                  if (typeof skill.skill === 'object' && skill.skill) {
-                    if (skill.skill._id) {
-                      skillId = skill.skill._id;
-                    } else if (skill.skill.$oid) {
-                      skillId = skill.skill.$oid;
-                    }
-                  } else if (typeof skill.skill === 'string') {
-                    skillId = skill.skill;
+                // Extract the actual ID string from the skill object
+                let skillId = '';
+                if (typeof skill.skill === 'object' && skill.skill) {
+                  if (skill.skill._id) {
+                    skillId = skill.skill._id;
+                  } else if (skill.skill.$oid) {
+                    skillId = skill.skill.$oid;
                   }
-                  
-                  return {
-                    skill: { $oid: skillId },
-                    level: skill.level || 1,
-                    details: skill.details || ''
-                  };
-                })
+                } else if (typeof skill.skill === 'string') {
+                  skillId = skill.skill;
+                }
+
+                return {
+                  skill: { $oid: skillId },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                };
+              })
               : [],
-            professional: Array.isArray(data.skills?.professional) 
+            professional: Array.isArray(data.skills?.professional)
               ? data.skills.professional.map(skill => {
-                  // Extract the actual ID string from the skill object
-                  let skillId = '';
-                  if (typeof skill.skill === 'object' && skill.skill) {
-                    if (skill.skill._id) {
-                      skillId = skill.skill._id;
-                    } else if (skill.skill.$oid) {
-                      skillId = skill.skill.$oid;
-                    }
-                  } else if (typeof skill.skill === 'string') {
-                    skillId = skill.skill;
+                // Extract the actual ID string from the skill object
+                let skillId = '';
+                if (typeof skill.skill === 'object' && skill.skill) {
+                  if (skill.skill._id) {
+                    skillId = skill.skill._id;
+                  } else if (skill.skill.$oid) {
+                    skillId = skill.skill.$oid;
                   }
-                  
-                  return {
-                    skill: { $oid: skillId },
-                    level: skill.level || 1,
-                    details: skill.details || ''
-                  };
-                })
+                } else if (typeof skill.skill === 'string') {
+                  skillId = skill.skill;
+                }
+
+                return {
+                  skill: { $oid: skillId },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                };
+              })
               : [],
-            technical: Array.isArray(data.skills?.technical) 
+            technical: Array.isArray(data.skills?.technical)
               ? data.skills.technical.map(skill => {
-                  // Extract the actual ID string from the skill object
-                  let skillId = '';
-                  if (typeof skill.skill === 'object' && skill.skill) {
-                    if (skill.skill._id) {
-                      skillId = skill.skill._id;
-                    } else if (skill.skill.$oid) {
-                      skillId = skill.skill.$oid;
-                    }
-                  } else if (typeof skill.skill === 'string') {
-                    skillId = skill.skill;
+                // Extract the actual ID string from the skill object
+                let skillId = '';
+                if (typeof skill.skill === 'object' && skill.skill) {
+                  if (skill.skill._id) {
+                    skillId = skill.skill._id;
+                  } else if (skill.skill.$oid) {
+                    skillId = skill.skill.$oid;
                   }
-                  
-                  return {
-                    skill: { $oid: skillId },
-                    level: skill.level || 1,
-                    details: skill.details || ''
-                  };
-                })
+                } else if (typeof skill.skill === 'string') {
+                  skillId = skill.skill;
+                }
+
+                return {
+                  skill: { $oid: skillId },
+                  level: skill.level || 1,
+                  details: skill.details || ''
+                };
+              })
               : []
           },
           seniority: {
@@ -330,10 +330,10 @@ const PrompAI: React.FC = () => {
             structure: data.team?.structure || [],
             territories: Array.isArray(data.team?.territories)
               ? data.team.territories.map(territory =>
-                  typeof territory === 'object' && territory?._id
-                    ? territory._id
-                    : territory
-                )
+                typeof territory === 'object' && territory?._id
+                  ? territory._id
+                  : territory
+              )
               : [],
             reporting: data.team?.reporting || { to: "", frequency: "" },
             collaboration: data.team?.collaboration || []
@@ -344,7 +344,7 @@ const PrompAI: React.FC = () => {
             process: data.documentation?.process || []
           }
         };
-        
+
         console.log('🔄 EDIT MODE - Loaded gig data:', data);
         console.log('🔄 EDIT MODE - Raw industries:', data.industries);
         console.log('🔄 EDIT MODE - Raw activities:', data.activities);
@@ -360,7 +360,7 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Raw professional skills:', data.skills?.professional);
         console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
         console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
-        
+
         // Debug: Check the structure of individual skill objects
         if (data.skills?.professional && data.skills.professional.length > 0) {
           console.log('🔄 EDIT MODE - First professional skill raw structure:', data.skills.professional[0]);
@@ -374,7 +374,7 @@ const PrompAI: React.FC = () => {
           console.log('🔄 EDIT MODE - First soft skill raw structure:', data.skills.soft[0]);
           console.log('🔄 EDIT MODE - First soft skill.skill structure:', data.skills.soft[0].skill);
         }
-        
+
         // Debug: Check the mapped skill structure
         if (mappedGigData.skills.professional.length > 0) {
           console.log('🔄 EDIT MODE - Mapped professional skill structure:', mappedGigData.skills.professional[0]);
@@ -393,7 +393,7 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Mapped professional skills:', mappedGigData.skills.professional);
         console.log('🔄 EDIT MODE - Mapped technical skills:', mappedGigData.skills.technical);
         console.log('🔄 EDIT MODE - Mapped soft skills:', mappedGigData.skills.soft);
-        
+
         // Debug: Vérifier la structure des skills mappés
         if (mappedGigData.skills.languages.length > 0) {
           console.log('🔄 EDIT MODE - First language structure:', mappedGigData.skills.languages[0]);
@@ -403,10 +403,10 @@ const PrompAI: React.FC = () => {
         }
         console.log('🔄 EDIT MODE - Raw team territories:', data.team?.territories);
         console.log('🔄 EDIT MODE - Mapped team territories:', mappedGigData.team.territories);
-        
+
         setGigData(mappedGigData);
         setIsManualMode(true); // Activer le mode manuel pour l'édition
-        
+
         // Vérifier si une section spécifique est demandée dans l'URL
         const urlParams = new URLSearchParams(window.location.search);
         const sectionParam = urlParams.get('section');
@@ -448,7 +448,7 @@ const PrompAI: React.FC = () => {
     console.log('🔄 PROMP AI - suggestions.destination_zone:', suggestions.destination_zone);
     console.log('🔄 PROMP AI - mappedData.destination_zone:', mappedData.destination_zone);
     console.log('🔄 PROMP AI - selectedJobTitle:', suggestions.selectedJobTitle);
-    
+
     // Update the gig data with the mapped suggestions
     setGigData((prevData: GigData) => ({
       ...prevData,
@@ -515,7 +515,7 @@ const PrompAI: React.FC = () => {
     // S'assurer que currentSection est valide
     const validSections = sections.map(s => s.id);
     const effectiveSection = validSections.includes(currentSection) ? currentSection : 'basic';
-    
+
     // Si showReview est true, afficher directement le GigReview
     if (showReview) {
       return (
@@ -545,7 +545,7 @@ const PrompAI: React.FC = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <div className={
@@ -556,9 +556,9 @@ const PrompAI: React.FC = () => {
           {/* Logo et Titre global en haut */}
           <div className="w-full max-w-3xl mx-auto mb-8">
             {confirmedSuggestions && (
-                  <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
-                    <Logo className="mb-4" />
-                  </div>
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+                <Logo className="mb-4" />
+              </div>
             )}
           </div>
 
@@ -595,7 +595,7 @@ const PrompAI: React.FC = () => {
 
           {/* Navigation and Section Content */}
           <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
-            
+
             {/* Navigation Tabs */}
             {effectiveSection !== 'review' && (
               <nav className="border-b border-gray-200 bg-white px-4 py-3">
@@ -719,7 +719,7 @@ const PrompAI: React.FC = () => {
         </div>
       </div>
 
-{/* AIDialog disabled - modal removed */}
+      {/* AIDialog disabled - modal removed */}
     </div>
   );
 };

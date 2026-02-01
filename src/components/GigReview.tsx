@@ -5,22 +5,17 @@ import {
   DollarSign,
   Users,
   Brain,
-  FileText,
   Star,
   Clock,
   Calendar,
   Briefcase,
-  Award,
-  Laptop,
   Coins,
   Edit3,
-  Heart,
   MapPin,
   Building,
   Target,
   Zap,
   Languages,
-  CheckSquare,
 } from "lucide-react";
 import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
@@ -28,7 +23,7 @@ import { validateGigData } from "../lib/validation";
 import { groupSchedules } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchCompanyById, getCountryNameById } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
-import { 
+import {
   getIndustryNameById,
   loadLanguages,
   getLanguageNameById
@@ -58,9 +53,9 @@ export function GigReview({
   const validation = skipValidation ? { isValid: true, errors: {}, warnings: {} } : validateGigData(data);
 
   // State for skills data
-  const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
-  const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
-  const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [softSkills, setSoftSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
+  const [professionalSkills, setProfessionalSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
+  const [technicalSkills, setTechnicalSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [languagesLoading, setLanguagesLoading] = useState(true);
 
@@ -75,7 +70,7 @@ export function GigReview({
       try {
         setSkillsLoading(true);
         setLanguagesLoading(true);
-        
+
         // Fetch all skills categories and languages
         const [softResponse, professionalResponse, technicalResponse] = await Promise.all([
           fetch(`${import.meta.env.VITE_REP_URL}/skills/soft`),
@@ -134,23 +129,23 @@ export function GigReview({
       if (data.companyId) {
         try {
           const company = await fetchCompanyById(data.companyId);
-          
+
           if (company) {
             const cMap: { [key: string]: string } = {};
             cMap[company._id] = company.name || company._id;
             setCompanyMap(cMap);
-        } else {
+          } else {
           }
-        } catch (e) { 
+        } catch (e) {
         }
       }
-      
+
       // Fetch country name if we have a destination_zone
       if (data.destination_zone) {
         try {
           const countryNameFromApi = await getCountryNameById(data.destination_zone);
           setCountryName(countryNameFromApi);
-        } catch (e) { 
+        } catch (e) {
           console.error('❌ GigReview: Error fetching country name:', e);
           setCountryName(data.destination_zone); // Fallback to zone ID
         }
@@ -165,7 +160,7 @@ export function GigReview({
   };
   // Helper to get company name
   const getCompanyName = (id: string) => {
-  
+
     const companyName = companyMap[id] || id;
     return companyName;
   };
@@ -194,7 +189,7 @@ export function GigReview({
     if (languagesLoading) {
       return 'Loading...';
     }
-    
+
     // Handle both string and { $oid: string } formats
     let languageId: string;
     if (typeof language === 'string') {
@@ -204,7 +199,7 @@ export function GigReview({
     } else {
       return '';
     }
-    
+
     const languageName = getLanguageNameById(languageId);
     return languageName || languageId;
   };
@@ -215,17 +210,17 @@ export function GigReview({
     }
     return data.commission.currency
       ? predefinedOptions.commission.currencies.find(
-          (c) => c.code === data.commission.currency
-        )?.symbol || "€"
+        (c) => c.code === data.commission.currency
+      )?.symbol || "€"
       : "€";
   };
 
   const handlePublish = async () => {
     try {
-      
+
       // Let onSubmit handle the saving (it already calls saveGigData)
       await onSubmit();
-      
+
       const result = await Swal.fire({
         title: "Success!",
         text: isEditMode ? "Your gig has been updated successfully." : "Your gig has been published successfully.",
@@ -236,9 +231,9 @@ export function GigReview({
         confirmButtonColor: "#667eea",
         cancelButtonColor: "#6b7280",
 
-        
+
       });
-      
+
       if (result.isConfirmed) {
         // Rediriger vers le dashboard en mode édition
         if (isEditMode && editGigId) {
@@ -262,7 +257,7 @@ export function GigReview({
         confirmButtonColor: "#dc2626",
         cancelButtonColor: "#6b7280",
       });
-      
+
       if (result.isConfirmed) {
         handlePublish(); // Retry publishing
       }
@@ -370,10 +365,10 @@ export function GigReview({
   return (
     <div className="min-h-screen w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
       <div className="w-full h-full px-8 py-6 max-w-7xl mx-auto">
-  
+
         {/* Page Header with Title and Description */}
         <div className="mb-8">
-          
+
           <div className="flex items-center justify-between mb-6">
             <div className="flex gap-3">
               <button
@@ -420,7 +415,7 @@ export function GigReview({
                     {data?.title || 'No title provided'}
                   </h1>
                   <p className="text-gray-700 text-lg leading-relaxed mb-6">{data?.description || 'No description provided'}</p>
-                  
+
                   <div className="flex flex-wrap gap-3 mb-6">
                     {data?.category && (
                       <span className="px-4 py-2 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
@@ -488,7 +483,7 @@ export function GigReview({
                       )} */}
                     </div>
                   )}
-                  
+
                   {data?.companyId && (
                     <div className="bg-gradient-to-br from-[#764ba2]/5 to-[#f093fb]/5 rounded-lg p-4 border border-[#764ba2]/20">
                       <div className="flex items-center gap-3 mb-2">
@@ -508,20 +503,20 @@ export function GigReview({
               "commission",
               <DollarSign className="w-6 h-6 text-gray-600" />,
               <div className="space-y-6">
-                {/* Base Commission */}
-                {data.commission.base && (
+                {/* Per Call Commission */}
+                {data.commission.commission_per_call > 0 && (
                   <div className="bg-gradient-to-r from-[#667eea]/10 to-[#667eea]/20 rounded-xl p-6 border border-[#667eea]/30">
                     <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-3">
                       <CheckCircle className="w-6 h-6 text-[#667eea]" />
-                      Base Commission
+                      Per Call Compensation
                     </h3>
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
                       <div className="text-3xl font-bold text-gray-900 mb-3">
                         {getCurrencySymbol()}
-                        {data.commission.baseAmount || '0'}
+                        {data.commission.commission_per_call}
                       </div>
                       <div className="text-gray-700 text-lg mb-4">
-                        {data.commission.base}
+                        Fixed amount per successful call
                       </div>
                       {data.commission.minimumVolume && (
                         <div className="pt-4 border-t border-[#667eea]/20">
@@ -544,7 +539,7 @@ export function GigReview({
                 )}
 
                 {/* Transaction Commission */}
-                {data.commission.transactionCommission?.type && (
+                {data.commission.transactionCommission > 0 && (
                   <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
                     <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f093fb] to-[#667eea] mb-4 flex items-center gap-3">
                       <Coins className="w-6 h-6 text-[#f093fb]" />
@@ -552,23 +547,18 @@ export function GigReview({
                     </h3>
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
                       <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {data.commission.transactionCommission.type === "percentage"
-                          ? `${data.commission.transactionCommission.amount}%`
-                          : `${getCurrencySymbol()}${
-                              data.commission.transactionCommission.amount
-                            }`}
+                        {getCurrencySymbol()}
+                        {data.commission.transactionCommission}
                       </div>
                       <div className="text-gray-700 text-lg">
-                        {data.commission.transactionCommission.type === "percentage"
-                          ? "Per Transaction Value"
-                          : "Per Transaction"}
+                        Per Successful Transaction
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Performance Bonus */}
-                {data.commission.bonus && data.commission.bonusAmount && (
+                {data.commission.bonusAmount && data.commission.bonusAmount !== "0" && (
                   <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
                     <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
                       <Star className="w-6 h-6 text-[#764ba2]" />
@@ -580,7 +570,7 @@ export function GigReview({
                         {data.commission.bonusAmount}
                       </div>
                       <div className="text-gray-700 text-lg">
-                        {data.commission.bonus}
+                        Performance Incentives
                       </div>
                     </div>
                   </div>
@@ -588,9 +578,18 @@ export function GigReview({
 
                 {/* Additional Details */}
                 {data?.commission?.additionalDetails && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Additional Details</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{data?.commission?.additionalDetails}</p>
+                  <div className="bg-gradient-to-r from-slate-100 to-gray-100 rounded-xl p-6 border border-slate-200">
+                    <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-3">
+                      <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Additional Details
+                    </h3>
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
+                      <p className="text-gray-700 whitespace-pre-wrap text-lg leading-relaxed">
+                        {data?.commission?.additionalDetails}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -708,7 +707,7 @@ export function GigReview({
                       </div>
                     )}
                   </div>
-                  
+
                 </div>
                 {/* Actual skill names for each category */}
                 <div className="space-y-4">
@@ -767,7 +766,7 @@ export function GigReview({
                   <div className="text-3xl font-bold text-gray-900 mb-2">{data.team.size}</div>
                   <div className="text-base text-gray-600 font-semibold">Team Members</div>
                 </div>
-                
+
                 {data.team.structure && data.team.structure.length > 0 && (
                   <div>
                     <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-2">
@@ -810,4 +809,3 @@ export function GigReview({
     </div>
   );
 }
-    

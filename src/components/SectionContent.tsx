@@ -42,10 +42,10 @@ export function SectionContent({
     if (!schedules || schedules.length === 0) {
       return [];
     }
-  
+
     const seen = new Set<string>();
     const cleaned: DaySchedule[] = [];
-  
+
     schedules.forEach((schedule, index) => {
       console.log(`🧹 CLEAN SCHEDULES - Processing schedule ${index}:`, schedule);
       console.log(`🧹 CLEAN SCHEDULES - schedule.day:`, schedule?.day);
@@ -66,7 +66,7 @@ export function SectionContent({
         console.log(`🧹 CLEAN SCHEDULES - Schedule ${index} rejected - missing day or hours`);
       }
     });
-  
+
     console.log('🧹 CLEAN SCHEDULES - Final cleaned schedules:', cleaned);
     return cleaned;
   };
@@ -78,19 +78,19 @@ export function SectionContent({
     console.log('🔧 SECTION CONTENT - data.schedule?.schedules:', data.schedule?.schedules);
     console.log('🔧 SECTION CONTENT - data.availability?.schedule:', data.availability?.schedule);
     console.log('🔧 SECTION CONTENT - schedulesToClean:', schedulesToClean);
-    
+
     const cleanedSchedules = cleanSchedules(schedulesToClean);
     console.log('🔧 SECTION CONTENT - cleanedSchedules:', cleanedSchedules);
-    
+
     return {
-    ...data,
-          schedule: {
+      ...data,
+      schedule: {
         schedules: cleanedSchedules,
         time_zone: (() => {
           console.log('🕐 TIMEZONE INIT - data.schedule?.time_zone:', data.schedule?.time_zone);
           console.log('🕐 TIMEZONE INIT - data.schedule?.timeZones:', data.schedule?.timeZones);
           console.log('🕐 TIMEZONE INIT - data.availability?.time_zone:', data.availability?.time_zone);
-          
+
           if (data.schedule?.time_zone) {
             console.log('🕐 TIMEZONE INIT - Using schedule.time_zone:', data.schedule.time_zone);
             return data.schedule.time_zone;
@@ -119,27 +119,27 @@ export function SectionContent({
         },
         shifts: data.schedule?.shifts || []
       },
-    seniority: {
-      level: data.seniority?.level || '',
-      yearsExperience: data.seniority?.yearsExperience || 0,
-    },
-    skills: {
-      professional: data.skills?.professional || [{
-        skill: "Brand Identity Design",
-        level: 1
-      }],
-      technical: data.skills?.technical || [{
-        skill: "Adobe Illustrator",
-        level: 1
-      }],
-      soft: data.skills?.soft || [{
-        skill: "Communication",
-        level: 1
-      }],
-      languages: data.skills?.languages || [],
+      seniority: {
+        level: data.seniority?.level || '',
+        yearsExperience: data.seniority?.yearsExperience || 0,
+      },
+      skills: {
+        professional: data.skills?.professional || [{
+          skill: "Brand Identity Design",
+          level: 1
+        }],
+        technical: data.skills?.technical || [{
+          skill: "Adobe Illustrator",
+          level: 1
+        }],
+        soft: data.skills?.soft || [{
+          skill: "Communication",
+          level: 1
+        }],
+        languages: data.skills?.languages || [],
 
-          certifications: []
-    }
+        certifications: []
+      }
     };
   }, [data]);
 
@@ -164,8 +164,8 @@ export function SectionContent({
               onSectionChange?.('suggestions');
             }}
             onNext={() => onSectionChange?.('schedule')}
-            onSave={() => {}}
-            onAIAssist={() => {}}
+            onSave={() => { }}
+            onAIAssist={() => { }}
             currentSection={section}
           />
         );
@@ -174,10 +174,10 @@ export function SectionContent({
         console.log('🔄 SECTION CONTENT - Schedule case triggered');
         console.log('🔄 SECTION CONTENT - initializedData.schedule:', initializedData.schedule);
         console.log('🔄 SECTION CONTENT - initializedData.schedule.schedules:', initializedData.schedule.schedules);
-        
+
         return (
           <ScheduleSection
-            data={{...initializedData.schedule}}
+            data={{ ...initializedData.schedule }}
             destination_zone={data.destination_zone}
             onChange={(scheduleData) => onChange({
               ...data,
@@ -211,22 +211,17 @@ export function SectionContent({
                 yearsExperience: initializedData.seniority.yearsExperience
               },
               commission: initializedData.commission || {
-                base: "",
-                baseAmount: 0,
-                bonus: "",
-                bonusAmount: 0,
-                structure: "",
+                commission_per_call: 0,
+                bonusAmount: "0",
                 currency: "",
                 minimumVolume: {
-                  amount: 0,
+                  amount: "0",
                   period: "",
                   unit: ""
                 },
-                transactionCommission: {
-                  type: "",
-                  amount: 0
-                },
-                kpis: []
+                transactionCommission: 0,
+                kpis: [],
+                additionalDetails: ""
               }
             }}
             onChange={onChange}
@@ -288,22 +283,22 @@ export function SectionContent({
                   iso639_1: '' // This will be handled by the backend
                 })) || initializedData.skills.languages,
                 soft: skillsData.soft?.map((skill: string | { skill: { $oid: string } | string; level: number }) => ({
-                  skill: typeof skill === 'string' ? skill : 
-                         typeof skill.skill === 'string' ? skill.skill : 
-                         skill.skill.$oid,
+                  skill: typeof skill === 'string' ? skill :
+                    typeof skill.skill === 'string' ? skill.skill :
+                      skill.skill.$oid,
                   level: typeof skill === 'string' ? 1 : Number(skill.level)
                 })) || initializedData.skills.soft,
                 professional: skillsData.professional?.map((skill: string | { skill: { $oid: string } | string; level: number }) => ({
-                  skill: typeof skill === 'string' ? skill : 
-                         typeof skill.skill === 'string' ? skill.skill : 
-                         skill.skill.$oid,
+                  skill: typeof skill === 'string' ? skill :
+                    typeof skill.skill === 'string' ? skill.skill :
+                      skill.skill.$oid,
                   level: typeof skill === 'string' ? 1 : Number(skill.level)
                 })) || initializedData.skills.professional,
 
                 technical: skillsData.technical?.map((skill: string | { skill: { $oid: string } | string; level: number }) => ({
-                  skill: typeof skill === 'string' ? skill : 
-                         typeof skill.skill === 'string' ? skill.skill : 
-                         skill.skill.$oid,
+                  skill: typeof skill === 'string' ? skill :
+                    typeof skill.skill === 'string' ? skill.skill :
+                      skill.skill.$oid,
                   level: typeof skill === 'string' ? 1 : Number(skill.level)
                 })) || initializedData.skills.technical
               }
@@ -353,13 +348,13 @@ export function SectionContent({
             }}
             skipValidation={false}
             onSubmit={async () => {
-              
+
               try {
                 // Save or update gig data to API based on mode
-                const result = isEditMode && editGigId 
+                const result = isEditMode && editGigId
                   ? await updateGigData(editGigId, initializedData)
                   : await saveGigData(initializedData);
-                
+
                 if (result.error) {
                   console.error('Error saving/updating gig:', result.error);
                   return;
