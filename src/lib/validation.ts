@@ -57,7 +57,7 @@ export function validateGigData(data: GigData): ValidationResult {
     }
 
     if (data.commission.commission_per_call === undefined || data.commission.commission_per_call === null) {
-      warnings.commission = [...(warnings.commission || []), 'Consider specifying commission per call'];
+      warnings.commission = [...(warnings.commission || []), 'Consider specifying Per call compensation'];
     }
 
     if (data.commission?.minimumVolume) {

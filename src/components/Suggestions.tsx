@@ -33,16 +33,17 @@ import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
 import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone, getCountryNameById, fetchAllCurrencies, Currency } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
-import { 
-  loadActivities, 
-  loadIndustries, 
+import {
+  loadActivities,
+  loadIndustries,
   loadLanguages,
-  getActivityOptions, 
+  getActivityOptions,
   getIndustryOptions,
   getLanguageOptions,
   getActivityNameById,
   getIndustryNameById,
-  getLanguageNameById} from '../lib/activitiesIndustries';
+  getLanguageNameById
+} from '../lib/activitiesIndustries';
 import Logo from "./Logo";
 import { useLanguage } from '../contexts/LanguageContext';
 import { LanguageSelector } from './LanguageSelector';
@@ -243,13 +244,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [searchResults, setSearchResults] = useState<CountryData[]>([]);
   const [searching, setSearching] = useState(false);
   const [timezoneSearch, setTimezoneSearch] = useState("");
-  const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
-  const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
-  const [professionalSkills, setProfessionalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
+  const [softSkills, setSoftSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
+  const [technicalSkills, setTechnicalSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
+  const [professionalSkills, setProfessionalSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
   const [skillsLoading, setSkillsLoading] = useState(false);
   const [territoriesFromAPI, setTerritoriesFromAPI] = useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = useState(true);
-  const [territoryNames, setTerritoryNames] = useState<{[key: string]: string}>({});
+  const [territoryNames, setTerritoryNames] = useState<{ [key: string]: string }>({});
   const [allCountriesFromAPI, setAllCountriesFromAPI] = useState<Country[]>([]);
   const [destinationCountriesLoading, setDestinationCountriesLoading] = useState(false);
   const isGeneratingRef = useRef(false);
@@ -263,51 +264,51 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [languagesLoading, setLanguagesLoading] = useState(true);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [currenciesLoading, setCurrenciesLoading] = useState(false);
-  
+
   // States for textarea inputs
   const [newJobTitle, setNewJobTitle] = useState('');
   const [newHighlight, setNewHighlight] = useState('');
   const [newDeliverable, setNewDeliverable] = useState('');
-  
+
   // States for showing add forms
   const [showJobTitleForm, setShowJobTitleForm] = useState(false);
   const [showHighlightForm, setShowHighlightForm] = useState(false);
   const [showDeliverableForm, setShowDeliverableForm] = useState(false);
-  
+
   // States for editing existing items
   const [editingJobTitleIndex, setEditingJobTitleIndex] = useState<number | null>(null);
   const [editingHighlightIndex, setEditingHighlightIndex] = useState<number | null>(null);
   const [editingDeliverableIndex, setEditingDeliverableIndex] = useState<number | null>(null);
-  
+
   // States for selection
   const [selectedJobTitle, setSelectedJobTitle] = useState<string | null>(null);
-  
+
   // States for skill adding interface
-  const [showAddSkillInterface, setShowAddSkillInterface] = useState<{[key: string]: boolean}>({
+  const [showAddSkillInterface, setShowAddSkillInterface] = useState<{ [key: string]: boolean }>({
     languages: false,
     professional: false,
     technical: false,
     soft: false
   });
-  const [selectedSkillToAdd, setSelectedSkillToAdd] = useState<{[key: string]: string}>({
+  const [selectedSkillToAdd, setSelectedSkillToAdd] = useState<{ [key: string]: string }>({
     languages: '',
     professional: '',
     technical: '',
     soft: ''
   });
-  const [selectedLevelToAdd, setSelectedLevelToAdd] = useState<{[key: string]: number}>({
+  const [selectedLevelToAdd, setSelectedLevelToAdd] = useState<{ [key: string]: number }>({
     languages: 2, // B1 par défaut
     professional: 1,
     technical: 1,
     soft: 1
   });
-  const [selectedExactPosition, setSelectedExactPosition] = useState<{[key: string]: number | undefined}>({
+  const [selectedExactPosition, setSelectedExactPosition] = useState<{ [key: string]: number | undefined }>({
     languages: undefined,
     professional: undefined,
     technical: undefined,
     soft: undefined
   });
-  const [hoveredLevel, setHoveredLevel] = useState<{[key: string]: number | null}>({
+  const [hoveredLevel, setHoveredLevel] = useState<{ [key: string]: number | null }>({
     languages: null,
     professional: null,
     technical: null,
@@ -316,7 +317,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Plus besoin de searchTerm car on utilise uniquement des sélecteurs
 
   // États pour l'édition des langues existantes
-  const [editingSkill, setEditingSkill] = useState<{[key: string]: number | null}>({
+  const [editingSkill, setEditingSkill] = useState<{ [key: string]: number | null }>({
     professional: null,
     technical: null,
     soft: null,
@@ -325,7 +326,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Plus besoin de editSearchTerm car on utilise uniquement des sélecteurs
 
   // État pour le hover sur les niveaux des cartes existantes
-  const [hoveredExistingLevel, setHoveredExistingLevel] = useState<{[key: string]: {[index: number]: number | null}}>({
+  const [hoveredExistingLevel, setHoveredExistingLevel] = useState<{ [key: string]: { [index: number]: number | null } }>({
     professional: {},
     technical: {},
     soft: {},
@@ -333,7 +334,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   });
 
   // Ref pour gérer le clic dehors
-  const addInterfaceRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
+  const addInterfaceRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Gestion du clic dehors pour fermer l'interface d'ajout
   useEffect(() => {
@@ -357,7 +358,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       const isClickInsideEditDropdown = target.closest('.edit-dropdown');
       const isClickInsideEditInput = target.closest('input[type="text"]');
       const isClickInsideEditSelect = target.closest('select') || target.closest('.edit-select');
-      
+
       if (!isClickInsideEditDropdown && !isClickInsideEditInput && !isClickInsideEditSelect) {
         // Annuler toute édition en cours
         setEditingSkill({
@@ -380,14 +381,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAddSkillInterface, selectedSkillToAdd, selectedLevelToAdd]);
-  
-  
+
+
   // Helper function to get currency symbol by ID
   const getCurrencySymbol = (currencyId: string): string => {
     const currency = currencies.find(c => c._id === currencyId);
     return currency?.symbol || '€';
   };
-  
+
   // Helper function to get default currency (EUR if available, otherwise first in list)
   const getDefaultCurrencyId = (): string => {
     if (currencies.length === 0) return '';
@@ -412,7 +413,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setCurrenciesLoading(false);
       }
     };
-    
+
     loadCurrencies();
   }, []);
 
@@ -420,7 +421,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     if (currencies.length > 0 && suggestions?.commission) {
       const defaultCurrencyId = getDefaultCurrencyId();
-      
+
       // Set default currency for main commission if not already set
       if (!suggestions.commission.currency) {
         setSuggestions(prev => prev ? {
@@ -431,7 +432,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           }
         } : null);
       }
-      
+
       console.log('💰 SUGGESTIONS - Set default currency:', defaultCurrencyId);
     }
   }, [currencies, suggestions?.commission]);
@@ -439,25 +440,25 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Load activities, industries, and languages from external API
   useEffect(() => {
     const loadActivitiesIndustriesAndLanguages = async () => {
-      
+
       try {
         setActivitiesLoading(true);
         setIndustriesLoading(true);
         setLanguagesLoading(true);
-        
+
         await loadActivities();
-        
+
         await loadIndustries();
-        
+
         await loadLanguages();
-        
+
         // Get options for UI components
         const activityOptions = getActivityOptions();
         const industryOptions = getIndustryOptions();
         const languageOptions = getLanguageOptions();
-        
-        
-        
+
+
+
         // Log sample data for debugging
         if (activityOptions.length > 0) {
         }
@@ -465,13 +466,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
         if (languageOptions.length > 0) {
         }
-        
+
         setActivities(activityOptions);
         setIndustries(industryOptions);
         setLanguages(languageOptions);
-        
-        
-        
+
+
+
       } catch (error) {
         console.error('❌ Suggestions: Error loading activities, industries, and languages:', error);
         alert(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your internet connection and try again.`);
@@ -507,10 +508,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Ensure all team roles have valid seniority structure
   const validateAndFixTeamStructure = () => {
     if (!suggestions?.team?.structure) return;
-    
+
     let needsUpdate = false;
     const newSuggestions = { ...suggestions };
-    
+
     newSuggestions.team.structure.forEach((role, index) => {
       // Check if role is a string and convert it to proper object structure
       if (typeof role === 'string') {
@@ -568,7 +569,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         needsUpdate = true;
       }
     });
-    
+
     if (needsUpdate) {
       setSuggestions(prev => prev ? newSuggestions : null);
     }
@@ -619,24 +620,24 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       // Fetch timezones only once
       if (!timezonesLoaded) {
-      setTimezoneLoading(true);
-      try {
-        const data = await fetchAllTimezonesNew();
-        if (data.length > 0) {
-          setAllTimezones(data);
-          setTimezonesLoaded(true);
-        } else {
+        setTimezoneLoading(true);
+        try {
+          const data = await fetchAllTimezonesNew();
+          if (data.length > 0) {
+            setAllTimezones(data);
+            setTimezonesLoaded(true);
+          } else {
             console.error('❌ No timezones received from API');
             // Fallback to default timezones
             setAllTimezones([]);
             setTimezonesLoaded(true);
-        }
-      } catch (error) {
+          }
+        } catch (error) {
           console.error('❌ Error fetching timezones:', error);
           setAllTimezones([]);
           setTimezonesLoaded(true);
-      } finally {
-        setTimezoneLoading(false);
+        } finally {
+          setTimezoneLoading(false);
         }
       }
     };
@@ -651,7 +652,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
 
     setTimezoneLoading(true);
-    
+
     try {
       // Process all timezones from the API
       const processedTimezones = allTimezones
@@ -706,7 +707,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       }
 
       setSkillsLoading(true);
-      
+
       try {
         const [softResult, technicalResult, professionalResult] = await Promise.all([
           fetchSoftSkills(),
@@ -740,53 +741,53 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Global migration effect - runs when skills are loaded
   useEffect(() => {
     if (suggestions && (softSkills.length > 0 || professionalSkills.length > 0 || technicalSkills.length > 0)) {
-      
+
       const migrateAllSkills = () => {
         if (!suggestions.skills) return;
-        
+
         let needsUpdate = false;
         const migratedSkills = { ...suggestions.skills };
-        
+
         ['soft', 'professional', 'technical'].forEach(type => {
           const skillArray = migratedSkills[type as keyof typeof migratedSkills];
           if (skillArray && Array.isArray(skillArray)) {
             (migratedSkills as any)[type] = skillArray.map((skill: any) => {
               if (skill && typeof skill.skill === 'string') {
-                
+
                 let skillArray: any[] = [];
                 switch (type) {
                   case 'soft': skillArray = softSkills; break;
                   case 'professional': skillArray = professionalSkills; break;
                   case 'technical': skillArray = technicalSkills; break;
                 }
-                
+
                 // Try exact match first
                 let found = skillArray.find(s => s.name === skill.skill);
-                
+
                 // If not found, try case-insensitive match
                 if (!found) {
                   found = skillArray.find(s => s.name.toLowerCase() === skill.skill.toLowerCase());
                 }
-                
+
                 // If still not found, try partial match
                 if (!found) {
-                  found = skillArray.find(s => 
+                  found = skillArray.find(s =>
                     s.name.toLowerCase().includes(skill.skill.toLowerCase()) ||
                     skill.skill.toLowerCase().includes(s.name.toLowerCase())
                   );
                 }
-                
+
                 if (found) {
                   needsUpdate = true;
-                  return { 
-                    ...skill, 
+                  return {
+                    ...skill,
                     skill: { $oid: found._id },
                     details: skill.details || `Migrated from "${skill.skill}" to "${found.name}"`
                   };
                 } else {
                   // Keep as string but mark for later processing
-                  return { 
-                    ...skill, 
+                  return {
+                    ...skill,
                     _needsMigration: true,
                     _originalSkill: skill.skill
                   };
@@ -796,12 +797,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             });
           }
         });
-        
+
         if (needsUpdate) {
           setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
-      
+
       migrateAllSkills();
     }
   }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
@@ -809,7 +810,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Skills migration effect - runs when skills are loaded
   useEffect(() => {
     if (suggestions && (softSkills.length > 0 || professionalSkills.length > 0 || technicalSkills.length > 0)) {
-      
+
       // Helper: get ObjectId for a skill name and type
       const getSkillObjectId = (skillName: string, type: string): string | undefined => {
         let arr: any[] = [];
@@ -822,10 +823,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       const migrateSkillsToObjectIds = () => {
         if (!suggestions.skills) return;
-        
+
         let needsUpdate = false;
         const migratedSkills = { ...suggestions.skills } as any;
-        
+
         ['soft', 'professional', 'technical'].forEach(type => {
           const skillArray = migratedSkills[type];
           if (skillArray && Array.isArray(skillArray)) {
@@ -834,8 +835,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const oid = getSkillObjectId(skill.skill, type);
                 if (oid) {
                   needsUpdate = true;
-                  return { 
-                    ...skill, 
+                  return {
+                    ...skill,
                     skill: { $oid: oid },
                     details: skill.details || 'Migrated from string'
                   };
@@ -847,12 +848,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             });
           }
         });
-        
+
         if (needsUpdate) {
           setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
-      
+
       migrateSkillsToObjectIds();
     }
   }, [softSkills, professionalSkills, technicalSkills]); // Removed suggestions from dependencies
@@ -864,8 +865,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setTerritoryNames({});
         return;
       }
-      
-      const names: {[key: string]: string} = {};
+
+      const names: { [key: string]: string } = {};
       for (const territoryId of suggestions.team.territories) {
         try {
           const name = await getCountryNameById(territoryId);
@@ -886,7 +887,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const forceMigration = () => {
       if (suggestions && suggestions.skills) {
         let hasStringSkills = false;
-        
+
         ['soft', 'professional', 'technical'].forEach(type => {
           const skillArray = (suggestions.skills as any)[type];
           if (skillArray && Array.isArray(skillArray)) {
@@ -897,7 +898,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             });
           }
         });
-        
+
         if (hasStringSkills) {
           // Trigger the global migration effect
           const event = new CustomEvent('forceSkillsMigration');
@@ -905,17 +906,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         }
       }
     };
-    
+
     // Run on mount
     forceMigration();
-    
+
     // Listen for force migration events
     const handleForceMigration = () => {
       forceMigration();
     };
-    
+
     window.addEventListener('forceSkillsMigration', handleForceMigration);
-    
+
     return () => {
       window.removeEventListener('forceSkillsMigration', handleForceMigration);
     };
@@ -946,7 +947,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         setLoading(true);
         setError(null);
         const result = await generateGigSuggestions(props.input);
-        
+
         // Convert schedules from days array to individual day objects
         if (result.schedule && result.schedule.schedules) {
           const convertedSchedules: Array<ScheduleEntry> = [];
@@ -977,16 +978,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
           });
 
-                  // Format times to be compliant with <input type="time">
-        result.schedule.schedules.forEach((schedule) => {
-          const formatTimeForInput = (timeStr: string) => {
-            if (!timeStr || !timeStr.includes(":")) return "00:00";
-            const [h, m] = timeStr.split(":");
-            return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
-          };
-          schedule.hours.start = formatTimeForInput(schedule.hours.start);
-          schedule.hours.end = formatTimeForInput(schedule.hours.end);
-        });
+          // Format times to be compliant with <input type="time">
+          result.schedule.schedules.forEach((schedule) => {
+            const formatTimeForInput = (timeStr: string) => {
+              if (!timeStr || !timeStr.includes(":")) return "00:00";
+              const [h, m] = timeStr.split(":");
+              return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+            };
+            schedule.hours.start = formatTimeForInput(schedule.hours.start);
+            schedule.hours.end = formatTimeForInput(schedule.hours.end);
+          });
 
           result.schedule.schedules = convertedSchedules;
         }
@@ -995,8 +996,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Validate and filter sectors to only allow predefined ones
         if (result.sectors && result.sectors.length > 0) {
-          
-          
+
+
           const validSectors = result.sectors.filter(sector => {
             const isValid = predefinedOptions.sectors.includes(sector);
             if (!isValid) {
@@ -1004,14 +1005,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
             return isValid;
           });
-          
+
           result.sectors = validSectors;
         }
 
         // Validate and filter flexibility options to only allow predefined ones
         if (result.schedule?.flexibility && result.schedule.flexibility.length > 0) {
-          
-          
+
+
           const validFlexibility = result.schedule.flexibility.filter(option => {
             const isValid = FLEXIBILITY_SELECT_OPTIONS.includes(option);
             if (!isValid) {
@@ -1019,46 +1020,46 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
             return isValid;
           });
-          
+
           result.schedule.flexibility = validFlexibility;
         }
 
         // Validate and filter skills to only allow predefined ones from API
         if (result.skills) {
-          
-          
+
+
           // Only validate if skills are loaded from API
           if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
-            
-            
+
+
             // Helper function to find best match for a skill
             const findBestSkillMatch = (skillName: string, skillArray: any[]) => {
               // Try exact match first
               let found = skillArray.find(s => s.name === skillName);
-              
+
               // If not found, try case-insensitive match
               if (!found) {
                 found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
               }
-              
+
               // If still not found, try partial match
               if (!found) {
-                found = skillArray.find(s => 
+                found = skillArray.find(s =>
                   s.name.toLowerCase().includes(skillName.toLowerCase()) ||
                   skillName.toLowerCase().includes(s.name.toLowerCase())
                 );
               }
-              
+
               return found;
             };
-            
+
             // Validate and migrate professional skills
             if (result.skills.professional && result.skills.professional.length > 0) {
               const validProfessional = result.skills.professional.map(skill => {
                 const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
                 const found = findBestSkillMatch(skillName, professionalSkills);
                 if (found) {
-                  return { 
+                  return {
                     skill: { $oid: found._id },
                     level: typeof skill === 'object' ? skill.level : 1,
                     details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
@@ -1077,7 +1078,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
                 const found = findBestSkillMatch(skillName, technicalSkills);
                 if (found) {
-                  return { 
+                  return {
                     skill: { $oid: found._id },
                     level: typeof skill === 'object' ? skill.level : 1,
                     details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
@@ -1096,7 +1097,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
                 const found = findBestSkillMatch(skillName, softSkills);
                 if (found) {
-                  return { 
+                  return {
                     skill: { $oid: found._id },
                     level: typeof skill === 'object' ? skill.level : 1,
                   };
@@ -1113,46 +1114,46 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Convert destination zones from country names to MongoDB ObjectIds
         if (result.destinationZones && result.destinationZones.length > 0) {
-          
+
           const convertedZones = await Promise.all(result.destinationZones.map(async (zone) => {
             // If it's already a MongoDB ObjectId (24 characters), keep it
             if (typeof zone === 'string' && zone.length === 24) {
               return zone;
             }
-            
+
             // If it's "Global", replace with France's MongoDB ObjectId
             if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
               // Find France in allCountriesFromAPI
-              const franceCountry = allCountriesFromAPI.find(c => 
-                c.name.common.toLowerCase() === 'france' || 
+              const franceCountry = allCountriesFromAPI.find(c =>
+                c.name.common.toLowerCase() === 'france' ||
                 c.cca2 === 'FR'
               );
               return franceCountry ? franceCountry._id : zone;
             }
-            
+
             // If it's an alpha-2 code, convert to MongoDB ObjectId
             if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
               const country = allCountriesFromAPI.find(c => c.cca2 === zone);
               return country ? country._id : zone;
             }
-            
+
             // If it's a country name, convert to MongoDB ObjectId
             if (typeof zone === 'string') {
-              const country = allCountriesFromAPI.find(c => 
+              const country = allCountriesFromAPI.find(c =>
                 c.name.common.toLowerCase() === zone.toLowerCase() ||
                 c.name.official.toLowerCase() === zone.toLowerCase()
               );
               return country ? country._id : zone;
             }
-            
+
             return zone;
           }));
-          
+
           result.destinationZones = convertedZones;
         } else {
           // If no destination zones are provided, default to France's MongoDB ObjectId
-          const franceCountry = allCountriesFromAPI.find(c => 
-            c.name.common.toLowerCase() === 'france' || 
+          const franceCountry = allCountriesFromAPI.find(c =>
+            c.name.common.toLowerCase() === 'france' ||
             c.cca2 === 'FR'
           );
           result.destinationZones = franceCountry ? [franceCountry._id] : [];
@@ -1183,23 +1184,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const timezoneOptions = React.useMemo(() => {
     return availableTimezones.length > 0
       ? availableTimezones.map(tz => ({
-          _id: tz._id,
-          zoneName: tz.name,
-          countryName: tz.countryName,
-          offset: tz.offset, // Include offset for GMT display
-        }))
+        _id: tz._id,
+        zoneName: tz.name,
+        countryName: tz.countryName,
+        offset: tz.offset, // Include offset for GMT display
+      }))
       : Object.entries(MAJOR_TIMEZONES).map(([code, { name, offset }]) => ({
-          _id: `default_${code}`,
-          zoneName: name,
-          countryName: '',
-          offset: offset,
-        }));
+        _id: `default_${code}`,
+        zoneName: name,
+        countryName: '',
+        offset: offset,
+      }));
   }, [availableTimezones]);
 
   // Auto-select first timezone when available timezones change
   useEffect(() => {
     if (!suggestions?.schedule || availableTimezones.length === 0) return;
-    
+
     setSuggestions(prev => {
       if (!prev || !prev.schedule) return prev;
       return {
@@ -1225,40 +1226,40 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     if (!suggestions?.skills) return;
     if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
-      
+
       setSuggestions(prev => {
         if (!prev || !prev.skills) return prev;
-        
+
         const newSuggestions = { ...prev };
-        
+
         // Helper function to find best match for a skill
         const findBestSkillMatch = (skillName: string, skillArray: any[]) => {
           // Try exact match first
           let found = skillArray.find(s => s.name === skillName);
-          
+
           // If not found, try case-insensitive match
           if (!found) {
             found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
           }
-          
+
           // If still not found, try partial match
           if (!found) {
-            found = skillArray.find(s => 
+            found = skillArray.find(s =>
               s.name.toLowerCase().includes(skillName.toLowerCase()) ||
               skillName.toLowerCase().includes(s.name.toLowerCase())
             );
           }
-          
+
           return found;
         };
-        
+
         // Validate and migrate professional skills
         if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
           const validProfessional = newSuggestions.skills.professional.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, professionalSkills);
             if (found) {
-              return { 
+              return {
                 skill: { $oid: found._id },
                 level: typeof skill === 'object' ? skill.level : 1,
                 details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
@@ -1277,7 +1278,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, technicalSkills);
             if (found) {
-              return { 
+              return {
                 skill: { $oid: found._id },
                 level: typeof skill === 'object' ? skill.level : 1,
                 details: typeof skill === 'object' ? skill.details : `Migrated from "${skillName}"`
@@ -1296,7 +1297,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, softSkills);
             if (found) {
-              return { 
+              return {
                 skill: { $oid: found._id },
                 level: typeof skill === 'object' ? skill.level : 1,
               };
@@ -1318,10 +1319,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       // Final migration to ensure all skills are in ObjectId format
       const finalMigration = () => {
         if (!suggestions.skills) return suggestions;
-        
+
         let needsUpdate = false;
         const migratedSkills = { ...suggestions.skills };
-        
+
         ['soft', 'professional', 'technical'].forEach(type => {
           const skillArray = migratedSkills[type as keyof typeof migratedSkills];
           if (skillArray && Array.isArray(skillArray)) {
@@ -1335,23 +1336,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   case 'technical': skillArray = technicalSkills; break;
                   default: skillArray = [];
                 }
-                
+
                 // Try exact match first
                 let found = skillArray.find(s => s.name === skillName);
-                
+
                 // If not found, try case-insensitive match
                 if (!found) {
                   found = skillArray.find(s => s.name.toLowerCase() === skillName.toLowerCase());
                 }
-                
+
                 // If still not found, try partial match
                 if (!found) {
-                  found = skillArray.find(s => 
+                  found = skillArray.find(s =>
                     s.name.toLowerCase().includes(skillName.toLowerCase()) ||
                     skillName.toLowerCase().includes(s.name.toLowerCase())
                   );
                 }
-                
+
                 return found;
               };
 
@@ -1360,8 +1361,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const foundSkill = findSkillByName(skill, type);
                 if (foundSkill) {
                   needsUpdate = true;
-                  return { 
-                    skill: { $oid: foundSkill._id }, 
+                  return {
+                    skill: { $oid: foundSkill._id },
                     level: 1,
                     details: foundSkill.description || 'Migrated from string'
                   };
@@ -1369,14 +1370,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   return null; // Remove skills that don't exist in database
                 }
               }
-              
+
               // If skill.skill is a string, convert to ObjectId format
               if (skill && typeof skill.skill === 'string') {
                 const foundSkill = findSkillByName(skill.skill, type);
                 if (foundSkill) {
                   needsUpdate = true;
-                  return { 
-                    ...skill, 
+                  return {
+                    ...skill,
                     skill: { $oid: foundSkill._id },
                     details: skill.details || foundSkill.description || 'Migrated from string'
                   };
@@ -1384,27 +1385,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   return null; // Remove skills that don't exist in database
                 }
               }
-              
+
               return skill; // Already in correct format
             }).filter(Boolean); // Remove null entries
           }
         });
-        
+
         if (needsUpdate) {
           return { ...suggestions, skills: migratedSkills };
         }
-        
+
         return suggestions;
       };
-      
+
       const finalSuggestions = finalMigration();
-      
+
       // Add selected job title to the final suggestions
       const suggestionsWithSelectedTitle: GigSuggestion = {
         ...finalSuggestions,
         selectedJobTitle: selectedJobTitle || undefined
       };
-      
+
       props.onConfirm(suggestionsWithSelectedTitle);
     }
   };
@@ -1418,18 +1419,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         return country.name.common;
       }
     }
-    
+
     // Then check our predefined list (for backward compatibility)
     if (DESTINATION_ZONES[countryId]) {
       return DESTINATION_ZONES[countryId];
     }
-    
+
     // Then check the fetched countries by cca2 (for backward compatibility)
     const country = allCountries.find(c => c.cca2 === countryId);
     if (country) {
       return country.name.common;
     }
-    
+
     return countryId;
   };
 
@@ -1439,7 +1440,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (territoryNames[territoryId]) {
       return territoryNames[territoryId];
     }
-    
+
     // Then check if it's an API ID (MongoDB ObjectId format) in loaded territories
     if (territoryId && territoryId.length === 24) {
       const country = territoriesFromAPI.find(c => c._id === territoryId);
@@ -1454,16 +1455,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Helper function to search for countries by name
   const searchCountries = async (searchTerm: string): Promise<CountryData[]> => {
     if (!searchTerm || searchTerm.length < 2) return [];
-    
+
     setSearching(true);
     try {
       const countries = await fetchAllCountries();
       // Filter countries by search term
-      const filtered = countries.filter(country => 
+      const filtered = countries.filter(country =>
         country.name.common.toLowerCase().includes(searchTerm.toLowerCase()) ||
         country.name.official.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      
+
       // Convert to expected format
       const data = filtered.map(country => ({
         name: {
@@ -1472,7 +1473,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         },
         cca2: country.cca2
       }));
-      
+
       return data;
     } catch (error) {
       console.error('❌ Error searching countries:', error);
@@ -1485,7 +1486,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Helper function to get alpha-2 code from country name (synchronous version for UI)
   const getAlpha2CodeSync = (countryName: string): string => {
-    
+
     // First check our predefined list
     const predefinedCode = Object.keys(DESTINATION_ZONES).find(
       code => DESTINATION_ZONES[code] === countryName
@@ -1493,19 +1494,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (predefinedCode) {
       return predefinedCode;
     }
-    
+
     // Then check the fetched countries
     const country = allCountries.find(c => c.name.common === countryName);
     if (country) {
       return country.cca2;
     }
-    
+
     return countryName;
   };
 
   // Helper function to get alpha-2 code from country name (async version for API calls)
   const getAlpha2Code = async (countryName: string): Promise<string> => {
-    
+
     // First check our predefined list
     const predefinedCode = Object.keys(DESTINATION_ZONES).find(
       code => DESTINATION_ZONES[code] === countryName
@@ -1513,28 +1514,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (predefinedCode) {
       return predefinedCode;
     }
-    
+
     // Then check the fetched countries
     const country = allCountries.find(c => c.name.common === countryName);
     if (country) {
       return country.cca2;
     }
-    
+
     // If not found, try to fetch from our API
     try {
       const countries = await fetchAllCountries();
-      const country = countries.find(c => 
+      const country = countries.find(c =>
         c.name.common.toLowerCase() === countryName.toLowerCase() ||
         c.name.official.toLowerCase() === countryName.toLowerCase()
       );
-      
+
       if (country) {
         return country.cca2;
       }
     } catch (error) {
       console.error('❌ Error fetching from API:', error);
     }
-    
+
     return countryName;
   };
 
@@ -1599,12 +1600,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "destinationZones":
         // For destination zones, we store the MongoDB ObjectId
-        
+
         // If someone tries to add "Global", replace with "France"
         if (item.toLowerCase() === 'global') {
           item = 'France';
         }
-        
+
         // Find the country by name or code and get its MongoDB ObjectId
         let countryId = item;
         if (item.length === 2) {
@@ -1613,18 +1614,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           countryId = country ? country._id : item;
         } else {
           // It's a country name, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find(c => 
+          const country = allCountriesFromAPI.find(c =>
             c.name.common.toLowerCase() === item.toLowerCase() ||
             c.name.official.toLowerCase() === item.toLowerCase()
           );
           countryId = country ? country._id : item;
         }
-        
+
         newSuggestions.destinationZones = [
           ...(newSuggestions.destinationZones || []),
           countryId,
         ];
-        
+
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential = [
@@ -1704,12 +1705,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "destinationZones":
         // For destination zones, we store the MongoDB ObjectId
-        
+
         // If someone tries to update to "Global", replace with "France"
         if (newValue.toLowerCase() === 'global') {
           newValue = 'France';
         }
-        
+
         // Find the country by name or code and get its MongoDB ObjectId
         let countryId = newValue;
         if (newValue.length === 2) {
@@ -1718,13 +1719,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           countryId = country ? country._id : newValue;
         } else {
           // It's a country name, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find(c => 
+          const country = allCountriesFromAPI.find(c =>
             c.name.common.toLowerCase() === newValue.toLowerCase() ||
             c.name.official.toLowerCase() === newValue.toLowerCase()
           );
           countryId = country ? country._id : newValue;
         }
-        
+
         newSuggestions.destinationZones[index] = countryId;
         break;
       case "requirements.essential":
@@ -1833,7 +1834,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         const countryName = getCountryName(currentValue);
         setEditValue(countryName);
       } else {
-      setEditValue(currentValue);
+        setEditValue(currentValue);
       }
     } else if (currentValue && typeof currentValue === "object") {
       // Handle skill objects with $oid
@@ -1894,11 +1895,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <div className="flex-1">
                         <input
                           type="text"
-                        value={editValue}
+                          value={editValue}
                           onChange={async (e) => {
                             const value = e.target.value;
                             setEditValue(value);
-                            
+
                             // Search for countries if user types something
                             if (value.length >= 2) {
                               const results = await searchCountries(value);
@@ -1931,7 +1932,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           }}
                           placeholder="Type to search countries..."
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        autoFocus
+                          autoFocus
                         />
                         {searching && (
                           <div className="mt-2 text-sm text-gray-500 flex items-center">
@@ -2004,11 +2005,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={() => {
                           if (editValue.trim()) {
-                        updateItem(section, index, editValue);
+                            updateItem(section, index, editValue);
                           }
-                        setEditingSection(null);
-                        setEditingIndex(null);
-                        setEditValue("");
+                          setEditingSection(null);
+                          setEditingIndex(null);
+                          setEditValue("");
                         }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -2036,23 +2037,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </div>
                 ) : (
                   <>
-                    <div 
+                    <div
                       className="text-gray-700 flex-1 font-medium cursor-pointer hover:bg-gray-50 rounded p-2 -m-2 transition-colors"
                       onClick={() => startEditing(section, index, item)}
                     >
                       {typeof item === "string"
-                        ? section === "destinationZones" 
+                        ? section === "destinationZones"
                           ? (() => {
-                              const countryName = getCountryName(item);
-                              return (
-                                <div className="flex items-center space-x-2">
-                                  <span>{countryName}</span>
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    {item}
-                                  </span>
-                                </div>
-                              );
-                            })()
+                            const countryName = getCountryName(item);
+                            return (
+                              <div className="flex items-center space-x-2">
+                                <span>{countryName}</span>
+                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                  {item}
+                                </span>
+                              </div>
+                            );
+                          })()
                           : item
                         : item?.skill || item?.language || ""}
                     </div>
@@ -2077,11 +2078,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <div className="flex-1">
                 <input
                   type="text"
-                value={editValue}
+                  value={editValue}
                   onChange={async (e) => {
                     const value = e.target.value;
                     setEditValue(value);
-                    
+
                     // Search for countries if user types something
                     if (value.length >= 2) {
                       const results = await searchCountries(value);
@@ -2114,7 +2115,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   }}
                   placeholder="Type to search countries..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                autoFocus
+                  autoFocus
                 />
                 {searching && (
                   <div className="mt-2 text-sm text-gray-500 flex items-center">
@@ -2187,8 +2188,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={() => {
-                if (editValue.trim()) {
-                  addItem(section, editValue.trim());
+                  if (editValue.trim()) {
+                    addItem(section, editValue.trim());
                   }
                   setEditValue("");
                   setEditingSection(null);
@@ -2237,7 +2238,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       (groups, schedule) => {
         // Ignorer les schedules avec des jours vides
         if (!schedule.day || schedule.day.trim() === "") return groups;
-        
+
         const key = `${schedule.hours.start}-${schedule.hours.end}`;
         if (!groups[key]) {
           groups[key] = { hours: schedule.hours, days: [] };
@@ -2267,12 +2268,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const selectedDays = suggestions.schedule.schedules
       .filter(schedule => schedule.day && schedule.day.trim() !== "")
       .map(schedule => schedule.day);
-    
+
     const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
 
     const addNewScheduleGroup = () => {
       if (!suggestions) return;
-      
+
       // Cherche un horaire non utilisé
       const defaultHoursList = [
         { start: "09:00", end: "17:00" },
@@ -2295,7 +2296,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             .substr(2, 9)}`,
         },
       };
-      
+
       const newSuggestions = {
         ...suggestions,
         schedule: {
@@ -2459,7 +2460,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       const schedulesToRemove = newSuggestions.schedule.schedules.filter(
         (s: ScheduleEntry) => s.hours.start === groupHours.start && s.hours.end === groupHours.end
       );
-      
+
       schedulesToRemove.forEach((schedule: ScheduleEntry) => {
         const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
           (s: ScheduleEntry) => s._id?.$oid === schedule._id?.$oid
@@ -2468,7 +2469,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
         }
       });
-      
+
       setSuggestions(newSuggestions);
     };
 
@@ -2616,7 +2617,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="flex gap-1 mb-4">
               {allWeekDays.map((day) => {
                 const isSelected = emptySchedule.day === day;
@@ -2738,7 +2739,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             >
               <div className="flex items-center space-x-3">
                 <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
-              <Plus className="w-5 h-5" />
+                  <Plus className="w-5 h-5" />
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-bold">Add Schedule Group</div>
@@ -2774,7 +2775,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!newSuggestions.schedule.minimumHours) {
         newSuggestions.schedule.minimumHours = { daily: 0, weekly: 0, monthly: 0 };
       }
-      
+
       const numericValue = value ? parseInt(value, 10) : 0;
       newSuggestions.schedule.minimumHours[field] = numericValue;
       setSuggestions(newSuggestions);
@@ -2794,58 +2795,58 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               {/* Daily Hours */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-700">Daily Hours</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  max="24"
-                  value={suggestions.schedule.minimumHours?.daily || ''}
-                  onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
-                  placeholder="e.g. 8"
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="24"
+                    value={suggestions.schedule.minimumHours?.daily || ''}
+                    onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
+                    placeholder="e.g. 8"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
-                />
+                  />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
-                  hrs
-                </span>
+                    hrs
+                  </span>
+                </div>
               </div>
-            </div>
 
               {/* Weekly Hours */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-700">Weekly Hours</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  max="168"
-                  value={suggestions.schedule.minimumHours?.weekly || ''}
-                  onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
-                  placeholder="e.g. 40"
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="168"
+                    value={suggestions.schedule.minimumHours?.weekly || ''}
+                    onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
+                    placeholder="e.g. 40"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
-                />
+                  />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
-                  hrs
-                </span>
+                    hrs
+                  </span>
+                </div>
               </div>
-            </div>
 
               {/* Monthly Hours */}
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-700">Monthly Hours</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  max="744"
-                  value={suggestions.schedule.minimumHours?.monthly || ''}
-                  onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
-                  placeholder="e.g. 160"
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="744"
+                    value={suggestions.schedule.minimumHours?.monthly || ''}
+                    onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
+                    placeholder="e.g. 160"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
-                />
+                  />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
-                  hrs
-                </span>
-              </div>
+                    hrs
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -2861,7 +2862,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       const newSuggestions = { ...suggestions };
-      
+
       if (value) {
         // Find the selected timezone to get the _id
         const selectedTimezone = filteredTimezones.find(tz => tz._id === value);
@@ -2876,7 +2877,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         newSuggestions.schedule.timeZones = [];
         newSuggestions.schedule.time_zone = undefined;
       }
-      
+
       setSuggestions(newSuggestions);
     };
 
@@ -2898,7 +2899,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <Globe2 className="w-5 h-5 text-purple-500" />
           <h4 className="text-lg font-semibold text-gray-900">Time Zone</h4>
         </div>
-        
+
         {/* Search input */}
         {timezoneOptions.length > 0 && (
           <div className="mb-3">
@@ -2911,14 +2912,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             />
           </div>
         )}
-        
+
         <select
           className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
           value={suggestions.schedule.time_zone || ''}
           onChange={handleTimezoneChange}
           disabled={timezoneLoading}
         >
-            <option value="">Select a timezone...</option>
+          <option value="">Select a timezone...</option>
           {filteredTimezones.map((tz) => (
             <option key={tz._id} value={tz._id}>
               {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
@@ -2926,11 +2927,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           ))}
         </select>
         <p className="text-xs text-gray-500 italic text-center mt-2">
-          {availableTimezones.length > 0 
-            ? timezoneSearch 
+          {availableTimezones.length > 0
+            ? timezoneSearch
               ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones`
               : `${availableTimezones.length} timezones available worldwide`
-            : timezoneLoading 
+            : timezoneLoading
               ? 'Loading timezones from API...'
               : 'No timezones available'
           }
@@ -2941,14 +2942,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   const renderDestinationZonesSection = () => {
     if (!suggestions) return null;
-    
+
     const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value; // This is the MongoDB ObjectId
       if (!value) return;
-      
+
       // Use the existing addItem logic for destination zones
       addItem("destinationZones", value);
-      
+
       // Reset select
       e.target.value = '';
     };
@@ -2960,13 +2961,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const selected = suggestions.destinationZones || [];
-    
+
     // Get all available countries from API, excluding already selected ones
     const availableCountries = allCountriesFromAPI
       .filter(country => !selected.includes(country._id))
-      .map(country => ({ 
+      .map(country => ({
         code: country._id,  // Use MongoDB ObjectId as the value
-        name: country.name.common 
+        name: country.name.common
       }));
 
     return (
@@ -2975,7 +2976,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Destination Zones</h4>
         </div>
-        
+
         {/* Select pour ajouter */}
         <select
           className="w-full p-3 rounded-lg border border-blue-300 bg-white text-blue-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
@@ -2990,7 +2991,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={code} value={code}>{name}</option>
           ))}
         </select>
-        
+
         {/* Badges sélectionnés - displayed below the select */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
@@ -3009,10 +3010,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </div>
         )}
-        
+
         <p className="text-xs text-gray-500 italic text-center mt-2">
-          {destinationCountriesLoading 
-            ? 'Loading countries from API...' 
+          {destinationCountriesLoading
+            ? 'Loading countries from API...'
             : `${availableCountries.length} countries available for selection`
           }
         </p>
@@ -3026,7 +3027,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleAddJobTitle = () => {
       const value = newJobTitle.trim();
       if (!value) return;
-      
+
       // Add the job title if it's not already in the list
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.jobTitles) newSuggestions.jobTitles = [];
@@ -3043,7 +3044,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleUpdateJobTitle = (index: number) => {
       const value = newJobTitle.trim();
       if (!value) return;
-      
+
       const newSuggestions = { ...suggestions };
       if (newSuggestions.jobTitles) {
         const oldTitle = newSuggestions.jobTitles[index];
@@ -3089,7 +3090,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
           </div>
         </div>
-        
+
         {/* Instructions */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-start space-x-3">
@@ -3103,169 +3104,166 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </div>
           </div>
         </div>
-        
+
         {/* Job titles list */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h5 className="text-lg font-semibold text-gray-900">Available Job Titles</h5>
             <span className="text-sm text-gray-500">Click to select your main position</span>
           </div>
-          
+
           <div className="flex flex-wrap gap-3">
-          {selected.map((title, index) => (
-            <span key={index}>
-              {editingJobTitleIndex === index ? (
+            {selected.map((title, index) => (
+              <span key={index}>
+                {editingJobTitleIndex === index ? (
                   <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
-                  <input
-                    type="text"
-                    value={newJobTitle}
-                    onChange={(e) => setNewJobTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleUpdateJobTitle(index);
-                      } else if (e.key === 'Escape') {
-                        handleCancelEdit();
-                      }
-                    }}
-                    onBlur={() => {
-                      if (newJobTitle.trim()) {
-                        handleUpdateJobTitle(index);
-                      } else {
-                        handleCancelEdit();
-                      }
-                    }}
+                    <input
+                      type="text"
+                      value={newJobTitle}
+                      onChange={(e) => setNewJobTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleUpdateJobTitle(index);
+                        } else if (e.key === 'Escape') {
+                          handleCancelEdit();
+                        }
+                      }}
+                      onBlur={() => {
+                        if (newJobTitle.trim()) {
+                          handleUpdateJobTitle(index);
+                        } else {
+                          handleCancelEdit();
+                        }
+                      }}
                       className="bg-transparent border-none outline-none text-sm font-semibold text-blue-800 min-w-0 flex-1"
-                    style={{ width: `${Math.max(newJobTitle.length, 10)}ch` }}
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => handleUpdateJobTitle(index)}
+                      style={{ width: `${Math.max(newJobTitle.length, 10)}ch` }}
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleUpdateJobTitle(index)}
                       className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
-                    title="Save"
-                  >
+                      title="Save"
+                    >
                       <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
                       className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Cancel"
-                  >
+                      title="Cancel"
+                    >
                       <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <span 
-                    className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${
-                    selectedJobTitle === title 
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105' 
+                    </button>
+                  </div>
+                ) : (
+                  <span
+                    className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${selectedJobTitle === title
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
                         : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedJobTitle(selectedJobTitle === title ? null : title);
-                  }}
-                  onDoubleClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // Disable double-click functionality
-                  }}
-                  title={selectedJobTitle === title ? "Selected as main job title" : "Click to select as main job title"}
-                >
-                  {selectedJobTitle === title && (
+                      }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedJobTitle(selectedJobTitle === title ? null : title);
+                    }}
+                    onDoubleClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Disable double-click functionality
+                    }}
+                    title={selectedJobTitle === title ? "Selected as main job title" : "Click to select as main job title"}
+                  >
+                    {selectedJobTitle === title && (
                       <CheckCircle className="w-5 h-5 mr-2" />
-                  )}
-                  {title}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditClick(title, index);
-                    }}
-                      className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${
-                        selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100'
-                    }`}
-                    title="Click to edit"
-                  >
-                    <Edit2 className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveJobTitle(title);
-                      if (selectedJobTitle === title) {
-                        setSelectedJobTitle(null);
-                      }
-                    }}
-                    className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${
-                      selectedJobTitle === title 
-                        ? 'text-white hover:bg-blue-700' 
-                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
-                    }`}
-                    title="Remove"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-            </span>
-          ))}
-          
-          {/* Add button/input at the end */}
-          {showJobTitleForm ? (
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full">
-              <input
-                type="text"
-                value={newJobTitle}
-                onChange={(e) => setNewJobTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddJobTitle();
-                  } else if (e.key === 'Escape') {
-                    handleCancelEdit();
-                  }
-                }}
-                onBlur={() => {
-                  if (newJobTitle.trim()) {
-                    handleAddJobTitle();
-                  } else {
-                    handleCancelEdit();
-                  }
-                }}
-                placeholder="Enter job title..."
-                className="bg-transparent border-none outline-none text-sm font-medium text-blue-800 min-w-0 flex-1"
-                style={{ width: `${Math.max(newJobTitle.length || 15, 15)}ch` }}
-                autoFocus
-              />
+                    )}
+                    {title}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditClick(title, index);
+                      }}
+                      className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100'
+                        }`}
+                      title="Click to edit"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveJobTitle(title);
+                        if (selectedJobTitle === title) {
+                          setSelectedJobTitle(null);
+                        }
+                      }}
+                      className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${selectedJobTitle === title
+                          ? 'text-white hover:bg-blue-700'
+                          : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                        }`}
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </span>
+            ))}
+
+            {/* Add button/input at the end */}
+            {showJobTitleForm ? (
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full">
+                <input
+                  type="text"
+                  value={newJobTitle}
+                  onChange={(e) => setNewJobTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddJobTitle();
+                    } else if (e.key === 'Escape') {
+                      handleCancelEdit();
+                    }
+                  }}
+                  onBlur={() => {
+                    if (newJobTitle.trim()) {
+                      handleAddJobTitle();
+                    } else {
+                      handleCancelEdit();
+                    }
+                  }}
+                  placeholder="Enter job title..."
+                  className="bg-transparent border-none outline-none text-sm font-medium text-blue-800 min-w-0 flex-1"
+                  style={{ width: `${Math.max(newJobTitle.length || 15, 15)}ch` }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleAddJobTitle}
+                  disabled={!newJobTitle.trim()}
+                  className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                  title="Add"
+                >
+                  <Check className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Cancel"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={handleAddJobTitle}
-                disabled={!newJobTitle.trim()}
-                className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                title="Add"
+                onClick={() => setShowJobTitleForm(true)}
+                className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
               >
-                <Check className="w-3 h-3" />
+                <Plus className="w-3 h-3" />
+                <span>Add</span>
               </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-gray-500 hover:text-gray-700"
-                title="Cancel"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowJobTitleForm(true)}
-              className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
-            >
-              <Plus className="w-3 h-3" />
-              <span>Add</span>
-            </button>
-          )}
-        </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -3277,7 +3275,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleAddHighlight = () => {
       const value = newHighlight.trim();
       if (!value) return;
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.highlights) newSuggestions.highlights = [];
       if (!newSuggestions.highlights.includes(value)) {
@@ -3291,7 +3289,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleUpdateHighlight = (index: number) => {
       const value = newHighlight.trim();
       if (!value) return;
-      
+
       const newSuggestions = { ...suggestions };
       if (newSuggestions.highlights) {
         newSuggestions.highlights[index] = value;
@@ -3327,8 +3325,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
         </div>
-        
-        
+
+
         {/* Highlights list */}
         <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
           {selected.map((highlight, index) => (
@@ -3374,7 +3372,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </button>
                 </div>
               ) : (
-                <span 
+                <span
                   className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
                 >
                   {highlight}
@@ -3401,7 +3399,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               )}
             </span>
           ))}
-          
+
           {/* Add button/input at the end */}
           {showHighlightForm ? (
             <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
@@ -3465,7 +3463,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleAddDeliverable = () => {
       const value = newDeliverable.trim();
       if (!value) return;
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.deliverables) newSuggestions.deliverables = [];
       if (!newSuggestions.deliverables.includes(value)) {
@@ -3479,7 +3477,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleUpdateDeliverable = (index: number) => {
       const value = newDeliverable.trim();
       if (!value) return;
-      
+
       const newSuggestions = { ...suggestions };
       if (newSuggestions.deliverables) {
         newSuggestions.deliverables[index] = value;
@@ -3515,8 +3513,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
         </div>
-        
-        
+
+
         {/* Deliverables list */}
         <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
           {selected.map((deliverable, index) => (
@@ -3562,7 +3560,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </button>
                 </div>
               ) : (
-                <span 
+                <span
                   className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
                 >
                   {deliverable}
@@ -3589,7 +3587,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               )}
             </span>
           ))}
-          
+
           {/* Add button/input at the end */}
           {showDeliverableForm ? (
             <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
@@ -3678,7 +3676,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
         </div>
-        
+
         {/* Add selector */}
         <select
           className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
@@ -3690,28 +3688,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={sector} value={sector}>{sector}</option>
           ))}
         </select>
-        
+
         {/* Available sectors */}
         {selected.length > 0 && (
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-          {selected.map(sector => (
-                <span 
-                  key={sector} 
+              {selected.map(sector => (
+                <span
+                  key={sector}
                   className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
                 >
-              {sector}
-              <button
-                type="button"
-                onClick={() => handleRemoveSector(sector)}
+                  {sector}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSector(sector)}
                     className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove"
-              >
+                    title="Remove"
+                  >
                     <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -3724,14 +3722,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
-      
+
       // Find the activity by label and get its ID
       const selectedActivity = activities.find(activity => activity.label === value);
       if (!selectedActivity) {
         console.error('❌ Activity not found:', value);
         return;
       }
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.activities) newSuggestions.activities = [];
       if (!newSuggestions.activities.includes(selectedActivity.value)) {
@@ -3757,7 +3755,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Activities</h4>
         </div>
-        
+
         {/* Add selector */}
         {activitiesLoading ? (
           <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
@@ -3776,35 +3774,35 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </select>
         )}
-        
+
         {!activitiesLoading && activities.length === 0 && (
           <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
             ⚠️ No activities available. Please check API connection.
           </div>
         )}
-        
+
         {/* Available activities */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {selected.map(activityId => {
-                const activityName = getActivityNameById(activityId);
-                return activityName ? (
-                  <span 
-                    key={activityId} 
-                    className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+            {selected.map(activityId => {
+              const activityName = getActivityNameById(activityId);
+              return activityName ? (
+                <span
+                  key={activityId}
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+                  {activityName}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveActivity(activityId)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
                   >
-                    {activityName}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveActivity(activityId)}
-                      className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Remove"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ) : null;
-              })}
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })}
           </div>
         )}
       </div>
@@ -3817,14 +3815,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value;
       if (!value) return;
-      
+
       // Find the industry by label and get its ID
       const selectedIndustry = industries.find(industry => industry.label === value);
       if (!selectedIndustry) {
         console.error('❌ Industry not found:', value);
         return;
       }
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.industries) newSuggestions.industries = [];
       if (!newSuggestions.industries.includes(selectedIndustry.value)) {
@@ -3850,7 +3848,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Industries</h4>
         </div>
-        
+
         {/* Add selector */}
         {industriesLoading ? (
           <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
@@ -3869,35 +3867,35 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ))}
           </select>
         )}
-        
+
         {!industriesLoading && industries.length === 0 && (
           <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
             ⚠️ No industries available. Please check API connection.
           </div>
         )}
-        
+
         {/* Selected badges - displayed below the select */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {selected.map(industryId => {
-                const industryName = getIndustryNameById(industryId);
-                return industryName ? (
-                  <span 
-                    key={industryId} 
-                    className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+            {selected.map(industryId => {
+              const industryName = getIndustryNameById(industryId);
+              return industryName ? (
+                <span
+                  key={industryId}
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+                  {industryName}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveIndustry(industryId)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
                   >
-                    {industryName}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveIndustry(industryId)}
-                      className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Remove"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ) : null;
-              })}
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })}
           </div>
         )}
       </div>
@@ -3935,7 +3933,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <Gauge className="w-5 h-5 text-purple-500" />
           <h4 className="text-lg font-semibold text-gray-900">Schedule Flexibility</h4>
         </div>
-        
+
         {/* Select pour ajouter */}
         <select
           className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
@@ -3947,26 +3945,26 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <option key={option} value={option}>{option}</option>
           ))}
         </select>
-        
+
         {/* Badges sélectionnés - displayed below the select */}
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
-          {selected.map(option => (
+            {selected.map(option => (
               <span key={option} className="group relative flex items-center bg-purple-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
-              {option}
-              <button
-                type="button"
-                onClick={() => handleRemoveFlexibility(option)}
+                {option}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFlexibility(option)}
                   className="ml-2 text-white hover:text-purple-200 rounded-full focus:outline-none focus:bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Remove"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </span>
-          ))}
-        </div>
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
         )}
-        
+
         <p className="text-xs text-gray-500 italic text-center mt-2">
           Select all applicable schedule flexibility options
         </p>
@@ -4051,22 +4049,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     return (
       <div className="mb-8">
-                  <textarea
-            value={suggestions.description || ""}
-            onChange={(e) => handleDescriptionChange(e.target.value)}
-            placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
-            rows={8}
-            className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
-          />
-          
-          <div className="mt-3 flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              {suggestions.description ? `${suggestions.description.length} characters` : "0 characters"}
-            </div>
-            <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-              Detailed description helps attract the right candidates
-            </div>
+        <textarea
+          value={suggestions.description || ""}
+          onChange={(e) => handleDescriptionChange(e.target.value)}
+          placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
+          rows={8}
+          className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
+        />
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {suggestions.description ? `${suggestions.description.length} characters` : "0 characters"}
           </div>
+          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+            Detailed description helps attract the right candidates
+          </div>
+        </div>
       </div>
     );
   };
@@ -4154,7 +4152,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <p className="text-sm text-gray-500">Base currency for payments</p>
                         </div>
                       </div>
-                      
+
                       <select
                         value={option.currency || getDefaultCurrencyId()}
                         onChange={(e) =>
@@ -4174,7 +4172,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           </option>
                         ))}
                       </select>
-                      
+
                       {currenciesLoading && (
                         <div className="flex items-center mt-3 text-sm text-blue-600">
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -4183,17 +4181,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       )}
                     </div>
 
-                    {/* Commission Per Call Card */}
+                    {/* Per call compensation Card */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <Briefcase className="w-6 h-6 text-white" />
                         </div>
                         <div className="ml-4">
-                          <h3 className="text-lg font-bold text-gray-900">Commission Per Call</h3>
+                          <h3 className="text-lg font-bold text-gray-900">Per call compensation</h3>
                           <p className="text-sm text-gray-500">Base amount per successful call</p>
-                  </div>
-                </div>
+                        </div>
+                      </div>
 
                       <div className="relative">
                         <input
@@ -4214,7 +4212,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
                           {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
                         </span>
-                    </div>
+                      </div>
                     </div>
 
                     {/* Transaction Commission Card */}
@@ -4228,7 +4226,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <p className="text-sm text-gray-500">Commission per transaction</p>
                         </div>
                       </div>
-                      
+
                       <div className="relative">
                         <input
                           type="number"
@@ -4256,13 +4254,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <div className="flex items-center mb-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <Award className="w-6 h-6 text-white" />
-                  </div>
+                        </div>
                         <div className="ml-4">
                           <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
                           <p className="text-sm text-gray-500">Performance bonus amount</p>
-                </div>
-                    </div>
-                      
+                        </div>
+                      </div>
+
                       <div className="relative">
                         <input
                           type="number"
@@ -4272,8 +4270,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             typeof option.bonusAmount === "number"
                               ? option.bonusAmount
                               : option.bonusAmount
-                              ? parseFloat(option.bonusAmount)
-                              : ""
+                                ? parseFloat(option.bonusAmount)
+                                : ""
                           }
                           onChange={(e) =>
                             updateCommissionOption(
@@ -4291,43 +4289,43 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       </div>
                     </div>
 
-                </div>
+                  </div>
 
                   {/* Volume Requirements Section */}
                   <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
                     <div className="flex items-center mb-6">
                       <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
                         <Gauge className="w-6 h-6 text-white" />
-                    </div>
+                      </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
                         <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={
-                          typeof option.minimumVolume?.amount === "number"
-                            ? option.minimumVolume.amount
-                            : parseFloat(option.minimumVolume?.amount) || ""
-                        }
-                        onChange={(e) =>
-                          updateCommissionOption(
-                            0,
-                            "minimumVolume.amount",
-                            e.target.value
-                          )
-                        }
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.minimumVolume?.amount === "number"
+                              ? option.minimumVolume.amount
+                              : parseFloat(option.minimumVolume?.amount) || ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              0,
+                              "minimumVolume.amount",
+                              e.target.value
+                            )
+                          }
                           placeholder="100"
                           className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                      />
-                    </div>
-                      
+                        />
+                      </div>
+
                       <select
                         value={option.minimumVolume?.period || ""}
                         onChange={(e) =>
@@ -4344,8 +4342,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <option value="Weekly">Weekly</option>
                         <option value="Monthly">Monthly</option>
                       </select>
+                    </div>
                   </div>
-                </div>
 
                   {/* Additional Details Section */}
                   <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
@@ -4354,12 +4352,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                    </div>
+                      </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
                         <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
                     <textarea
                       value={option.additionalDetails || ""}
@@ -4374,9 +4372,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       rows={4}
                       className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-3 focus:ring-gray-300 focus:border-gray-400 transition-all resize-none"
                     />
-                      </div>
+                  </div>
 
-              </div>
+                </div>
               );
             })()}
           </div>
@@ -4425,7 +4423,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     });
 
     const addSkill = (skillType: string, skill: string, level: number = 1, exactPosition?: number) => {
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) {
         newSuggestions.skills = {
@@ -4461,7 +4459,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         case "professional":
         case "technical":
           // For skills, we need to find the skill object to get the ObjectId
-          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+          let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
           switch (skillType) {
             case "soft":
               skillArray = softSkills;
@@ -4475,12 +4473,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             default:
               skillArray = [];
           }
-          
+
           // Find the skill by ObjectId (skill parameter is now the ObjectId)
           const skillObject = skillArray.find(s => s._id === skill);
-          
+
           if (skillObject) {
-            const skillData: any = { 
+            const skillData: any = {
               skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
               level,
               details: skillObject.description || '' // Add details field
@@ -4496,12 +4494,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           }
           break;
       }
-      
+
       setSuggestions(newSuggestions);
     };
 
     const updateSkill = (skillType: string, index: number, field: string, value: string | number, exactPosition?: number) => {
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.skills) return;
 
@@ -4530,7 +4528,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         case "technical":
           if (field === "skill") {
             // For skills, we need to find the skill object to get the ObjectId
-            let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
+            let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
             switch (skillType) {
               case "soft":
                 skillArray = softSkills;
@@ -4544,11 +4542,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               default:
                 skillArray = [];
             }
-            
+
             // Find the skill by ObjectId (value parameter is now the ObjectId)
             const skillObject = skillArray.find(s => s._id === value);
-            
-            
+
+
             if (skillObject) {
               (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
               (newSuggestions.skills as any)[skillType][index].details = skillObject.description || ''; // Update details field
@@ -4569,7 +4567,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const deleteSkill = (skillType: string, index: number) => {
-      
+
       const arr = (suggestions.skills as any)[skillType];
       if (arr && arr[index]) {
         const skillEntry = arr[index];
@@ -4606,10 +4604,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       const handleConfirmAddSkill = () => {
         const skillId = selectedSkillToAdd[skillType];
         if (!skillId) return;
-        
+
         const exactPos = selectedExactPosition[skillType];
         addSkill(skillType, skillId, selectedLevelToAdd[skillType], exactPos);
-        
+
         // Reset states
         setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
         setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
@@ -4627,12 +4625,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       // Fonction pour commencer l'édition d'une compétence existante
       const handleStartEditSkill = (index: number) => {
         setEditingSkill(prev => ({ ...prev, [skillType]: index }));
-        
+
         // Pré-remplir le terme de recherche avec le nom actuel
         if (currentItems && currentItems[index]) {
           const item = currentItems[index];
           let skillName = '';
-          
+
           if (skillType === 'languages') {
             const languageItem = item as any;
             const language = languages.find(l => l.value === languageItem.language);
@@ -4648,17 +4646,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             } else if (skillType === 'soft') {
               allSkills = softSkills.map(s => ({ id: s._id, name: s.name }));
             }
-            
-            const skillId = typeof skillItem.skill === 'string' 
-              ? skillItem.skill 
-              : (skillItem.skill && typeof skillItem.skill === 'object' && skillItem.skill.$oid 
-                  ? skillItem.skill.$oid 
-                  : null);
-            
+
+            const skillId = typeof skillItem.skill === 'string'
+              ? skillItem.skill
+              : (skillItem.skill && typeof skillItem.skill === 'object' && skillItem.skill.$oid
+                ? skillItem.skill.$oid
+                : null);
+
             const skill = allSkills.find(s => s.id === skillId);
             skillName = skill?.name || '';
           }
-          
+
           // Plus besoin de pré-remplir car on utilise un sélecteur
         }
       };
@@ -4677,7 +4675,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               ...prev,
               skills: {
                 ...prev.skills,
-              languages: updatedLanguages
+                languages: updatedLanguages
               }
             }) : null);
           }
@@ -4693,7 +4691,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               ...prev,
               skills: {
                 ...prev.skills,
-              [skillType]: updatedSkills
+                [skillType]: updatedSkills
               }
             }) : null);
           }
@@ -4784,20 +4782,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               .filter(skill => {
                 // Si on édite un élément, inclure l'élément actuel
                 if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
-                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string' 
-                    ? currentItems[editingIndex].skill 
-                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid 
-                        ? currentItems[editingIndex].skill.$oid 
-                        : null);
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
+                    ? currentItems[editingIndex].skill
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
+                      ? currentItems[editingIndex].skill.$oid
+                      : null);
                   if (currentSkillId === skill._id) {
                     return true;
                   }
                 }
                 // Sinon, exclure les éléments déjà sélectionnés
                 return !currentItems.some(item => {
-                if (!item || !item.skill) return false;
-                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                return skillId === skill._id;
+                  if (!item || !item.skill) return false;
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  return skillId === skill._id;
                 });
               })
               .map(skill => ({ id: skill._id, name: skill.name }));
@@ -4806,20 +4804,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               .filter(skill => {
                 // Si on édite un élément, inclure l'élément actuel
                 if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
-                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string' 
-                    ? currentItems[editingIndex].skill 
-                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid 
-                        ? currentItems[editingIndex].skill.$oid 
-                        : null);
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
+                    ? currentItems[editingIndex].skill
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
+                      ? currentItems[editingIndex].skill.$oid
+                      : null);
                   if (currentSkillId === skill._id) {
                     return true;
                   }
                 }
                 // Sinon, exclure les éléments déjà sélectionnés
                 return !currentItems.some(item => {
-                if (!item || !item.skill) return false;
-                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                return skillId === skill._id;
+                  if (!item || !item.skill) return false;
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  return skillId === skill._id;
                 });
               })
               .map(skill => ({ id: skill._id, name: skill.name }));
@@ -4828,20 +4826,20 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               .filter(skill => {
                 // Si on édite un élément, inclure l'élément actuel
                 if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
-                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string' 
-                    ? currentItems[editingIndex].skill 
-                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid 
-                        ? currentItems[editingIndex].skill.$oid 
-                        : null);
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
+                    ? currentItems[editingIndex].skill
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
+                      ? currentItems[editingIndex].skill.$oid
+                      : null);
                   if (currentSkillId === skill._id) {
                     return true;
                   }
                 }
                 // Sinon, exclure les éléments déjà sélectionnés
                 return !currentItems.some(item => {
-                if (!item || !item.skill) return false;
-                const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                return skillId === skill._id;
+                  if (!item || !item.skill) return false;
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  return skillId === skill._id;
                 });
               })
               .map(skill => ({ id: skill._id, name: skill.name }));
@@ -4935,205 +4933,422 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               Loading {skillType} from API...
             </div>
           )}
-          
-          
+
+
           {!skillsLoading && !showAddSkillInterface[skillType] && currentItems.length === 0 && (
             // Message when no skills
             <div className="text-center py-8">
               <p className="text-gray-500 text-sm">
-                No {skillType === "languages" ? "languages" : "skills"} added yet. 
+                No {skillType === "languages" ? "languages" : "skills"} added yet.
                 <br />
                 Click the + button above to add your first {skillType === "languages" ? "language" : "skill"}.
               </p>
             </div>
           )}
-          
+
           {/* Selected badges - displayed below the select */}
           {(currentItems.length > 0 || showAddSkillInterface[skillType]) && (
             <div className="pt-2 border-t border-gray-100">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {currentItems.map((item, index) => {
-                let skillName = '';
-                let levelDisplay = null;
-                
-                                  if (skillType === "languages") {
-                  skillName = getLanguageNameById(item.language);
-                  levelDisplay = (
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.proficiency?.includes("C") 
-                                  ? "bg-green-100 text-green-800"
-                                  : item.proficiency?.includes("B") 
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                      {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
-                            </span>
-                  );
-                        } else {
-                          let skillArray: Array<{_id: string, name: string, description: string, category: string}>;
-                          switch (skillType) {
-                            case "soft":
-                              skillArray = softSkills;
-                              break;
-                            case "professional":
-                              skillArray = professionalSkills;
-                              break;
-                            case "technical":
-                              skillArray = technicalSkills;
-                              break;
-                            default:
-                              skillArray = [];
-                          }
-                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                  if (skillId) {
-                    const skillObject = skillArray.find(s => s._id === skillId);
-                    skillName = skillObject ? skillObject.name : '';
+                {currentItems.map((item, index) => {
+                  let skillName = '';
+                  let levelDisplay = null;
+
+                  if (skillType === "languages") {
+                    skillName = getLanguageNameById(item.language);
+                    levelDisplay = (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.proficiency?.includes("C")
+                          ? "bg-green-100 text-green-800"
+                          : item.proficiency?.includes("B")
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                        {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
+                      </span>
+                    );
+                  } else {
+                    let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
+                    switch (skillType) {
+                      case "soft":
+                        skillArray = softSkills;
+                        break;
+                      case "professional":
+                        skillArray = professionalSkills;
+                        break;
+                      case "technical":
+                        skillArray = technicalSkills;
+                        break;
+                      default:
+                        skillArray = [];
+                    }
+                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                    if (skillId) {
+                      const skillObject = skillArray.find(s => s._id === skillId);
+                      skillName = skillObject ? skillObject.name : '';
+                    }
+
+                    levelDisplay = (
+                      <div className="flex items-center space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-3 h-3 ${star <= (item.level || 1)
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
+                              }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    );
                   }
-                  
-                  levelDisplay = (
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg
-                          key={star}
-                          className={`w-3 h-3 ${
-                            star <= (item.level || 1) 
-                              ? "text-yellow-400 fill-current" 
-                              : "text-gray-300"
-                          }`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                  );
-                }
-                
-                if (!skillName) return null;
-                
+
+                  if (!skillName) return null;
+
 
                   return (
-                   <div key={index} className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}>
-                     {/* 3 equal columns layout: Name - Progress bar - Level */}
-                     <div className="grid grid-cols-3 gap-4 items-center w-full">
-                       {/* Column 1: Skill name */}
-                       <div className="flex items-center">
-                       {editingSkill[skillType] === index ? (
-                           // Edit mode: selector
-                           <select
-                             value={(() => {
-                               const currentItem = currentItems[index] as any;
-                               if (skillType === 'languages') {
-                                 return currentItem?.language || '';
-                               } else {
-                                 const skillId = typeof currentItem?.skill === 'string' 
-                                   ? currentItem.skill 
-                                   : (currentItem?.skill && typeof currentItem.skill === 'object' && currentItem.skill.$oid 
-                                       ? currentItem.skill.$oid 
-                                       : '');
-                                 return skillId;
-                               }
-                             })()}
-                             onChange={(e) => {
-                               if (e.target.value) {
-                                 handleConfirmEditSkill(index, e.target.value);
-                               }
-                             }}
-                             onKeyDown={(e) => {
-                               if (e.key === 'Escape') {
-                                 handleCancelEditSkill();
-                               }
-                             }}
-                             className={`edit-select w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
-                             autoFocus
-                           >
-                             <option value="">
-                               {skillType === 'languages' ? 'Select a language...' : 
-                                skillType === 'professional' ? 'Select a professional skill...' :
-                                skillType === 'technical' ? 'Select a technical skill...' :
-                                'Select a soft skill...'}
-                             </option>
-                             {editSkillOptions.map(option => (
-                               <option key={option.id} value={option.id}>
-                                     {option.name}
-                               </option>
-                             ))}
-                           </select>
-                       ) : (
-                         // Normal mode: clickable name
-                         <button
-                           onClick={() => handleStartEditSkill(index)}
-                            className="font-medium text-xs truncate text-left hover:underline cursor-pointer w-full"
-                           title="Click to edit"
-                         >
-                           {skillName}
-                         </button>
-                       )}
-                       </div>
-                       
-                       {/* Column 2: Progress bar (100 segments) */}
-                       <div className="flex items-center justify-center">
-                         <div className="relative w-full max-w-xs">
-                           <div className="w-full bg-gray-200 rounded-full h-2">
-                             <div 
-                               className="h-2 rounded-full transition-all duration-300"
+                    <div key={index} className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}>
+                      {/* 3 equal columns layout: Name - Progress bar - Level */}
+                      <div className="grid grid-cols-3 gap-4 items-center w-full">
+                        {/* Column 1: Skill name */}
+                        <div className="flex items-center">
+                          {editingSkill[skillType] === index ? (
+                            // Edit mode: selector
+                            <select
+                              value={(() => {
+                                const currentItem = currentItems[index] as any;
+                                if (skillType === 'languages') {
+                                  return currentItem?.language || '';
+                                } else {
+                                  const skillId = typeof currentItem?.skill === 'string'
+                                    ? currentItem.skill
+                                    : (currentItem?.skill && typeof currentItem.skill === 'object' && currentItem.skill.$oid
+                                      ? currentItem.skill.$oid
+                                      : '');
+                                  return skillId;
+                                }
+                              })()}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  handleConfirmEditSkill(index, e.target.value);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  handleCancelEditSkill();
+                                }
+                              }}
+                              className={`edit-select w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                              autoFocus
+                            >
+                              <option value="">
+                                {skillType === 'languages' ? 'Select a language...' :
+                                  skillType === 'professional' ? 'Select a professional skill...' :
+                                    skillType === 'technical' ? 'Select a technical skill...' :
+                                      'Select a soft skill...'}
+                              </option>
+                              {editSkillOptions.map(option => (
+                                <option key={option.id} value={option.id}>
+                                  {option.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            // Normal mode: clickable name
+                            <button
+                              onClick={() => handleStartEditSkill(index)}
+                              className="font-medium text-xs truncate text-left hover:underline cursor-pointer w-full"
+                              title="Click to edit"
+                            >
+                              {skillName}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Column 2: Progress bar (100 segments) */}
+                        <div className="flex items-center justify-center">
+                          <div className="relative w-full max-w-xs">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${(() => {
+                                    const hoveredLevel = hoveredExistingLevel[skillType][index];
+                                    if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                      return hoveredLevel;
+                                    }
+
+                                    // Utiliser la position exacte stockée ou calculer la position par défaut
+                                    if (skillType === "languages") {
+                                      // Vérifier si on a une position exacte stockée
+                                      const exactPosition = item.exactPosition;
+                                      if (exactPosition !== undefined) {
+                                        return exactPosition;
+                                      }
+                                      // Sinon, utiliser la position par défaut basée sur le niveau
+                                      const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
+                                      return ((currentLevelIndex + 1) / 6) * 100;
+                                    } else {
+                                      // Vérifier si on a une position exacte stockée
+                                      const exactPosition = item.exactPosition;
+                                      if (exactPosition !== undefined) {
+                                        return exactPosition;
+                                      }
+                                      // Sinon, utiliser la position par défaut basée sur le niveau
+                                      const currentLevel = item.level || 1;
+                                      return (currentLevel / 5) * 100;
+                                    }
+                                  })()}%`,
+                                  background: (() => {
+                                    const hoveredLevel = hoveredExistingLevel[skillType][index];
+                                    let currentPercentage;
+
+                                    if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                      currentPercentage = hoveredLevel;
+                                    } else {
+                                      // Calculer le pourcentage actuel
+                                      if (skillType === "languages") {
+                                        const exactPosition = item.exactPosition;
+                                        if (exactPosition !== undefined) {
+                                          currentPercentage = exactPosition;
+                                        } else {
+                                          const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
+                                          currentPercentage = ((currentLevelIndex + 1) / 6) * 100;
+                                        }
+                                      } else {
+                                        const exactPosition = item.exactPosition;
+                                        if (exactPosition !== undefined) {
+                                          currentPercentage = exactPosition;
+                                        } else {
+                                          const currentLevel = item.level || 1;
+                                          currentPercentage = (currentLevel / 5) * 100;
+                                        }
+                                      }
+                                    }
+
+                                    // Créer une couleur unie avec opacité par paliers croissants
+                                    // Dégradés correspondant aux couleurs des sections
+                                    if (skillType === 'professional') {
+                                      // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
+                                      return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
+                                    } else if (skillType === 'technical') {
+                                      // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
+                                      return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
+                                    } else if (skillType === 'languages') {
+                                      // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
+                                      return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
+                                    } else {
+                                      // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
+                                      return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
+                                    }
+                                  })()
+                                }}
+                              />
+                            </div>
+                            <div
+                              className="absolute inset-0 h-2 cursor-pointer"
+                              onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                const percentage = (clickX / rect.width) * 100;
+
+                                if (skillType === "languages") {
+                                  // 6 zones égales : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                  let languageLevel = 'A1';
+                                  if (percentage >= 83.33) languageLevel = 'C2';
+                                  else if (percentage >= 66.67) languageLevel = 'C1';
+                                  else if (percentage >= 50) languageLevel = 'B2';
+                                  else if (percentage >= 33.33) languageLevel = 'B1';
+                                  else if (percentage >= 16.67) languageLevel = 'A2';
+                                  else languageLevel = 'A1';
+
+                                  // Mettre à jour le niveau ET stocker la position exacte
+                                  updateSkill(skillType, index, 'proficiency', languageLevel, percentage);
+                                } else {
+                                  // 5 zones égales : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                  let level = 1;
+                                  if (percentage >= 80) level = 5;
+                                  else if (percentage >= 60) level = 4;
+                                  else if (percentage >= 40) level = 3;
+                                  else if (percentage >= 20) level = 2;
+                                  else level = 1;
+
+                                  // Mettre à jour le niveau ET stocker la position exacte
+                                  updateSkill(skillType, index, 'level', level, percentage);
+                                }
+                              }}
+                              onMouseMove={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const mouseX = e.clientX - rect.left;
+                                const percentage = (mouseX / rect.width) * 100;
+
+                                setHoveredExistingLevel(prev => ({
+                                  ...prev,
+                                  [skillType]: { ...prev[skillType], [index]: Math.round(percentage) }
+                                }));
+                              }}
+                              onMouseLeave={(e) => {
+                                // Reset le hover seulement (pas de sauvegarde automatique)
+                                setHoveredExistingLevel(prev => ({
+                                  ...prev,
+                                  [skillType]: { ...prev[skillType], [index]: null }
+                                }));
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Column 3: Level name + Delete button */}
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                            {(() => {
+                              const hoveredLevel = hoveredExistingLevel[skillType][index];
+
+                              if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                // Convertir le pourcentage en description du niveau
+                                if (skillType === "languages") {
+                                  // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                  let languageLevel;
+                                  if (hoveredLevel >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
+                                  else if (hoveredLevel >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
+                                  else if (hoveredLevel >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
+                                  else if (hoveredLevel >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
+                                  else if (hoveredLevel >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
+                                  else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
+                                  // Extraire seulement la description après le " - "
+                                  const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
+                                  return description;
+                                } else {
+                                  // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                  let level = 1;
+                                  if (hoveredLevel >= 80) level = 5;
+                                  else if (hoveredLevel >= 60) level = 4;
+                                  else if (hoveredLevel >= 40) level = 3;
+                                  else if (hoveredLevel >= 20) level = 2;
+                                  else level = 1;
+                                  return getLevelLabel(level, skillType);
+                                }
+                              }
+
+                              if (skillType === "languages") {
+                                const currentLevel = LANGUAGE_LEVELS.find(l => l.value === item.proficiency);
+                                const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
+                                return description;
+                              } else {
+                                return getLevelLabel(item.level || 1, skillType);
+                              }
+                            })()}
+                          </span>
+
+                          {/* Delete button */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(index)}
+                            className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-indigo-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
+                            title="Remove"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Interface d'ajout intégrée dans la grille */}
+                {!skillsLoading && showAddSkillInterface[skillType] && (
+                  <div
+                    ref={(el) => { addInterfaceRefs.current[skillType] = el; }}
+                    className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}
+                  >
+                    {/* 3 equal columns layout: Selector - Progress bar - Level */}
+                    <div className="grid grid-cols-3 gap-4 items-center w-full">
+                      {/* Column 1: Selector */}
+                      <div className="flex items-center">
+                        <select
+                          value={selectedSkillToAdd[skillType] || ''}
+                          onChange={(e) => {
+                            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: e.target.value }));
+                            // Sauvegarder automatiquement dès la sélection
+                            if (e.target.value) {
+                              // Utiliser le niveau par défaut et la position par défaut
+                              const defaultLevel = selectedLevelToAdd[skillType];
+                              const defaultPosition = selectedExactPosition[skillType];
+                              addSkill(skillType, e.target.value, defaultLevel, defaultPosition);
+
+                              // Reset states après ajout
+                              setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+                              setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+                              setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+                            }
+                          }}
+                          className={`w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                        >
+                          <option value="">
+                            {skillType === "languages" ? "Select a language..." :
+                              skillType === "professional" ? "Select a professional skill..." :
+                                skillType === "technical" ? "Select a technical skill..." :
+                                  "Select a soft skill..."}
+                          </option>
+                          {skillOptions.map(option => (
+                            <option key={option.id} value={option.id}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Column 2: Progress bar (100 segments) */}
+                      <div className="flex items-center justify-center">
+                        <div className="relative w-full max-w-xs">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="h-2 rounded-full transition-all duration-300"
                               style={{
                                 width: `${(() => {
-                                  const hoveredLevel = hoveredExistingLevel[skillType][index];
-                                  if (hoveredLevel !== null && hoveredLevel !== undefined) {
-                                    return hoveredLevel;
+                                  if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                                    return hoveredLevel[skillType];
                                   }
-                                  
+
                                   // Utiliser la position exacte stockée ou calculer la position par défaut
+                                  const exactPosition = selectedExactPosition[skillType];
+                                  if (exactPosition !== undefined) {
+                                    return exactPosition;
+                                  }
+
                                   if (skillType === "languages") {
-                                    // Vérifier si on a une position exacte stockée
-                                    const exactPosition = item.exactPosition;
-                                    if (exactPosition !== undefined) {
-                                      return exactPosition;
-                                    }
-                                    // Sinon, utiliser la position par défaut basée sur le niveau
-                             const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
-                                    return ((currentLevelIndex + 1) / 6) * 100;
+                                    // 6 zones égales : chaque niveau = 16.67%
+                                    return ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
                                   } else {
-                                    // Vérifier si on a une position exacte stockée
-                                    const exactPosition = item.exactPosition;
-                                    if (exactPosition !== undefined) {
-                                      return exactPosition;
-                                    }
-                                    // Sinon, utiliser la position par défaut basée sur le niveau
-                                    const currentLevel = item.level || 1;
-                                    return (currentLevel / 5) * 100;
+                                    // 5 zones égales : chaque niveau = 20%
+                                    return (selectedLevelToAdd[skillType] / 5) * 100;
                                   }
                                 })()}%`,
                                 background: (() => {
-                             const hoveredLevel = hoveredExistingLevel[skillType][index];
                                   let currentPercentage;
-                             
-                             if (hoveredLevel !== null && hoveredLevel !== undefined) {
-                                    currentPercentage = hoveredLevel;
-                             } else {
-                                    // Calculer le pourcentage actuel
-                                    if (skillType === "languages") {
-                                      const exactPosition = item.exactPosition;
-                                      if (exactPosition !== undefined) {
-                                        currentPercentage = exactPosition;
-                                      } else {
-                                        const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
-                                        currentPercentage = ((currentLevelIndex + 1) / 6) * 100;
-                                      }
+
+                                  if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                                    currentPercentage = hoveredLevel[skillType];
+                                  } else {
+                                    // Utiliser la position exacte stockée ou calculer la position par défaut
+                                    const exactPosition = selectedExactPosition[skillType];
+                                    if (exactPosition !== undefined) {
+                                      currentPercentage = exactPosition;
                                     } else {
-                                      const exactPosition = item.exactPosition;
-                                      if (exactPosition !== undefined) {
-                                        currentPercentage = exactPosition;
+                                      if (skillType === "languages") {
+                                        // 6 zones égales : chaque niveau = 16.67%
+                                        currentPercentage = ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
                                       } else {
-                                        const currentLevel = item.level || 1;
-                                        currentPercentage = (currentLevel / 5) * 100;
+                                        // 5 zones égales : chaque niveau = 20%
+                                        currentPercentage = (selectedLevelToAdd[skillType] / 5) * 100;
                                       }
                                     }
                                   }
-                                  
-                                  // Créer une couleur unie avec opacité par paliers croissants
+
                                   // Dégradés correspondant aux couleurs des sections
                                   if (skillType === 'professional') {
                                     // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
@@ -5150,325 +5365,106 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   }
                                 })()
                               }}
-                             />
-                           </div>
-                           <div 
-                             className="absolute inset-0 h-2 cursor-pointer"
+                            />
+                          </div>
+                          <div
+                            className="absolute inset-0 h-2 cursor-pointer"
                             onClick={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
                               const clickX = e.clientX - rect.left;
                               const percentage = (clickX / rect.width) * 100;
-                              
+
+                              // Stocker la position exacte du clic
+                              setSelectedExactPosition(prev => ({ ...prev, [skillType]: percentage }));
+
                               if (skillType === "languages") {
-                                // 6 zones égales : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                                let languageLevel = 'A1';
-                                if (percentage >= 83.33) languageLevel = 'C2';
-                                else if (percentage >= 66.67) languageLevel = 'C1';
-                                else if (percentage >= 50) languageLevel = 'B2';
-                                else if (percentage >= 33.33) languageLevel = 'B1';
-                                else if (percentage >= 16.67) languageLevel = 'A2';
-                                else languageLevel = 'A1';
-                                
-                                // Mettre à jour le niveau ET stocker la position exacte
-                                updateSkill(skillType, index, 'proficiency', languageLevel, percentage);
-                             } else {
-                                // 5 zones égales : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                let levelIndex = 0; // A1
+                                if (percentage >= 83.33) levelIndex = 5; // C2
+                                else if (percentage >= 66.67) levelIndex = 4; // C1
+                                else if (percentage >= 50) levelIndex = 3; // B2
+                                else if (percentage >= 33.33) levelIndex = 2; // B1
+                                else if (percentage >= 16.67) levelIndex = 1; // A2
+                                else levelIndex = 0; // A1
+
+                                setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: levelIndex }));
+                              } else {
+                                // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
                                 let level = 1;
                                 if (percentage >= 80) level = 5;
                                 else if (percentage >= 60) level = 4;
                                 else if (percentage >= 40) level = 3;
                                 else if (percentage >= 20) level = 2;
                                 else level = 1;
-                                
-                                // Mettre à jour le niveau ET stocker la position exacte
-                                updateSkill(skillType, index, 'level', level, percentage);
+
+                                setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: level }));
                               }
+
+                              // Note: La compétence est déjà ajoutée dès la sélection dans le dropdown
                             }}
-                             onMouseMove={(e) => {
-                               const rect = e.currentTarget.getBoundingClientRect();
-                               const mouseX = e.clientX - rect.left;
-                               const percentage = (mouseX / rect.width) * 100;
-                               
-                               setHoveredExistingLevel(prev => ({
-                                   ...prev,
-                                 [skillType]: { ...prev[skillType], [index]: Math.round(percentage) }
-                               }));
-                             }}
-                                  onMouseLeave={(e) => {
-                                    // Reset le hover seulement (pas de sauvegarde automatique)
-                                    setHoveredExistingLevel(prev => ({
-                                   ...prev,
-                                   [skillType]: { ...prev[skillType], [index]: null }
-                                    }));
-                                  }}
-                           />
-                       </div>
-                     </div>
-                     
-                       {/* Column 3: Level name + Delete button */}
-                       <div className="flex items-center justify-between">
-                       <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
-                         {(() => {
-                           const hoveredLevel = hoveredExistingLevel[skillType][index];
-                           
-                             if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const mouseX = e.clientX - rect.left;
+                              const percentage = (mouseX / rect.width) * 100;
+
+                              setHoveredLevel(prev => ({ ...prev, [skillType]: Math.round(percentage) }));
+                            }}
+                            onMouseLeave={(e) => {
+                              // Reset le hover seulement (pas de sauvegarde automatique)
+                              setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Column 3: Level name */}
+                      <div className="flex items-center">
+                        <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                          {(() => {
+                            if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
                               // Convertir le pourcentage en description du niveau
                               if (skillType === "languages") {
                                 // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
                                 let languageLevel;
-                                if (hoveredLevel >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
-                                else if (hoveredLevel >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
-                                else if (hoveredLevel >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
-                                else if (hoveredLevel >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
-                                else if (hoveredLevel >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
+                                if (hoveredLevel[skillType] >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
+                                else if (hoveredLevel[skillType] >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
+                                else if (hoveredLevel[skillType] >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
+                                else if (hoveredLevel[skillType] >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
+                                else if (hoveredLevel[skillType] >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
                                 else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
                                 // Extraire seulement la description après le " - "
                                 const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
                                 return description;
-                           } else {
+                              } else {
                                 // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
                                 let level = 1;
-                                if (hoveredLevel >= 80) level = 5;
-                                else if (hoveredLevel >= 60) level = 4;
-                                else if (hoveredLevel >= 40) level = 3;
-                                else if (hoveredLevel >= 20) level = 2;
+                                if (hoveredLevel[skillType] >= 80) level = 5;
+                                else if (hoveredLevel[skillType] >= 60) level = 4;
+                                else if (hoveredLevel[skillType] >= 40) level = 3;
+                                else if (hoveredLevel[skillType] >= 20) level = 2;
                                 else level = 1;
                                 return getLevelLabel(level, skillType);
                               }
                             }
-                             
+
                             if (skillType === "languages") {
-                              const currentLevel = LANGUAGE_LEVELS.find(l => l.value === item.proficiency);
+                              const currentLevel = LANGUAGE_LEVELS[selectedLevelToAdd[skillType]];
                               const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
                               return description;
                             } else {
-                             return getLevelLabel(item.level || 1, skillType);
-                           }
-                         })()}
-                       </span>
-                         
-                         {/* Delete button */}
-                         <button
-                           type="button"
-                           onClick={() => handleRemoveSkill(index)}
-                           className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-indigo-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
-                           title="Remove"
-                         >
-                           <X className="w-3 h-3" />
-                         </button>
-                       </div>
-                     </div>
-                   </div>
-                );
-              })}
-              
-              {/* Interface d'ajout intégrée dans la grille */}
-              {!skillsLoading && showAddSkillInterface[skillType] && (
-                <div 
-                  ref={(el) => { addInterfaceRefs.current[skillType] = el; }}
-                  className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}
-                >
-                  {/* 3 equal columns layout: Selector - Progress bar - Level */}
-                  <div className="grid grid-cols-3 gap-4 items-center w-full">
-                    {/* Column 1: Selector */}
-                    <div className="flex items-center">
-                        <select
-                          value={selectedSkillToAdd[skillType] || ''}
-                        onChange={(e) => {
-                            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: e.target.value }));
-                            // Sauvegarder automatiquement dès la sélection
-                            if (e.target.value) {
-                              // Utiliser le niveau par défaut et la position par défaut
-                              const defaultLevel = selectedLevelToAdd[skillType];
-                              const defaultPosition = selectedExactPosition[skillType];
-                              addSkill(skillType, e.target.value, defaultLevel, defaultPosition);
-                              
-                              // Reset states après ajout
-                              setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
-                              setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
-                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-                              setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+                              return getLevelLabel(selectedLevelToAdd[skillType] || 1, skillType);
                             }
-                          }}
-                     className={`w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
-                      >
-                        <option value="">
-                          {skillType === "languages" ? "Select a language..." : 
-                           skillType === "professional" ? "Select a professional skill..." :
-                           skillType === "technical" ? "Select a technical skill..." :
-                           "Select a soft skill..."}
-                        </option>
-                        {skillOptions.map(option => (
-                          <option key={option.id} value={option.id}>
-                              {option.name}
-                          </option>
-                        ))}
-                      </select>
+                          })()}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+                )}
 
-                    {/* Column 2: Progress bar (100 segments) */}
-                    <div className="flex items-center justify-center">
-                      <div className="relative w-full max-w-xs">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full transition-all duration-300"
-                            style={{
-                              width: `${(() => {
-                                if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
-                                  return hoveredLevel[skillType];
-                                }
-                                
-                                // Utiliser la position exacte stockée ou calculer la position par défaut
-                                const exactPosition = selectedExactPosition[skillType];
-                                if (exactPosition !== undefined) {
-                                  return exactPosition;
-                                }
-                                
-                                if (skillType === "languages") {
-                                  // 6 zones égales : chaque niveau = 16.67%
-                                  return ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
-                                } else {
-                                  // 5 zones égales : chaque niveau = 20%
-                                  return (selectedLevelToAdd[skillType] / 5) * 100;
-                                }
-                              })()}%`,
-                              background: (() => {
-                                let currentPercentage;
-                                
-                              if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
-                                  currentPercentage = hoveredLevel[skillType];
-                              } else {
-                                  // Utiliser la position exacte stockée ou calculer la position par défaut
-                                  const exactPosition = selectedExactPosition[skillType];
-                                  if (exactPosition !== undefined) {
-                                    currentPercentage = exactPosition;
-                                  } else {
-                                    if (skillType === "languages") {
-                                      // 6 zones égales : chaque niveau = 16.67%
-                                      currentPercentage = ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
-                                    } else {
-                                      // 5 zones égales : chaque niveau = 20%
-                                      currentPercentage = (selectedLevelToAdd[skillType] / 5) * 100;
-                                    }
-                                  }
-                                }
-                                
-                                // Dégradés correspondant aux couleurs des sections
-                                if (skillType === 'professional') {
-                                  // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
-                                  return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
-                                } else if (skillType === 'technical') {
-                                  // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
-                                  return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
-                                } else if (skillType === 'languages') {
-                                  // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
-                                  return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
-                                } else {
-                                  // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
-                                  return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
-                                }
-                              })()
-                            }}
-                          />
-                        </div>
-                        <div 
-                          className="absolute inset-0 h-2 cursor-pointer"
-                          onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const clickX = e.clientX - rect.left;
-                            const percentage = (clickX / rect.width) * 100;
-                            
-                            // Stocker la position exacte du clic
-                            setSelectedExactPosition(prev => ({ ...prev, [skillType]: percentage }));
-                            
-                            if (skillType === "languages") {
-                              // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                              let levelIndex = 0; // A1
-                              if (percentage >= 83.33) levelIndex = 5; // C2
-                              else if (percentage >= 66.67) levelIndex = 4; // C1
-                              else if (percentage >= 50) levelIndex = 3; // B2
-                              else if (percentage >= 33.33) levelIndex = 2; // B1
-                              else if (percentage >= 16.67) levelIndex = 1; // A2
-                              else levelIndex = 0; // A1
-                              
-                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: levelIndex }));
-                              } else {
-                              // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                              let level = 1;
-                              if (percentage >= 80) level = 5;
-                              else if (percentage >= 60) level = 4;
-                              else if (percentage >= 40) level = 3;
-                              else if (percentage >= 20) level = 2;
-                              else level = 1;
-                              
-                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: level }));
-                            }
-                            
-                            // Note: La compétence est déjà ajoutée dès la sélection dans le dropdown
-                          }}
-                          onMouseMove={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const mouseX = e.clientX - rect.left;
-                            const percentage = (mouseX / rect.width) * 100;
-                            
-                            setHoveredLevel(prev => ({ ...prev, [skillType]: Math.round(percentage) }));
-                          }}
-                             onMouseLeave={(e) => {
-                               // Reset le hover seulement (pas de sauvegarde automatique)
-                               setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
-                             }}
-                        />
-                    </div>
-                  </div>
-                  
-                    {/* Column 3: Level name */}
-                    <div className="flex items-center">
-                    <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
-                       {(() => {
-                         if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
-                           // Convertir le pourcentage en description du niveau
-                           if (skillType === "languages") {
-                             // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                             let languageLevel;
-                             if (hoveredLevel[skillType] >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
-                             else if (hoveredLevel[skillType] >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
-                             else if (hoveredLevel[skillType] >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
-                             else if (hoveredLevel[skillType] >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
-                             else if (hoveredLevel[skillType] >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
-                             else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
-                             // Extraire seulement la description après le " - "
-                             const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
-                             return description;
-                           } else {
-                             // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                             let level = 1;
-                             if (hoveredLevel[skillType] >= 80) level = 5;
-                             else if (hoveredLevel[skillType] >= 60) level = 4;
-                             else if (hoveredLevel[skillType] >= 40) level = 3;
-                             else if (hoveredLevel[skillType] >= 20) level = 2;
-                             else level = 1;
-                             return getLevelLabel(level, skillType);
-                           }
-                         }
-                         
-                         if (skillType === "languages") {
-                           const currentLevel = LANGUAGE_LEVELS[selectedLevelToAdd[skillType]];
-                           const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
-                           return description;
-                         } else {
-                           return getLevelLabel(selectedLevelToAdd[skillType] || 1, skillType);
-                         }
-                       })()}
-                    </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               </div>
             </div>
           )}
-          
+
           {!skillsLoading && skillOptions.length === 0 && currentItems.length === 0 && (
             <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
               ⚠️ No {skillType} available. Please check API connection.
@@ -5641,7 +5637,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     const addTerritory = (territory: string) => {
       if (!suggestions || !territory) return;
-      
+
       const newSuggestions = { ...suggestions };
       if (!newSuggestions.team) {
         newSuggestions.team = {
@@ -5655,12 +5651,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           collaboration: ["Daily standups", "Weekly reviews"],
         };
       }
-      
+
       // Ensure territories array exists
       if (!newSuggestions.team.territories) {
         newSuggestions.team.territories = [];
       }
-      
+
       // Only add if not already present
       if (!newSuggestions.team.territories.includes(territory)) {
         newSuggestions.team.territories.push(territory);
@@ -5682,16 +5678,16 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-4">
         {/* Team Roles */}
-              <div>
+        <div>
           <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <h4 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Team Roles</h4>
               <div className="flex items-center space-x-1">
                 <span className="text-sm font-medium text-blue-600">Total:</span>
                 <span className="text-md font-bold text-indigo-700 bg-white border border-blue-300 rounded-md px-2 py-1">
                   {suggestions.team?.size || 0}
-                        </span>
-                      </div>
+                </span>
+              </div>
             </div>
             <button
               onClick={addTeamRole}
@@ -5710,7 +5706,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
                 const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Mid-Level') : 'Mid-Level';
                 const yearsExperience = typeof role === 'object' && role !== null ? (role.seniority?.yearsExperience || 3) : 3;
-                
+
                 return (
                   <div
                     key={index}
@@ -5757,7 +5753,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         />
                       </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
                           <label className="text-xs font-bold text-indigo-700 mb-1 block">
                             Seniority Level
@@ -5821,8 +5817,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-lg p-3 border border-blue-200 shadow-md mb-4">
           <div className="flex items-center space-x-2 mb-2">
             <h4 className="text-md font-semibold text-gray-900">Territories</h4>
-            </div>
-          
+          </div>
+
           <select
             onChange={(e) => {
               if (e.target.value) {
@@ -5845,7 +5841,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </option>
             ))}
           </select>
-          
+
           {/* Territories badges - displayed below the select */}
           {suggestions.team?.territories && suggestions.team.territories.length > 0 && (
             <div className="flex flex-wrap gap-1 pt-1 border-t border-blue-200">
@@ -5868,10 +5864,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               ))}
             </div>
           )}
-          
+
           <p className="text-xs text-gray-500 italic text-center mt-1">
-            {territoriesLoading 
-              ? 'Loading countries from API...' 
+            {territoriesLoading
+              ? 'Loading countries from API...'
               : `${territoriesFromAPI.filter((country: Country) => !suggestions.team?.territories?.includes(country._id)).length} countries available for selection`
             }
           </p>
@@ -5888,14 +5884,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="animate-fade-in">
             <Logo />
           </div>
-          
+
           {/* AI Loading Animation */}
           <div className="relative flex items-center justify-center">
             {/* Animated rings */}
             <div className="absolute w-16 h-16 border-4 border-blue-300/30 rounded-full animate-ping"></div>
             <div className="absolute w-14 h-14 border-4 border-indigo-400/40 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
             <div className="absolute w-12 h-12 border-4 border-violet-500/50 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-            
+
             {/* Central AI icon */}
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
               <Brain className="w-8 h-8 text-white animate-pulse" />
@@ -5913,29 +5909,29 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="mb-8">
             <Logo className="mb-6" />
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
             <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            
+
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-gray-900">
-          Error Generating Suggestions
-        </h2>
+                Error Generating Suggestions
+              </h2>
               <p className="text-gray-600 leading-relaxed">
                 {error}
               </p>
             </div>
-            
+
             <div className="pt-4 border-t border-gray-100">
-        <button
-          onClick={props.onBack}
+              <button
+                onClick={props.onBack}
                 className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-colors"
-        >
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Input
-        </button>
+              </button>
             </div>
           </div>
         </div>
@@ -5950,12 +5946,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="mb-8">
             <Logo className="mb-6" />
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
             <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
               <Brain className="w-8 h-8 text-gray-400" />
             </div>
-            
+
             <div className="space-y-3">
               <h2 className="text-2xl font-bold text-gray-900">
                 No Suggestions Available
@@ -5964,15 +5960,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 We couldn't generate suggestions based on your input. Please try again with different requirements.
               </p>
             </div>
-            
+
             <div className="pt-4 border-t border-gray-100">
-        <button
-          onClick={props.onBack}
+              <button
+                onClick={props.onBack}
                 className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
-        >
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Input
-        </button>
+              </button>
             </div>
           </div>
         </div>
@@ -5992,8 +5988,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 AI-Powered Gig Creation
               </h1>
               <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
-            </p>
+                Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
+              </p>
             </div>
           </div>
 
@@ -6006,11 +6002,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
               Back to Input
             </button>
-            
+
             <div className="text-center">
               <h2 className="text-lg font-semibold text-gray-900">
-              Review & Refine Suggestions
-            </h2>
+                Review & Refine Suggestions
+              </h2>
               {/* Mock Data Indicator */}
               {import.meta.env.VITE_USE_MOCK_DATA === 'true' && (
                 <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -6018,7 +6014,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               )}
             </div>
-            
+
             <button
               onClick={handleConfirm}
               className="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-lg transition-colors shadow-sm"
@@ -6028,7 +6024,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             </button>
           </div>
         </div>
-          </div>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-8">
@@ -6045,81 +6041,81 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <h3 className="text-xl font-bold text-white">Basic Information</h3>
                   <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
                 </div>
-                </div>
               </div>
+            </div>
 
             <div className="p-3 space-y-6">
               {/* Job Titles */}
               <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg p-3 border border-blue-200 shadow-md">
                 <div className="space-y-2">
-                {renderJobTitlesSection()}
+                  {renderJobTitlesSection()}
                 </div>
               </div>
 
               {/* Highlights */}
               <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-lg p-3 border border-green-200 shadow-md">
                 <div className="space-y-2">
-                {renderHighlightsSection()}
+                  {renderHighlightsSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Job Description - Full Width */}
               <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-lg p-3 border border-orange-200 shadow-md">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
-                </div>
+                    <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
+                  </div>
                   {renderDescriptionSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Sectors - After Description */}
               <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 rounded-lg p-3 border border-purple-200 shadow-md">
                 <div className="space-y-2">
-                {renderSectorsSection()}
+                  {renderSectorsSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Industries */}
               <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 rounded-lg p-3 border border-rose-200 shadow-md">
                 <div>
                   {renderIndustriesSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Activities */}
               <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-lg p-3 border border-cyan-200 shadow-md">
                 <div>
                   {renderActivitiesSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Deliverables */}
               <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 rounded-lg p-3 border border-blue-200 shadow-md">
                 <div className="space-y-2">
-                {renderDeliverablesSection()}
+                  {renderDeliverablesSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Destination Zones */}
               <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 rounded-lg p-3 border border-slate-200 shadow-md">
                 <div>
                   {renderDestinationZonesSection()}
                 </div>
-                </div>
+              </div>
 
               {/* Seniority */}
               <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-lg p-3 border border-amber-200 shadow-md">
                 <div>
                   {renderSenioritySection()}
                 </div>
-                </div>
-
               </div>
-            </div>
 
-            {/* Schedule Section */}
+            </div>
+          </div>
+
+          {/* Schedule Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-700 to-indigo-700 px-6 py-4">
               <div className="flex items-center">
@@ -6132,27 +6128,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-3 space-y-4">
               <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200 shadow-md">
-              {renderEditableSchedules()}
+                {renderEditableSchedules()}
               </div>
-              
-              <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-50 rounded-lg p-3 border border-teal-200 shadow-md">
-              {renderMinimumHoursSection()}
-              </div>
-              
-              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-lg p-3 border border-violet-200 shadow-md">
-              {renderTimezoneSection()}
-              </div>
-              
-              <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 rounded-lg p-3 border border-yellow-200 shadow-md">
-              {renderFlexibilitySection()}
-              </div>
-            </div>
-            </div>
 
-            {/* Commission Section */}
+              <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-50 rounded-lg p-3 border border-teal-200 shadow-md">
+                {renderMinimumHoursSection()}
+              </div>
+
+              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-lg p-3 border border-violet-200 shadow-md">
+                {renderTimezoneSection()}
+              </div>
+
+              <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 rounded-lg p-3 border border-yellow-200 shadow-md">
+                {renderFlexibilitySection()}
+              </div>
+            </div>
+          </div>
+
+          {/* Commission Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
               <div className="flex items-center">
@@ -6165,13 +6161,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
               {renderCommissionSection()}
             </div>
-            </div>
+          </div>
 
-            {/* Skills Section */}
+          {/* Skills Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
               <div className="flex items-center">
@@ -6184,13 +6180,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
               {renderSkillsSection()}
             </div>
-            </div>
+          </div>
 
-            {/* Team Section */}
+          {/* Team Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
               <div className="flex items-center">
@@ -6203,7 +6199,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
               {renderTeamSection()}
             </div>

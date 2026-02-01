@@ -38,7 +38,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         },
         benefits: gig.benefits || [],
         availability: {
-          schedule: gig.schedule?.schedules?.map(schedule => ({
+          schedule: gig.schedule?.schedules?.map((schedule: { day: any[]; hours: { start: any; end: any; }; }) => ({
             day: schedule.day?.[0] || "",
             hours: {
               start: schedule.hours?.start || "",
@@ -55,7 +55,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           }
         },
         schedule: {
-          schedules: gig.schedule?.schedules?.map(schedule => ({
+          schedules: gig.schedule?.schedules?.map((schedule: { day: any; hours: { start: any; end: any; }; }) => ({
             day: schedule.day || "",
             hours: {
               start: schedule.hours?.start || "",
@@ -88,22 +88,22 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           qualificationCriteria: gig.leads?.qualificationCriteria || []
         },
         skills: {
-          languages: gig.skills?.languages.map(lang => ({
+          languages: gig.skills?.languages.map((lang: { language: any; proficiency: any; iso639_1: any; }) => ({
             language: lang.language,
             proficiency: lang.proficiency,
             iso639_1: lang.iso639_1
           })) || [],
-          soft: gig.skills?.soft.map(skill => ({
+          soft: gig.skills?.soft.map((skill: { skill: any; level: any; }) => ({
             skill: skill.skill,
             level: skill.level,
             details: ""
           })) || [],
-          professional: gig.skills?.professional.map(skill => ({
+          professional: gig.skills?.professional.map((skill: { skill: any; level: any; }) => ({
             skill: skill.skill,
             level: skill.level,
             details: ""
           })) || [],
-          technical: gig.skills?.technical.map(skill => ({
+          technical: gig.skills?.technical.map((skill: { skill: any; level: any; }) => ({
             skill: skill.skill,
             level: skill.level,
             details: ""

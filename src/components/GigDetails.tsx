@@ -142,7 +142,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <div className="text-sm text-gray-500 mb-1">Commission per Call</div>
+            <div className="text-sm text-gray-500 mb-1">Per call compensation</div>
             <div className="text-lg font-semibold text-gray-900">
               {typeof data.commission.currency === 'string' ? data.commission.currency : (data.commission.currency?.$oid || 'USD')} {data.commission.commission_per_call}
             </div>

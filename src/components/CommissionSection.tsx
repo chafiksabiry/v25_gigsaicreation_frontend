@@ -198,7 +198,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             )}
           </div>
 
-          {/* Commission Per Call Card */}
+          {/* Per call compensation Card */}
           <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
