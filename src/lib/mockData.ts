@@ -119,21 +119,15 @@ export const MOCK_GIG_SUGGESTIONS: GigSuggestion = {
     ]
   },
   commission: {
-    base: "Performance Based",
-    baseAmount: 2500,
-    bonus: "Performance Bonus",
-    bonusAmount: 500,
-    structure: "Tiered Commission",
+    commission_per_call: 25.50,
+    bonusAmount: "500",
     currency: "507f1f77bcf86cd79943901e", // EUR currency ID example
     minimumVolume: {
-      amount: 100,
+      amount: "100",
       period: "Monthly",
       unit: "Sales"
     },
-    transactionCommission: {
-      type: "Fixed Amount",
-      amount: 25.50
-    },
+    transactionCommission: 10,
     additionalDetails: "Commission payée mensuellement avec bonus trimestriel selon les objectifs atteints. Possibilité d'augmentation après 6 mois de performance."
   },
   team: {
@@ -181,13 +175,13 @@ export const simulateApiDelay = (ms: number = 2000): Promise<void> => {
 // Fonction pour générer des suggestions mockées
 export const generateMockGigSuggestions = async (input: string): Promise<GigSuggestion> => {
   console.log('🎭 Using mock data instead of OpenAI API for input:', input);
-  
+
   // Simuler un délai d'API
   await simulateApiDelay(1500);
-  
+
   // Personnaliser légèrement les données selon l'input
   const mockData = { ...MOCK_GIG_SUGGESTIONS };
-  
+
   // Adapter le titre selon l'input
   if (input.toLowerCase().includes('tech')) {
     mockData.jobTitles = [
@@ -204,6 +198,6 @@ export const generateMockGigSuggestions = async (input: string): Promise<GigSugg
     ];
     mockData.description = "Développez nos stratégies marketing et augmentez notre visibilité...";
   }
-  
+
   return mockData;
 };

@@ -76,7 +76,32 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
       seniority: data.seniority || { level: '', yearsExperience: 0 },
       skills: data.skills || { languages: [], soft: [], professional: [], technical: [] },
       availability: data.availability || {},
-      commission: data.commission || {},
+      commission: (() => {
+        const rawCommission = data.commission || {};
+
+        // Check if we received the old structure (transactionCommission is an object or baseAmount exists)
+        const isLegacyStructure =
+          (rawCommission.transactionCommission && typeof rawCommission.transactionCommission === 'object') ||
+          rawCommission.baseAmount !== undefined;
+
+        if (isLegacyStructure) {
+          console.log('⚠️ Detected legacy commission structure, adapting to new format');
+          return {
+            commission_per_call: rawCommission.baseAmount || 0, // Map baseAmount to commission_per_call
+            bonusAmount: String(rawCommission.bonusAmount || "0"), // Convert to string
+            currency: "68cae8918f8bb2a31a09b79f", // Default EUR ID as requested, since backend returns code
+            minimumVolume: {
+              amount: String(rawCommission.minimumVolume?.amount || "0"), // Convert to string
+              period: rawCommission.minimumVolume?.period || "Monthly",
+              unit: rawCommission.minimumVolume?.unit || "Transactions"
+            },
+            transactionCommission: rawCommission.transactionCommission?.amount || 0, // Extract amount
+            additionalDetails: rawCommission.additionalDetails || ""
+          };
+        }
+
+        return rawCommission;
+      })(),
       team: {
         ...data.team,
         size: data.team?.size || 1,
