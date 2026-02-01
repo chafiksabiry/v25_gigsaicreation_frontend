@@ -3158,8 +3158,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 ) : (
                   <span
                     className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${selectedJobTitle === title
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
-                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
+                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
                       }`}
                     onClick={(e) => {
                       e.preventDefault();
@@ -3199,8 +3199,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         }
                       }}
                       className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${selectedJobTitle === title
-                          ? 'text-white hover:bg-blue-700'
-                          : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                        ? 'text-white hover:bg-blue-700'
+                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
                         }`}
                       title="Remove"
                     >
@@ -4154,12 +4154,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       </div>
 
                       <select
-                        value={option.currency || getDefaultCurrencyId()}
+                        value={(typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId()}
                         onChange={(e) =>
                           updateCommissionOption(
                             0,
                             "currency",
-                            e.target.value
+                            { $oid: e.target.value }
                           )
                         }
                         disabled={currenciesLoading}
@@ -4198,11 +4198,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           type="number"
                           step="0.01"
                           min="0"
-                          value={option.baseAmount || ""}
+                          value={option.commission_per_call || option.baseAmount || ""}
                           onChange={(e) => {
                             updateCommissionOption(
                               0,
-                              "baseAmount",
+                              "commission_per_call",
                               e.target.value
                             );
                           }}
@@ -4210,7 +4210,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
-                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                          {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
@@ -4232,11 +4232,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           type="number"
                           step="0.01"
                           min="0"
-                          value={option.transactionCommission?.amount || ""}
+                          value={typeof option.transactionCommission === 'object' ? (option.transactionCommission as any).amount : option.transactionCommission || ""}
                           onChange={(e) => {
                             updateCommissionOption(
                               0,
-                              "transactionCommission.amount",
+                              "transactionCommission",
                               e.target.value
                             );
                           }}
@@ -4244,7 +4244,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
-                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                          {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
@@ -4284,7 +4284,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
-                          {getCurrencySymbol(option.currency || getDefaultCurrencyId())}
+                          {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
                         </span>
                       </div>
                     </div>
@@ -4958,10 +4958,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     skillName = getLanguageNameById(item.language);
                     levelDisplay = (
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.proficiency?.includes("C")
-                          ? "bg-green-100 text-green-800"
-                          : item.proficiency?.includes("B")
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
+                        ? "bg-green-100 text-green-800"
+                        : item.proficiency?.includes("B")
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
                         }`}>
                         {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
                       </span>
@@ -4993,8 +4993,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <svg
                             key={star}
                             className={`w-3 h-3 ${star <= (item.level || 1)
-                                ? "text-yellow-400 fill-current"
-                                : "text-gray-300"
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-300"
                               }`}
                             fill="currentColor"
                             viewBox="0 0 20 20"
