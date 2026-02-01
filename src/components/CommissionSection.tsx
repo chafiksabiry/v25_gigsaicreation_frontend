@@ -43,16 +43,21 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   // Fetch selected currency details when currency ID changes
   useEffect(() => {
     const loadSelectedCurrency = async () => {
-      if (data?.commission?.currency?.$oid && currencies.length > 0) {
+      // Handle both string ID and object with $oid (for backward compatibility)
+      const currencyId = typeof data?.commission?.currency === 'object' && (data?.commission?.currency as any)?.$oid
+        ? (data?.commission?.currency as any).$oid
+        : data?.commission?.currency;
+
+      if (currencyId && currencies.length > 0) {
         // First try to find in loaded currencies
-        const foundCurrency = currencies.find(c => c._id === data.commission.currency.$oid);
+        const foundCurrency = currencies.find(c => c._id === currencyId);
         if (foundCurrency) {
           setSelectedCurrency(foundCurrency);
           console.log('💰 COMMISSION - Selected currency from list:', foundCurrency);
         } else {
           // If not found, fetch by ID
           try {
-            const fetchedCurrency = await fetchCurrencyById(data.commission.currency.$oid);
+            const fetchedCurrency = await fetchCurrencyById(currencyId);
             if (fetchedCurrency) {
               setSelectedCurrency(fetchedCurrency);
               console.log('💰 COMMISSION - Selected currency from API:', fetchedCurrency);
@@ -67,7 +72,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
     };
 
     loadSelectedCurrency();
-  }, [data?.commission?.currency?.$oid, currencies]);
+  }, [data?.commission?.currency, currencies]);
 
   const getCurrencySymbol = () => {
     return selectedCurrency?.symbol || '$';
@@ -141,11 +146,6 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   console.log('💰 COMMISSION SECTION - data.commission:', data.commission);
   console.log('💰 COMMISSION SECTION - currency:', data?.commission?.currency);
   console.log('💰 COMMISSION SECTION - commission_per_call:', data?.commission?.commission_per_call);
-  console.log('💰 COMMISSION SECTION - minimumVolume:', data?.commission?.minimumVolume);
-  console.log('💰 COMMISSION SECTION - transactionCommission:', data?.commission?.transactionCommission);
-  console.log('💰 COMMISSION SECTION - bonusAmount:', data?.commission?.bonusAmount);
-  console.log('💰 COMMISSION SECTION - errors:', errors);
-  console.log('💰 COMMISSION SECTION - warnings:', warnings);
 
   return (
     <div className="w-full bg-white p-0">
@@ -172,12 +172,16 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
 
             <select
-              value={data?.commission?.currency?.$oid || ''}
+              value={
+                typeof data?.commission?.currency === 'object' && (data?.commission?.currency as any)?.$oid
+                  ? (data?.commission?.currency as any).$oid
+                  : data?.commission?.currency || ''
+              }
               onChange={(e) => onChange({
                 ...data,
                 commission: {
                   ...data.commission,
-                  currency: { $oid: e.target.value }
+                  currency: e.target.value // Save as string
                 }
               })}
               disabled={currenciesLoading}

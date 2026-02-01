@@ -166,6 +166,8 @@ const PrompAI: React.FC = () => {
       const { data } = responseData;
 
       if (data) {
+        console.log('🔍 DEBUG COMMISSION - Raw API data.commission:', data.commission);
+
         // Map the fetched gig data to our GigData format
         const mappedGigData: GigData = {
           userId: data.userId || Cookies.get('userId') || "",
@@ -225,8 +227,8 @@ const PrompAI: React.FC = () => {
               ? data.availability.time_zone._id
               : data.schedule?.time_zone || data.availability?.time_zone || "",
           commission: {
-            commission_per_call: data.commission?.commission_per_call || data.commission?.baseAmount || 0,
-            bonusAmount: (data.commission?.bonusAmount || "0").toString(),
+            commission_per_call: data.commission?.commission_per_call || data.commission?.baseAmount || data.commission?.base || 0,
+            bonusAmount: (data.commission?.bonusAmount || data.commission?.bonus || "0").toString(),
             currency: typeof data.commission?.currency === 'object' && data.commission?.currency?._id
               ? data.commission.currency._id
               : data.commission?.currency || "",
@@ -360,6 +362,8 @@ const PrompAI: React.FC = () => {
         console.log('🔄 EDIT MODE - Raw professional skills:', data.skills?.professional);
         console.log('🔄 EDIT MODE - Raw technical skills:', data.skills?.technical);
         console.log('🔄 EDIT MODE - Raw soft skills:', data.skills?.soft);
+        console.log('🔍 DEBUG COMMISSION - Mapped commission data:', mappedGigData.commission);
+
 
         // Debug: Check the structure of individual skill objects
         if (data.skills?.professional && data.skills.professional.length > 0) {
