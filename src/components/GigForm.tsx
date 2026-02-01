@@ -1,8 +1,8 @@
 import React from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { saveGigData } from '../lib/api';
-import { 
-  Calendar, Clock, DollarSign, Users, Globe2, 
+import {
+  Calendar, Clock, DollarSign, Users, Globe2,
   Brain, Briefcase, FileText, Building2
 } from 'lucide-react';
 import axios from 'axios';
@@ -54,11 +54,16 @@ type GigFormData = {
     };
   };
   commission: {
-    base: string;
-    baseAmount: string;
-    bonus: string;
-    bonusAmount: string;
-    structure: string;
+    commission_per_call: number;
+    bonusAmount: number;
+    currency: string;
+    minimumVolume: {
+      amount: number;
+      period: string;
+      unit: string;
+    };
+    transactionCommission: number;
+    additionalDetails: string;
   };
   leads: {
     types: {
@@ -69,9 +74,9 @@ type GigFormData = {
     sources: string[];
   };
   skills: {
-    languages: { 
-      language: string; 
-      proficiency: string; 
+    languages: {
+      language: string;
+      proficiency: string;
       iso639_1: string;
       _id?: { $oid: string };
     }[];
@@ -161,22 +166,16 @@ interface GigData {
     };
   };
   commission: {
-    base: string;
-    baseAmount: number;
-    bonus: string;
+    commission_per_call: number;
     bonusAmount: number;
-    structure: string;
     currency: string;
     minimumVolume: {
       amount: number;
       period: string;
       unit: string;
     };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
-    kpis: any[];
+    transactionCommission: number;
+    additionalDetails?: string;
   };
   leads: {
     types: {
@@ -335,22 +334,16 @@ export function GigForm() {
           }
         },
         commission: {
-          base: data.commission.base,
-          baseAmount: parseFloat(data.commission.baseAmount) || 0,
-          bonus: data.commission.bonus,
-          bonusAmount: parseFloat(data.commission.bonusAmount) || 0,
-          structure: data.commission.structure,
+          commission_per_call: data.commission.commission_per_call,
+          bonusAmount: data.commission.bonusAmount,
           currency: "USD",
           minimumVolume: {
             amount: 0,
             period: "",
             unit: ""
           },
-          transactionCommission: {
-            type: "",
-            amount: 0
-          },
-          kpis: []
+          transactionCommission: data.commission.transactionCommission,
+          additionalDetails: data.commission.additionalDetails || ""
         },
         leads: {
           types: data.leads.types,

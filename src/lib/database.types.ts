@@ -22,12 +22,13 @@ export interface Database {
           schedule_hours: string
           schedule_timezone: string[]
           schedule_flexibility: string | null
-          commission_base: string
-          commission_base_amount: string | null
-          commission_bonus: string | null
-          commission_bonus_amount: string | null
-          commission_currency: string | null
+          commission_per_call: number
+          commission_bonus_amount: number
+          commission_currency: Json
           commission_structure: string | null
+          transaction_commission: number
+          minimum_volume: Json
+          additional_details: string | null
           team_size: number
           team_structure: Json
           team_territories: string[]
@@ -49,12 +50,13 @@ export interface Database {
           schedule_hours: string
           schedule_timezone: string[]
           schedule_flexibility?: string | null
-          commission_base: string
-          commission_base_amount?: string | null
-          commission_bonus?: string | null
-          commission_bonus_amount?: string | null
-          commission_currency?: string | null
+          commission_per_call?: number
+          commission_bonus_amount?: number
+          commission_currency?: Json
           commission_structure?: string | null
+          transaction_commission?: number
+          minimum_volume?: Json
+          additional_details?: string | null
           team_size: number
           team_structure: Json
           team_territories: string[]
@@ -76,12 +78,13 @@ export interface Database {
           schedule_hours?: string
           schedule_timezone?: string[]
           schedule_flexibility?: string | null
-          commission_base?: string
-          commission_base_amount?: string | null
-          commission_bonus?: string | null
-          commission_bonus_amount?: string | null
-          commission_currency?: string | null
+          commission_per_call?: number
+          commission_bonus_amount?: number
+          commission_currency?: Json
           commission_structure?: string | null
+          transaction_commission?: number
+          minimum_volume?: Json
+          additional_details?: string | null
           team_size?: string
           team_structure?: Json
           team_territories?: string[]

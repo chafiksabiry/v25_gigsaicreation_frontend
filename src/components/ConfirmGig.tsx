@@ -67,22 +67,16 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           minimumHours: gig.schedule?.minimumHours || {},
         },
         commission: {
-          base: gig.commission?.base || "",
-          baseAmount: gig.commission?.baseAmount || 0,
-          bonus: gig.commission?.bonus || "",
+          commission_per_call: gig.commission?.commission_per_call || 0,
           bonusAmount: gig.commission?.bonusAmount || 0,
-          structure: gig.commission?.structure || "",
           currency: gig.commission?.currency || "",
           minimumVolume: {
             amount: gig.commission?.minimumVolume?.amount || 0,
             period: gig.commission?.minimumVolume?.period || "",
             unit: gig.commission?.minimumVolume?.unit || ""
           },
-          transactionCommission: {
-            type: gig.commission?.transactionCommission?.type || "",
-            amount: gig.commission?.transactionCommission?.amount || 0
-          },
-          kpis: gig.commission?.kpis || []
+          transactionCommission: gig.commission?.transactionCommission || 0,
+          additionalDetails: gig.commission?.additionalDetails || ""
         },
         leads: {
           types: gig.leads?.types || [],
@@ -94,10 +88,10 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
           qualificationCriteria: gig.leads?.qualificationCriteria || []
         },
         skills: {
-          languages: gig.skills?.languages.map(lang => ({ 
-            language: lang.language, 
+          languages: gig.skills?.languages.map(lang => ({
+            language: lang.language,
             proficiency: lang.proficiency,
-            iso639_1: lang.iso639_1 
+            iso639_1: lang.iso639_1
           })) || [],
           soft: gig.skills?.soft.map(skill => ({
             skill: skill.skill,
@@ -174,7 +168,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
       };
 
       await saveGigData(gigData);
-      
+
       const result = await Swal.fire({
         title: "Success!",
         text: "Gig has been created successfully",
@@ -201,7 +195,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         confirmButtonColor: "#dc2626",
         cancelButtonColor: "#6b7280",
       });
-      
+
       if (result.isConfirmed) {
         handleConfirm(); // Retry saving
       }
@@ -211,7 +205,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 w-full h-full">
       <h2 className="text-2xl font-bold mb-4">Confirm Gig Details</h2>
-      
+
       <div className="space-y-4">
         <div className="flex items-start">
           <CheckCircle className="h-6 w-6 text-green-500 mr-2 flex-shrink-0" />

@@ -1,7 +1,7 @@
 import React from 'react';
-import { 
-  DollarSign, Users, Globe2, Brain, Target, FileText, 
-  ArrowRight, Star, TrendingUp, Clock, CheckCircle, 
+import {
+  DollarSign, Users, Globe2, Brain, Target, FileText,
+  ArrowRight, Star, TrendingUp, Clock, CheckCircle,
   Calendar, Languages, Building2, Briefcase, Phone,
   GraduationCap, Award, Laptop, Shield, BookOpen
 } from 'lucide-react';
@@ -22,7 +22,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
       <div className="text-center py-8">
         <Logo className="mb-6" />
       </div>
-      
+
       {/* ... keep existing header and main content ... */}
 
       {/* Update the Skills Required section in the sidebar */}
@@ -61,8 +61,8 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {data.skills.professional.map((skill, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="flex items-center gap-2 p-2 bg-indigo-50 text-indigo-700 rounded-lg"
                   >
                     <CheckCircle className="w-4 h-4" />
@@ -127,6 +127,50 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Commission Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+        <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-green-600" />
+            Commission Structure
+          </h2>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Commission per Call</div>
+            <div className="text-lg font-semibold text-gray-900">
+              {typeof data.commission.currency === 'string' ? data.commission.currency : (data.commission.currency?.$oid || 'USD')} {data.commission.commission_per_call}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Performance Bonus</div>
+            <div className="text-lg font-semibold text-gray-900">
+              {typeof data.commission.currency === 'string' ? data.commission.currency : (data.commission.currency?.$oid || 'USD')} {data.commission.bonusAmount}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500 mb-1">Transaction Commission</div>
+            <div className="text-lg font-semibold text-gray-900">
+              {data.commission.transactionCommission}%
+            </div>
+          </div>
+          {data.commission.minimumVolume && (
+            <div>
+              <div className="text-sm text-gray-500 mb-1">Minimum Volume</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {data.commission.minimumVolume.amount} {data.commission.minimumVolume.unit} / {data.commission.minimumVolume.period}
+              </div>
+            </div>
+          )}
+          {data.commission.additionalDetails && (
+            <div className="col-span-full">
+              <div className="text-sm text-gray-500 mb-1">Additional Details</div>
+              <div className="text-gray-700">{data.commission.additionalDetails}</div>
             </div>
           )}
         </div>

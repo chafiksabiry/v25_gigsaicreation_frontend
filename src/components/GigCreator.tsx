@@ -61,22 +61,16 @@ const initialGigData: GigData = {
     },
   },
   commission: {
-    base: "",
-    baseAmount: 0,
-    bonus: "",
+    commission_per_call: 0,
     bonusAmount: 0,
-    structure: "",
     currency: "",
     minimumVolume: {
       amount: 0,
       period: "",
       unit: "",
     },
-    transactionCommission: {
-      type: "",
-      amount: 0,
-    },
-    kpis: [],
+    transactionCommission: 0,
+    additionalDetails: "",
   },
   leads: {
     types: [
@@ -123,14 +117,14 @@ const initialGigData: GigData = {
       monthly: undefined
     }
   },
-     activity: {
-     options: []
-   },
-   documentation: {
-     training: [],
-     product: [],
-     process: []
-   }
+  activity: {
+    options: []
+  },
+  documentation: {
+    training: [],
+    product: [],
+    process: []
+  }
 }
 
 
@@ -171,10 +165,10 @@ export function GigCreator({ children }: GigCreatorProps) {
   const handleGigDataChange = (newData: GigData) => {
     // Synchroniser les données entre schedule et availability
     let updatedData = { ...newData, destinationZones: newData.destinationZones || [] };
-    
+
     // Synchronize time zone selection between schedule and availability
     const selectedTimeZone = newData.schedule?.time_zone || (Array.isArray(newData.schedule?.timeZones) ? newData.schedule.timeZones[0] : undefined);
-    
+
     // Si les données de schedule ont changé, synchroniser avec availability
     if (newData.schedule && newData.schedule.schedules) {
       updatedData = {
@@ -197,7 +191,7 @@ export function GigCreator({ children }: GigCreatorProps) {
         }
       };
     }
-    
+
     // Si les données de availability ont changé, synchroniser avec schedule
     if (newData.availability && newData.availability.schedule) {
       const availTimeZone = newData.availability.time_zone || (Array.isArray(newData.availability.timeZones) ? newData.availability.timeZones[0] : undefined);
@@ -221,7 +215,7 @@ export function GigCreator({ children }: GigCreatorProps) {
         }
       };
     }
-    
+
     setGigData(updatedData);
     const validation = validateGigData(updatedData);
     setValidationErrors(validation.errors);
@@ -239,7 +233,7 @@ export function GigCreator({ children }: GigCreatorProps) {
         analyzeTitleAndGenerateDescription(gigData.title),
         generateSkills(gigData.title, gigData.description || "")
       ]);
-      
+
       const formatTime = (time: string | undefined) => {
         if (!time) return "00:00";
         const parts = time.split(':');
@@ -299,7 +293,7 @@ export function GigCreator({ children }: GigCreatorProps) {
 
       // Vérifier si on est en mode standalone
 
-      
+
 
       companyId = Cookies.get('companyId') || "";
       userId = Cookies.get('userId') || "";
@@ -329,7 +323,7 @@ export function GigCreator({ children }: GigCreatorProps) {
             skill: skill.skill,
             level: skill.level
           })),
-          soft: gigData.skills.soft.map(skill => ({ 
+          soft: gigData.skills.soft.map(skill => ({
             skill: skill.skill,
             level: skill.level
           }))
@@ -372,9 +366,7 @@ export function GigCreator({ children }: GigCreatorProps) {
           }
         },
         commission: {
-          base: gigData.commission.base,
-          baseAmount: gigData.commission.baseAmount,
-          bonus: gigData.commission.bonus,
+          commission_per_call: gigData.commission.commission_per_call,
           bonusAmount: gigData.commission.bonusAmount,
           currency: gigData.commission.currency,
           minimumVolume: {
@@ -382,12 +374,8 @@ export function GigCreator({ children }: GigCreatorProps) {
             period: gigData.commission.minimumVolume.period,
             unit: gigData.commission.minimumVolume.unit
           },
-          transactionCommission: {
-            type: gigData.commission.transactionCommission.type,
-            amount: gigData.commission.transactionCommission.amount
-          },
-          structure: gigData.commission.additionalDetails || "",
-          kpis: gigData.commission.kpis || []
+          transactionCommission: gigData.commission.transactionCommission,
+          additionalDetails: gigData.commission.additionalDetails || "",
         },
         leads: {
           types: gigData.leads.types,
@@ -407,12 +395,11 @@ export function GigCreator({ children }: GigCreatorProps) {
         updatedAt: new Date()
       };
 
-      // Ensure commission.kpis and structure are included as required by GigData type
-      (gigDataToSave.commission as any).kpis = gigData.commission.kpis || [];
-      if (!gigDataToSave.commission.structure) {
-        gigDataToSave.commission.structure = gigData.commission.structure || "";
+      // Ensure additionalDetails is included
+      if (!gigDataToSave.commission.additionalDetails) {
+        gigDataToSave.commission.additionalDetails = gigData.commission.additionalDetails || "";
       }
-      
+
       let gig;
       try {
         const response = await saveGigData(gigDataToSave);

@@ -21,7 +21,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
         const { data, error } = await getGig(selectedGigId);
 
         if (error) throw error;
-        
+
         if (data) {
           setGigs(data);
           if (selectedGigId) {
@@ -98,23 +98,16 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       }
     },
     commission: {
-      base: gig.commission_base || 'Fixed Salary',
-      baseAmount: gig.commission_base_amount || '',
-      bonus: gig.commission_bonus || '',
-      bonusAmount: gig.commission_bonus_amount || '',
-      structure: gig.commission_structure || '',
-      additionalDetails: gig.commission_structure || '',
+      commission_per_call: gig.commission_per_call || 0,
+      bonusAmount: gig.commission_bonus_amount || 0,
       currency: gig.commission_currency || 'USD',
-      minimumVolume: {
-        amount: gig.minimum_volume_amount || '',
-        period: gig.minimum_volume_period || '',
-        unit: gig.minimum_volume_unit || ''
+      minimumVolume: gig.minimum_volume || {
+        amount: 0,
+        period: '',
+        unit: ''
       },
-      transactionCommission: {
-        type: gig.transaction_commission_type || '',
-        amount: gig.transaction_commission_amount || ''
-      },
-      kpis: []
+      transactionCommission: gig.transaction_commission || 0,
+      additionalDetails: gig.additional_details || ''
     },
     leads: {
       types: gig.gig_leads?.map((lead: any) => ({
@@ -219,7 +212,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
 
   if (selectedGig) {
     return (
-      <GigDetails 
+      <GigDetails
         data={selectedGig}
       />
     );
@@ -231,7 +224,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
       <div className="text-center mb-8">
         <Logo className="mb-6" />
       </div>
-      
+
       {gigs.map((gig) => (
         <div
           key={gig.id}
@@ -267,7 +260,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
             <div className="text-right">
               <div className="text-sm text-gray-500">Base Commission</div>
               <div className="font-semibold text-gray-900">
-                {gig.commission_currency} {gig.commission_base_amount}
+                {typeof gig.commission_currency === 'string' ? gig.commission_currency : (gig.commission_currency?.$oid || 'USD')} {gig.commission_per_call}
               </div>
               {gig.commission_bonus && (
                 <div className="mt-1 text-sm text-green-600">

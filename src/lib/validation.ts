@@ -36,7 +36,7 @@ export function validateGigData(data: GigData): ValidationResult {
     }
 
     // Check if there are any schedules with hours
-    const hasHours = data.schedule.schedules?.some(schedule => 
+    const hasHours = data.schedule.schedules?.some(schedule =>
       schedule.hours?.start && schedule.hours?.end
     );
     if (!hasHours) {
@@ -56,17 +56,18 @@ export function validateGigData(data: GigData): ValidationResult {
       warnings.commission = [...(warnings.commission || []), 'Consider specifying the currency'];
     }
 
-    if (data.commission?.base) {
-      if (!data.commission?.baseAmount) {
-        warnings.commission = [...(warnings.commission || []), 'Consider specifying base commission amount'];
-      }
-      if (!data.commission?.minimumVolume?.amount) {
+    if (data.commission.commission_per_call === undefined || data.commission.commission_per_call === null) {
+      warnings.commission = [...(warnings.commission || []), 'Consider specifying commission per call'];
+    }
+
+    if (data.commission?.minimumVolume) {
+      if (!data.commission.minimumVolume.amount) {
         warnings.commission = [...(warnings.commission || []), 'Consider specifying minimum volume amount'];
       }
-      if (!data.commission?.minimumVolume?.unit) {
+      if (!data.commission.minimumVolume.unit) {
         warnings.commission = [...(warnings.commission || []), 'Consider specifying minimum volume unit'];
       }
-      if (!data.commission?.minimumVolume?.period) {
+      if (!data.commission.minimumVolume.period) {
         warnings.commission = [...(warnings.commission || []), 'Consider specifying minimum volume period'];
       }
     }

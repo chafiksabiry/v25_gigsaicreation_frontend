@@ -73,20 +73,16 @@ export interface ParsedGig {
     };
   };
   commission?: {
-    base: string;
-    baseAmount: number;
-    bonus?: string;
-    bonusAmount?: number;
-    currency: string;
+    commission_per_call: number;
+    bonusAmount: number;
+    currency: string | { $oid: string };
     minimumVolume: {
       amount: number;
       period: string;
       unit: string;
     };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
+    transactionCommission: number;
+    additionalDetails?: string;
   };
   leads?: {
     types: Array<{
@@ -219,21 +215,16 @@ export interface GigData {
     };
   };
   commission: {
-    base: string;
-    baseAmount: number;
-    bonus: string;
+    commission_per_call: number;
     bonusAmount: number;
-    structure: string;
-    currency: string;
+    currency: string | { $oid: string };
     minimumVolume: {
       amount: number;
       period: string;
       unit: string;
     };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
+    transactionCommission: number;
+    additionalDetails?: string;
     kpis: any[];
   };
   leads: {
@@ -368,21 +359,15 @@ export interface GigSuggestion {
     };
   };
   commission: {
-    base: string;
-    baseAmount: number;
-    bonus?: string;
-    bonusAmount?: number;
-    structure?: string;
-    currency: string;
+    commission_per_call: number;
+    bonusAmount: number;
+    currency: string | { $oid: string };
     minimumVolume: {
       amount: number;
       period: string;
       unit: string;
     };
-    transactionCommission: {
-      type: string;
-      amount: number;
-    };
+    transactionCommission: number;
     additionalDetails?: string;
   };
   sectors: string[];
