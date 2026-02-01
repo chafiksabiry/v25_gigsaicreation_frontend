@@ -4154,7 +4154,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       </div>
 
                       <select
-                        value={(typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId()}
+                        value={(() => {
+                          const currentVal = typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency;
+                          // If currentVal matches an ID in the list, use it
+                          if (currencies.some(c => c._id === currentVal)) return currentVal;
+                          // If not, try to find a currency with this code
+                          const matchingCurrency = currencies.find(c => c.code === currentVal);
+                          return matchingCurrency ? matchingCurrency._id : (currentVal || getDefaultCurrencyId());
+                        })()}
                         onChange={(e) =>
                           updateCommissionOption(
                             0,
