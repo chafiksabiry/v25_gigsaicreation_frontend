@@ -43,16 +43,16 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   // Fetch selected currency details when currency ID changes
   useEffect(() => {
     const loadSelectedCurrency = async () => {
-      if (data?.commission?.currency && currencies.length > 0) {
+      if (data?.commission?.currency?.$oid && currencies.length > 0) {
         // First try to find in loaded currencies
-        const foundCurrency = currencies.find(c => c._id === data.commission.currency);
+        const foundCurrency = currencies.find(c => c._id === data.commission.currency.$oid);
         if (foundCurrency) {
           setSelectedCurrency(foundCurrency);
           console.log('💰 COMMISSION - Selected currency from list:', foundCurrency);
         } else {
           // If not found, fetch by ID
           try {
-            const fetchedCurrency = await fetchCurrencyById(data.commission.currency);
+            const fetchedCurrency = await fetchCurrencyById(data.commission.currency.$oid);
             if (fetchedCurrency) {
               setSelectedCurrency(fetchedCurrency);
               console.log('💰 COMMISSION - Selected currency from API:', fetchedCurrency);
@@ -67,7 +67,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
     };
 
     loadSelectedCurrency();
-  }, [data?.commission?.currency, currencies]);
+  }, [data?.commission?.currency?.$oid, currencies]);
 
   const getCurrencySymbol = () => {
     return selectedCurrency?.symbol || '$';
@@ -172,12 +172,12 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
 
             <select
-              value={data?.commission?.currency || ''}
+              value={data?.commission?.currency?.$oid || ''}
               onChange={(e) => onChange({
                 ...data,
                 commission: {
                   ...data.commission,
-                  currency: e.target.value
+                  currency: { $oid: e.target.value }
                 }
               })}
               disabled={currenciesLoading}

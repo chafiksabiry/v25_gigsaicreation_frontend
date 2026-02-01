@@ -148,48 +148,13 @@ export const predefinedOptions = {
     ]
   },
   commission: {
-    baseTypes: [
-      'Fixed Salary',
-      'Base + Commission',
-      'Pure Commission',
-      'Tiered Commission',
-      'Graduated Commission'
-    ],
-    bonusTypes: [
-      'Performance Bonus',
-      'Sales Bonus',
-      'Project Completion',
-      'Team Achievement',
-      'Quarterly Bonus',
-      'Annual Bonus'
-    ],
-    currencies: [
-      { code: 'USD', name: 'US Dollar', symbol: '$' },
-      { code: 'EUR', name: 'Euro', symbol: '€' },
-      { code: 'GBP', name: 'British Pound', symbol: '£' },
-      { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-      { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-      { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-      { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr' },
-      { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
-      { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-      { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' }
-    ],
-    minimumVolumeUnits: [
-      'Calls',
-      'Transactions',
-      'Sales'
-    ],
-    minimumVolumePeriods: [
-      'Daily',
-      'Weekly',
-      'Monthly'
-    ],
-    transactionCommissionTypes: [
-      'Fixed Amount',
-      'Percentage',
-      'Conversion'
-    ]
+    // Structure strictly defined by user requirements:
+    // commission_per_call (number)
+    // bonusAmount (string)
+    // currency (ObjectId)
+    // minimumVolume (Object)
+    // transactionCommission (number)
+    // additionalDetails (string)
   },
   skills: {
     // Skills are now loaded from API endpoints

@@ -89,7 +89,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
           return {
             commission_per_call: rawCommission.baseAmount || 0, // Map baseAmount to commission_per_call
             bonusAmount: String(rawCommission.bonusAmount || "0"), // Convert to string
-            currency: "68cae8918f8bb2a31a09b79f", // Default EUR ID as requested, since backend returns code
+            currency: { $oid: "68cae8918f8bb2a31a09b79f" }, // Default EUR ID as requested
             minimumVolume: {
               amount: String(rawCommission.minimumVolume?.amount || "0"), // Convert to string
               period: rawCommission.minimumVolume?.period || "Monthly",
@@ -98,6 +98,11 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
             transactionCommission: rawCommission.transactionCommission?.amount || 0, // Extract amount
             additionalDetails: rawCommission.additionalDetails || ""
           };
+        }
+
+        // Ensure currency is strictly valid object if passed through
+        if (rawCommission.currency && typeof rawCommission.currency === 'string') {
+          rawCommission.currency = { $oid: rawCommission.currency };
         }
 
         return rawCommission;
@@ -109,20 +114,27 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
         territories: cleanedTerritories
       },
 
-      // Additional fields that might be expected by the UI
+      // Missing fields required by GigSuggestion interface
+      title: data.jobTitles?.[0] || '',
       description: data.jobDescription || '',
-      sectors: data.category ? [data.category] : [],
-      scheduleFlexibility: data.availability?.flexibility || [],
-      destinationZones: data.destination_zone ? [data.destination_zone] : [],
       highlights: data.highlights || [],
       deliverables: data.deliverables || [],
-      requirements: { essential: [], preferred: [] }, // Backend doesn't provide this yet
+      requirements: { essential: [], preferred: [] },
+      timeframes: [],
+      benefits: [],
+      activity: { options: [] },
+      leads: { types: [], sources: [], distribution: { method: '', rules: [] }, qualificationCriteria: [] },
+      documentation: { templates: {}, reference: {}, product: [], process: [], training: [] },
+      selectedJobTitle: data.jobTitles?.[0] || '',
+      sectors: data.category ? [data.category] : [],
+      destinationZones: data.destination_zone ? [data.destination_zone] : [],
 
       // Schedule mapping
       schedule: {
         schedules: data.availability?.schedule ? data.availability.schedule.map((sched: any) => ({
-          days: [sched.day],
-          hours: sched.hours
+          day: sched.day,
+          hours: sched.hours,
+          days: [sched.day] // backend returns day, frontend type wants days array? check type
         })) : [],
         timeZones: data.availability?.time_zone ? [data.availability.time_zone] : [],
         time_zone: data.availability?.time_zone || '',
@@ -153,10 +165,10 @@ export function mapGigDataToSuggestions(gigData: GigData): any {
     activities: gigData.activities || [],
     industries: gigData.industries || [],
     seniority: gigData.seniority || { level: '', yearsExperience: 0 },
-    skills: {
+    skills: (gigData.skills ? {
       ...gigData.skills,
-      certifications: gigData.skills?.certifications || []
-    } || { languages: [], soft: [], professional: [], technical: [], certifications: [] },
+      certifications: (gigData.skills as any)?.certifications || []
+    } : { languages: [], soft: [], professional: [], technical: [], certifications: [] }) as any,
     schedule: gigData.schedule || {
       schedules: [],
       time_zone: '',
@@ -165,10 +177,7 @@ export function mapGigDataToSuggestions(gigData: GigData): any {
       minimumHours: {}
     },
     availability: gigData.availability || {},
-    commission: {
-      ...gigData.commission,
-      kpis: gigData.commission?.kpis || []
-    } || {},
+    commission: gigData.commission || {},
     team: gigData.team || { size: 1, structure: [], territories: [] },
     highlights: gigData.highlights || [],
     requirements: gigData.requirements || { essential: [], preferred: [] },

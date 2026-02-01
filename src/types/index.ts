@@ -287,15 +287,15 @@ export interface GigSuggestion {
   };
   commission: {
     commission_per_call: number;
-    bonusAmount?: string;
-    currency: string;
+    bonusAmount: string;
+    currency: { $oid: string };
     minimumVolume: {
       amount: string;
       period: string;
       unit: string;
     };
     transactionCommission: number;
-    additionalDetails?: string;
+    additionalDetails: string;
   };
   activity: {
     options: Array<{
