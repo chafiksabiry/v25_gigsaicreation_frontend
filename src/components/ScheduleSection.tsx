@@ -227,14 +227,39 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
     });
   };
 
-  const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
-    onChange({
-      ...data,
-      minimumHours: {
-        ...data.minimumHours,
-        [field]: value ? parseInt(value) : undefined
-      }
+  // Local state for minimum hours to prevent focus loss
+  const [localMinHours, setLocalMinHours] = useState({
+    daily: data.minimumHours?.daily?.toString() || "",
+    weekly: data.minimumHours?.weekly?.toString() || "",
+    monthly: data.minimumHours?.monthly?.toString() || ""
+  });
+
+  // Sync local state with props when props change externally
+  useEffect(() => {
+    setLocalMinHours({
+      daily: data.minimumHours?.daily?.toString() || "",
+      weekly: data.minimumHours?.weekly?.toString() || "",
+      monthly: data.minimumHours?.monthly?.toString() || ""
     });
+  }, [data.minimumHours?.daily, data.minimumHours?.weekly, data.minimumHours?.monthly]);
+
+  const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
+    // Update local state immediately
+    setLocalMinHours(prev => ({ ...prev, [field]: value }));
+
+    // Update parent only if value is a valid number or empty
+    const numValue = value === "" ? undefined : parseInt(value);
+
+    // Only trigger parent update if the parsed value is different to avoid loops
+    if (numValue !== data.minimumHours?.[field]) {
+      onChange({
+        ...data,
+        minimumHours: {
+          ...data.minimumHours,
+          [field]: numValue
+        }
+      });
+    }
   };
 
   const handleTimezoneChange = (timezoneId: string) => {
@@ -329,10 +354,10 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                                 onClick={() => !isAlreadySelected && handleDayToggle(day, group.hours)}
                                 disabled={isAlreadySelected}
                                 className={`px-2 py-1 text-xs font-medium rounded-md transition-all ${isSelected
-                                    ? 'bg-blue-500 text-white'
-                                    : isAlreadySelected
-                                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                  ? 'bg-blue-500 text-white'
+                                  : isAlreadySelected
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
                                   }`}
                               >
                                 {day.slice(0, 3)}
@@ -412,7 +437,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                     type="number"
                     min="1"
                     max="24"
-                    value={data.minimumHours?.daily || ''}
+                    value={localMinHours.daily}
                     onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
                     placeholder="e.g. 8"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
@@ -424,7 +449,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                     type="number"
                     min="1"
                     max="168"
-                    value={data.minimumHours?.weekly || ''}
+                    value={localMinHours.weekly}
                     onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
                     placeholder="e.g. 40"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
@@ -436,7 +461,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                     type="number"
                     min="1"
                     max="744"
-                    value={data.minimumHours?.monthly || ''}
+                    value={localMinHours.monthly}
                     onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
                     placeholder="e.g. 160"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
@@ -514,8 +539,8 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       key={option}
                       onClick={() => handleFlexibilityToggle(option)}
                       className={`p-3 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                          ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800'
-                          : 'bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'
+                        ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'
                         }`}
                     >
                       <div className="flex items-center gap-2">
