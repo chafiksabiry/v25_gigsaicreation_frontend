@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Clock, 
-  Calendar, 
+import {
+  Clock,
+  Calendar,
   Globe,
-  Plus, 
-  Trash2, 
-  ArrowLeft, 
-  ArrowRight, 
+  Plus,
+  Trash2,
+  ArrowLeft,
+  ArrowRight,
   Loader2
 } from "lucide-react";
 import { fetchAllTimezones } from "../lib/api";
@@ -41,7 +41,7 @@ interface ScheduleSectionProps {
 
 const allWeekDays = [
   "Monday",
-  "Tuesday", 
+  "Tuesday",
   "Wednesday",
   "Thursday",
   "Friday",
@@ -50,8 +50,8 @@ const allWeekDays = [
 ];
 
 const flexibilityOptions = [
-  'Remote Work Available', 'Flexible Hours', 'Weekend Rotation', 
-  'Night Shift Available', 'Split Shifts', 'Part-Time Options', 
+  'Remote Work Available', 'Flexible Hours', 'Weekend Rotation',
+  'Night Shift Available', 'Split Shifts', 'Part-Time Options',
   'Compressed Work Week', 'Shift Swapping Allowed'
 ];
 
@@ -113,7 +113,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
     (groups, schedule) => {
       // Ignorer les schedules avec des jours vides
       if (!schedule.day || schedule.day.trim() === "") return groups;
-      
+
       const key = `${schedule.hours.start}-${schedule.hours.end}`;
       if (!groups[key]) {
         groups[key] = { hours: schedule.hours, days: [] };
@@ -129,7 +129,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
   const selectedDays = data.schedules
     .filter(schedule => schedule.day && schedule.day.trim() !== "")
     .map(schedule => schedule.day);
-  
+
   const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
 
   const addNewScheduleGroup = () => {
@@ -176,9 +176,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
     value: string
   ) => {
     const updatedSchedules = data.schedules.map(schedule => {
-      if (group.days.includes(schedule.day) && 
-          schedule.hours.start === group.hours.start && 
-          schedule.hours.end === group.hours.end) {
+      if (group.days.includes(schedule.day) &&
+        schedule.hours.start === group.hours.start &&
+        schedule.hours.end === group.hours.end) {
         return {
           ...schedule,
           hours: { ...schedule.hours, [field]: value }
@@ -198,9 +198,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
     if (!presetData) return;
 
     const updatedSchedules = data.schedules.map(schedule => {
-      if (group.days.includes(schedule.day) && 
-          schedule.hours.start === group.hours.start && 
-          schedule.hours.end === group.hours.end) {
+      if (group.days.includes(schedule.day) &&
+        schedule.hours.start === group.hours.start &&
+        schedule.hours.end === group.hours.end) {
         return {
           ...schedule,
           hours: { start: presetData.start, end: presetData.end }
@@ -216,8 +216,8 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
   };
 
   const deleteScheduleGroup = (groupHours: { start: string; end: string }) => {
-    const updatedSchedules = data.schedules.filter(schedule => 
-      !(schedule.hours.start === groupHours.start && 
+    const updatedSchedules = data.schedules.filter(schedule =>
+      !(schedule.hours.start === groupHours.start &&
         schedule.hours.end === groupHours.end)
     );
 
@@ -247,7 +247,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
   const handleFlexibilityToggle = (option: string) => {
     const currentFlexibility = data.flexibility || [];
     const isSelected = currentFlexibility.includes(option);
-    
+
     const updatedFlexibility = isSelected
       ? currentFlexibility.filter(item => item !== option)
       : [...currentFlexibility, option];
@@ -257,26 +257,26 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
       flexibility: updatedFlexibility
     });
   };
-  
+
   return (
     <div className="w-full bg-white p-0">
       <div className="space-y-8">
         <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
-          
+
           {/* Schedule Groups Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className={`bg-gradient-to-r ${getHeaderGradient('blue')} px-6 py-4`}>
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <div>
+                  <Calendar className="w-6 h-6 text-white" />
+                </div>
+                <div>
                   <h3 className="text-xl font-bold text-white">Work Schedule</h3>
                   <p className="text-white/80 text-sm">Define working days and hours</p>
+                </div>
+              </div>
             </div>
-          </div>
-            </div>
-            
+
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -284,7 +284,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                   <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
                     {Object.keys(groupedSchedules).length}
                   </span>
-          </div>
+                </div>
                 {!allDaysSelected && (
                   <button
                     onClick={addNewScheduleGroup}
@@ -294,10 +294,10 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                     Add Schedule
                   </button>
                 )}
-      </div>
+              </div>
 
               {Object.entries(groupedSchedules).length > 0 ? (
-      <div className="space-y-4">
+                <div className="space-y-4">
                   {Object.entries(groupedSchedules).map(([key, group]) => (
                     <div
                       key={key}
@@ -306,64 +306,64 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-sm font-semibold text-blue-800">
                           {formatTime24(group.hours.start)} - {formatTime24(group.hours.end)}
-              </h4>
-              <button
+                        </h4>
+                        <button
                           onClick={() => deleteScheduleGroup(group.hours)}
                           className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
 
                       {/* Days Selection */}
                       <div className="mb-4">
                         <label className="block text-xs font-medium text-gray-700 mb-2">Working Days</label>
                         <div className="grid grid-cols-7 gap-1">
                           {allWeekDays.map(day => {
-                    const isSelected = group.days.includes(day);
+                            const isSelected = group.days.includes(day);
                             const isAlreadySelected = selectedDays.includes(day) && !isSelected;
-                            
-                    return (
-                      <button
-                        key={day}
+
+                            return (
+                              <button
+                                key={day}
                                 onClick={() => !isAlreadySelected && handleDayToggle(day, group.hours)}
                                 disabled={isAlreadySelected}
-                                className={`px-2 py-1 text-xs font-medium rounded-md transition-all ${
-                                  isSelected
+                                className={`px-2 py-1 text-xs font-medium rounded-md transition-all ${isSelected
                                     ? 'bg-blue-500 text-white'
                                     : isAlreadySelected
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
-                                }`}
+                                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                  }`}
                               >
                                 {day.slice(0, 3)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
 
                       {/* Time Selection */}
                       <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
+                        <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">Start Time</label>
-                    <input
-                      type="time"
-                      value={group.hours.start}
-                      onChange={(e) => handleHoursChange(group, 'start', e.target.value)}
+                          <input
+                            type="time"
+                            value={group.hours.start}
+                            onChange={(e) => handleHoursChange(group, 'start', e.target.value)}
                             className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
+                          />
+                        </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">End Time</label>
-                    <input
-                      type="time"
-                      value={group.hours.end}
-                      onChange={(e) => handleHoursChange(group, 'end', e.target.value)}
+                          <input
+                            type="time"
+                            value={group.hours.end}
+                            onChange={(e) => handleHoursChange(group, 'end', e.target.value)}
+                            min={group.hours.start}
                             className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
+                          />
+                        </div>
+                      </div>
 
                       {/* Time Presets */}
                       <div className="flex flex-wrap gap-2">
@@ -374,11 +374,11 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                             className="px-2 py-1 text-xs bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
                           >
                             {preset.label}
-                  </button>
+                          </button>
                         ))}
-            </div>
-          </div>
-        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
@@ -408,37 +408,37 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Daily Hours</label>
-                    <input
-                      type="number"
+                  <input
+                    type="number"
                     min="1"
-                      max="24"
+                    max="24"
                     value={data.minimumHours?.daily || ''}
-                   onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
-                      placeholder="e.g. 8"
+                    onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
+                    placeholder="e.g. 8"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
-                    />
-                  </div>
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Weekly Hours</label>
-                    <input
-                      type="number"
+                  <input
+                    type="number"
                     min="1"
-                      max="168"
+                    max="168"
                     value={data.minimumHours?.weekly || ''}
-                  onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
-                      placeholder="e.g. 40"
+                    onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
+                    placeholder="e.g. 40"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
-                    />
-                  </div>
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Hours</label>
-                    <input
-                      type="number"
+                  <input
+                    type="number"
                     min="1"
-                      max="744"
+                    max="744"
                     value={data.minimumHours?.monthly || ''}
-                  onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
-                      placeholder="e.g. 160"
+                    onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
+                    placeholder="e.g. 160"
                     className="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-medium focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
                   />
                 </div>
@@ -459,9 +459,9 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
-            <select
+              <select
                 value={data.time_zone || ''}
                 onChange={(e) => handleTimezoneChange(e.target.value)}
                 disabled={timezonesLoading}
@@ -474,14 +474,14 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                   // Convertir gmtOffset (probablement en secondes) en heures
                   const offsetHours = timezone.gmtOffset / 3600;
                   const offsetString = offsetHours >= 0 ? `+${offsetHours}` : `${offsetHours}`;
-                  
+
                   return (
                     <option key={timezone._id} value={timezone._id}>
                       {timezone.zoneName} ({timezone.countryName}) UTC{offsetString}
                     </option>
                   );
                 })}
-            </select>
+              </select>
               {timezonesLoading && (
                 <div className="mt-2 flex items-center justify-center">
                   <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
@@ -504,7 +504,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {flexibilityOptions.map((option) => {
@@ -513,16 +513,14 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                     <button
                       key={option}
                       onClick={() => handleFlexibilityToggle(option)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all duration-200 ${
-                        isSelected
+                      className={`p-3 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
                           ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800'
                           : 'bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                          isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
-                        }`}>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+                          }`}>
                           {isSelected && <span className="text-white text-xs">✓</span>}
                         </div>
                         <span className="text-sm font-medium">{option}</span>
@@ -530,19 +528,19 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                     </button>
                   );
                 })}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
           {/* Navigation Buttons */}
-        <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-          <div className="flex items-center gap-3">
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <div className="flex items-center gap-3">
               <button
                 onClick={onPrevious}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               >
                 <ArrowLeft className="w-5 h-5" />
-              Previous
+                Previous
               </button>
             </div>
             <button
