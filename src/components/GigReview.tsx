@@ -21,7 +21,7 @@ import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
 import { validateGigData } from "../lib/validation";
 import { groupSchedules } from "../lib/scheduleUtils";
-import { fetchAllTimezones, fetchCompanyById, getCountryNameById } from '../lib/api';
+import { fetchAllTimezones, fetchCompanyById, getCountryNameById, fetchCurrencyById } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
 import {
   getIndustryNameById,
@@ -58,6 +58,7 @@ export function GigReview({
   const [technicalSkills, setTechnicalSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [selectedCurrency, setSelectedCurrency] = useState<any>(null);
 
   // State for timezones and companies
   const [timezoneMap, setTimezoneMap] = useState<{ [key: string]: string }>({});
@@ -154,6 +155,37 @@ export function GigReview({
     fetchMeta();
   }, []);
 
+  // Fetch currency details
+  useEffect(() => {
+    const loadCurrency = async () => {
+      const currencyVal = data?.commission?.currency;
+      if (!currencyVal) return;
+
+      const currencyId = (typeof currencyVal === 'object' && (currencyVal as any).$oid)
+        ? (currencyVal as any).$oid
+        : currencyVal;
+
+      if (typeof currencyId === 'string') {
+        // Try finding in predefined options first
+        const currencies = (predefinedOptions.commission as any)?.currencies || [];
+        const found = currencies.find((c: any) => c._id === currencyId || c.code === currencyId);
+
+        if (found) {
+          setSelectedCurrency(found);
+        } else if (/^[0-9a-fA-F]{24}$/.test(currencyId)) {
+          // If not found and looks like an ID, fetch it
+          try {
+            const fetched = await fetchCurrencyById(currencyId);
+            if (fetched) setSelectedCurrency(fetched);
+          } catch (e) {
+            console.error('Error fetching currency:', e);
+          }
+        }
+      }
+    };
+    loadCurrency();
+  }, [data?.commission?.currency]);
+
   // Helper to get time zone name
   const getTimeZoneName = (zone: string) => {
     return timezoneMap[zone] || zone;
@@ -205,6 +237,9 @@ export function GigReview({
   };
 
   const getCurrencySymbol = () => {
+    if (selectedCurrency?.symbol) return selectedCurrency.symbol;
+
+    // Fallback logic
     if (!data.commission) {
       return "€";
     }
@@ -508,32 +543,13 @@ export function GigReview({
                 <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl p-6 border border-blue-100">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
 
-                    {/* Currency */}
-                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-blue-100/50">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                          <DollarSign className="w-5 h-5" />
-                        </div>
-                        <span className="text-gray-600 font-medium">Currency</span>
-                      </div>
-                      <span className="font-bold text-gray-900">
-                        {(() => {
-                          const currencies = (predefinedOptions.commission as any)?.currencies || [];
-                          const currencyVal = data.commission.currency;
-                          const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
-                          const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
-                          return curr ? `${curr.code}` : (typeof currencyId === 'string' ? currencyId : '-');
-                        })()}
-                      </span>
-                    </div>
-
-                    {/* Per call */}
+                    {/* Per call compensation */}
                     <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-green-100/50">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-100 rounded-lg text-green-600">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                         </div>
-                        <span className="text-gray-600 font-medium">Per Call</span>
+                        <span className="text-gray-600 font-medium">Per call compensation</span>
                       </div>
                       <span className="font-bold text-gray-900">
                         {data.commission.commission_per_call || 0}
@@ -543,13 +559,13 @@ export function GigReview({
                       </span>
                     </div>
 
-                    {/* Transaction */}
+                    {/* Transaction Commission */}
                     <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-purple-100/50">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
                           <Coins className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-600 font-medium">Transaction</span>
+                        <span className="text-gray-600 font-medium">Transaction Commission</span>
                       </div>
                       <span className="font-bold text-gray-900">
                         {data.commission.transactionCommission || 0}
@@ -559,13 +575,13 @@ export function GigReview({
                       </span>
                     </div>
 
-                    {/* Bonus */}
+                    {/* Bonus & Incentives */}
                     <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-amber-100/50">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
                           <Star className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-600 font-medium">Bonus</span>
+                        <span className="text-gray-600 font-medium">Bonus & Incentives</span>
                       </div>
                       <span className="font-bold text-gray-900">
                         {data.commission.bonusAmount || 0}
@@ -575,13 +591,13 @@ export function GigReview({
                       </span>
                     </div>
 
-                    {/* Minimum Volume */}
+                    {/* Minimum Volume Requirements */}
                     <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-orange-100/50 col-span-1 md:col-span-2">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
                           <Target className="w-5 h-5" />
                         </div>
-                        <span className="text-gray-600 font-medium">Min. Volume</span>
+                        <span className="text-gray-600 font-medium">Minimum Volume Requirements</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-gray-900 text-lg">
