@@ -2603,7 +2603,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         {/* Afficher les groupes vides */}
         {emptySchedules.map((emptySchedule, index) => (
           <div
-            key={emptySchedule._id?.$oid || index}
+            key={`empty-schedule-${index}`}
             className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
           >
             <div className="flex items-center justify-between mb-3">
