@@ -49,21 +49,32 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         : data?.commission?.currency;
 
       if (currencyId && currencies.length > 0) {
-        // First try to find in loaded currencies
-        const foundCurrency = currencies.find(c => c._id === currencyId);
+        // First try to find in loaded currencies by ID
+        let foundCurrency = currencies.find(c => c._id === currencyId);
+
+        // If not found by ID, and currencyId looks like a code (e.g. "EUR"), try finding by code
+        if (!foundCurrency && typeof currencyId === 'string' && currencyId.length === 3) {
+          foundCurrency = currencies.find(c => c.code === currencyId);
+        }
+
         if (foundCurrency) {
           setSelectedCurrency(foundCurrency);
           console.log('💰 COMMISSION - Selected currency from list:', foundCurrency);
         } else {
-          // If not found, fetch by ID
-          try {
-            const fetchedCurrency = await fetchCurrencyById(currencyId);
-            if (fetchedCurrency) {
-              setSelectedCurrency(fetchedCurrency);
-              console.log('💰 COMMISSION - Selected currency from API:', fetchedCurrency);
+          // If not found, fetch by ID ONLY if it looks like a valid Mongo ID (24 hex chars)
+          // This prevents sending "EUR" to the ID endpoint which causes 400 error
+          if (typeof currencyId === 'string' && /^[0-9a-fA-F]{24}$/.test(currencyId)) {
+            try {
+              const fetchedCurrency = await fetchCurrencyById(currencyId);
+              if (fetchedCurrency) {
+                setSelectedCurrency(fetchedCurrency);
+                console.log('💰 COMMISSION - Selected currency from API:', fetchedCurrency);
+              }
+            } catch (error) {
+              console.error('❌ Error fetching selected currency:', error);
             }
-          } catch (error) {
-            console.error('❌ Error fetching selected currency:', error);
+          } else {
+            console.warn('⚠️ Invalid currency ID format, skipping fetch:', currencyId);
           }
         }
       } else {

@@ -208,9 +208,10 @@ export function GigReview({
     if (!data.commission) {
       return "€";
     }
+    const currencies = predefinedOptions.commission.currencies || [];
     return data.commission.currency
-      ? predefinedOptions.commission.currencies.find(
-        (c) => c.code === data.commission.currency
+      ? currencies.find(
+        (c: any) => c.code === data.commission.currency
       )?.symbol || "€"
       : "€";
   };

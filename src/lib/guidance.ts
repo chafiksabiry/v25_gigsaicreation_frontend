@@ -156,7 +156,8 @@ export const predefinedOptions = {
     // transactionCommission (number)
     // additionalDetails (string)
     minimumVolumeUnits: [] as string[],
-    minimumVolumePeriods: ['Daily', 'Weekly', 'Monthly']
+    minimumVolumePeriods: ['Daily', 'Weekly', 'Monthly'],
+    currencies: [] as any[] // Loaded dynamically from API, but defined here for type safety
   },
   skills: {
     // Skills are now loaded from API endpoints
