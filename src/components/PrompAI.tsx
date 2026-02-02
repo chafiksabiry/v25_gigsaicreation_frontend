@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, HelpCircle, PlusCircle } from 'lucide-react';
+import { Brain, HelpCircle, PlusCircle, ArrowUp } from 'lucide-react';
 import { Suggestions } from './Suggestions';
 import { SectionContent } from './SectionContent';
 import Logo from './Logo';
@@ -707,15 +707,15 @@ const PrompAI: React.FC = () => {
                   id="description"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Example: I need a sales campaign targeting Spanish-speaking customers in Europe, with a focus on insurance products..."
-                  className="w-full h-32 px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm resize-none"
+                  placeholder="Message ChatGPT..."
+                  className="w-full h-32 pl-6 pr-14 py-4 bg-[#f4f4f4] border-none rounded-[26px] focus:ring-0 text-gray-900 placeholder-gray-500 text-lg resize-none shadow-sm"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="absolute bottom-3 right-3 p-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200"
                 >
-                  <Brain className="w-5 h-5" />
+                  <ArrowUp className="w-5 h-5" />
                 </button>
               </div>
             </div>
