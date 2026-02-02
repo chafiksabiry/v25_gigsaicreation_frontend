@@ -229,7 +229,7 @@ const FLEXIBILITY_SELECT_OPTIONS = [
   "Shift Swapping Allowed",
 ];
 
-export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggestions: any; input: string; onConfirm: (arg0: GigSuggestion) => void; onBack: any; }) => {
+export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(props.initialSuggestions || null);
   const [loading, setLoading] = useState(!props.initialSuggestions);
   const [error, setError] = useState<string | null>(null);
@@ -343,11 +343,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         if (showAddSkillInterface[skillType] && addInterfaceRefs.current[skillType]) {
           if (!addInterfaceRefs.current[skillType]!.contains(event.target as Node)) {
             // Fermer l'interface sans sauvegarder
-            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
-            setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
-            setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-            setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
-            setHoveredLevel((prev: any) => ({ ...prev, [skillType]: null }));
+            setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+            setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+            setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+            setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
             // Plus besoin de reset searchTerm
           }
         }
@@ -385,14 +385,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
   // Helper function to get currency symbol by ID
   const getCurrencySymbol = (currencyId: string): string => {
-    const currency = currencies.find((c: { _id: string; }) => c._id === currencyId);
+    const currency = currencies.find(c => c._id === currencyId);
     return currency?.symbol || '€';
   };
 
   // Helper function to get default currency (EUR if available, otherwise first in list)
   const getDefaultCurrencyId = (): string => {
     if (currencies.length === 0) return '';
-    const eurCurrency = currencies.find((c: { code: string; }) => c.code === 'EUR');
+    const eurCurrency = currencies.find(c => c.code === 'EUR');
     return eurCurrency?._id || currencies[0]._id;
   };
 
@@ -424,7 +424,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
       // Set default currency for main commission if not already set
       if (!suggestions.commission.currency) {
-        setSuggestions((prev: { commission: any; }) => prev ? {
+        setSuggestions(prev => prev ? {
           ...prev,
           commission: {
             ...prev.commission,
@@ -512,7 +512,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     let needsUpdate = false;
     const newSuggestions = { ...suggestions };
 
-    newSuggestions.team.structure.forEach((role: { roleId: any; count: any; seniority: { level: any; yearsExperience: any; }; } | null, index: string | number) => {
+    newSuggestions.team.structure.forEach((role, index) => {
       // Check if role is a string and convert it to proper object structure
       if (typeof role === 'string') {
         newSuggestions.team.structure[index] = {
@@ -571,7 +571,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     });
 
     if (needsUpdate) {
-      setSuggestions((prev: any) => prev ? newSuggestions : null);
+      setSuggestions(prev => prev ? newSuggestions : null);
     }
   };
 
@@ -656,14 +656,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     try {
       // Process all timezones from the API
       const processedTimezones = allTimezones
-        .map((tz: { _id: any; zoneName: string; gmtOffset: number; countryName: any; }) => ({
+        .map(tz => ({
           _id: tz._id,
           name: tz.zoneName,
           offset: tz.gmtOffset / 3600, // Convert seconds to hours
           abbreviation: tz.zoneName.split('/').pop() || '',
           countryName: tz.countryName
         }))
-        .sort((a: { offset: number; }, b: { offset: number; }) => a.offset - b.offset);
+        .sort((a, b) => a.offset - b.offset);
 
       setAvailableTimezones(processedTimezones);
     } catch (error) {
@@ -687,14 +687,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
   useEffect(() => {
     if (allTimezones && allTimezones.length > 0 && availableTimezones.length === 0) {
       const processedTimezones = allTimezones
-        .map((tz: { _id: any; zoneName: string; gmtOffset: number; countryName: any; }) => ({
+        .map(tz => ({
           _id: tz._id,
           name: tz.zoneName,
           offset: tz.gmtOffset / 3600,
           abbreviation: tz.zoneName.split('/').pop() || '',
           countryName: tz.countryName
         }))
-        .sort((a: { offset: number; }, b: { offset: number; }) => a.offset - b.offset);
+        .sort((a, b) => a.offset - b.offset);
       setAvailableTimezones(processedTimezones);
     }
   }, [allTimezones, availableTimezones.length]);
@@ -799,7 +799,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         });
 
         if (needsUpdate) {
-          setSuggestions((prev: any) => prev ? { ...prev, skills: migratedSkills } : null);
+          setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
 
@@ -850,7 +850,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         });
 
         if (needsUpdate) {
-          setSuggestions((prev: any) => prev ? { ...prev, skills: migratedSkills } : null);
+          setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
 
@@ -1124,7 +1124,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
             // If it's "Global", replace with France's MongoDB ObjectId
             if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
               // Find France in allCountriesFromAPI
-              const franceCountry = allCountriesFromAPI.find((c: { name: { common: string; }; cca2: string; }) =>
+              const franceCountry = allCountriesFromAPI.find(c =>
                 c.name.common.toLowerCase() === 'france' ||
                 c.cca2 === 'FR'
               );
@@ -1133,13 +1133,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
             // If it's an alpha-2 code, convert to MongoDB ObjectId
             if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
-              const country = allCountriesFromAPI.find((c: { cca2: string; }) => c.cca2 === zone);
+              const country = allCountriesFromAPI.find(c => c.cca2 === zone);
               return country ? country._id : zone;
             }
 
             // If it's a country name, convert to MongoDB ObjectId
             if (typeof zone === 'string') {
-              const country = allCountriesFromAPI.find((c: { name: { common: string; official: string; }; }) =>
+              const country = allCountriesFromAPI.find(c =>
                 c.name.common.toLowerCase() === zone.toLowerCase() ||
                 c.name.official.toLowerCase() === zone.toLowerCase()
               );
@@ -1152,7 +1152,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
           result.destinationZones = convertedZones;
         } else {
           // If no destination zones are provided, default to France's MongoDB ObjectId
-          const franceCountry = allCountriesFromAPI.find((c: { name: { common: string; }; cca2: string; }) =>
+          const franceCountry = allCountriesFromAPI.find(c =>
             c.name.common.toLowerCase() === 'france' ||
             c.cca2 === 'FR'
           );
@@ -1183,7 +1183,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
   // Memoized timezone options for the UI
   const timezoneOptions = React.useMemo(() => {
     return availableTimezones.length > 0
-      ? availableTimezones.map((tz: { _id: any; name: any; countryName: any; offset: any; }) => ({
+      ? availableTimezones.map(tz => ({
         _id: tz._id,
         zoneName: tz.name,
         countryName: tz.countryName,
@@ -1201,7 +1201,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
   useEffect(() => {
     if (!suggestions?.schedule || availableTimezones.length === 0) return;
 
-    setSuggestions((prev: { schedule: any; }) => {
+    setSuggestions(prev => {
       if (!prev || !prev.schedule) return prev;
       return {
         ...prev,
@@ -1227,7 +1227,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     if (!suggestions?.skills) return;
     if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
 
-      setSuggestions((prev: { skills: any; }) => {
+      setSuggestions(prev => {
         if (!prev || !prev.skills) return prev;
 
         const newSuggestions = { ...prev };
@@ -1255,7 +1255,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
         // Validate and migrate professional skills
         if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
-          const validProfessional = newSuggestions.skills.professional.map((skill: { skill: { $oid: any; }; level: any; details: any; }) => {
+          const validProfessional = newSuggestions.skills.professional.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, professionalSkills);
             if (found) {
@@ -1274,7 +1274,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
         // Validate and migrate technical skills
         if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
-          const validTechnical = newSuggestions.skills.technical.map((skill: { skill: { $oid: any; }; level: any; details: any; }) => {
+          const validTechnical = newSuggestions.skills.technical.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, technicalSkills);
             if (found) {
@@ -1293,7 +1293,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
         // Validate and migrate soft skills
         if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
-          const validSoft = newSuggestions.skills.soft.map((skill: { skill: { $oid: any; }; level: any; }) => {
+          const validSoft = newSuggestions.skills.soft.map(skill => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, softSkills);
             if (found) {
@@ -1414,7 +1414,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
   const getCountryName = (countryId: string): string => {
     // First check if it's an API ID (MongoDB ObjectId format)
     if (countryId && countryId.length === 24) {
-      const country = allCountriesFromAPI.find((c: { _id: string; }) => c._id === countryId);
+      const country = allCountriesFromAPI.find(c => c._id === countryId);
       if (country) {
         return country.name.common;
       }
@@ -1426,7 +1426,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     }
 
     // Then check the fetched countries by cca2 (for backward compatibility)
-    const country = allCountries.find((c: { cca2: string; }) => c.cca2 === countryId);
+    const country = allCountries.find(c => c.cca2 === countryId);
     if (country) {
       return country.name.common;
     }
@@ -1443,7 +1443,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
     // Then check if it's an API ID (MongoDB ObjectId format) in loaded territories
     if (territoryId && territoryId.length === 24) {
-      const country = territoriesFromAPI.find((c: { _id: string; }) => c._id === territoryId);
+      const country = territoriesFromAPI.find(c => c._id === territoryId);
       if (country) {
         return country.name.common;
       }
@@ -1496,7 +1496,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     }
 
     // Then check the fetched countries
-    const country = allCountries.find((c: { name: { common: string; }; }) => c.name.common === countryName);
+    const country = allCountries.find(c => c.name.common === countryName);
     if (country) {
       return country.cca2;
     }
@@ -1516,7 +1516,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     }
 
     // Then check the fetched countries
-    const country = allCountries.find((c: { name: { common: string; }; }) => c.name.common === countryName);
+    const country = allCountries.find(c => c.name.common === countryName);
     if (country) {
       return country.cca2;
     }
@@ -1562,7 +1562,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         break;
       case "industries":
         // Convert industry name to ID
-        const industryId = industries.find((i: { label: string; }) => i.label === item)?.value;
+        const industryId = industries.find(i => i.label === item)?.value;
         if (industryId) {
           newSuggestions.industries = [...(newSuggestions.industries || []), industryId];
         } else {
@@ -1571,7 +1571,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         break;
       case "activities":
         // Convert activity name to ID
-        const activityId = activities.find((a: { label: string; }) => a.label === item)?.value;
+        const activityId = activities.find(a => a.label === item)?.value;
         if (activityId) {
           newSuggestions.activities = [...(newSuggestions.activities || []), activityId];
         } else {
@@ -1580,7 +1580,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         break;
       case "languages":
         // Convert language name to ID
-        const languageId = languages.find((l: { label: string; }) => l.label === item)?.value;
+        const languageId = languages.find(l => l.label === item)?.value;
         if (languageId) {
           newSuggestions.skills.languages = [
             ...(newSuggestions.skills.languages || []),
@@ -1610,11 +1610,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         let countryId = item;
         if (item.length === 2) {
           // It's an alpha-2 code, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find((c: { cca2: string; }) => c.cca2 === item);
+          const country = allCountriesFromAPI.find(c => c.cca2 === item);
           countryId = country ? country._id : item;
         } else {
           // It's a country name, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find((c: { name: { common: string; official: string; }; }) =>
+          const country = allCountriesFromAPI.find(c =>
             c.name.common.toLowerCase() === item.toLowerCase() ||
             c.name.official.toLowerCase() === item.toLowerCase()
           );
@@ -1679,7 +1679,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         break;
       case "industries":
         // Convert industry name to ID
-        const industryId = industries.find((i: { label: string; }) => i.label === newValue)?.value;
+        const industryId = industries.find(i => i.label === newValue)?.value;
         if (industryId) {
           newSuggestions.industries[index] = industryId;
         } else {
@@ -1688,7 +1688,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         break;
       case "activities":
         // Convert activity name to ID
-        const activityId = activities.find((a: { label: string; }) => a.label === newValue)?.value;
+        const activityId = activities.find(a => a.label === newValue)?.value;
         if (activityId) {
           newSuggestions.activities[index] = activityId;
         } else {
@@ -1715,11 +1715,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         let countryId = newValue;
         if (newValue.length === 2) {
           // It's an alpha-2 code, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find((c: { cca2: string; }) => c.cca2 === newValue);
+          const country = allCountriesFromAPI.find(c => c.cca2 === newValue);
           countryId = country ? country._id : newValue;
         } else {
           // It's a country name, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find((c: { name: { common: string; official: string; }; }) =>
+          const country = allCountriesFromAPI.find(c =>
             c.name.common.toLowerCase() === newValue.toLowerCase() ||
             c.name.official.toLowerCase() === newValue.toLowerCase()
           );
@@ -1767,58 +1767,58 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     switch (section) {
       case "highlights":
         newSuggestions.highlights = newSuggestions.highlights.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "jobTitles":
         newSuggestions.jobTitles = newSuggestions.jobTitles.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "deliverables":
         newSuggestions.deliverables = newSuggestions.deliverables.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "industries":
         newSuggestions.industries = newSuggestions.industries.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "activities":
         newSuggestions.activities = newSuggestions.activities.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "sectors":
         newSuggestions.sectors = newSuggestions.sectors.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "destinationZones":
         newSuggestions.destinationZones =
-          newSuggestions.destinationZones.filter((_: any, i: number) => i !== index);
+          newSuggestions.destinationZones.filter((_, i) => i !== index);
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential =
-          newSuggestions.requirements.essential.filter((_: any, i: number) => i !== index);
+          newSuggestions.requirements.essential.filter((_, i) => i !== index);
         break;
       case "requirements.preferred":
         newSuggestions.requirements.preferred =
-          newSuggestions.requirements.preferred.filter((_: any, i: number) => i !== index);
+          newSuggestions.requirements.preferred.filter((_, i) => i !== index);
         break;
       case "skills.technical":
         newSuggestions.skills.technical =
-          newSuggestions.skills.technical.filter((_: any, i: number) => i !== index);
+          newSuggestions.skills.technical.filter((_, i) => i !== index);
         break;
       case "skills.soft":
         newSuggestions.skills.soft = newSuggestions.skills.soft.filter(
-          (_: any, i: number) => i !== index
+          (_, i) => i !== index
         );
         break;
       case "skills.languages":
         newSuggestions.skills.languages =
-          newSuggestions.skills.languages.filter((_: any, i: number) => i !== index);
+          newSuggestions.skills.languages.filter((_, i) => i !== index);
         break;
     }
 
@@ -1896,7 +1896,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                         <input
                           type="text"
                           value={editValue}
-                          onChange={async (e: { target: { value: any; }; }) => {
+                          onChange={async (e) => {
                             const value = e.target.value;
                             setEditValue(value);
 
@@ -1917,7 +1917,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                             setEditValue("");
                             setSearchResults([]);
                           }}
-                          onKeyDown={(e: { key: string; }) => {
+                          onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               if (editValue.trim()) {
                                 updateItem(section, index, editValue);
@@ -1942,7 +1942,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                         )}
                         {searchResults.length > 0 && (
                           <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white">
-                            {searchResults.map((country: { cca2: any; name: { common: string; }; }) => (
+                            {searchResults.map((country) => (
                               <button
                                 key={country.cca2}
                                 type="button"
@@ -1966,7 +1966,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                     ) : section === "sectors" || section === "industries" || section === "activities" ? (
                       <select
                         value={editValue}
-                        onChange={(e: { target: { value: any; }; }) => {
+                        onChange={(e) => {
                           const value = e.target.value;
                           setEditValue(value);
                           if (value) {
@@ -2002,7 +2002,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                       <input
                         type="text"
                         value={editValue}
-                        onChange={(e: { target: { value: any; }; }) => setEditValue(e.target.value)}
+                        onChange={(e) => setEditValue(e.target.value)}
                         onBlur={() => {
                           if (editValue.trim()) {
                             updateItem(section, index, editValue);
@@ -2011,7 +2011,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                           setEditingIndex(null);
                           setEditValue("");
                         }}
-                        onKeyDown={(e: { key: string; }) => {
+                        onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             if (editValue.trim()) {
                               updateItem(section, index, editValue);
@@ -2079,7 +2079,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                 <input
                   type="text"
                   value={editValue}
-                  onChange={async (e: { target: { value: any; }; }) => {
+                  onChange={async (e) => {
                     const value = e.target.value;
                     setEditValue(value);
 
@@ -2100,7 +2100,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                     setEditingIndex(null);
                     setSearchResults([]);
                   }}
-                  onKeyDown={(e: { key: string; }) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       if (editValue.trim()) {
                         addItem(section, editValue.trim());
@@ -2125,7 +2125,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                 )}
                 {searchResults.length > 0 && (
                   <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white">
-                    {searchResults.map((country: { cca2: any; name: { common: string; }; }) => (
+                    {searchResults.map((country) => (
                       <button
                         key={country.cca2}
                         type="button"
@@ -2148,7 +2148,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
             ) : section === "sectors" || section === "industries" || section === "activities" ? (
               <select
                 value={editValue}
-                onChange={(e: { target: { value: any; }; }) => {
+                onChange={(e) => {
                   const value = e.target.value;
                   setEditValue(value);
                   if (value) {
@@ -2186,7 +2186,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
               <input
                 type="text"
                 value={editValue}
-                onChange={(e: { target: { value: any; }; }) => setEditValue(e.target.value)}
+                onChange={(e) => setEditValue(e.target.value)}
                 onBlur={() => {
                   if (editValue.trim()) {
                     addItem(section, editValue.trim());
@@ -2195,7 +2195,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                   setEditingSection(null);
                   setEditingIndex(null);
                 }}
-                onKeyDown={(e: { key: string; }) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     if (editValue.trim()) {
                       addItem(section, editValue.trim());
@@ -2235,7 +2235,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
     if (!suggestions?.schedule) return null;
 
     const groupedSchedules = (suggestions.schedule.schedules || []).reduce(
-      (groups: { [x: string]: { days: any[]; }; }, schedule: { day: string; hours: { start: any; end: any; }; }) => {
+      (groups, schedule) => {
         // Ignorer les schedules avec des jours vides
         if (!schedule.day || schedule.day.trim() === "") return groups;
 
@@ -2261,13 +2261,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
 
     // Trouver les groupes vides (schedules avec des jours vides)
     const emptySchedules = suggestions.schedule.schedules.filter(
-      (      schedule: { day: string; }) => !schedule.day || schedule.day.trim() === ""
+      schedule => !schedule.day || schedule.day.trim() === ""
     );
 
     // Vérifier si tous les jours sont déjà sélectionnés
     const selectedDays = suggestions.schedule.schedules
-      .filter((schedule: { day: string; }) => schedule.day && schedule.day.trim() !== "")
-      .map((schedule: { day: any; }) => schedule.day);
+      .filter(schedule => schedule.day && schedule.day.trim() !== "")
+      .map(schedule => schedule.day);
 
     const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
 
@@ -2281,7 +2281,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
         { start: "11:00", end: "19:00" },
         { start: "14:00", end: "22:00" },
       ];
-      const usedHours = suggestions.schedule.schedules.map((s: { hours: { start: any; end: any; }; }) => `${s.hours.start}-${s.hours.end}`);
+      const usedHours = suggestions.schedule.schedules.map(s => `${s.hours.start}-${s.hours.end}`);
       const availableHours = defaultHoursList.find(
         h => !usedHours.includes(`${h.start}-${h.end}`)
       ) || { start: "09:00", end: "17:00" };
@@ -2346,1127 +2346,1040 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
       field: "start" | "end",
       value: string
     ) => {
-      const handleHoursChange = (
-        group: GroupedSchedule,
-        field: "start" | "end",
-        value: string
-      ) => {
-        // Logic removed: blocking on change prevents typing intermediate valid times.
+      // Prevent End < Start
+      if (field === "end" && value < group.hours.start) return;
 
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
 
-        const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      // If Start > End, we will also update End
+      let shouldUpdateEnd = false;
+      if (field === "start" && value > group.hours.end) {
+        shouldUpdateEnd = true;
+      }
 
-        // If Start > End, we will also update End
-        let shouldUpdateEnd = false;
-        if (field === "start" && value > group.hours.end) {
-          shouldUpdateEnd = true;
-        }
-
-        group.days.forEach((day: string) => {
-          const schedule = newSuggestions.schedule.schedules.find(
-            (s: ScheduleEntry) => s.day === day
-          );
-          if (schedule) {
-            schedule.hours[field] = value;
-            if (shouldUpdateEnd) {
-              schedule.hours.end = value;
-            }
-          }
-        });
-        setSuggestions(newSuggestions);
-      };
-
-      const handlePresetClick = (group: GroupedSchedule, preset: string) => {
-        let newHours;
-        switch (preset) {
-          case "9-5":
-            newHours = { start: "09:00", end: "17:00" };
-            break;
-          case "Early":
-            newHours = { start: "07:00", end: "15:00" };
-            break;
-          case "Late":
-            newHours = { start: "11:00", end: "19:00" };
-            break;
-          case "Evening":
-            newHours = { start: "14:00", end: "22:00" };
-            break;
-          default:
-            newHours = group.hours;
-        }
-
-        const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-        group.days.forEach((day: string) => {
-          const schedule = newSuggestions.schedule.schedules.find(
-            (s: ScheduleEntry) => s.day === day
-          );
-          if (schedule) {
-            schedule.hours = newHours;
-          }
-        });
-        setSuggestions(newSuggestions);
-      };
-
-      const handleEmptyScheduleDayToggle = (dayToToggle: string, emptySchedule: ScheduleEntry) => {
-        const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-        const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
-          (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      group.days.forEach((day: string) => {
+        const schedule = newSuggestions.schedule.schedules.find(
+          (s: ScheduleEntry) => s.day === day
         );
-
-        if (scheduleIndex > -1) {
-          newSuggestions.schedule.schedules[scheduleIndex].day = dayToToggle;
+        if (schedule) {
+          schedule.hours[field] = value;
+          if (shouldUpdateEnd) {
+            schedule.hours.end = value;
+          }
         }
+      });
+      setSuggestions(newSuggestions);
+    };
+
+    const handlePresetClick = (group: GroupedSchedule, preset: string) => {
+      let newHours;
+      switch (preset) {
+        case "9-5":
+          newHours = { start: "09:00", end: "17:00" };
+          break;
+        case "Early":
+          newHours = { start: "07:00", end: "15:00" };
+          break;
+        case "Late":
+          newHours = { start: "11:00", end: "19:00" };
+          break;
+        case "Evening":
+          newHours = { start: "14:00", end: "22:00" };
+          break;
+        default:
+          newHours = group.hours;
+      }
+
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      group.days.forEach((day: string) => {
+        const schedule = newSuggestions.schedule.schedules.find(
+          (s: ScheduleEntry) => s.day === day
+        );
+        if (schedule) {
+          schedule.hours = newHours;
+        }
+      });
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEmptyScheduleDayToggle = (dayToToggle: string, emptySchedule: ScheduleEntry) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules[scheduleIndex].day = dayToToggle;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEmptyScheduleHoursChange = (emptySchedule: ScheduleEntry, field: "start" | "end", value: string) => {
+      // Prevent End < Start
+      if (field === "end" && value < emptySchedule.hours.start) return;
+
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules[scheduleIndex].hours[field] = value;
+        // If Start > End, update End as well
+        if (field === "start" && value > newSuggestions.schedule.schedules[scheduleIndex].hours.end) {
+          newSuggestions.schedule.schedules[scheduleIndex].hours.end = value;
+        }
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEmptySchedulePresetClick = (emptySchedule: ScheduleEntry, preset: string) => {
+      let newHours;
+      switch (preset) {
+        case "9-5":
+          newHours = { start: "09:00", end: "17:00" };
+          break;
+        case "Early":
+          newHours = { start: "07:00", end: "15:00" };
+          break;
+        case "Late":
+          newHours = { start: "11:00", end: "19:00" };
+          break;
+        case "Evening":
+          newHours = { start: "14:00", end: "22:00" };
+          break;
+        default:
+          newHours = emptySchedule.hours;
+      }
+
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules[scheduleIndex].hours = newHours;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteEmptySchedule = (emptySchedule: ScheduleEntry) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+        (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
+      );
+
+      if (scheduleIndex > -1) {
+        newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
         setSuggestions(newSuggestions);
-      };
+      }
+    };
 
-      const handleEmptyScheduleHoursChange = (emptySchedule: ScheduleEntry, field: "start" | "end", value: string) => {
-        const handleEmptyScheduleHoursChange = (emptySchedule: ScheduleEntry, field: "start" | "end", value: string) => {
-          // Logic removed: blocking on change prevents typing intermediate valid times.
+    const deleteScheduleGroup = (groupHours: { start: string; end: string }) => {
+      const newSuggestions = JSON.parse(JSON.stringify(suggestions));
+      const schedulesToRemove = newSuggestions.schedule.schedules.filter(
+        (s: ScheduleEntry) => s.hours.start === groupHours.start && s.hours.end === groupHours.end
+      );
 
-          const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-          const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
-            (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
-          );
+      schedulesToRemove.forEach((schedule: ScheduleEntry) => {
+        const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
+          (s: ScheduleEntry) => s._id?.$oid === schedule._id?.$oid
+        );
+        if (scheduleIndex > -1) {
+          newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
+        }
+      });
 
-          if (scheduleIndex > -1) {
-            newSuggestions.schedule.schedules[scheduleIndex].hours[field] = value;
-            // If Start > End, update End as well
-            if (field === "start" && value > newSuggestions.schedule.schedules[scheduleIndex].hours.end) {
-              newSuggestions.schedule.schedules[scheduleIndex].hours.end = value;
-            }
-          }
-          setSuggestions(newSuggestions);
-        };
+      setSuggestions(newSuggestions);
+    };
 
-        const handleEmptySchedulePresetClick = (emptySchedule: ScheduleEntry, preset: string) => {
-          let newHours;
-          switch (preset) {
-            case "9-5":
-              newHours = { start: "09:00", end: "17:00" };
-              break;
-            case "Early":
-              newHours = { start: "07:00", end: "15:00" };
-              break;
-            case "Late":
-              newHours = { start: "11:00", end: "19:00" };
-              break;
-            case "Evening":
-              newHours = { start: "14:00", end: "22:00" };
-              break;
-            default:
-              newHours = emptySchedule.hours;
-          }
-
-          const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-          const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
-            (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
-          );
-
-          if (scheduleIndex > -1) {
-            newSuggestions.schedule.schedules[scheduleIndex].hours = newHours;
-          }
-          setSuggestions(newSuggestions);
-        };
-
-        const deleteEmptySchedule = (emptySchedule: ScheduleEntry) => {
-          const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-          const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
-            (s: ScheduleEntry) => s._id?.$oid === emptySchedule._id?.$oid
-          );
-
-          if (scheduleIndex > -1) {
-            newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
-            setSuggestions(newSuggestions);
-          }
-        };
-
-        const deleteScheduleGroup = (groupHours: { start: string; end: string }) => {
-          const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-          const schedulesToRemove = newSuggestions.schedule.schedules.filter(
-            (s: ScheduleEntry) => s.hours.start === groupHours.start && s.hours.end === groupHours.end
-          );
-
-          schedulesToRemove.forEach((schedule: ScheduleEntry) => {
-            const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
-              (s: ScheduleEntry) => s._id?.$oid === schedule._id?.$oid
-            );
-            if (scheduleIndex > -1) {
-              newSuggestions.schedule.schedules.splice(scheduleIndex, 1);
-            }
-          });
-
-          setSuggestions(newSuggestions);
-        };
-
-        return (
-          <div className="space-y-4">
-            {Object.keys(groupedSchedules).length > 0 ? (
-              Object.entries(groupedSchedules).map(([key, group]) => (
-                <div
-                  key={group.days.slice().sort().join('-')}
-                  className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="text-sm font-semibold text-gray-800 flex items-center">
-                      <Calendar className="w-4 h-4 mr-2 text-blue-500" />
-                      Working Days
-                    </h5>
-                    <button
-                      onClick={() => deleteScheduleGroup(group.hours)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete schedule group"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
-                    {allWeekDays.map((day) => {
-                      const isSelected = group.days.includes(day);
-                      const isInOtherGroup = !isSelected && suggestions.schedule.schedules.some((s: { day: string; }) => s.day === day);
-                      return (
-                        <button
-                          key={day}
-                          onClick={() => handleDayToggle(day, group.hours)}
-                          disabled={isInOtherGroup}
-                          className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                        ${isSelected ? 'bg-purple-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'}
-                      `}
-                        >
-                          {day}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                    <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                      <Clock className="w-4 h-4 mr-2 text-blue-600" />
-                      Working Hours
-                    </h5>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                          <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
-                          Start Time
-                        </label>
-                        <input
-                          type="time"
-                          value={group.hours.start}
-                          onChange={(e: { target: { value: string; }; }) =>
-                            handleHoursChange(group, "start", e.target.value)
-                          }
-                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                          <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
-                          End Time
-                        </label>
-                        <input
-                          type="time"
-                          value={group.hours.end}
-                          onChange={(e: { target: { value: string; }; }) =>
-                            handleHoursChange(group, "end", e.target.value)
-                          }
-                          onBlur={() => {
-                            if (group.hours.end < group.hours.start) {
-                              handleHoursChange(group, "end", group.hours.start);
-                            }
-                          }}
-                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
-                      <span className="font-semibold text-gray-700 text-sm">
-                        {formatTime24(group.hours.start)} -{" "}
-                        {formatTime24(group.hours.end)}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      <button
-                        onClick={() => handlePresetClick(group, "9-5")}
-                        className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                      >
-                        <Sun className="w-4 h-4 text-yellow-500 mb-1" />
-                        <span className="text-xs font-medium text-gray-600">
-                          9-5
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => handlePresetClick(group, "Early")}
-                        className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                      >
-                        <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
-                        <span className="text-xs font-medium text-gray-600">
-                          Early
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => handlePresetClick(group, "Late")}
-                        className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                      >
-                        <Clock className="w-4 h-4 text-indigo-500 mb-1" />
-                        <span className="text-xs font-medium text-gray-600">
-                          Late
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => handlePresetClick(group, "Evening")}
-                        className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                      >
-                        <Moon className="w-4 h-4 text-purple-500 mb-1" />
-                        <span className="text-xs font-medium text-gray-600">
-                          Evening
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : null}
-
-            {/* Afficher les groupes vides */}
-            {emptySchedules.map((emptySchedule: { day: any; hours: any; _id?: { $oid: string; } | undefined; }, index: any) => (
-              <div
-                key={`empty-schedule-${index}`}
-                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-sm font-semibold text-gray-600">
-                    New Schedule Group (No days selected)
-                  </h5>
-                  <button
-                    onClick={() => deleteEmptySchedule(emptySchedule)}
-                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex gap-1 mb-4">
-                  {allWeekDays.map((day) => {
-                    const isSelected = emptySchedule.day === day;
-                    const isInOtherGroup = suggestions.schedule.schedules.some((s: { day: string; }) => s.day === day);
-                    return (
-                      <button
-                        key={day}
-                        onClick={() => handleEmptyScheduleDayToggle(day, emptySchedule)}
-                        disabled={isInOtherGroup}
-                        className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                      ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
-                    `}
-                      >
-                        {day}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                  <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                    <Clock className="w-4 h-4 mr-2 text-blue-600" />
-                    Working Hours
-                  </h5>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                        <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
-                        Start Time
-                      </label>
-                      <input
-                        type="time"
-                        value={emptySchedule.hours.start}
-                        onChange={(e: { target: { value: string; }; }) =>
-                          handleEmptyScheduleHoursChange(emptySchedule, "start", e.target.value)
-                        }
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                        <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
-                        End Time
-                      </label>
-                      <input
-                        type="time"
-                        value={emptySchedule.hours.end}
-                        onChange={(e: { target: { value: string; }; }) =>
-                          handleEmptyScheduleHoursChange(emptySchedule, "end", e.target.value)
-                        }
-                        onBlur={() => {
-                          if (emptySchedule.hours.end < emptySchedule.hours.start) {
-                            handleEmptyScheduleHoursChange(emptySchedule, "end", emptySchedule.hours.start);
-                          }
-                        }}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
-                    <span className="font-semibold text-gray-700 text-sm">
-                      {formatTime24(emptySchedule.hours.start)} -{" "}
-                      {formatTime24(emptySchedule.hours.end)}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <button
-                      onClick={() => handleEmptySchedulePresetClick(emptySchedule, "9-5")}
-                      className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                    >
-                      <Sun className="w-4 h-4 text-yellow-500 mb-1" />
-                      <span className="text-xs font-medium text-gray-600">
-                        9-5
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Early")}
-                      className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                    >
-                      <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
-                      <span className="text-xs font-medium text-gray-600">
-                        Early
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Late")}
-                      className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                    >
-                      <Clock className="w-4 h-4 text-indigo-500 mb-1" />
-                      <span className="text-xs font-medium text-gray-600">
-                        Late
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Evening")}
-                      className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
-                    >
-                      <Moon className="w-4 h-4 text-purple-500 mb-1" />
-                      <span className="text-xs font-medium text-gray-600">
-                        Evening
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Message si aucun planning n'est défini */}
-            {Object.keys(groupedSchedules).length === 0 && emptySchedules.length === 0 && (
-              <div className="text-center py-10">
-                <p className="text-gray-500 mb-4">No schedule defined.</p>
-              </div>
-            )}
-
-            {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés ET qu'il n'y a pas de groupes vides */}
-            {!allDaysSelected && emptySchedules.length === 0 && (
-              <div className="flex justify-center mt-8">
+    return (
+      <div className="space-y-4">
+        {Object.keys(groupedSchedules).length > 0 ? (
+          Object.entries(groupedSchedules).map(([key, group]) => (
+            <div
+              key={group.days.slice().sort().join('-')}
+              className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h5 className="text-sm font-semibold text-gray-800 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                  Working Days
+                </h5>
                 <button
-                  onClick={addNewScheduleGroup}
-                  className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-300 focus:ring-opacity-50"
+                  onClick={() => deleteScheduleGroup(group.hours)}
+                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete schedule group"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
-                      <Plus className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-sm font-bold">Add Schedule Group</div>
-                      <div className="text-xs text-purple-100 opacity-90">Create a new time slot</div>
-                    </div>
-                  </div>
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            )}
-
-            {/* Message quand tous les jours sont sélectionnés ET qu'il n'y a pas de groupes vides */}
-            {allDaysSelected && emptySchedules.length === 0 && (
-              <div className="text-center mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-center space-x-2 text-green-700">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-medium">All week days are scheduled!</span>
-                </div>
-                <p className="text-sm text-green-600 mt-1">
-                  You can still modify existing schedules or remove days to add new groups.
-                </p>
-              </div>
-            )}
-          </div>
-        );
-      };
-
-      const renderMinimumHoursSection = () => {
-        if (!suggestions?.schedule) return null;
-
-        const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.schedule.minimumHours) {
-            newSuggestions.schedule.minimumHours = { daily: 0, weekly: 0, monthly: 0 };
-          }
-
-          const numericValue = value ? parseInt(value, 10) : 0;
-          newSuggestions.schedule.minimumHours[field] = numericValue;
-          setSuggestions(newSuggestions);
-        };
-
-        return (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <Clock className="w-5 h-5 text-purple-500" />
-              <h4 className="text-lg font-semibold text-gray-900">Minimum Hours Requirements</h4>
-            </div>
-
-            <div className="space-y-4">
-              {/* Hours Input Cards - Horizontal Layout */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Daily Hours */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-700">Daily Hours</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="24"
-                        value={suggestions.schedule.minimumHours?.daily || ''}
-                        onChange={(e: { target: { value: string; }; }) => handleMinimumHoursChange('daily', e.target.value)}
-                        placeholder="e.g. 8"
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
-                      />
-                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
-                        hrs
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Weekly Hours */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-700">Weekly Hours</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="168"
-                        value={suggestions.schedule.minimumHours?.weekly || ''}
-                        onChange={(e: { target: { value: string; }; }) => handleMinimumHoursChange('weekly', e.target.value)}
-                        placeholder="e.g. 40"
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
-                      />
-                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
-                        hrs
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Monthly Hours */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-gray-700">Monthly Hours</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="744"
-                        value={suggestions.schedule.minimumHours?.monthly || ''}
-                        onChange={(e: { target: { value: string; }; }) => handleMinimumHoursChange('monthly', e.target.value)}
-                        placeholder="e.g. 160"
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
-                      />
-                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
-                        hrs
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        );
-      };
-
-      const renderTimezoneSection = () => {
-        if (!suggestions?.schedule) return null;
-
-        const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const value = e.target.value;
-          const newSuggestions = { ...suggestions };
-
-          if (value) {
-            // Find the selected timezone to get the _id
-            const selectedTimezone = filteredTimezones.find((tz: { _id: any; }) => tz._id === value);
-            if (selectedTimezone) {
-              newSuggestions.schedule.timeZones = [selectedTimezone._id];
-              newSuggestions.schedule.time_zone = selectedTimezone._id;
-            } else {
-              newSuggestions.schedule.timeZones = [value]; // Fallback to string
-              newSuggestions.schedule.time_zone = value;
-            }
-          } else {
-            newSuggestions.schedule.timeZones = [];
-            newSuggestions.schedule.time_zone = undefined;
-          }
-
-          setSuggestions(newSuggestions);
-        };
-
-        // Filter timezones based on search
-        const filteredTimezones = availableTimezones.filter((tz: { name: string; _id: any; countryName: string; }) =>
-          tz.name && tz._id && (
-            tz.name.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
-            tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
-          )
-        );
-
-        // Get the first destination zone for display
-        const firstDestination = suggestions.destinationZones?.[0];
-        firstDestination ? getCountryName(firstDestination) : 'Unknown';
-
-        return (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <Globe2 className="w-5 h-5 text-purple-500" />
-              <h4 className="text-lg font-semibold text-gray-900">Time Zone</h4>
-            </div>
-
-            {/* Search input */}
-            {timezoneOptions.length > 0 && (
-              <div className="mb-3">
-                <input
-                  type="text"
-                  placeholder="Search timezones by name, country, or abbreviation..."
-                  value={timezoneSearch}
-                  onChange={(e: { target: { value: any; }; }) => setTimezoneSearch(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-              </div>
-            )}
-
-            <select
-              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
-              value={suggestions.schedule.time_zone || ''}
-              onChange={handleTimezoneChange}
-              disabled={timezoneLoading}
-            >
-              <option value="">Select a timezone...</option>
-              {filteredTimezones.map((tz: { _id: any; name: any; countryName: any; offset: number; }) => (
-                <option key={tz._id} value={tz._id}>
-                  {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 italic text-center mt-2">
-              {availableTimezones.length > 0
-                ? timezoneSearch
-                  ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones`
-                  : `${availableTimezones.length} timezones available worldwide`
-                : timezoneLoading
-                  ? 'Loading timezones from API...'
-                  : 'No timezones available'
-              }
-            </p>
-          </div>
-        );
-      };
-
-      const renderDestinationZonesSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const value = e.target.value; // This is the MongoDB ObjectId
-          if (!value) return;
-
-          // Use the existing addItem logic for destination zones
-          addItem("destinationZones", value);
-
-          // Reset select
-          e.target.value = '';
-        };
-
-        const handleRemoveDestinationZone = (zone: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.destinationZones = newSuggestions.destinationZones.filter((z: string) => z !== zone);
-          setSuggestions(newSuggestions);
-        };
-
-        const selected = suggestions.destinationZones || [];
-
-        // Get all available countries from API, excluding already selected ones
-        const availableCountries = allCountriesFromAPI
-          .filter((country: { _id: any; }) => !selected.includes(country._id))
-          .map((country: { _id: any; name: { common: any; }; }) => ({
-            code: country._id,  // Use MongoDB ObjectId as the value
-            name: country.name.common
-          }));
-
-        return (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Destination Zones</h4>
-            </div>
-
-            {/* Select pour ajouter */}
-            <select
-              className="w-full p-3 rounded-lg border border-blue-300 bg-white text-blue-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
-              defaultValue=""
-              onChange={handleAddDestinationZone}
-              disabled={destinationCountriesLoading}
-            >
-              <option value="" disabled>
-                {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
-              </option>
-              {availableCountries.map(({ code, name }) => (
-                <option key={code} value={code}>{name}</option>
-              ))}
-            </select>
-
-            {/* Badges sélectionnés - displayed below the select */}
-            {selected.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
-                {selected.map((zone: string) => (
-                  <span key={zone} className="group relative flex items-center bg-blue-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-blue-800 transition-colors">
-                    <span>{getCountryName(zone)}</span>
+              <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
+                {allWeekDays.map((day) => {
+                  const isSelected = group.days.includes(day);
+                  const isInOtherGroup = !isSelected && suggestions.schedule.schedules.some((s) => s.day === day);
+                  return (
                     <button
-                      type="button"
-                      onClick={() => handleRemoveDestinationZone(zone)}
-                      className="ml-2 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Remove"
+                      key={day}
+                      onClick={() => handleDayToggle(day, group.hours)}
+                      disabled={isInOtherGroup}
+                      className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
+                        ${isSelected ? 'bg-purple-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'}
+                      `}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      {day}
                     </button>
+                  );
+                })}
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                  <Clock className="w-4 h-4 mr-2 text-blue-600" />
+                  Working Hours
+                </h5>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={group.hours.start}
+                      onChange={(e) =>
+                        handleHoursChange(group, "start", e.target.value)
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                      <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={group.hours.end}
+                      onChange={(e) =>
+                        handleHoursChange(group, "end", e.target.value)
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
+                  <span className="font-semibold text-gray-700 text-sm">
+                    {formatTime24(group.hours.start)} -{" "}
+                    {formatTime24(group.hours.end)}
                   </span>
-                ))}
-              </div>
-            )}
+                </div>
 
-            <p className="text-xs text-gray-500 italic text-center mt-2">
-              {destinationCountriesLoading
-                ? 'Loading countries from API...'
-                : `${availableCountries.length} countries available for selection`
-              }
-            </p>
-          </div>
-        );
-      };
-
-      const renderJobTitlesSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddJobTitle = () => {
-          const value = newJobTitle.trim();
-          if (!value) return;
-
-          // Add the job title if it's not already in the list
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.jobTitles) newSuggestions.jobTitles = [];
-          if (!newSuggestions.jobTitles.includes(value)) {
-            newSuggestions.jobTitles = [...newSuggestions.jobTitles, value];
-            setSuggestions(newSuggestions);
-            // Auto-select the newly added job title
-            setSelectedJobTitle(value);
-            setNewJobTitle('');
-            setShowJobTitleForm(false);
-          }
-        };
-
-        const handleUpdateJobTitle = (index: number) => {
-          const value = newJobTitle.trim();
-          if (!value) return;
-
-          const newSuggestions = { ...suggestions };
-          if (newSuggestions.jobTitles) {
-            const oldTitle = newSuggestions.jobTitles[index];
-            newSuggestions.jobTitles[index] = value;
-            setSuggestions(newSuggestions);
-            // If the old title was selected, update selection to the new title
-            if (selectedJobTitle === oldTitle) {
-              setSelectedJobTitle(value);
-            }
-            setNewJobTitle('');
-            setEditingJobTitleIndex(null);
-          }
-        };
-
-        const handleRemoveJobTitle = (jobTitle: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.jobTitles = newSuggestions.jobTitles.filter((jt: string) => jt !== jobTitle);
-          setSuggestions(newSuggestions);
-        };
-
-        const handleEditClick = (title: string, index: number) => {
-          setNewJobTitle(title);
-          setEditingJobTitleIndex(index);
-          setShowJobTitleForm(false);
-        };
-
-        const handleCancelEdit = () => {
-          setNewJobTitle('');
-          setEditingJobTitleIndex(null);
-          setShowJobTitleForm(false);
-        };
-
-        const selected = suggestions.jobTitles || [];
-
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-sm">
-                <Briefcase className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h4 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Position Details</h4>
-                <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <button
+                    onClick={() => handlePresetClick(group, "9-5")}
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  >
+                    <Sun className="w-4 h-4 text-yellow-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
+                      9-5
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handlePresetClick(group, "Early")}
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  >
+                    <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
+                      Early
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handlePresetClick(group, "Late")}
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  >
+                    <Clock className="w-4 h-4 text-indigo-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
+                      Late
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handlePresetClick(group, "Evening")}
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  >
+                    <Moon className="w-4 h-4 text-purple-500 mb-1" />
+                    <span className="text-xs font-medium text-gray-600">
+                      Evening
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
+          ))
+        ) : null}
 
-            {/* Instructions */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-start space-x-3">
-                <div className="p-1 bg-blue-100 rounded-full mt-0.5">
-                  <AlertCircle className="w-4 h-4 text-blue-600" />
+        {/* Afficher les groupes vides */}
+        {emptySchedules.map((emptySchedule, index) => (
+          <div
+            key={`empty-schedule-${index}`}
+            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="text-sm font-semibold text-gray-600">
+                New Schedule Group (No days selected)
+              </h5>
+              <button
+                onClick={() => deleteEmptySchedule(emptySchedule)}
+                className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex gap-1 mb-4">
+              {allWeekDays.map((day) => {
+                const isSelected = emptySchedule.day === day;
+                const isInOtherGroup = suggestions.schedule.schedules.some((s) => s.day === day);
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleEmptyScheduleDayToggle(day, emptySchedule)}
+                    disabled={isInOtherGroup}
+                    className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
+                      ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                    `}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+              <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-blue-600" />
+                Working Hours
+              </h5>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                    <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={emptySchedule.hours.start}
+                    onChange={(e) =>
+                      handleEmptyScheduleHoursChange(emptySchedule, "start", e.target.value)
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-blue-900">
-                    Start by providing the basic information about the contact center role. Be specific and clear about the position's requirements and responsibilities.
-                  </p>
+                  <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
+                    <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    value={emptySchedule.hours.end}
+                    onChange={(e) =>
+                      handleEmptyScheduleHoursChange(emptySchedule, "end", e.target.value)
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="text-center bg-white border border-gray-200 rounded-lg p-2 mb-4">
+                <span className="font-semibold text-gray-700 text-sm">
+                  {formatTime24(emptySchedule.hours.start)} -{" "}
+                  {formatTime24(emptySchedule.hours.end)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "9-5")}
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                >
+                  <Sun className="w-4 h-4 text-yellow-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
+                    9-5
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Early")}
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                >
+                  <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
+                    Early
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Late")}
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                >
+                  <Clock className="w-4 h-4 text-indigo-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
+                    Late
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Evening")}
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                >
+                  <Moon className="w-4 h-4 text-purple-500 mb-1" />
+                  <span className="text-xs font-medium text-gray-600">
+                    Evening
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Message si aucun planning n'est défini */}
+        {Object.keys(groupedSchedules).length === 0 && emptySchedules.length === 0 && (
+          <div className="text-center py-10">
+            <p className="text-gray-500 mb-4">No schedule defined.</p>
+          </div>
+        )}
+
+        {/* Afficher le bouton seulement si tous les jours ne sont pas sélectionnés ET qu'il n'y a pas de groupes vides */}
+        {!allDaysSelected && emptySchedules.length === 0 && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={addNewScheduleGroup}
+              className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-300 focus:ring-opacity-50"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-bold">Add Schedule Group</div>
+                  <div className="text-xs text-purple-100 opacity-90">Create a new time slot</div>
+                </div>
+              </div>
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+            </button>
+          </div>
+        )}
+
+        {/* Message quand tous les jours sont sélectionnés ET qu'il n'y a pas de groupes vides */}
+        {allDaysSelected && emptySchedules.length === 0 && (
+          <div className="text-center mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-center space-x-2 text-green-700">
+              <CheckCircle className="w-5 h-5" />
+              <span className="font-medium">All week days are scheduled!</span>
+            </div>
+            <p className="text-sm text-green-600 mt-1">
+              You can still modify existing schedules or remove days to add new groups.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderMinimumHoursSection = () => {
+    if (!suggestions?.schedule) return null;
+
+    const handleMinimumHoursChange = (field: 'daily' | 'weekly' | 'monthly', value: string) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.schedule.minimumHours) {
+        newSuggestions.schedule.minimumHours = { daily: 0, weekly: 0, monthly: 0 };
+      }
+
+      const numericValue = value ? parseInt(value, 10) : 0;
+      newSuggestions.schedule.minimumHours[field] = numericValue;
+      setSuggestions(newSuggestions);
+    };
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <Clock className="w-5 h-5 text-purple-500" />
+          <h4 className="text-lg font-semibold text-gray-900">Minimum Hours Requirements</h4>
+        </div>
+
+        <div className="space-y-4">
+          {/* Hours Input Cards - Horizontal Layout */}
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Daily Hours */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Daily Hours</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="24"
+                    value={suggestions.schedule.minimumHours?.daily || ''}
+                    onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
+                    placeholder="e.g. 8"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
+                    hrs
+                  </span>
+                </div>
+              </div>
+
+              {/* Weekly Hours */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Weekly Hours</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="168"
+                    value={suggestions.schedule.minimumHours?.weekly || ''}
+                    onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
+                    placeholder="e.g. 40"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
+                    hrs
+                  </span>
+                </div>
+              </div>
+
+              {/* Monthly Hours */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-700">Monthly Hours</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="744"
+                    value={suggestions.schedule.minimumHours?.monthly || ''}
+                    onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
+                    placeholder="e.g. 160"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
+                    hrs
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Job titles list */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h5 className="text-lg font-semibold text-gray-900">Available Job Titles</h5>
-                <span className="text-sm text-gray-500">Click to select your main position</span>
-              </div>
+        </div>
+      </div>
+    );
+  };
 
-              <div className="flex flex-wrap gap-3">
-                {selected.map((title: string, index: number) => (
-                  <span key={index}>
-                    {editingJobTitleIndex === index ? (
-                      <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
-                        <input
-                          type="text"
-                          value={newJobTitle}
-                          onChange={(e: { target: { value: any; }; }) => setNewJobTitle(e.target.value)}
-                          onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleUpdateJobTitle(index);
-                            } else if (e.key === 'Escape') {
-                              handleCancelEdit();
-                            }
-                          }}
-                          onBlur={() => {
-                            if (newJobTitle.trim()) {
-                              handleUpdateJobTitle(index);
-                            } else {
-                              handleCancelEdit();
-                            }
-                          }}
-                          className="bg-transparent border-none outline-none text-sm font-semibold text-blue-800 min-w-0 flex-1"
-                          style={{ width: `${Math.max(newJobTitle.length, 10)}ch` }}
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => handleUpdateJobTitle(index)}
-                          className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
-                          title="Save"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Cancel"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <span
-                        className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${selectedJobTitle === title
-                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
-                          : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
-                          }`}
-                        onClick={(e: { preventDefault: () => void; stopPropagation: () => void; }) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedJobTitle(selectedJobTitle === title ? null : title);
-                        }}
-                        onDoubleClick={(e: { preventDefault: () => void; stopPropagation: () => void; }) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          // Disable double-click functionality
-                        }}
-                        title={selectedJobTitle === title ? "Selected as main job title" : "Click to select as main job title"}
-                      >
-                        {selectedJobTitle === title && (
-                          <CheckCircle className="w-5 h-5 mr-2" />
-                        )}
-                        {title}
-                        <button
-                          type="button"
-                          onClick={(e: { stopPropagation: () => void; }) => {
-                            e.stopPropagation();
-                            handleEditClick(title, index);
-                          }}
-                          className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100'
-                            }`}
-                          title="Click to edit"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e: { stopPropagation: () => void; }) => {
-                            e.stopPropagation();
-                            handleRemoveJobTitle(title);
-                            if (selectedJobTitle === title) {
-                              setSelectedJobTitle(null);
-                            }
-                          }}
-                          className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${selectedJobTitle === title
-                            ? 'text-white hover:bg-blue-700'
-                            : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
-                            }`}
-                          title="Remove"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    )}
-                  </span>
-                ))}
+  const renderTimezoneSection = () => {
+    if (!suggestions?.schedule) return null;
 
-                {/* Add button/input at the end */}
-                {showJobTitleForm ? (
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full">
+    const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      const newSuggestions = { ...suggestions };
+
+      if (value) {
+        // Find the selected timezone to get the _id
+        const selectedTimezone = filteredTimezones.find(tz => tz._id === value);
+        if (selectedTimezone) {
+          newSuggestions.schedule.timeZones = [selectedTimezone._id];
+          newSuggestions.schedule.time_zone = selectedTimezone._id;
+        } else {
+          newSuggestions.schedule.timeZones = [value]; // Fallback to string
+          newSuggestions.schedule.time_zone = value;
+        }
+      } else {
+        newSuggestions.schedule.timeZones = [];
+        newSuggestions.schedule.time_zone = undefined;
+      }
+
+      setSuggestions(newSuggestions);
+    };
+
+    // Filter timezones based on search
+    const filteredTimezones = availableTimezones.filter(tz =>
+      tz.name && tz._id && (
+        tz.name.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
+        tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
+      )
+    );
+
+    // Get the first destination zone for display
+    const firstDestination = suggestions.destinationZones?.[0];
+    firstDestination ? getCountryName(firstDestination) : 'Unknown';
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <Globe2 className="w-5 h-5 text-purple-500" />
+          <h4 className="text-lg font-semibold text-gray-900">Time Zone</h4>
+        </div>
+
+        {/* Search input */}
+        {timezoneOptions.length > 0 && (
+          <div className="mb-3">
+            <input
+              type="text"
+              placeholder="Search timezones by name, country, or abbreviation..."
+              value={timezoneSearch}
+              onChange={(e) => setTimezoneSearch(e.target.value)}
+              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+          </div>
+        )}
+
+        <select
+          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
+          value={suggestions.schedule.time_zone || ''}
+          onChange={handleTimezoneChange}
+          disabled={timezoneLoading}
+        >
+          <option value="">Select a timezone...</option>
+          {filteredTimezones.map((tz) => (
+            <option key={tz._id} value={tz._id}>
+              {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          {availableTimezones.length > 0
+            ? timezoneSearch
+              ? `Showing ${filteredTimezones.length} of ${availableTimezones.length} timezones`
+              : `${availableTimezones.length} timezones available worldwide`
+            : timezoneLoading
+              ? 'Loading timezones from API...'
+              : 'No timezones available'
+          }
+        </p>
+      </div>
+    );
+  };
+
+  const renderDestinationZonesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddDestinationZone = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value; // This is the MongoDB ObjectId
+      if (!value) return;
+
+      // Use the existing addItem logic for destination zones
+      addItem("destinationZones", value);
+
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveDestinationZone = (zone: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.destinationZones = newSuggestions.destinationZones.filter(z => z !== zone);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.destinationZones || [];
+
+    // Get all available countries from API, excluding already selected ones
+    const availableCountries = allCountriesFromAPI
+      .filter(country => !selected.includes(country._id))
+      .map(country => ({
+        code: country._id,  // Use MongoDB ObjectId as the value
+        name: country.name.common
+      }));
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Destination Zones</h4>
+        </div>
+
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-blue-300 bg-white text-blue-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
+          defaultValue=""
+          onChange={handleAddDestinationZone}
+          disabled={destinationCountriesLoading}
+        >
+          <option value="" disabled>
+            {destinationCountriesLoading ? 'Loading countries...' : 'Add destination zone...'}
+          </option>
+          {availableCountries.map(({ code, name }) => (
+            <option key={code} value={code}>{name}</option>
+          ))}
+        </select>
+
+        {/* Badges sélectionnés - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
+            {selected.map(zone => (
+              <span key={zone} className="group relative flex items-center bg-blue-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-blue-800 transition-colors">
+                <span>{getCountryName(zone)}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDestinationZone(zone)}
+                  className="ml-2 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          {destinationCountriesLoading
+            ? 'Loading countries from API...'
+            : `${availableCountries.length} countries available for selection`
+          }
+        </p>
+      </div>
+    );
+  };
+
+  const renderJobTitlesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddJobTitle = () => {
+      const value = newJobTitle.trim();
+      if (!value) return;
+
+      // Add the job title if it's not already in the list
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.jobTitles) newSuggestions.jobTitles = [];
+      if (!newSuggestions.jobTitles.includes(value)) {
+        newSuggestions.jobTitles = [...newSuggestions.jobTitles, value];
+        setSuggestions(newSuggestions);
+        // Auto-select the newly added job title
+        setSelectedJobTitle(value);
+        setNewJobTitle('');
+        setShowJobTitleForm(false);
+      }
+    };
+
+    const handleUpdateJobTitle = (index: number) => {
+      const value = newJobTitle.trim();
+      if (!value) return;
+
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.jobTitles) {
+        const oldTitle = newSuggestions.jobTitles[index];
+        newSuggestions.jobTitles[index] = value;
+        setSuggestions(newSuggestions);
+        // If the old title was selected, update selection to the new title
+        if (selectedJobTitle === oldTitle) {
+          setSelectedJobTitle(value);
+        }
+        setNewJobTitle('');
+        setEditingJobTitleIndex(null);
+      }
+    };
+
+    const handleRemoveJobTitle = (jobTitle: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.jobTitles = newSuggestions.jobTitles.filter(jt => jt !== jobTitle);
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEditClick = (title: string, index: number) => {
+      setNewJobTitle(title);
+      setEditingJobTitleIndex(index);
+      setShowJobTitleForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewJobTitle('');
+      setEditingJobTitleIndex(null);
+      setShowJobTitleForm(false);
+    };
+
+    const selected = suggestions.jobTitles || [];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-sm">
+            <Briefcase className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Position Details</h4>
+            <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-start space-x-3">
+            <div className="p-1 bg-blue-100 rounded-full mt-0.5">
+              <AlertCircle className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Start by providing the basic information about the contact center role. Be specific and clear about the position's requirements and responsibilities.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Job titles list */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h5 className="text-lg font-semibold text-gray-900">Available Job Titles</h5>
+            <span className="text-sm text-gray-500">Click to select your main position</span>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {selected.map((title, index) => (
+              <span key={index}>
+                {editingJobTitleIndex === index ? (
+                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
                     <input
                       type="text"
                       value={newJobTitle}
-                      onChange={(e: { target: { value: any; }; }) => setNewJobTitle(e.target.value)}
-                      onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
+                      onChange={(e) => setNewJobTitle(e.target.value)}
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          handleAddJobTitle();
+                          handleUpdateJobTitle(index);
                         } else if (e.key === 'Escape') {
                           handleCancelEdit();
                         }
                       }}
                       onBlur={() => {
                         if (newJobTitle.trim()) {
-                          handleAddJobTitle();
+                          handleUpdateJobTitle(index);
                         } else {
                           handleCancelEdit();
                         }
                       }}
-                      placeholder="Enter job title..."
-                      className="bg-transparent border-none outline-none text-sm font-medium text-blue-800 min-w-0 flex-1"
-                      style={{ width: `${Math.max(newJobTitle.length || 15, 15)}ch` }}
+                      className="bg-transparent border-none outline-none text-sm font-semibold text-blue-800 min-w-0 flex-1"
+                      style={{ width: `${Math.max(newJobTitle.length, 10)}ch` }}
                       autoFocus
                     />
                     <button
-                      onClick={handleAddJobTitle}
-                      disabled={!newJobTitle.trim()}
-                      className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                      title="Add"
+                      onClick={() => handleUpdateJobTitle(index)}
+                      className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                      title="Save"
                     >
-                      <Check className="w-3 h-3" />
+                      <Check className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                       title="Cancel"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setShowJobTitleForm(true)}
-                    className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+                  <span
+                    className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${selectedJobTitle === title
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
+                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
+                      }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedJobTitle(selectedJobTitle === title ? null : title);
+                    }}
+                    onDoubleClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Disable double-click functionality
+                    }}
+                    title={selectedJobTitle === title ? "Selected as main job title" : "Click to select as main job title"}
                   >
-                    <Plus className="w-3 h-3" />
-                    <span>Add</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      };
-
-      const renderHighlightsSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddHighlight = () => {
-          const value = newHighlight.trim();
-          if (!value) return;
-
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.highlights) newSuggestions.highlights = [];
-          if (!newSuggestions.highlights.includes(value)) {
-            newSuggestions.highlights = [...newSuggestions.highlights, value];
-            setSuggestions(newSuggestions);
-            setNewHighlight('');
-            setShowHighlightForm(false);
-          }
-        };
-
-        const handleUpdateHighlight = (index: number) => {
-          const value = newHighlight.trim();
-          if (!value) return;
-
-          const newSuggestions = { ...suggestions };
-          if (newSuggestions.highlights) {
-            newSuggestions.highlights[index] = value;
-            setSuggestions(newSuggestions);
-            setNewHighlight('');
-            setEditingHighlightIndex(null);
-          }
-        };
-
-        const handleRemoveHighlight = (highlight: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.highlights = newSuggestions.highlights.filter((h: string) => h !== highlight);
-          setSuggestions(newSuggestions);
-        };
-
-        const handleEditClick = (highlight: string, index: number) => {
-          setNewHighlight(highlight);
-          setEditingHighlightIndex(index);
-          setShowHighlightForm(false);
-        };
-
-        const handleCancelEdit = () => {
-          setNewHighlight('');
-          setEditingHighlightIndex(null);
-          setShowHighlightForm(false);
-        };
-
-        const selected = suggestions.highlights || [];
-
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
-            </div>
-
-
-            {/* Highlights list */}
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {selected.map((highlight: string, index: number) => (
-                <span key={index}>
-                  {editingHighlightIndex === index ? (
-                    <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
-                      <input
-                        type="text"
-                        value={newHighlight}
-                        onChange={(e: { target: { value: any; }; }) => setNewHighlight(e.target.value)}
-                        onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleUpdateHighlight(index);
-                          } else if (e.key === 'Escape') {
-                            handleCancelEdit();
-                          }
-                        }}
-                        onBlur={() => {
-                          if (newHighlight.trim()) {
-                            handleUpdateHighlight(index);
-                          } else {
-                            handleCancelEdit();
-                          }
-                        }}
-                        className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
-                        style={{ width: `${Math.max(newHighlight.length, 10)}ch` }}
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => handleUpdateHighlight(index)}
-                        className="text-green-600 hover:text-green-800"
-                        title="Save"
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="text-gray-500 hover:text-gray-700"
-                        title="Cancel"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                    {selectedJobTitle === title && (
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                    )}
+                    {title}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditClick(title, index);
+                      }}
+                      className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100'
+                        }`}
+                      title="Click to edit"
                     >
-                      {highlight}
-                      <button
-                        type="button"
-                        onClick={(e: { stopPropagation: () => void; }) => {
-                          e.stopPropagation();
-                          handleEditClick(highlight, index);
-                        }}
-                        className="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20 text-white"
-                        title="Click to edit"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveHighlight(highlight)}
-                        className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                </span>
-              ))}
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveJobTitle(title);
+                        if (selectedJobTitle === title) {
+                          setSelectedJobTitle(null);
+                        }
+                      }}
+                      className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${selectedJobTitle === title
+                        ? 'text-white hover:bg-blue-700'
+                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                        }`}
+                      title="Remove"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </span>
+            ))}
 
-              {/* Add button/input at the end */}
-              {showHighlightForm ? (
+            {/* Add button/input at the end */}
+            {showJobTitleForm ? (
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full">
+                <input
+                  type="text"
+                  value={newJobTitle}
+                  onChange={(e) => setNewJobTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddJobTitle();
+                    } else if (e.key === 'Escape') {
+                      handleCancelEdit();
+                    }
+                  }}
+                  onBlur={() => {
+                    if (newJobTitle.trim()) {
+                      handleAddJobTitle();
+                    } else {
+                      handleCancelEdit();
+                    }
+                  }}
+                  placeholder="Enter job title..."
+                  className="bg-transparent border-none outline-none text-sm font-medium text-blue-800 min-w-0 flex-1"
+                  style={{ width: `${Math.max(newJobTitle.length || 15, 15)}ch` }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleAddJobTitle}
+                  disabled={!newJobTitle.trim()}
+                  className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                  title="Add"
+                >
+                  <Check className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Cancel"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowJobTitleForm(true)}
+                className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Add</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderHighlightsSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddHighlight = () => {
+      const value = newHighlight.trim();
+      if (!value) return;
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.highlights) newSuggestions.highlights = [];
+      if (!newSuggestions.highlights.includes(value)) {
+        newSuggestions.highlights = [...newSuggestions.highlights, value];
+        setSuggestions(newSuggestions);
+        setNewHighlight('');
+        setShowHighlightForm(false);
+      }
+    };
+
+    const handleUpdateHighlight = (index: number) => {
+      const value = newHighlight.trim();
+      if (!value) return;
+
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.highlights) {
+        newSuggestions.highlights[index] = value;
+        setSuggestions(newSuggestions);
+        setNewHighlight('');
+        setEditingHighlightIndex(null);
+      }
+    };
+
+    const handleRemoveHighlight = (highlight: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.highlights = newSuggestions.highlights.filter(h => h !== highlight);
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEditClick = (highlight: string, index: number) => {
+      setNewHighlight(highlight);
+      setEditingHighlightIndex(index);
+      setShowHighlightForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewHighlight('');
+      setEditingHighlightIndex(null);
+      setShowHighlightForm(false);
+    };
+
+    const selected = suggestions.highlights || [];
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
+        </div>
+
+
+        {/* Highlights list */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+          {selected.map((highlight, index) => (
+            <span key={index}>
+              {editingHighlightIndex === index ? (
                 <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
                   <input
                     type="text"
                     value={newHighlight}
-                    onChange={(e: { target: { value: any; }; }) => setNewHighlight(e.target.value)}
-                    onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
+                    onChange={(e) => setNewHighlight(e.target.value)}
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        handleAddHighlight();
+                        handleUpdateHighlight(index);
                       } else if (e.key === 'Escape') {
                         handleCancelEdit();
                       }
                     }}
                     onBlur={() => {
                       if (newHighlight.trim()) {
-                        handleAddHighlight();
+                        handleUpdateHighlight(index);
                       } else {
                         handleCancelEdit();
                       }
                     }}
-                    placeholder="Enter highlight..."
                     className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
-                    style={{ width: `${Math.max(newHighlight.length || 15, 15)}ch` }}
+                    style={{ width: `${Math.max(newHighlight.length, 10)}ch` }}
                     autoFocus
                   />
                   <button
-                    onClick={handleAddHighlight}
-                    disabled={!newHighlight.trim()}
-                    className="text-green-600 hover:text-green-800 disabled:opacity-50"
-                    title="Add"
+                    onClick={() => handleUpdateHighlight(index)}
+                    className="text-green-600 hover:text-green-800"
+                    title="Save"
                   >
                     <Check className="w-3 h-3" />
                   </button>
@@ -3479,182 +3392,182 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowHighlightForm(true)}
-                  className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+                <span
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
                 >
-                  <Plus className="w-3 h-3" />
-                  <span>Add</span>
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      };
-
-      const renderDeliverablesSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddDeliverable = () => {
-          const value = newDeliverable.trim();
-          if (!value) return;
-
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.deliverables) newSuggestions.deliverables = [];
-          if (!newSuggestions.deliverables.includes(value)) {
-            newSuggestions.deliverables = [...newSuggestions.deliverables, value];
-            setSuggestions(newSuggestions);
-            setNewDeliverable('');
-            setShowDeliverableForm(false);
-          }
-        };
-
-        const handleUpdateDeliverable = (index: number) => {
-          const value = newDeliverable.trim();
-          if (!value) return;
-
-          const newSuggestions = { ...suggestions };
-          if (newSuggestions.deliverables) {
-            newSuggestions.deliverables[index] = value;
-            setSuggestions(newSuggestions);
-            setNewDeliverable('');
-            setEditingDeliverableIndex(null);
-          }
-        };
-
-        const handleRemoveDeliverable = (deliverable: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.deliverables = newSuggestions.deliverables.filter((d: string) => d !== deliverable);
-          setSuggestions(newSuggestions);
-        };
-
-        const handleEditClick = (deliverable: string, index: number) => {
-          setNewDeliverable(deliverable);
-          setEditingDeliverableIndex(index);
-          setShowDeliverableForm(false);
-        };
-
-        const handleCancelEdit = () => {
-          setNewDeliverable('');
-          setEditingDeliverableIndex(null);
-          setShowDeliverableForm(false);
-        };
-
-        const selected = suggestions.deliverables || [];
-
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
-            </div>
-
-
-            {/* Deliverables list */}
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {selected.map((deliverable: string, index: number) => (
-                <span key={index}>
-                  {editingDeliverableIndex === index ? (
-                    <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
-                      <input
-                        type="text"
-                        value={newDeliverable}
-                        onChange={(e: { target: { value: any; }; }) => setNewDeliverable(e.target.value)}
-                        onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleUpdateDeliverable(index);
-                          } else if (e.key === 'Escape') {
-                            handleCancelEdit();
-                          }
-                        }}
-                        onBlur={() => {
-                          if (newDeliverable.trim()) {
-                            handleUpdateDeliverable(index);
-                          } else {
-                            handleCancelEdit();
-                          }
-                        }}
-                        className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
-                        style={{ width: `${Math.max(newDeliverable.length, 10)}ch` }}
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => handleUpdateDeliverable(index)}
-                        className="text-purple-600 hover:text-purple-800"
-                        title="Save"
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="text-gray-500 hover:text-gray-700"
-                        title="Cancel"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
-                    >
-                      {deliverable}
-                      <button
-                        type="button"
-                        onClick={(e: { stopPropagation: () => void; }) => {
-                          e.stopPropagation();
-                          handleEditClick(deliverable, index);
-                        }}
-                        className="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20 text-white"
-                        title="Click to edit"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveDeliverable(deliverable)}
-                        className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
+                  {highlight}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(highlight, index);
+                    }}
+                    className="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20 text-white"
+                    title="Click to edit"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveHighlight(highlight)}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </span>
-              ))}
+              )}
+            </span>
+          ))}
 
-              {/* Add button/input at the end */}
-              {showDeliverableForm ? (
+          {/* Add button/input at the end */}
+          {showHighlightForm ? (
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
+              <input
+                type="text"
+                value={newHighlight}
+                onChange={(e) => setNewHighlight(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddHighlight();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+                onBlur={() => {
+                  if (newHighlight.trim()) {
+                    handleAddHighlight();
+                  } else {
+                    handleCancelEdit();
+                  }
+                }}
+                placeholder="Enter highlight..."
+                className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
+                style={{ width: `${Math.max(newHighlight.length || 15, 15)}ch` }}
+                autoFocus
+              />
+              <button
+                onClick={handleAddHighlight}
+                disabled={!newHighlight.trim()}
+                className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                title="Add"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-500 hover:text-gray-700"
+                title="Cancel"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowHighlightForm(true)}
+              className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Add</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDeliverablesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddDeliverable = () => {
+      const value = newDeliverable.trim();
+      if (!value) return;
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.deliverables) newSuggestions.deliverables = [];
+      if (!newSuggestions.deliverables.includes(value)) {
+        newSuggestions.deliverables = [...newSuggestions.deliverables, value];
+        setSuggestions(newSuggestions);
+        setNewDeliverable('');
+        setShowDeliverableForm(false);
+      }
+    };
+
+    const handleUpdateDeliverable = (index: number) => {
+      const value = newDeliverable.trim();
+      if (!value) return;
+
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.deliverables) {
+        newSuggestions.deliverables[index] = value;
+        setSuggestions(newSuggestions);
+        setNewDeliverable('');
+        setEditingDeliverableIndex(null);
+      }
+    };
+
+    const handleRemoveDeliverable = (deliverable: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.deliverables = newSuggestions.deliverables.filter(d => d !== deliverable);
+      setSuggestions(newSuggestions);
+    };
+
+    const handleEditClick = (deliverable: string, index: number) => {
+      setNewDeliverable(deliverable);
+      setEditingDeliverableIndex(index);
+      setShowDeliverableForm(false);
+    };
+
+    const handleCancelEdit = () => {
+      setNewDeliverable('');
+      setEditingDeliverableIndex(null);
+      setShowDeliverableForm(false);
+    };
+
+    const selected = suggestions.deliverables || [];
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
+        </div>
+
+
+        {/* Deliverables list */}
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+          {selected.map((deliverable, index) => (
+            <span key={index}>
+              {editingDeliverableIndex === index ? (
                 <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
                   <input
                     type="text"
                     value={newDeliverable}
-                    onChange={(e: { target: { value: any; }; }) => setNewDeliverable(e.target.value)}
-                    onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
+                    onChange={(e) => setNewDeliverable(e.target.value)}
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        handleAddDeliverable();
+                        handleUpdateDeliverable(index);
                       } else if (e.key === 'Escape') {
                         handleCancelEdit();
                       }
                     }}
                     onBlur={() => {
                       if (newDeliverable.trim()) {
-                        handleAddDeliverable();
+                        handleUpdateDeliverable(index);
                       } else {
                         handleCancelEdit();
                       }
                     }}
-                    placeholder="Enter deliverable..."
                     className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
-                    style={{ width: `${Math.max(newDeliverable.length || 15, 15)}ch` }}
+                    style={{ width: `${Math.max(newDeliverable.length, 10)}ch` }}
                     autoFocus
                   />
                   <button
-                    onClick={handleAddDeliverable}
-                    disabled={!newDeliverable.trim()}
-                    className="text-purple-600 hover:text-purple-800 disabled:opacity-50"
-                    title="Add"
+                    onClick={() => handleUpdateDeliverable(index)}
+                    className="text-purple-600 hover:text-purple-800"
+                    title="Save"
                   >
                     <Check className="w-3 h-3" />
                   </button>
@@ -3667,483 +3580,555 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setShowDeliverableForm(true)}
-                  className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
+                <span
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
                 >
-                  <Plus className="w-3 h-3" />
-                  <span>Add</span>
-                </button>
+                  {deliverable}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(deliverable, index);
+                    }}
+                    className="ml-2 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/20 text-white"
+                    title="Click to edit"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDeliverable(deliverable)}
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
               )}
-            </div>
-          </div>
-        );
-      };
+            </span>
+          ))}
 
-      const renderSectorsSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddSector = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const value = e.target.value;
-          if (!value) return;
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.sectors) newSuggestions.sectors = [];
-          if (!newSuggestions.sectors.includes(value)) {
-            newSuggestions.sectors = [...newSuggestions.sectors, value];
-            setSuggestions(newSuggestions);
-          }
-          // Reset select
-          e.target.value = '';
-        };
-
-        const handleRemoveSector = (sector: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.sectors = newSuggestions.sectors.filter((s: string) => s !== sector);
-          setSuggestions(newSuggestions);
-        };
-
-        const selected = suggestions.sectors || [];
-        const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
-
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
-            </div>
-
-            {/* Add selector */}
-            <select
-              className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              defaultValue=""
-              onChange={handleAddSector}
-            >
-              <option value="" disabled>Select a sector...</option>
-              {available.map(sector => (
-                <option key={sector} value={sector}>{sector}</option>
-              ))}
-            </select>
-
-            {/* Available sectors */}
-            {selected.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                  {selected.map((sector: string) => (
-                    <span
-                      key={sector}
-                      className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
-                    >
-                      {sector}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSector(sector)}
-                        className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      };
-
-      const renderActivitiesSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const value = e.target.value;
-          if (!value) return;
-
-          // Find the activity by label and get its ID
-          const selectedActivity = activities.find((activity: { label: any; }) => activity.label === value);
-          if (!selectedActivity) {
-            console.error('❌ Activity not found:', value);
-            return;
-          }
-
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.activities) newSuggestions.activities = [];
-          if (!newSuggestions.activities.includes(selectedActivity.value)) {
-            newSuggestions.activities = [...newSuggestions.activities, selectedActivity.value];
-            setSuggestions(newSuggestions);
-          }
-          // Reset select
-          e.target.value = '';
-        };
-
-        const handleRemoveActivity = (activity: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.activities = newSuggestions.activities.filter((a: string) => a !== activity);
-          setSuggestions(newSuggestions);
-        };
-
-        const selected = suggestions.activities || [];
-        const available = activities.filter((activity: { value: any; }) => !selected.includes(activity.value));
-
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Activities</h4>
-            </div>
-
-            {/* Add selector */}
-            {activitiesLoading ? (
-              <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
-                <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                Loading activities from API...
-              </div>
-            ) : (
-              <select
-                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                defaultValue=""
-                onChange={handleAddActivity}
+          {/* Add button/input at the end */}
+          {showDeliverableForm ? (
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
+              <input
+                type="text"
+                value={newDeliverable}
+                onChange={(e) => setNewDeliverable(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddDeliverable();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+                onBlur={() => {
+                  if (newDeliverable.trim()) {
+                    handleAddDeliverable();
+                  } else {
+                    handleCancelEdit();
+                  }
+                }}
+                placeholder="Enter deliverable..."
+                className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
+                style={{ width: `${Math.max(newDeliverable.length || 15, 15)}ch` }}
+                autoFocus
+              />
+              <button
+                onClick={handleAddDeliverable}
+                disabled={!newDeliverable.trim()}
+                className="text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                title="Add"
               >
-                <option value="" disabled>Select an activity...</option>
-                {available.map((activity: { value: any; label: any; }) => (
-                  <option key={activity.value} value={activity.label}>{activity.label}</option>
-                ))}
-              </select>
-            )}
-
-            {!activitiesLoading && activities.length === 0 && (
-              <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
-                ⚠️ No activities available. Please check API connection.
-              </div>
-            )}
-
-            {/* Available activities */}
-            {selected.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                {selected.map((activityId: string) => {
-                  const activityName = getActivityNameById(activityId);
-                  return activityName ? (
-                    <span
-                      key={activityId}
-                      className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
-                    >
-                      {activityName}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveActivity(activityId)}
-                        className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
-        );
-      };
-
-      const renderIndustriesSection = () => {
-        if (!suggestions) return null;
-
-        const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const value = e.target.value;
-          if (!value) return;
-
-          // Find the industry by label and get its ID
-          const selectedIndustry = industries.find((industry: { label: any; }) => industry.label === value);
-          if (!selectedIndustry) {
-            console.error('❌ Industry not found:', value);
-            return;
-          }
-
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.industries) newSuggestions.industries = [];
-          if (!newSuggestions.industries.includes(selectedIndustry.value)) {
-            newSuggestions.industries = [...newSuggestions.industries, selectedIndustry.value];
-            setSuggestions(newSuggestions);
-          }
-          // Reset select
-          e.target.value = '';
-        };
-
-        const handleRemoveIndustry = (industry: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.industries = newSuggestions.industries.filter((i: string) => i !== industry);
-          setSuggestions(newSuggestions);
-        };
-
-        const selected = suggestions.industries || [];
-        const available = industries.filter((industry: { value: any; }) => !selected.includes(industry.value));
-
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Industries</h4>
-            </div>
-
-            {/* Add selector */}
-            {industriesLoading ? (
-              <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
-                <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                Loading industries from API...
-              </div>
-            ) : (
-              <select
-                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                defaultValue=""
-                onChange={handleAddIndustry}
+                <Check className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-500 hover:text-gray-700"
+                title="Cancel"
               >
-                <option value="" disabled>Select an industry...</option>
-                {available.map((industry: { value: any; label: any; }) => (
-                  <option key={industry.value} value={industry.label}>{industry.label}</option>
-                ))}
-              </select>
-            )}
-
-            {!industriesLoading && industries.length === 0 && (
-              <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
-                ⚠️ No industries available. Please check API connection.
-              </div>
-            )}
-
-            {/* Selected badges - displayed below the select */}
-            {selected.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                {selected.map((industryId: string) => {
-                  const industryName = getIndustryNameById(industryId);
-                  return industryName ? (
-                    <span
-                      key={industryId}
-                      className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
-                    >
-                      {industryName}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveIndustry(industryId)}
-                        className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
-        );
-      };
-
-      const renderFlexibilitySection = () => {
-        if (!suggestions?.schedule) return null;
-
-        const handleAddFlexibility = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const value = e.target.value;
-          if (!value) return;
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.schedule.flexibility) newSuggestions.schedule.flexibility = [];
-          if (!newSuggestions.schedule.flexibility.includes(value)) {
-            newSuggestions.schedule.flexibility = [...newSuggestions.schedule.flexibility, value];
-            setSuggestions(newSuggestions);
-          }
-          // Reset select
-          e.target.value = '';
-        };
-
-        const handleRemoveFlexibility = (option: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.schedule.flexibility = newSuggestions.schedule.flexibility.filter((f: string) => f !== option);
-          setSuggestions(newSuggestions);
-        };
-
-        const selected = suggestions.schedule.flexibility || [];
-        const available = FLEXIBILITY_SELECT_OPTIONS.filter(opt => !selected.includes(opt));
-
-        return (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <Gauge className="w-5 h-5 text-purple-500" />
-              <h4 className="text-lg font-semibold text-gray-900">Schedule Flexibility</h4>
+                <X className="w-3 h-3" />
+              </button>
             </div>
-
-            {/* Select pour ajouter */}
-            <select
-              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
-              defaultValue=""
-              onChange={handleAddFlexibility}
+          ) : (
+            <button
+              onClick={() => setShowDeliverableForm(true)}
+              className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 font-medium text-sm rounded-full transition-colors"
             >
-              <option value="" disabled>Add flexibility option...</option>
-              {available.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
+              <Plus className="w-3 h-3" />
+              <span>Add</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
-            {/* Badges sélectionnés - displayed below the select */}
-            {selected.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
-                {selected.map((option: string) => (
-                  <span key={option} className="group relative flex items-center bg-purple-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
-                    {option}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFlexibility(option)}
-                      className="ml-2 text-white hover:text-purple-200 rounded-full focus:outline-none focus:bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Remove"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+  const renderSectorsSection = () => {
+    if (!suggestions) return null;
 
-            <p className="text-xs text-gray-500 italic text-center mt-2">
-              Select all applicable schedule flexibility options
-            </p>
-          </div>
-        );
-      };
+    const handleAddSector = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.sectors) newSuggestions.sectors = [];
+      if (!newSuggestions.sectors.includes(value)) {
+        newSuggestions.sectors = [...newSuggestions.sectors, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
 
-      const renderSenioritySection = () => {
-        if (!suggestions) return null;
+    const handleRemoveSector = (sector: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.sectors = newSuggestions.sectors.filter(s => s !== sector);
+      setSuggestions(newSuggestions);
+    };
 
-        const handleSeniorityLevelChange = (level: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.seniority = {
-            ...newSuggestions.seniority,
-            level: level,
-          };
-          setSuggestions(newSuggestions);
-        };
+    const selected = suggestions.sectors || [];
+    const available = predefinedOptions.sectors.filter(sector => !selected.includes(sector));
 
-        const handleYearsExperienceChange = (years: string) => {
-          const newSuggestions = { ...suggestions };
-          const numericValue = parseInt(years, 10);
-          if (!isNaN(numericValue)) {
-            newSuggestions.seniority = {
-              ...newSuggestions.seniority,
-              yearsExperience: numericValue,
-            };
-            setSuggestions(newSuggestions);
-          }
-        };
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
+        </div>
 
-        return (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h4 className="text-lg font-semibold text-gray-900">Seniority Level</h4>
-            </div>
+        {/* Add selector */}
+        <select
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          defaultValue=""
+          onChange={handleAddSector}
+        >
+          <option value="" disabled>Select a sector...</option>
+          {available.map(sector => (
+            <option key={sector} value={sector}>{sector}</option>
+          ))}
+        </select>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1 block">
-                  Level
-                </label>
-                <select
-                  value={suggestions.seniority?.level || ""}
-                  onChange={(e: { target: { value: string; }; }) => handleSeniorityLevelChange(e.target.value)}
-                  className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+        {/* Available sectors */}
+        {selected.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selected.map(sector => (
+                <span
+                  key={sector}
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
                 >
-                  <option value="">Select level...</option>
-                  {predefinedOptions.basic.seniorityLevels.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1 block">
-                  Years of Experience
-                </label>
-                <input
-                  type="number"
-                  value={suggestions.seniority?.yearsExperience || ""}
-                  onChange={(e: { target: { value: string; }; }) => handleYearsExperienceChange(e.target.value)}
-                  placeholder="e.g. 5"
-                  className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
+                  {sector}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSector(sector)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
             </div>
           </div>
-        );
+        )}
+      </div>
+    );
+  };
+
+  const renderActivitiesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddActivity = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+
+      // Find the activity by label and get its ID
+      const selectedActivity = activities.find(activity => activity.label === value);
+      if (!selectedActivity) {
+        console.error('❌ Activity not found:', value);
+        return;
+      }
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.activities) newSuggestions.activities = [];
+      if (!newSuggestions.activities.includes(selectedActivity.value)) {
+        newSuggestions.activities = [...newSuggestions.activities, selectedActivity.value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveActivity = (activity: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.activities = newSuggestions.activities.filter(a => a !== activity);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.activities || [];
+    const available = activities.filter(activity => !selected.includes(activity.value));
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Activities</h4>
+        </div>
+
+        {/* Add selector */}
+        {activitiesLoading ? (
+          <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
+            <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+            Loading activities from API...
+          </div>
+        ) : (
+          <select
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            defaultValue=""
+            onChange={handleAddActivity}
+          >
+            <option value="" disabled>Select an activity...</option>
+            {available.map(activity => (
+              <option key={activity.value} value={activity.label}>{activity.label}</option>
+            ))}
+          </select>
+        )}
+
+        {!activitiesLoading && activities.length === 0 && (
+          <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+            ⚠️ No activities available. Please check API connection.
+          </div>
+        )}
+
+        {/* Available activities */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            {selected.map(activityId => {
+              const activityName = getActivityNameById(activityId);
+              return activityName ? (
+                <span
+                  key={activityId}
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+                  {activityName}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveActivity(activityId)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderIndustriesSection = () => {
+    if (!suggestions) return null;
+
+    const handleAddIndustry = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+
+      // Find the industry by label and get its ID
+      const selectedIndustry = industries.find(industry => industry.label === value);
+      if (!selectedIndustry) {
+        console.error('❌ Industry not found:', value);
+        return;
+      }
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.industries) newSuggestions.industries = [];
+      if (!newSuggestions.industries.includes(selectedIndustry.value)) {
+        newSuggestions.industries = [...newSuggestions.industries, selectedIndustry.value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveIndustry = (industry: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.industries = newSuggestions.industries.filter(i => i !== industry);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.industries || [];
+    const available = industries.filter(industry => !selected.includes(industry.value));
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Industries</h4>
+        </div>
+
+        {/* Add selector */}
+        {industriesLoading ? (
+          <div className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 text-center text-sm">
+            <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+            Loading industries from API...
+          </div>
+        ) : (
+          <select
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            defaultValue=""
+            onChange={handleAddIndustry}
+          >
+            <option value="" disabled>Select an industry...</option>
+            {available.map(industry => (
+              <option key={industry.value} value={industry.label}>{industry.label}</option>
+            ))}
+          </select>
+        )}
+
+        {!industriesLoading && industries.length === 0 && (
+          <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+            ⚠️ No industries available. Please check API connection.
+          </div>
+        )}
+
+        {/* Selected badges - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+            {selected.map(industryId => {
+              const industryName = getIndustryNameById(industryId);
+              return industryName ? (
+                <span
+                  key={industryId}
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                >
+                  {industryName}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveIndustry(industryId)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ) : null;
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderFlexibilitySection = () => {
+    if (!suggestions?.schedule) return null;
+
+    const handleAddFlexibility = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const value = e.target.value;
+      if (!value) return;
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.schedule.flexibility) newSuggestions.schedule.flexibility = [];
+      if (!newSuggestions.schedule.flexibility.includes(value)) {
+        newSuggestions.schedule.flexibility = [...newSuggestions.schedule.flexibility, value];
+        setSuggestions(newSuggestions);
+      }
+      // Reset select
+      e.target.value = '';
+    };
+
+    const handleRemoveFlexibility = (option: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.schedule.flexibility = newSuggestions.schedule.flexibility.filter(f => f !== option);
+      setSuggestions(newSuggestions);
+    };
+
+    const selected = suggestions.schedule.flexibility || [];
+    const available = FLEXIBILITY_SELECT_OPTIONS.filter(opt => !selected.includes(opt));
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <Gauge className="w-5 h-5 text-purple-500" />
+          <h4 className="text-lg font-semibold text-gray-900">Schedule Flexibility</h4>
+        </div>
+
+        {/* Select pour ajouter */}
+        <select
+          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
+          defaultValue=""
+          onChange={handleAddFlexibility}
+        >
+          <option value="" disabled>Add flexibility option...</option>
+          {available.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+
+        {/* Badges sélectionnés - displayed below the select */}
+        {selected.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
+            {selected.map(option => (
+              <span key={option} className="group relative flex items-center bg-purple-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
+                {option}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFlexibility(option)}
+                  className="ml-2 text-white hover:text-purple-200 rounded-full focus:outline-none focus:bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <p className="text-xs text-gray-500 italic text-center mt-2">
+          Select all applicable schedule flexibility options
+        </p>
+      </div>
+    );
+  };
+
+  const renderSenioritySection = () => {
+    if (!suggestions) return null;
+
+    const handleSeniorityLevelChange = (level: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.seniority = {
+        ...newSuggestions.seniority,
+        level: level,
       };
+      setSuggestions(newSuggestions);
+    };
 
-      const renderDescriptionSection = () => {
-        if (!suggestions) return null;
-
-        const handleDescriptionChange = (newDescription: string) => {
-          const newSuggestions = { ...suggestions };
-          newSuggestions.description = newDescription;
-          setSuggestions(newSuggestions);
+    const handleYearsExperienceChange = (years: string) => {
+      const newSuggestions = { ...suggestions };
+      const numericValue = parseInt(years, 10);
+      if (!isNaN(numericValue)) {
+        newSuggestions.seniority = {
+          ...newSuggestions.seniority,
+          yearsExperience: numericValue,
         };
+        setSuggestions(newSuggestions);
+      }
+    };
 
-        return (
-          <div className="mb-8">
-            <textarea
-              value={suggestions.description || ""}
-              onChange={(e: { target: { value: string; }; }) => handleDescriptionChange(e.target.value)}
-              placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
-              rows={8}
-              className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
+    return (
+      <div className="mb-8">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h4 className="text-lg font-semibold text-gray-900">Seniority Level</h4>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-gray-600 mb-1 block">
+              Level
+            </label>
+            <select
+              value={suggestions.seniority?.level || ""}
+              onChange={(e) => handleSeniorityLevelChange(e.target.value)}
+              className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              <option value="">Select level...</option>
+              {predefinedOptions.basic.seniorityLevels.map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-600 mb-1 block">
+              Years of Experience
+            </label>
+            <input
+              type="number"
+              value={suggestions.seniority?.yearsExperience || ""}
+              onChange={(e) => handleYearsExperienceChange(e.target.value)}
+              placeholder="e.g. 5"
+              className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-sm text-gray-500">
-                {suggestions.description ? `${suggestions.description.length} characters` : "0 characters"}
-              </div>
-              <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                Detailed description helps attract the right candidates
-              </div>
-            </div>
           </div>
-        );
-      };
+        </div>
+      </div>
+    );
+  };
 
-      const renderCommissionSection = () => {
-        if (!suggestions) return null;
+  const renderDescriptionSection = () => {
+    if (!suggestions) return null;
+
+    const handleDescriptionChange = (newDescription: string) => {
+      const newSuggestions = { ...suggestions };
+      newSuggestions.description = newDescription;
+      setSuggestions(newSuggestions);
+    };
+
+    return (
+      <div className="mb-8">
+        <textarea
+          value={suggestions.description || ""}
+          onChange={(e) => handleDescriptionChange(e.target.value)}
+          placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
+          rows={8}
+          className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
+        />
+
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {suggestions.description ? `${suggestions.description.length} characters` : "0 characters"}
+          </div>
+          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+            Detailed description helps attract the right candidates
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCommissionSection = () => {
+    if (!suggestions) return null;
 
 
-        const updateCommissionOption = (
-          _index: number,
-          field: string,
-          value: string | number
-        ) => {
-          const newSuggestions = { ...suggestions };
-          if (newSuggestions.commission) {
-            // Correction : parser uniquement les champs numériques
-            const numericFields = [
-              'amount', 'baseAmount', 'bonusAmount'
-            ];
-            if (field.includes(".")) {
-              const [parent, child] = field.split(".");
-              if (numericFields.includes(child)) {
-                const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-                (newSuggestions.commission as any)[parent][child] = numericValue;
-              } else {
-                (newSuggestions.commission as any)[parent][child] = value;
-              }
-            } else {
-              if (numericFields.includes(field)) {
-                const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-                (newSuggestions.commission as any)[field] = numericValue;
-              } else {
-                (newSuggestions.commission as any)[field] = value;
-              }
-            }
-            setSuggestions(newSuggestions);
+    const updateCommissionOption = (
+      _index: number,
+      field: string,
+      value: string | number
+    ) => {
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.commission) {
+        // Correction : parser uniquement les champs numériques
+        const numericFields = [
+          'amount', 'baseAmount', 'bonusAmount'
+        ];
+        if (field.includes(".")) {
+          const [parent, child] = field.split(".");
+          if (numericFields.includes(child)) {
+            const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+            (newSuggestions.commission as any)[parent][child] = numericValue;
+          } else {
+            (newSuggestions.commission as any)[parent][child] = value;
           }
-        };
+        } else {
+          if (numericFields.includes(field)) {
+            const numericValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+            (newSuggestions.commission as any)[field] = numericValue;
+          } else {
+            (newSuggestions.commission as any)[field] = value;
+          }
+        }
+        setSuggestions(newSuggestions);
+      }
+    };
 
 
-        return (
-          <div className="mb-8">
-            {/* Commission Header */}
-            {/* <div className="flex items-center mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-md">
+    return (
+      <div className="mb-8">
+        {/* Commission Header */}
+        {/* <div className="flex items-center mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-md">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
               <DollarSign className="w-6 h-6 text-white" />
@@ -4155,15 +4140,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
           </div>
         </div> */}
 
-            {suggestions.commission ? (
-              <div className="rounded-3xl overflow-hidden">
-                {(() => {
-                  const option = suggestions.commission;
-                  const index = 0;
-                  return (
-                    <div className="p-8">
-                      {/* Header Section */}
-                      {/* <div className="text-center mb-8 pb-6 border-b border-gray-200">
+        {suggestions.commission ? (
+          <div className="rounded-3xl overflow-hidden">
+            {(() => {
+              const option = suggestions.commission;
+              const index = 0;
+              return (
+                <div className="p-8">
+                  {/* Header Section */}
+                  {/* <div className="text-center mb-8 pb-6 border-b border-gray-200">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg mb-4">
                       <DollarSign className="w-8 h-8 text-white" />
                     </div>
@@ -4173,1399 +4158,1465 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
                     <p className="text-gray-500 text-sm">Configure compensation and performance incentives</p>
                   </div> */}
 
-                      {/* Commission Grid */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Commission Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                        {/* Currency Card */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
-                          <div className="flex items-center mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                              <DollarSign className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="ml-4">
-                              <h3 className="text-lg font-bold text-gray-900">Currency</h3>
-                              <p className="text-sm text-gray-500">Base currency for payments</p>
-                            </div>
-                          </div>
-
-                          <select
-                            value={(() => {
-                              const currentVal = typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency;
-                              // If currentVal matches an ID in the list, use it
-                              if (currencies.some((c: { _id: any; }) => c._id === currentVal)) return currentVal;
-                              // If not, try to find a currency with this code
-                              const matchingCurrency = currencies.find((c: { code: any; }) => c.code === currentVal);
-                              return matchingCurrency ? matchingCurrency._id : (currentVal || getDefaultCurrencyId());
-                            })()}
-                            onChange={(e: { target: { value: any; }; }) =>
-                              updateCommissionOption(
-                                0,
-                                "currency",
-                                { $oid: e.target.value }
-                              )
-                            }
-                            disabled={currenciesLoading}
-                            className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all"
-                          >
-                            <option value="">Select currency...</option>
-                            {currencies.map((currency: { _id: any; symbol: any; name: any; code: any; }) => (
-                              <option key={currency._id} value={currency._id}>
-                                {currency.symbol} {currency.name} ({currency.code})
-                              </option>
-                            ))}
-                          </select>
-
-                          {currenciesLoading && (
-                            <div className="flex items-center mt-3 text-sm text-blue-600">
-                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                              Loading currencies...
-                            </div>
-                          )}
+                    {/* Currency Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <DollarSign className="w-6 h-6 text-white" />
                         </div>
-
-                        {/* Per call compensation Card */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
-                          <div className="flex items-center mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                              <Briefcase className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="ml-4">
-                              <h3 className="text-lg font-bold text-gray-900">Per call compensation</h3>
-                              <p className="text-sm text-gray-500">Base amount per successful call</p>
-                            </div>
-                          </div>
-
-                          <div className="relative">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={option.commission_per_call || option.baseAmount || ""}
-                              onChange={(e: { target: { value: string | number; }; }) => {
-                                updateCommissionOption(
-                                  0,
-                                  "commission_per_call",
-                                  e.target.value
-                                );
-                              }}
-                              placeholder="2500"
-                              className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
-                              {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Transaction Commission Card */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
-                          <div className="flex items-center mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                              <DollarSign className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="ml-4">
-                              <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
-                              <p className="text-sm text-gray-500">Commission per transaction</p>
-                            </div>
-                          </div>
-
-                          <div className="relative">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={typeof option.transactionCommission === 'object' ? (option.transactionCommission as any).amount : option.transactionCommission || ""}
-                              onChange={(e: { target: { value: string | number; }; }) => {
-                                updateCommissionOption(
-                                  0,
-                                  "transactionCommission",
-                                  e.target.value
-                                );
-                              }}
-                              placeholder="25.50"
-                              className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
-                              {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Bonus & Incentives Card */}
-                        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-yellow-100 hover:border-yellow-200 group">
-                          <div className="flex items-center mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                              <Award className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="ml-4">
-                              <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
-                              <p className="text-sm text-gray-500">Performance bonus amount</p>
-                            </div>
-                          </div>
-
-                          <div className="relative">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={
-                                typeof option.bonusAmount === "number"
-                                  ? option.bonusAmount
-                                  : option.bonusAmount
-                                    ? parseFloat(option.bonusAmount)
-                                    : ""
-                              }
-                              onChange={(e: { target: { value: string | number; }; }) =>
-                                updateCommissionOption(
-                                  0,
-                                  "bonusAmount",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="500"
-                              className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
-                            />
-                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
-                              {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
-                            </span>
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Volume Requirements Section */}
-                      <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
-                        <div className="flex items-center mb-6">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
-                            <Gauge className="w-6 h-6 text-white" />
-                          </div>
-                          <div className="ml-4">
-                            <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
-                            <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="relative">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={
-                                typeof option.minimumVolume?.amount === "number"
-                                  ? option.minimumVolume.amount
-                                  : parseFloat(option.minimumVolume?.amount) || ""
-                              }
-                              onChange={(e: { target: { value: string | number; }; }) =>
-                                updateCommissionOption(
-                                  0,
-                                  "minimumVolume.amount",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="100"
-                              className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                            />
-                          </div>
-
-                          <select
-                            value={option.minimumVolume?.period || ""}
-                            onChange={(e: { target: { value: string | number; }; }) =>
-                              updateCommissionOption(
-                                0,
-                                "minimumVolume.period",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
-                          >
-                            <option value="">Select Period</option>
-                            <option value="Daily">Daily</option>
-                            <option value="Weekly">Weekly</option>
-                            <option value="Monthly">Monthly</option>
-                          </select>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Currency</h3>
+                          <p className="text-sm text-gray-500">Base currency for payments</p>
                         </div>
                       </div>
 
-                      {/* Additional Details Section */}
-                      <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                        <div className="flex items-center mb-6">
-                          <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                          </div>
-                          <div className="ml-4">
-                            <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
-                            <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
-                          </div>
-                        </div>
+                      <select
+                        value={(() => {
+                          const currentVal = typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency;
+                          // If currentVal matches an ID in the list, use it
+                          if (currencies.some(c => c._id === currentVal)) return currentVal;
+                          // If not, try to find a currency with this code
+                          const matchingCurrency = currencies.find(c => c.code === currentVal);
+                          return matchingCurrency ? matchingCurrency._id : (currentVal || getDefaultCurrencyId());
+                        })()}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "currency",
+                            { $oid: e.target.value }
+                          )
+                        }
+                        disabled={currenciesLoading}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all"
+                      >
+                        <option value="">Select currency...</option>
+                        {currencies.map((currency) => (
+                          <option key={currency._id} value={currency._id}>
+                            {currency.symbol} {currency.name} ({currency.code})
+                          </option>
+                        ))}
+                      </select>
 
-                        <textarea
-                          value={option.additionalDetails || ""}
-                          onChange={(e: { target: { value: string | number; }; }) =>
+                      {currenciesLoading && (
+                        <div className="flex items-center mt-3 text-sm text-blue-600">
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Loading currencies...
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Per call compensation Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <Briefcase className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Per call compensation</h3>
+                          <p className="text-sm text-gray-500">Base amount per successful call</p>
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={option.commission_per_call || option.baseAmount || ""}
+                          onChange={(e) => {
                             updateCommissionOption(
                               0,
-                              "additionalDetails",
+                              "commission_per_call",
+                              e.target.value
+                            );
+                          }}
+                          placeholder="2500"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
+                          {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Transaction Commission Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <DollarSign className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
+                          <p className="text-sm text-gray-500">Commission per transaction</p>
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={typeof option.transactionCommission === 'object' ? (option.transactionCommission as any).amount : option.transactionCommission || ""}
+                          onChange={(e) => {
+                            updateCommissionOption(
+                              0,
+                              "transactionCommission",
+                              e.target.value
+                            );
+                          }}
+                          placeholder="25.50"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
+                          {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bonus & Incentives Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-yellow-100 hover:border-yellow-200 group">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                          <Award className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
+                          <p className="text-sm text-gray-500">Performance bonus amount</p>
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.bonusAmount === "number"
+                              ? option.bonusAmount
+                              : option.bonusAmount
+                                ? parseFloat(option.bonusAmount)
+                                : ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              0,
+                              "bonusAmount",
                               e.target.value
                             )
                           }
-                          placeholder="Commission details, payment terms, conditions, or special notes..."
-                          rows={4}
-                          className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-3 focus:ring-gray-300 focus:border-gray-400 transition-all resize-none"
+                          placeholder="500"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-xl text-yellow-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-yellow-300 focus:border-yellow-400 transition-all"
+                        />
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-yellow-600 text-lg font-bold">
+                          {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Volume Requirements Section */}
+                  <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
+                    <div className="flex items-center mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
+                        <Gauge className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
+                        <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={
+                            typeof option.minimumVolume?.amount === "number"
+                              ? option.minimumVolume.amount
+                              : parseFloat(option.minimumVolume?.amount) || ""
+                          }
+                          onChange={(e) =>
+                            updateCommissionOption(
+                              0,
+                              "minimumVolume.amount",
+                              e.target.value
+                            )
+                          }
+                          placeholder="100"
+                          className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
                         />
                       </div>
 
+                      <select
+                        value={option.minimumVolume?.period || ""}
+                        onChange={(e) =>
+                          updateCommissionOption(
+                            0,
+                            "minimumVolume.period",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                      >
+                        <option value="">Select Period</option>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
                     </div>
-                  );
-                })()}
-              </div>
-            ) : (
-              <div className="text-center py-16 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 shadow-lg">
-                <div className="p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
-                  <DollarSign className="w-10 h-10 text-green-600" />
+                  </div>
+
+                  {/* Additional Details Section */}
+                  <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex items-center mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
+                        <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
+                      </div>
+                    </div>
+
+                    <textarea
+                      value={option.additionalDetails || ""}
+                      onChange={(e) =>
+                        updateCommissionOption(
+                          0,
+                          "additionalDetails",
+                          e.target.value
+                        )
+                      }
+                      placeholder="Commission details, payment terms, conditions, or special notes..."
+                      rows={4}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-3 focus:ring-gray-300 focus:border-gray-400 transition-all resize-none"
+                    />
+                  </div>
+
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  No Commission Data
-                </h3>
-                <p className="text-gray-600 mb-8 w-full mx-auto text-lg leading-relaxed">
-                  Commission data will be populated automatically from AI suggestions.
-                </p>
-              </div>
-            )}
+              );
+            })()}
           </div>
-        );
+        ) : (
+          <div className="text-center py-16 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 shadow-lg">
+            <div className="p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
+              <DollarSign className="w-10 h-10 text-green-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">
+              No Commission Data
+            </h3>
+            <p className="text-gray-600 mb-8 w-full mx-auto text-lg leading-relaxed">
+              Commission data will be populated automatically from AI suggestions.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderSkillsSection = () => {
+    if (!suggestions) return null;
+
+    // Helper: get ObjectId for a skill name and type
+    function getSkillObjectId(skillName: string, type: string): string | undefined {
+      let arr: any[] = [];
+      if (type === 'soft') arr = softSkills;
+      if (type === 'professional') arr = professionalSkills;
+      if (type === 'technical') arr = technicalSkills;
+      const found = arr.find(s => s.name === skillName);
+      return found?._id;
+    }
+
+    // Note: Skills migration is now handled at the top level of the component
+
+    // Mapping for display: always show ObjectId if possible
+    const skillsWithObjectIds: any = { ...suggestions.skills };
+    ['soft', 'professional', 'technical'].forEach(type => {
+      skillsWithObjectIds[type] = ((suggestions.skills as any)[type] as any[]).map(s => {
+        if (typeof s.skill === 'string') {
+          const oid = getSkillObjectId(s.skill, type);
+          return { ...s, skill: oid ? { $oid: oid } : s.skill };
+        }
+        return s;
+      });
+    });
+
+    const addSkill = (skillType: string, skill: string, level: number = 1, exactPosition?: number) => {
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) {
+        newSuggestions.skills = {
+          languages: [],
+          soft: [],
+          professional: [],
+          technical: [],
+          certifications: [],
+        };
+      }
+
+      switch (skillType) {
+        case "languages":
+          // Find the language by ID to get the code
+          const selectedLanguage = languages.find(l => l.value === skill);
+          if (selectedLanguage) {
+            const newLanguage: any = {
+              language: selectedLanguage.value, // Store ID
+              proficiency: LANGUAGE_LEVELS[level]?.value || "B1", // level est maintenant l'index
+              iso639_1: selectedLanguage.code, // Use correct code
+            };
+            // Ajouter la position exacte si fournie
+            if (exactPosition !== undefined) {
+              newLanguage.exactPosition = exactPosition;
+            }
+            newSuggestions.skills.languages.push(newLanguage);
+          } else {
+            console.warn(`Language with ID "${skill}" not found. Skipping addition.`);
+            return; // Exit early without adding the skill
+          }
+          break;
+        case "soft":
+        case "professional":
+        case "technical":
+          // For skills, we need to find the skill object to get the ObjectId
+          let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
+          switch (skillType) {
+            case "soft":
+              skillArray = softSkills;
+              break;
+            case "professional":
+              skillArray = professionalSkills;
+              break;
+            case "technical":
+              skillArray = technicalSkills;
+              break;
+            default:
+              skillArray = [];
+          }
+
+          // Find the skill by ObjectId (skill parameter is now the ObjectId)
+          const skillObject = skillArray.find(s => s._id === skill);
+
+          if (skillObject) {
+            const skillData: any = {
+              skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
+              level,
+              details: skillObject.description || '' // Add details field
+            };
+            // Ajouter la position exacte si fournie
+            if (exactPosition !== undefined) {
+              skillData.exactPosition = exactPosition;
+            }
+            (newSuggestions.skills as any)[skillType].push(skillData);
+          } else {
+            // Don't add skills that don't exist in the database
+            return; // Exit early without adding the skill
+          }
+          break;
+      }
+
+      setSuggestions(newSuggestions);
+    };
+
+    const updateSkill = (skillType: string, index: number, field: string, value: string | number, exactPosition?: number) => {
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) return;
+
+      switch (skillType) {
+        case "languages":
+          if (field === "language") {
+            // Find the language by ID to get the code
+            const selectedLanguage = languages.find(l => l.value === value);
+            if (selectedLanguage) {
+              newSuggestions.skills.languages[index].language = selectedLanguage.value; // Store ID
+              newSuggestions.skills.languages[index].iso639_1 = selectedLanguage.code; // Update code
+            } else {
+              console.warn(`Language with ID "${value}" not found. Skipping update.`);
+              return;
+            }
+          } else if (field === "proficiency") {
+            newSuggestions.skills.languages[index].proficiency = value as string;
+            // Stocker la position exacte si fournie
+            if (exactPosition !== undefined) {
+              (newSuggestions.skills.languages[index] as any).exactPosition = exactPosition;
+            }
+          }
+          break;
+        case "soft":
+        case "professional":
+        case "technical":
+          if (field === "skill") {
+            // For skills, we need to find the skill object to get the ObjectId
+            let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
+            switch (skillType) {
+              case "soft":
+                skillArray = softSkills;
+                break;
+              case "professional":
+                skillArray = professionalSkills;
+                break;
+              case "technical":
+                skillArray = technicalSkills;
+                break;
+              default:
+                skillArray = [];
+            }
+
+            // Find the skill by ObjectId (value parameter is now the ObjectId)
+            const skillObject = skillArray.find(s => s._id === value);
+
+
+            if (skillObject) {
+              (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
+              (newSuggestions.skills as any)[skillType][index].details = skillObject.description || ''; // Update details field
+            } else {
+              // Don't update with skills that don't exist in the database
+              return; // Exit early without updating the skill
+            }
+          } else if (field === "level") {
+            (newSuggestions.skills as any)[skillType][index].level = value as number;
+            // Stocker la position exacte si fournie
+            if (exactPosition !== undefined) {
+              ((newSuggestions.skills as any)[skillType][index] as any).exactPosition = exactPosition;
+            }
+          }
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteSkill = (skillType: string, index: number) => {
+
+      const arr = (suggestions.skills as any)[skillType];
+      if (arr && arr[index]) {
+        const skillEntry = arr[index];
+        if (skillEntry && skillEntry.skill && skillEntry.skill.$oid) {
+        } else {
+        }
+      }
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.skills) return;
+      switch (skillType) {
+        case "languages":
+          newSuggestions.skills.languages.splice(index, 1);
+          break;
+        case "soft":
+          newSuggestions.skills.soft.splice(index, 1);
+          break;
+        case "professional":
+          newSuggestions.skills.professional.splice(index, 1);
+          break;
+        case "technical":
+          newSuggestions.skills.technical.splice(index, 1);
+          break;
+      }
+      setSuggestions(newSuggestions);
+    };
+
+    const renderSkillCard = (skillType: string, items: any[], title: string, icon: React.ReactNode) => {
+      const currentItems = items || [];
+
+      const handleShowAddInterface = () => {
+        setShowAddSkillInterface(prev => ({ ...prev, [skillType]: true }));
       };
 
-      const renderSkillsSection = () => {
-        if (!suggestions) return null;
+      const handleConfirmAddSkill = () => {
+        const skillId = selectedSkillToAdd[skillType];
+        if (!skillId) return;
 
-        // Helper: get ObjectId for a skill name and type
-        function getSkillObjectId(skillName: string, type: string): string | undefined {
-          let arr: any[] = [];
-          if (type === 'soft') arr = softSkills;
-          if (type === 'professional') arr = professionalSkills;
-          if (type === 'technical') arr = technicalSkills;
-          const found = arr.find(s => s.name === skillName);
-          return found?._id;
+        const exactPos = selectedExactPosition[skillType];
+        addSkill(skillType, skillId, selectedLevelToAdd[skillType], exactPos);
+
+        // Reset states
+        setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+        setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+        setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+        setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+      };
+
+      const handleCancelAddSkill = () => {
+        setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+        setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+        setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+        setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+      };
+
+      // Fonction pour commencer l'édition d'une compétence existante
+      const handleStartEditSkill = (index: number) => {
+        setEditingSkill(prev => ({ ...prev, [skillType]: index }));
+
+        // Pré-remplir le terme de recherche avec le nom actuel
+        if (currentItems && currentItems[index]) {
+          const item = currentItems[index];
+          let skillName = '';
+
+          if (skillType === 'languages') {
+            const languageItem = item as any;
+            const language = languages.find(l => l.value === languageItem.language);
+            skillName = language?.label || '';
+          } else {
+            const skillItem = item as any;
+            // Utiliser la liste complète selon le type de compétence
+            let allSkills: any[] = [];
+            if (skillType === 'professional') {
+              allSkills = professionalSkills.map(s => ({ id: s._id, name: s.name }));
+            } else if (skillType === 'technical') {
+              allSkills = technicalSkills.map(s => ({ id: s._id, name: s.name }));
+            } else if (skillType === 'soft') {
+              allSkills = softSkills.map(s => ({ id: s._id, name: s.name }));
+            }
+
+            const skillId = typeof skillItem.skill === 'string'
+              ? skillItem.skill
+              : (skillItem.skill && typeof skillItem.skill === 'object' && skillItem.skill.$oid
+                ? skillItem.skill.$oid
+                : null);
+
+            const skill = allSkills.find(s => s.id === skillId);
+            skillName = skill?.name || '';
+          }
+
+          // Plus besoin de pré-remplir car on utilise un sélecteur
+        }
+      };
+
+      // Fonction pour confirmer l'édition d'une compétence
+      const handleConfirmEditSkill = (index: number, newSkillId: string) => {
+        if (skillType === 'languages') {
+          const currentLanguage = suggestions?.skills?.languages?.[index];
+          if (currentLanguage) {
+            const updatedLanguages = [...(suggestions?.skills?.languages || [])];
+            updatedLanguages[index] = {
+              ...currentLanguage,
+              language: newSkillId
+            };
+            setSuggestions(prev => prev ? ({
+              ...prev,
+              skills: {
+                ...prev.skills,
+                languages: updatedLanguages
+              }
+            }) : null);
+          }
+        } else {
+          const currentSkills = suggestions?.skills?.[skillType as keyof typeof suggestions.skills] as any[];
+          if (currentSkills && currentSkills[index]) {
+            const updatedSkills = [...currentSkills];
+            updatedSkills[index] = {
+              ...updatedSkills[index],
+              skill: newSkillId
+            };
+            setSuggestions(prev => prev ? ({
+              ...prev,
+              skills: {
+                ...prev.skills,
+                [skillType]: updatedSkills
+              }
+            }) : null);
+          }
         }
 
-        // Note: Skills migration is now handled at the top level of the component
+        // Reset editing state
+        setEditingSkill(prev => ({ ...prev, [skillType]: null }));
+      };
 
-        // Mapping for display: always show ObjectId if possible
-        const skillsWithObjectIds: any = { ...suggestions.skills };
-        ['soft', 'professional', 'technical'].forEach(type => {
-          skillsWithObjectIds[type] = ((suggestions.skills as any)[type] as any[]).map(s => {
-            if (typeof s.skill === 'string') {
-              const oid = getSkillObjectId(s.skill, type);
-              return { ...s, skill: oid ? { $oid: oid } : s.skill };
-            }
-            return s;
-          });
-        });
+      // Fonction pour annuler l'édition
+      const handleCancelEditSkill = () => {
+        setEditingSkill(prev => ({ ...prev, [skillType]: null }));
+      };
 
-        const addSkill = (skillType: string, skill: string, level: number = 1, exactPosition?: number) => {
 
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.skills) {
-            newSuggestions.skills = {
-              languages: [],
-              soft: [],
-              professional: [],
-              technical: [],
-              certifications: [],
-            };
-          }
+      const handleRemoveSkill = (index: number) => {
+        deleteSkill(skillType, index);
+      };
 
-          switch (skillType) {
-            case "languages":
-              // Find the language by ID to get the code
-              const selectedLanguage = languages.find((l: { value: string; }) => l.value === skill);
-              if (selectedLanguage) {
-                const newLanguage: any = {
-                  language: selectedLanguage.value, // Store ID
-                  proficiency: LANGUAGE_LEVELS[level]?.value || "B1", // level est maintenant l'index
-                  iso639_1: selectedLanguage.code, // Use correct code
-                };
-                // Ajouter la position exacte si fournie
-                if (exactPosition !== undefined) {
-                  newLanguage.exactPosition = exactPosition;
-                }
-                newSuggestions.skills.languages.push(newLanguage);
-              } else {
-                console.warn(`Language with ID "${skill}" not found. Skipping addition.`);
-                return; // Exit early without adding the skill
-              }
-              break;
-            case "soft":
-            case "professional":
-            case "technical":
-              // For skills, we need to find the skill object to get the ObjectId
-              let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
-              switch (skillType) {
-                case "soft":
-                  skillArray = softSkills;
-                  break;
-                case "professional":
-                  skillArray = professionalSkills;
-                  break;
-                case "technical":
-                  skillArray = technicalSkills;
-                  break;
-                default:
-                  skillArray = [];
-              }
+      const getLevelLabel = (level: number, type: string) => {
+        if (type === "languages") {
+          const labels = ['Beginner', 'Elementary', 'Intermediate', 'Upper Intermediate', 'Advanced', 'Mastery'];
+          return labels[level] || 'Intermediate';
+        } else {
+          const labels = ['', 'Basic', 'Novice', 'Intermediate', 'Advanced', 'Expert'];
+          return labels[level] || 'Basic';
+        }
+      };
 
-              // Find the skill by ObjectId (skill parameter is now the ObjectId)
-              const skillObject = skillArray.find(s => s._id === skill);
+      // Helper function to get progressive colors for skill levels
+      const getProgressiveColor = (levelIndex: number, isActive: boolean): string => {
+        if (!isActive) {
+          return 'bg-white border-gray-300 hover:border-gray-400';
+        }
 
-              if (skillObject) {
-                const skillData: any = {
-                  skill: { $oid: skillObject._id }, // Store MongoDB ObjectId format
-                  level,
-                  details: skillObject.description || '' // Add details field
-                };
-                // Ajouter la position exacte si fournie
-                if (exactPosition !== undefined) {
-                  skillData.exactPosition = exactPosition;
-                }
-                (newSuggestions.skills as any)[skillType].push(skillData);
-              } else {
-                // Don't add skills that don't exist in the database
-                return; // Exit early without adding the skill
-              }
-              break;
-          }
-
-          setSuggestions(newSuggestions);
+        // Couleurs progressives selon le type de compétence
+        const colorSchemes = {
+          languages: [
+            'bg-blue-200 border-blue-300',    // A1 - Très clair
+            'bg-blue-300 border-blue-400',    // A2 - Clair
+            'bg-blue-400 border-blue-500',    // B1 - Moyen clair
+            'bg-blue-500 border-blue-600',    // B2 - Moyen
+            'bg-blue-600 border-blue-700',    // C1 - Foncé
+            'bg-blue-700 border-blue-800'     // C2 - Très foncé
+          ],
+          professional: [
+            'bg-green-200 border-green-300',  // Niveau 1
+            'bg-green-300 border-green-400',  // Niveau 2
+            'bg-green-400 border-green-500',  // Niveau 3
+            'bg-green-500 border-green-600',  // Niveau 4
+            'bg-green-600 border-green-700'   // Niveau 5
+          ],
+          technical: [
+            'bg-purple-200 border-purple-300', // Niveau 1
+            'bg-purple-300 border-purple-400', // Niveau 2
+            'bg-purple-400 border-purple-500', // Niveau 3
+            'bg-purple-500 border-purple-600', // Niveau 4
+            'bg-purple-600 border-purple-700'  // Niveau 5
+          ],
+          soft: [
+            'bg-orange-200 border-orange-300', // Niveau 1
+            'bg-orange-300 border-orange-400', // Niveau 2
+            'bg-orange-400 border-orange-500', // Niveau 3
+            'bg-orange-500 border-orange-600', // Niveau 4
+            'bg-orange-600 border-orange-700'  // Niveau 5
+          ]
         };
 
-        const updateSkill = (skillType: string, index: number, field: string, value: string | number, exactPosition?: number) => {
+        const colors = colorSchemes[skillType as keyof typeof colorSchemes];
+        return colors[levelIndex] || colors[colors.length - 1];
+      };
 
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.skills) return;
-
-          switch (skillType) {
-            case "languages":
-              if (field === "language") {
-                // Find the language by ID to get the code
-                const selectedLanguage = languages.find((l: { value: string | number; }) => l.value === value);
-                if (selectedLanguage) {
-                  newSuggestions.skills.languages[index].language = selectedLanguage.value; // Store ID
-                  newSuggestions.skills.languages[index].iso639_1 = selectedLanguage.code; // Update code
-                } else {
-                  console.warn(`Language with ID "${value}" not found. Skipping update.`);
-                  return;
+      const getSkillOptions = (editingIndex?: number) => {
+        switch (skillType) {
+          case "languages":
+            return languages
+              .filter(lang => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].language === lang.value) {
+                  return true;
                 }
-              } else if (field === "proficiency") {
-                newSuggestions.skills.languages[index].proficiency = value as string;
-                // Stocker la position exacte si fournie
-                if (exactPosition !== undefined) {
-                  (newSuggestions.skills.languages[index] as any).exactPosition = exactPosition;
-                }
-              }
-              break;
-            case "soft":
-            case "professional":
-            case "technical":
-              if (field === "skill") {
-                // For skills, we need to find the skill object to get the ObjectId
-                let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
-                switch (skillType) {
-                  case "soft":
-                    skillArray = softSkills;
-                    break;
-                  case "professional":
-                    skillArray = professionalSkills;
-                    break;
-                  case "technical":
-                    skillArray = technicalSkills;
-                    break;
-                  default:
-                    skillArray = [];
-                }
-
-                // Find the skill by ObjectId (value parameter is now the ObjectId)
-                const skillObject = skillArray.find(s => s._id === value);
-
-
-                if (skillObject) {
-                  (newSuggestions.skills as any)[skillType][index].skill = { $oid: skillObject._id }; // Store MongoDB ObjectId format
-                  (newSuggestions.skills as any)[skillType][index].details = skillObject.description || ''; // Update details field
-                } else {
-                  // Don't update with skills that don't exist in the database
-                  return; // Exit early without updating the skill
-                }
-              } else if (field === "level") {
-                (newSuggestions.skills as any)[skillType][index].level = value as number;
-                // Stocker la position exacte si fournie
-                if (exactPosition !== undefined) {
-                  ((newSuggestions.skills as any)[skillType][index] as any).exactPosition = exactPosition;
-                }
-              }
-              break;
-          }
-          setSuggestions(newSuggestions);
-        };
-
-        const deleteSkill = (skillType: string, index: number) => {
-
-          const arr = (suggestions.skills as any)[skillType];
-          if (arr && arr[index]) {
-            const skillEntry = arr[index];
-            if (skillEntry && skillEntry.skill && skillEntry.skill.$oid) {
-            } else {
-            }
-          }
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.skills) return;
-          switch (skillType) {
-            case "languages":
-              newSuggestions.skills.languages.splice(index, 1);
-              break;
-            case "soft":
-              newSuggestions.skills.soft.splice(index, 1);
-              break;
-            case "professional":
-              newSuggestions.skills.professional.splice(index, 1);
-              break;
-            case "technical":
-              newSuggestions.skills.technical.splice(index, 1);
-              break;
-          }
-          setSuggestions(newSuggestions);
-        };
-
-        const renderSkillCard = (skillType: string, items: any[], title: string, icon: React.ReactNode) => {
-          const currentItems = items || [];
-
-          const handleShowAddInterface = () => {
-            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: true }));
-          };
-
-          const handleConfirmAddSkill = () => {
-            const skillId = selectedSkillToAdd[skillType];
-            if (!skillId) return;
-
-            const exactPos = selectedExactPosition[skillType];
-            addSkill(skillType, skillId, selectedLevelToAdd[skillType], exactPos);
-
-            // Reset states
-            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
-            setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
-            setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-            setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
-          };
-
-          const handleCancelAddSkill = () => {
-            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
-            setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
-            setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-            setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
-          };
-
-          // Fonction pour commencer l'édition d'une compétence existante
-          const handleStartEditSkill = (index: number) => {
-            setEditingSkill((prev: any) => ({ ...prev, [skillType]: index }));
-
-            // Pré-remplir le terme de recherche avec le nom actuel
-            if (currentItems && currentItems[index]) {
-              const item = currentItems[index];
-              let skillName = '';
-
-              if (skillType === 'languages') {
-                const languageItem = item as any;
-                const language = languages.find((l: { value: any; }) => l.value === languageItem.language);
-                skillName = language?.label || '';
-              } else {
-                const skillItem = item as any;
-                // Utiliser la liste complète selon le type de compétence
-                let allSkills: any[] = [];
-                if (skillType === 'professional') {
-                  allSkills = professionalSkills.map((s: { _id: any; name: any; }) => ({ id: s._id, name: s.name }));
-                } else if (skillType === 'technical') {
-                  allSkills = technicalSkills.map((s: { _id: any; name: any; }) => ({ id: s._id, name: s.name }));
-                } else if (skillType === 'soft') {
-                  allSkills = softSkills.map((s: { _id: any; name: any; }) => ({ id: s._id, name: s.name }));
-                }
-
-                const skillId = typeof skillItem.skill === 'string'
-                  ? skillItem.skill
-                  : (skillItem.skill && typeof skillItem.skill === 'object' && skillItem.skill.$oid
-                    ? skillItem.skill.$oid
-                    : null);
-
-                const skill = allSkills.find(s => s.id === skillId);
-                skillName = skill?.name || '';
-              }
-
-              // Plus besoin de pré-remplir car on utilise un sélecteur
-            }
-          };
-
-          // Fonction pour confirmer l'édition d'une compétence
-          const handleConfirmEditSkill = (index: number, newSkillId: string) => {
-            if (skillType === 'languages') {
-              const currentLanguage = suggestions?.skills?.languages?.[index];
-              if (currentLanguage) {
-                const updatedLanguages = [...(suggestions?.skills?.languages || [])];
-                updatedLanguages[index] = {
-                  ...currentLanguage,
-                  language: newSkillId
-                };
-                setSuggestions((prev: { skills: any; }) => prev ? ({
-                  ...prev,
-                  skills: {
-                    ...prev.skills,
-                    languages: updatedLanguages
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => item.language === lang.value);
+              })
+              .map(lang => ({ id: lang.value, name: lang.label }));
+          case "professional":
+            return professionalSkills
+              .filter(skill => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
+                    ? currentItems[editingIndex].skill
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
+                      ? currentItems[editingIndex].skill.$oid
+                      : null);
+                  if (currentSkillId === skill._id) {
+                    return true;
                   }
-                }) : null);
-              }
-            } else {
-              const currentSkills = suggestions?.skills?.[skillType as keyof typeof suggestions.skills] as any[];
-              if (currentSkills && currentSkills[index]) {
-                const updatedSkills = [...currentSkills];
-                updatedSkills[index] = {
-                  ...updatedSkills[index],
-                  skill: newSkillId
-                };
-                setSuggestions((prev: { skills: any; }) => prev ? ({
-                  ...prev,
-                  skills: {
-                    ...prev.skills,
-                    [skillType]: updatedSkills
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => {
+                  if (!item || !item.skill) return false;
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  return skillId === skill._id;
+                });
+              })
+              .map(skill => ({ id: skill._id, name: skill.name }));
+          case "technical":
+            return technicalSkills
+              .filter(skill => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
+                    ? currentItems[editingIndex].skill
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
+                      ? currentItems[editingIndex].skill.$oid
+                      : null);
+                  if (currentSkillId === skill._id) {
+                    return true;
                   }
-                }) : null);
-              }
-            }
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => {
+                  if (!item || !item.skill) return false;
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  return skillId === skill._id;
+                });
+              })
+              .map(skill => ({ id: skill._id, name: skill.name }));
+          case "soft":
+            return softSkills
+              .filter(skill => {
+                // Si on édite un élément, inclure l'élément actuel
+                if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
+                  const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
+                    ? currentItems[editingIndex].skill
+                    : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
+                      ? currentItems[editingIndex].skill.$oid
+                      : null);
+                  if (currentSkillId === skill._id) {
+                    return true;
+                  }
+                }
+                // Sinon, exclure les éléments déjà sélectionnés
+                return !currentItems.some(item => {
+                  if (!item || !item.skill) return false;
+                  const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                  return skillId === skill._id;
+                });
+              })
+              .map(skill => ({ id: skill._id, name: skill.name }));
+          default:
+            return [];
+        }
+      };
 
-            // Reset editing state
-            setEditingSkill((prev: any) => ({ ...prev, [skillType]: null }));
-          };
+      const skillOptions = getSkillOptions();
+      const editSkillOptions = getSkillOptions(editingSkill[skillType] ?? undefined);
 
-          // Fonction pour annuler l'édition
-          const handleCancelEditSkill = () => {
-            setEditingSkill((prev: any) => ({ ...prev, [skillType]: null }));
-          };
-
-
-          const handleRemoveSkill = (index: number) => {
-            deleteSkill(skillType, index);
-          };
-
-          const getLevelLabel = (level: number, type: string) => {
-            if (type === "languages") {
-              const labels = ['Beginner', 'Elementary', 'Intermediate', 'Upper Intermediate', 'Advanced', 'Mastery'];
-              return labels[level] || 'Intermediate';
-            } else {
-              const labels = ['', 'Basic', 'Novice', 'Intermediate', 'Advanced', 'Expert'];
-              return labels[level] || 'Basic';
-            }
-          };
-
-          // Helper function to get progressive colors for skill levels
-          const getProgressiveColor = (levelIndex: number, isActive: boolean): string => {
-            if (!isActive) {
-              return 'bg-white border-gray-300 hover:border-gray-400';
-            }
-
-            // Couleurs progressives selon le type de compétence
-            const colorSchemes = {
-              languages: [
-                'bg-blue-200 border-blue-300',    // A1 - Très clair
-                'bg-blue-300 border-blue-400',    // A2 - Clair
-                'bg-blue-400 border-blue-500',    // B1 - Moyen clair
-                'bg-blue-500 border-blue-600',    // B2 - Moyen
-                'bg-blue-600 border-blue-700',    // C1 - Foncé
-                'bg-blue-700 border-blue-800'     // C2 - Très foncé
-              ],
-              professional: [
-                'bg-green-200 border-green-300',  // Niveau 1
-                'bg-green-300 border-green-400',  // Niveau 2
-                'bg-green-400 border-green-500',  // Niveau 3
-                'bg-green-500 border-green-600',  // Niveau 4
-                'bg-green-600 border-green-700'   // Niveau 5
-              ],
-              technical: [
-                'bg-purple-200 border-purple-300', // Niveau 1
-                'bg-purple-300 border-purple-400', // Niveau 2
-                'bg-purple-400 border-purple-500', // Niveau 3
-                'bg-purple-500 border-purple-600', // Niveau 4
-                'bg-purple-600 border-purple-700'  // Niveau 5
-              ],
-              soft: [
-                'bg-orange-200 border-orange-300', // Niveau 1
-                'bg-orange-300 border-orange-400', // Niveau 2
-                'bg-orange-400 border-orange-500', // Niveau 3
-                'bg-orange-500 border-orange-600', // Niveau 4
-                'bg-orange-600 border-orange-700'  // Niveau 5
-              ]
+      // Get colors for each skill type
+      const getColors = () => {
+        switch (skillType) {
+          case "languages":
+            return {
+              border: "border-blue-200",
+              focus: "focus:ring-indigo-400 focus:border-indigo-400",
+              bg: "bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100",
+              text: "text-indigo-900",
+              hover: "hover:from-indigo-100 hover:to-blue-100 hover:shadow-lg hover:shadow-indigo-100",
+              shadow: "shadow-md shadow-indigo-50"
             };
+          case "professional":
+            return {
+              border: "border-blue-200",
+              focus: "focus:ring-emerald-400 focus:border-emerald-400",
+              bg: "bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100",
+              text: "text-emerald-900",
+              hover: "hover:from-emerald-100 hover:to-green-100 hover:shadow-lg hover:shadow-emerald-100",
+              shadow: "shadow-md shadow-emerald-50"
+            };
+          case "technical":
+            return {
+              border: "border-violet-200",
+              focus: "focus:ring-violet-400 focus:border-violet-400",
+              bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100",
+              text: "text-violet-900",
+              hover: "hover:from-violet-100 hover:to-purple-100 hover:shadow-lg hover:shadow-violet-100",
+              shadow: "shadow-md shadow-violet-50"
+            };
+          case "soft":
+            return {
+              border: "border-amber-200",
+              focus: "focus:ring-amber-400 focus:border-amber-400",
+              bg: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100",
+              text: "text-amber-900",
+              hover: "hover:from-amber-100 hover:to-orange-100 hover:shadow-lg hover:shadow-amber-100",
+              shadow: "shadow-md shadow-amber-50"
+            };
+          default:
+            return {
+              border: "border-slate-200",
+              focus: "focus:ring-slate-400 focus:border-slate-400",
+              bg: "bg-gradient-to-br from-slate-50 to-gray-100",
+              text: "text-slate-900",
+              hover: "hover:from-slate-100 hover:to-gray-100 hover:shadow-lg hover:shadow-slate-100",
+              shadow: "shadow-md shadow-slate-50"
+            };
+        }
+      };
 
-            const colors = colorSchemes[skillType as keyof typeof colorSchemes];
-            return colors[levelIndex] || colors[colors.length - 1];
-          };
+      const colors = getColors();
 
-          const getSkillOptions = (editingIndex?: number) => {
-            switch (skillType) {
-              case "languages":
-                return languages
-                  .filter((lang: { value: any; }) => {
-                    // Si on édite un élément, inclure l'élément actuel
-                    if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].language === lang.value) {
-                      return true;
+      return (
+        <div className="space-y-4">
+          {/* Header avec titre et bouton + */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {icon}
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <span className="text-sm text-gray-500">
+                {skillOptions.length} available
+              </span>
+            </div>
+            {!showAddSkillInterface[skillType] && (
+              <button
+                onClick={handleShowAddInterface}
+                className={`w-8 h-8 rounded-full ${skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : skillType === 'technical' ? 'bg-purple-500 hover:bg-purple-600' : skillType === 'languages' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'} text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
+                title={`Add ${skillType === "languages" ? "language" : "skill"}`}
+              >
+                <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
+            )}
+          </div>
+
+          {/* Add interface */}
+          {skillsLoading && (
+            <div className={`w-full px-4 py-3 rounded-lg border ${colors.border} bg-gray-50 text-gray-500 text-center text-sm`}>
+              <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+              Loading {skillType} from API...
+            </div>
+          )}
+
+
+          {!skillsLoading && !showAddSkillInterface[skillType] && currentItems.length === 0 && (
+            // Message when no skills
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-sm">
+                No {skillType === "languages" ? "languages" : "skills"} added yet.
+                <br />
+                Click the + button above to add your first {skillType === "languages" ? "language" : "skill"}.
+              </p>
+            </div>
+          )}
+
+          {/* Selected badges - displayed below the select */}
+          {(currentItems.length > 0 || showAddSkillInterface[skillType]) && (
+            <div className="pt-2 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {currentItems.map((item, index) => {
+                  let skillName = '';
+                  let levelDisplay = null;
+
+                  if (skillType === "languages") {
+                    skillName = getLanguageNameById(item.language);
+                    levelDisplay = (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.proficiency?.includes("C")
+                        ? "bg-green-100 text-green-800"
+                        : item.proficiency?.includes("B")
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-yellow-100 text-yellow-800"
+                        }`}>
+                        {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
+                      </span>
+                    );
+                  } else {
+                    let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
+                    switch (skillType) {
+                      case "soft":
+                        skillArray = softSkills;
+                        break;
+                      case "professional":
+                        skillArray = professionalSkills;
+                        break;
+                      case "technical":
+                        skillArray = technicalSkills;
+                        break;
+                      default:
+                        skillArray = [];
                     }
-                    // Sinon, exclure les éléments déjà sélectionnés
-                    return !currentItems.some(item => item.language === lang.value);
-                  })
-                  .map((lang: { value: any; label: any; }) => ({ id: lang.value, name: lang.label }));
-              case "professional":
-                return professionalSkills
-                  .filter((skill: { _id: any; }) => {
-                    // Si on édite un élément, inclure l'élément actuel
-                    if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
-                      const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
-                        ? currentItems[editingIndex].skill
-                        : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
-                          ? currentItems[editingIndex].skill.$oid
-                          : null);
-                      if (currentSkillId === skill._id) {
-                        return true;
-                      }
+                    const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
+                    if (skillId) {
+                      const skillObject = skillArray.find(s => s._id === skillId);
+                      skillName = skillObject ? skillObject.name : '';
                     }
-                    // Sinon, exclure les éléments déjà sélectionnés
-                    return !currentItems.some(item => {
-                      if (!item || !item.skill) return false;
-                      const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                      return skillId === skill._id;
-                    });
-                  })
-                  .map((skill: { _id: any; name: any; }) => ({ id: skill._id, name: skill.name }));
-              case "technical":
-                return technicalSkills
-                  .filter((skill: { _id: any; }) => {
-                    // Si on édite un élément, inclure l'élément actuel
-                    if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
-                      const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
-                        ? currentItems[editingIndex].skill
-                        : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
-                          ? currentItems[editingIndex].skill.$oid
-                          : null);
-                      if (currentSkillId === skill._id) {
-                        return true;
-                      }
-                    }
-                    // Sinon, exclure les éléments déjà sélectionnés
-                    return !currentItems.some(item => {
-                      if (!item || !item.skill) return false;
-                      const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                      return skillId === skill._id;
-                    });
-                  })
-                  .map((skill: { _id: any; name: any; }) => ({ id: skill._id, name: skill.name }));
-              case "soft":
-                return softSkills
-                  .filter((skill: { _id: any; }) => {
-                    // Si on édite un élément, inclure l'élément actuel
-                    if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
-                      const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
-                        ? currentItems[editingIndex].skill
-                        : (currentItems[editingIndex].skill && typeof currentItems[editingIndex].skill === 'object' && currentItems[editingIndex].skill.$oid
-                          ? currentItems[editingIndex].skill.$oid
-                          : null);
-                      if (currentSkillId === skill._id) {
-                        return true;
-                      }
-                    }
-                    // Sinon, exclure les éléments déjà sélectionnés
-                    return !currentItems.some(item => {
-                      if (!item || !item.skill) return false;
-                      const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                      return skillId === skill._id;
-                    });
-                  })
-                  .map((skill: { _id: any; name: any; }) => ({ id: skill._id, name: skill.name }));
-              default:
-                return [];
-            }
-          };
 
-          const skillOptions = getSkillOptions();
-          const editSkillOptions = getSkillOptions(editingSkill[skillType] ?? undefined);
+                    levelDisplay = (
+                      <div className="flex items-center space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-3 h-3 ${star <= (item.level || 1)
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-300"
+                              }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    );
+                  }
 
-          // Get colors for each skill type
-          const getColors = () => {
-            switch (skillType) {
-              case "languages":
-                return {
-                  border: "border-blue-200",
-                  focus: "focus:ring-indigo-400 focus:border-indigo-400",
-                  bg: "bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100",
-                  text: "text-indigo-900",
-                  hover: "hover:from-indigo-100 hover:to-blue-100 hover:shadow-lg hover:shadow-indigo-100",
-                  shadow: "shadow-md shadow-indigo-50"
-                };
-              case "professional":
-                return {
-                  border: "border-blue-200",
-                  focus: "focus:ring-emerald-400 focus:border-emerald-400",
-                  bg: "bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100",
-                  text: "text-emerald-900",
-                  hover: "hover:from-emerald-100 hover:to-green-100 hover:shadow-lg hover:shadow-emerald-100",
-                  shadow: "shadow-md shadow-emerald-50"
-                };
-              case "technical":
-                return {
-                  border: "border-violet-200",
-                  focus: "focus:ring-violet-400 focus:border-violet-400",
-                  bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100",
-                  text: "text-violet-900",
-                  hover: "hover:from-violet-100 hover:to-purple-100 hover:shadow-lg hover:shadow-violet-100",
-                  shadow: "shadow-md shadow-violet-50"
-                };
-              case "soft":
-                return {
-                  border: "border-amber-200",
-                  focus: "focus:ring-amber-400 focus:border-amber-400",
-                  bg: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100",
-                  text: "text-amber-900",
-                  hover: "hover:from-amber-100 hover:to-orange-100 hover:shadow-lg hover:shadow-amber-100",
-                  shadow: "shadow-md shadow-amber-50"
-                };
-              default:
-                return {
-                  border: "border-slate-200",
-                  focus: "focus:ring-slate-400 focus:border-slate-400",
-                  bg: "bg-gradient-to-br from-slate-50 to-gray-100",
-                  text: "text-slate-900",
-                  hover: "hover:from-slate-100 hover:to-gray-100 hover:shadow-lg hover:shadow-slate-100",
-                  shadow: "shadow-md shadow-slate-50"
-                };
-            }
-          };
-
-          const colors = getColors();
-
-          return (
-            <div className="space-y-4">
-              {/* Header avec titre et bouton + */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  {icon}
-                  <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-                  <span className="text-sm text-gray-500">
-                    {skillOptions.length} available
-                  </span>
-                </div>
-                {!showAddSkillInterface[skillType] && (
-                  <button
-                    onClick={handleShowAddInterface}
-                    className={`w-8 h-8 rounded-full ${skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : skillType === 'technical' ? 'bg-purple-500 hover:bg-purple-600' : skillType === 'languages' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'} text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
-                    title={`Add ${skillType === "languages" ? "language" : "skill"}`}
-                  >
-                    <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  </button>
-                )}
-              </div>
-
-              {/* Add interface */}
-              {skillsLoading && (
-                <div className={`w-full px-4 py-3 rounded-lg border ${colors.border} bg-gray-50 text-gray-500 text-center text-sm`}>
-                  <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                  Loading {skillType} from API...
-                </div>
-              )}
+                  if (!skillName) return null;
 
 
-              {!skillsLoading && !showAddSkillInterface[skillType] && currentItems.length === 0 && (
-                // Message when no skills
-                <div className="text-center py-8">
-                  <p className="text-gray-500 text-sm">
-                    No {skillType === "languages" ? "languages" : "skills"} added yet.
-                    <br />
-                    Click the + button above to add your first {skillType === "languages" ? "language" : "skill"}.
-                  </p>
-                </div>
-              )}
-
-              {/* Selected badges - displayed below the select */}
-              {(currentItems.length > 0 || showAddSkillInterface[skillType]) && (
-                <div className="pt-2 border-t border-gray-100">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {currentItems.map((item, index) => {
-                      let skillName = '';
-                      let levelDisplay = null;
-
-                      if (skillType === "languages") {
-                        skillName = getLanguageNameById(item.language);
-                        levelDisplay = (
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.proficiency?.includes("C")
-                            ? "bg-green-100 text-green-800"
-                            : item.proficiency?.includes("B")
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-yellow-100 text-yellow-800"
-                            }`}>
-                            {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
-                          </span>
-                        );
-                      } else {
-                        let skillArray: Array<{ _id: string, name: string, description: string, category: string }>;
-                        switch (skillType) {
-                          case "soft":
-                            skillArray = softSkills;
-                            break;
-                          case "professional":
-                            skillArray = professionalSkills;
-                            break;
-                          case "technical":
-                            skillArray = technicalSkills;
-                            break;
-                          default:
-                            skillArray = [];
-                        }
-                        const skillId = typeof item.skill === 'string' ? item.skill : (item.skill && typeof item.skill === 'object' && item.skill.$oid ? item.skill.$oid : null);
-                        if (skillId) {
-                          const skillObject = skillArray.find(s => s._id === skillId);
-                          skillName = skillObject ? skillObject.name : '';
-                        }
-
-                        levelDisplay = (
-                          <div className="flex items-center space-x-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <svg
-                                key={star}
-                                className={`w-3 h-3 ${star <= (item.level || 1)
-                                  ? "text-yellow-400 fill-current"
-                                  : "text-gray-300"
-                                  }`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
-                          </div>
-                        );
-                      }
-
-                      if (!skillName) return null;
-
-
-                      return (
-                        <div key={index} className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}>
-                          {/* 3 equal columns layout: Name - Progress bar - Level */}
-                          <div className="grid grid-cols-3 gap-4 items-center w-full">
-                            {/* Column 1: Skill name */}
-                            <div className="flex items-center">
-                              {editingSkill[skillType] === index ? (
-                                // Edit mode: selector
-                                <select
-                                  value={(() => {
-                                    const currentItem = currentItems[index] as any;
-                                    if (skillType === 'languages') {
-                                      return currentItem?.language || '';
-                                    } else {
-                                      const skillId = typeof currentItem?.skill === 'string'
-                                        ? currentItem.skill
-                                        : (currentItem?.skill && typeof currentItem.skill === 'object' && currentItem.skill.$oid
-                                          ? currentItem.skill.$oid
-                                          : '');
-                                      return skillId;
-                                    }
-                                  })()}
-                                  onChange={(e: { target: { value: string; }; }) => {
-                                    if (e.target.value) {
-                                      handleConfirmEditSkill(index, e.target.value);
-                                    }
-                                  }}
-                                  onKeyDown={(e: { key: string; }) => {
-                                    if (e.key === 'Escape') {
-                                      handleCancelEditSkill();
-                                    }
-                                  }}
-                                  className={`edit-select w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
-                                  autoFocus
-                                >
-                                  <option value="">
-                                    {skillType === 'languages' ? 'Select a language...' :
-                                      skillType === 'professional' ? 'Select a professional skill...' :
-                                        skillType === 'technical' ? 'Select a technical skill...' :
-                                          'Select a soft skill...'}
-                                  </option>
-                                  {editSkillOptions.map((option: { id: any; name: any; }) => (
-                                    <option key={option.id} value={option.id}>
-                                      {option.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                // Normal mode: clickable name
-                                <button
-                                  onClick={() => handleStartEditSkill(index)}
-                                  className="font-medium text-xs truncate text-left hover:underline cursor-pointer w-full"
-                                  title="Click to edit"
-                                >
-                                  {skillName}
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Column 2: Progress bar (100 segments) */}
-                            <div className="flex items-center justify-center">
-                              <div className="relative w-full max-w-xs">
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="h-2 rounded-full transition-all duration-300"
-                                    style={{
-                                      width: `${(() => {
-                                        const hoveredLevel = hoveredExistingLevel[skillType][index];
-                                        if (hoveredLevel !== null && hoveredLevel !== undefined) {
-                                          return hoveredLevel;
-                                        }
-
-                                        // Utiliser la position exacte stockée ou calculer la position par défaut
-                                        if (skillType === "languages") {
-                                          // Vérifier si on a une position exacte stockée
-                                          const exactPosition = item.exactPosition;
-                                          if (exactPosition !== undefined) {
-                                            return exactPosition;
-                                          }
-                                          // Sinon, utiliser la position par défaut basée sur le niveau
-                                          const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
-                                          return ((currentLevelIndex + 1) / 6) * 100;
-                                        } else {
-                                          // Vérifier si on a une position exacte stockée
-                                          const exactPosition = item.exactPosition;
-                                          if (exactPosition !== undefined) {
-                                            return exactPosition;
-                                          }
-                                          // Sinon, utiliser la position par défaut basée sur le niveau
-                                          const currentLevel = item.level || 1;
-                                          return (currentLevel / 5) * 100;
-                                        }
-                                      })()}%`,
-                                      background: (() => {
-                                        const hoveredLevel = hoveredExistingLevel[skillType][index];
-                                        let currentPercentage;
-
-                                        if (hoveredLevel !== null && hoveredLevel !== undefined) {
-                                          currentPercentage = hoveredLevel;
-                                        } else {
-                                          // Calculer le pourcentage actuel
-                                          if (skillType === "languages") {
-                                            const exactPosition = item.exactPosition;
-                                            if (exactPosition !== undefined) {
-                                              currentPercentage = exactPosition;
-                                            } else {
-                                              const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
-                                              currentPercentage = ((currentLevelIndex + 1) / 6) * 100;
-                                            }
-                                          } else {
-                                            const exactPosition = item.exactPosition;
-                                            if (exactPosition !== undefined) {
-                                              currentPercentage = exactPosition;
-                                            } else {
-                                              const currentLevel = item.level || 1;
-                                              currentPercentage = (currentLevel / 5) * 100;
-                                            }
-                                          }
-                                        }
-
-                                        // Créer une couleur unie avec opacité par paliers croissants
-                                        // Dégradés correspondant aux couleurs des sections
-                                        if (skillType === 'professional') {
-                                          // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
-                                          return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
-                                        } else if (skillType === 'technical') {
-                                          // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
-                                          return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
-                                        } else if (skillType === 'languages') {
-                                          // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
-                                          return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
-                                        } else {
-                                          // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
-                                          return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
-                                        }
-                                      })()
-                                    }}
-                                  />
-                                </div>
-                                <div
-                                  className="absolute inset-0 h-2 cursor-pointer"
-                                  onClick={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    const clickX = e.clientX - rect.left;
-                                    const percentage = (clickX / rect.width) * 100;
-
-                                    if (skillType === "languages") {
-                                      // 6 zones égales : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                                      let languageLevel = 'A1';
-                                      if (percentage >= 83.33) languageLevel = 'C2';
-                                      else if (percentage >= 66.67) languageLevel = 'C1';
-                                      else if (percentage >= 50) languageLevel = 'B2';
-                                      else if (percentage >= 33.33) languageLevel = 'B1';
-                                      else if (percentage >= 16.67) languageLevel = 'A2';
-                                      else languageLevel = 'A1';
-
-                                      // Mettre à jour le niveau ET stocker la position exacte
-                                      updateSkill(skillType, index, 'proficiency', languageLevel, percentage);
-                                    } else {
-                                      // 5 zones égales : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                                      let level = 1;
-                                      if (percentage >= 80) level = 5;
-                                      else if (percentage >= 60) level = 4;
-                                      else if (percentage >= 40) level = 3;
-                                      else if (percentage >= 20) level = 2;
-                                      else level = 1;
-
-                                      // Mettre à jour le niveau ET stocker la position exacte
-                                      updateSkill(skillType, index, 'level', level, percentage);
-                                    }
-                                  }}
-                                  onMouseMove={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    const mouseX = e.clientX - rect.left;
-                                    const percentage = (mouseX / rect.width) * 100;
-
-                                    setHoveredExistingLevel((prev: { [x: string]: any; }) => ({
-                                      ...prev,
-                                      [skillType]: { ...prev[skillType], [index]: Math.round(percentage) }
-                                    }));
-                                  }}
-                                  onMouseLeave={(e: any) => {
-                                    // Reset le hover seulement (pas de sauvegarde automatique)
-                                    setHoveredExistingLevel((prev: { [x: string]: any; }) => ({
-                                      ...prev,
-                                      [skillType]: { ...prev[skillType], [index]: null }
-                                    }));
-                                  }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Column 3: Level name + Delete button */}
-                            <div className="flex items-center justify-between">
-                              <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
-                                {(() => {
-                                  const hoveredLevel = hoveredExistingLevel[skillType][index];
-
-                                  if (hoveredLevel !== null && hoveredLevel !== undefined) {
-                                    // Convertir le pourcentage en description du niveau
-                                    if (skillType === "languages") {
-                                      // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                                      let languageLevel;
-                                      if (hoveredLevel >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
-                                      else if (hoveredLevel >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
-                                      else if (hoveredLevel >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
-                                      else if (hoveredLevel >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
-                                      else if (hoveredLevel >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
-                                      else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
-                                      // Extraire seulement la description après le " - "
-                                      const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
-                                      return description;
-                                    } else {
-                                      // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                                      let level = 1;
-                                      if (hoveredLevel >= 80) level = 5;
-                                      else if (hoveredLevel >= 60) level = 4;
-                                      else if (hoveredLevel >= 40) level = 3;
-                                      else if (hoveredLevel >= 20) level = 2;
-                                      else level = 1;
-                                      return getLevelLabel(level, skillType);
-                                    }
-                                  }
-
-                                  if (skillType === "languages") {
-                                    const currentLevel = LANGUAGE_LEVELS.find(l => l.value === item.proficiency);
-                                    const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
-                                    return description;
-                                  } else {
-                                    return getLevelLabel(item.level || 1, skillType);
-                                  }
-                                })()}
-                              </span>
-
-                              {/* Delete button */}
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSkill(index)}
-                                className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-indigo-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
-                                title="Remove"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Interface d'ajout intégrée dans la grille */}
-                    {!skillsLoading && showAddSkillInterface[skillType] && (
-                      <div
-                        ref={(el: any) => { addInterfaceRefs.current[skillType] = el; }}
-                        className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}
-                      >
-                        {/* 3 equal columns layout: Selector - Progress bar - Level */}
-                        <div className="grid grid-cols-3 gap-4 items-center w-full">
-                          {/* Column 1: Selector */}
-                          <div className="flex items-center">
+                  return (
+                    <div key={index} className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}>
+                      {/* 3 equal columns layout: Name - Progress bar - Level */}
+                      <div className="grid grid-cols-3 gap-4 items-center w-full">
+                        {/* Column 1: Skill name */}
+                        <div className="flex items-center">
+                          {editingSkill[skillType] === index ? (
+                            // Edit mode: selector
                             <select
-                              value={selectedSkillToAdd[skillType] || ''}
-                              onChange={(e: { target: { value: string; }; }) => {
-                                setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: e.target.value }));
-                                // Sauvegarder automatiquement dès la sélection
+                              value={(() => {
+                                const currentItem = currentItems[index] as any;
+                                if (skillType === 'languages') {
+                                  return currentItem?.language || '';
+                                } else {
+                                  const skillId = typeof currentItem?.skill === 'string'
+                                    ? currentItem.skill
+                                    : (currentItem?.skill && typeof currentItem.skill === 'object' && currentItem.skill.$oid
+                                      ? currentItem.skill.$oid
+                                      : '');
+                                  return skillId;
+                                }
+                              })()}
+                              onChange={(e) => {
                                 if (e.target.value) {
-                                  // Utiliser le niveau par défaut et la position par défaut
-                                  const defaultLevel = selectedLevelToAdd[skillType];
-                                  const defaultPosition = selectedExactPosition[skillType];
-                                  addSkill(skillType, e.target.value, defaultLevel, defaultPosition);
-
-                                  // Reset states après ajout
-                                  setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
-                                  setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
-                                  setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-                                  setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
+                                  handleConfirmEditSkill(index, e.target.value);
                                 }
                               }}
-                              className={`w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  handleCancelEditSkill();
+                                }
+                              }}
+                              className={`edit-select w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                              autoFocus
                             >
                               <option value="">
-                                {skillType === "languages" ? "Select a language..." :
-                                  skillType === "professional" ? "Select a professional skill..." :
-                                    skillType === "technical" ? "Select a technical skill..." :
-                                      "Select a soft skill..."}
+                                {skillType === 'languages' ? 'Select a language...' :
+                                  skillType === 'professional' ? 'Select a professional skill...' :
+                                    skillType === 'technical' ? 'Select a technical skill...' :
+                                      'Select a soft skill...'}
                               </option>
-                              {skillOptions.map((option: { id: any; name: any; }) => (
+                              {editSkillOptions.map(option => (
                                 <option key={option.id} value={option.id}>
                                   {option.name}
                                 </option>
                               ))}
                             </select>
-                          </div>
+                          ) : (
+                            // Normal mode: clickable name
+                            <button
+                              onClick={() => handleStartEditSkill(index)}
+                              className="font-medium text-xs truncate text-left hover:underline cursor-pointer w-full"
+                              title="Click to edit"
+                            >
+                              {skillName}
+                            </button>
+                          )}
+                        </div>
 
-                          {/* Column 2: Progress bar (100 segments) */}
-                          <div className="flex items-center justify-center">
-                            <div className="relative w-full max-w-xs">
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                  className="h-2 rounded-full transition-all duration-300"
-                                  style={{
-                                    width: `${(() => {
-                                      if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
-                                        return hoveredLevel[skillType];
-                                      }
+                        {/* Column 2: Progress bar (100 segments) */}
+                        <div className="flex items-center justify-center">
+                          <div className="relative w-full max-w-xs">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${(() => {
+                                    const hoveredLevel = hoveredExistingLevel[skillType][index];
+                                    if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                      return hoveredLevel;
+                                    }
 
-                                      // Utiliser la position exacte stockée ou calculer la position par défaut
-                                      const exactPosition = selectedExactPosition[skillType];
+                                    // Utiliser la position exacte stockée ou calculer la position par défaut
+                                    if (skillType === "languages") {
+                                      // Vérifier si on a une position exacte stockée
+                                      const exactPosition = item.exactPosition;
                                       if (exactPosition !== undefined) {
                                         return exactPosition;
                                       }
-
-                                      if (skillType === "languages") {
-                                        // 6 zones égales : chaque niveau = 16.67%
-                                        return ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
-                                      } else {
-                                        // 5 zones égales : chaque niveau = 20%
-                                        return (selectedLevelToAdd[skillType] / 5) * 100;
+                                      // Sinon, utiliser la position par défaut basée sur le niveau
+                                      const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
+                                      return ((currentLevelIndex + 1) / 6) * 100;
+                                    } else {
+                                      // Vérifier si on a une position exacte stockée
+                                      const exactPosition = item.exactPosition;
+                                      if (exactPosition !== undefined) {
+                                        return exactPosition;
                                       }
-                                    })()}%`,
-                                    background: (() => {
-                                      let currentPercentage;
+                                      // Sinon, utiliser la position par défaut basée sur le niveau
+                                      const currentLevel = item.level || 1;
+                                      return (currentLevel / 5) * 100;
+                                    }
+                                  })()}%`,
+                                  background: (() => {
+                                    const hoveredLevel = hoveredExistingLevel[skillType][index];
+                                    let currentPercentage;
 
-                                      if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
-                                        currentPercentage = hoveredLevel[skillType];
-                                      } else {
-                                        // Utiliser la position exacte stockée ou calculer la position par défaut
-                                        const exactPosition = selectedExactPosition[skillType];
+                                    if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                      currentPercentage = hoveredLevel;
+                                    } else {
+                                      // Calculer le pourcentage actuel
+                                      if (skillType === "languages") {
+                                        const exactPosition = item.exactPosition;
                                         if (exactPosition !== undefined) {
                                           currentPercentage = exactPosition;
                                         } else {
-                                          if (skillType === "languages") {
-                                            // 6 zones égales : chaque niveau = 16.67%
-                                            currentPercentage = ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
-                                          } else {
-                                            // 5 zones égales : chaque niveau = 20%
-                                            currentPercentage = (selectedLevelToAdd[skillType] / 5) * 100;
-                                          }
+                                          const currentLevelIndex = LANGUAGE_LEVELS.findIndex(l => l.value === item.proficiency);
+                                          currentPercentage = ((currentLevelIndex + 1) / 6) * 100;
+                                        }
+                                      } else {
+                                        const exactPosition = item.exactPosition;
+                                        if (exactPosition !== undefined) {
+                                          currentPercentage = exactPosition;
+                                        } else {
+                                          const currentLevel = item.level || 1;
+                                          currentPercentage = (currentLevel / 5) * 100;
                                         }
                                       }
+                                    }
 
-                                      // Dégradés correspondant aux couleurs des sections
-                                      if (skillType === 'professional') {
-                                        // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
-                                        return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
-                                      } else if (skillType === 'technical') {
-                                        // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
-                                        return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
-                                      } else if (skillType === 'languages') {
-                                        // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
-                                        return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
-                                      } else {
-                                        // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
-                                        return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
-                                      }
-                                    })()
-                                  }}
-                                />
-                              </div>
-                              <div
-                                className="absolute inset-0 h-2 cursor-pointer"
-                                onClick={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  const clickX = e.clientX - rect.left;
-                                  const percentage = (clickX / rect.width) * 100;
-
-                                  // Stocker la position exacte du clic
-                                  setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: percentage }));
-
-                                  if (skillType === "languages") {
-                                    // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                                    let levelIndex = 0; // A1
-                                    if (percentage >= 83.33) levelIndex = 5; // C2
-                                    else if (percentage >= 66.67) levelIndex = 4; // C1
-                                    else if (percentage >= 50) levelIndex = 3; // B2
-                                    else if (percentage >= 33.33) levelIndex = 2; // B1
-                                    else if (percentage >= 16.67) levelIndex = 1; // A2
-                                    else levelIndex = 0; // A1
-
-                                    setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: levelIndex }));
-                                  } else {
-                                    // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                                    let level = 1;
-                                    if (percentage >= 80) level = 5;
-                                    else if (percentage >= 60) level = 4;
-                                    else if (percentage >= 40) level = 3;
-                                    else if (percentage >= 20) level = 2;
-                                    else level = 1;
-
-                                    setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: level }));
-                                  }
-
-                                  // Note: La compétence est déjà ajoutée dès la sélection dans le dropdown
-                                }}
-                                onMouseMove={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  const mouseX = e.clientX - rect.left;
-                                  const percentage = (mouseX / rect.width) * 100;
-
-                                  setHoveredLevel((prev: any) => ({ ...prev, [skillType]: Math.round(percentage) }));
-                                }}
-                                onMouseLeave={(e: any) => {
-                                  // Reset le hover seulement (pas de sauvegarde automatique)
-                                  setHoveredLevel((prev: any) => ({ ...prev, [skillType]: null }));
+                                    // Créer une couleur unie avec opacité par paliers croissants
+                                    // Dégradés correspondant aux couleurs des sections
+                                    if (skillType === 'professional') {
+                                      // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
+                                      return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
+                                    } else if (skillType === 'technical') {
+                                      // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
+                                      return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
+                                    } else if (skillType === 'languages') {
+                                      // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
+                                      return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
+                                    } else {
+                                      // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
+                                      return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
+                                    }
+                                  })()
                                 }}
                               />
                             </div>
-                          </div>
-
-                          {/* Column 3: Level name */}
-                          <div className="flex items-center">
-                            <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
-                              {(() => {
-                                if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
-                                  // Convertir le pourcentage en description du niveau
-                                  if (skillType === "languages") {
-                                    // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
-                                    let languageLevel;
-                                    if (hoveredLevel[skillType] >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
-                                    else if (hoveredLevel[skillType] >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
-                                    else if (hoveredLevel[skillType] >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
-                                    else if (hoveredLevel[skillType] >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
-                                    else if (hoveredLevel[skillType] >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
-                                    else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
-                                    // Extraire seulement la description après le " - "
-                                    const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
-                                    return description;
-                                  } else {
-                                    // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
-                                    let level = 1;
-                                    if (hoveredLevel[skillType] >= 80) level = 5;
-                                    else if (hoveredLevel[skillType] >= 60) level = 4;
-                                    else if (hoveredLevel[skillType] >= 40) level = 3;
-                                    else if (hoveredLevel[skillType] >= 20) level = 2;
-                                    else level = 1;
-                                    return getLevelLabel(level, skillType);
-                                  }
-                                }
+                            <div
+                              className="absolute inset-0 h-2 cursor-pointer"
+                              onClick={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                const percentage = (clickX / rect.width) * 100;
 
                                 if (skillType === "languages") {
-                                  const currentLevel = LANGUAGE_LEVELS[selectedLevelToAdd[skillType]];
-                                  const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
-                                  return description;
+                                  // 6 zones égales : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                  let languageLevel = 'A1';
+                                  if (percentage >= 83.33) languageLevel = 'C2';
+                                  else if (percentage >= 66.67) languageLevel = 'C1';
+                                  else if (percentage >= 50) languageLevel = 'B2';
+                                  else if (percentage >= 33.33) languageLevel = 'B1';
+                                  else if (percentage >= 16.67) languageLevel = 'A2';
+                                  else languageLevel = 'A1';
+
+                                  // Mettre à jour le niveau ET stocker la position exacte
+                                  updateSkill(skillType, index, 'proficiency', languageLevel, percentage);
                                 } else {
-                                  return getLevelLabel(selectedLevelToAdd[skillType] || 1, skillType);
+                                  // 5 zones égales : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                  let level = 1;
+                                  if (percentage >= 80) level = 5;
+                                  else if (percentage >= 60) level = 4;
+                                  else if (percentage >= 40) level = 3;
+                                  else if (percentage >= 20) level = 2;
+                                  else level = 1;
+
+                                  // Mettre à jour le niveau ET stocker la position exacte
+                                  updateSkill(skillType, index, 'level', level, percentage);
                                 }
-                              })()}
-                            </span>
+                              }}
+                              onMouseMove={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const mouseX = e.clientX - rect.left;
+                                const percentage = (mouseX / rect.width) * 100;
+
+                                setHoveredExistingLevel(prev => ({
+                                  ...prev,
+                                  [skillType]: { ...prev[skillType], [index]: Math.round(percentage) }
+                                }));
+                              }}
+                              onMouseLeave={(e) => {
+                                // Reset le hover seulement (pas de sauvegarde automatique)
+                                setHoveredExistingLevel(prev => ({
+                                  ...prev,
+                                  [skillType]: { ...prev[skillType], [index]: null }
+                                }));
+                              }}
+                            />
                           </div>
                         </div>
+
+                        {/* Column 3: Level name + Delete button */}
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                            {(() => {
+                              const hoveredLevel = hoveredExistingLevel[skillType][index];
+
+                              if (hoveredLevel !== null && hoveredLevel !== undefined) {
+                                // Convertir le pourcentage en description du niveau
+                                if (skillType === "languages") {
+                                  // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                  let languageLevel;
+                                  if (hoveredLevel >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
+                                  else if (hoveredLevel >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
+                                  else if (hoveredLevel >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
+                                  else if (hoveredLevel >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
+                                  else if (hoveredLevel >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
+                                  else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
+                                  // Extraire seulement la description après le " - "
+                                  const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
+                                  return description;
+                                } else {
+                                  // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                  let level = 1;
+                                  if (hoveredLevel >= 80) level = 5;
+                                  else if (hoveredLevel >= 60) level = 4;
+                                  else if (hoveredLevel >= 40) level = 3;
+                                  else if (hoveredLevel >= 20) level = 2;
+                                  else level = 1;
+                                  return getLevelLabel(level, skillType);
+                                }
+                              }
+
+                              if (skillType === "languages") {
+                                const currentLevel = LANGUAGE_LEVELS.find(l => l.value === item.proficiency);
+                                const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
+                                return description;
+                              } else {
+                                return getLevelLabel(item.level || 1, skillType);
+                              }
+                            })()}
+                          </span>
+
+                          {/* Delete button */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(index)}
+                            className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-indigo-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
+                            title="Remove"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                    )}
+                    </div>
+                  );
+                })}
 
+                {/* Interface d'ajout intégrée dans la grille */}
+                {!skillsLoading && showAddSkillInterface[skillType] && (
+                  <div
+                    ref={(el) => { addInterfaceRefs.current[skillType] = el; }}
+                    className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}
+                  >
+                    {/* 3 equal columns layout: Selector - Progress bar - Level */}
+                    <div className="grid grid-cols-3 gap-4 items-center w-full">
+                      {/* Column 1: Selector */}
+                      <div className="flex items-center">
+                        <select
+                          value={selectedSkillToAdd[skillType] || ''}
+                          onChange={(e) => {
+                            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: e.target.value }));
+                            // Sauvegarder automatiquement dès la sélection
+                            if (e.target.value) {
+                              // Utiliser le niveau par défaut et la position par défaut
+                              const defaultLevel = selectedLevelToAdd[skillType];
+                              const defaultPosition = selectedExactPosition[skillType];
+                              addSkill(skillType, e.target.value, defaultLevel, defaultPosition);
+
+                              // Reset states après ajout
+                              setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
+                              setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
+                              setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+                              setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+                            }
+                          }}
+                          className={`w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
+                        >
+                          <option value="">
+                            {skillType === "languages" ? "Select a language..." :
+                              skillType === "professional" ? "Select a professional skill..." :
+                                skillType === "technical" ? "Select a technical skill..." :
+                                  "Select a soft skill..."}
+                          </option>
+                          {skillOptions.map(option => (
+                            <option key={option.id} value={option.id}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Column 2: Progress bar (100 segments) */}
+                      <div className="flex items-center justify-center">
+                        <div className="relative w-full max-w-xs">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(() => {
+                                  if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                                    return hoveredLevel[skillType];
+                                  }
+
+                                  // Utiliser la position exacte stockée ou calculer la position par défaut
+                                  const exactPosition = selectedExactPosition[skillType];
+                                  if (exactPosition !== undefined) {
+                                    return exactPosition;
+                                  }
+
+                                  if (skillType === "languages") {
+                                    // 6 zones égales : chaque niveau = 16.67%
+                                    return ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
+                                  } else {
+                                    // 5 zones égales : chaque niveau = 20%
+                                    return (selectedLevelToAdd[skillType] / 5) * 100;
+                                  }
+                                })()}%`,
+                                background: (() => {
+                                  let currentPercentage;
+
+                                  if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                                    currentPercentage = hoveredLevel[skillType];
+                                  } else {
+                                    // Utiliser la position exacte stockée ou calculer la position par défaut
+                                    const exactPosition = selectedExactPosition[skillType];
+                                    if (exactPosition !== undefined) {
+                                      currentPercentage = exactPosition;
+                                    } else {
+                                      if (skillType === "languages") {
+                                        // 6 zones égales : chaque niveau = 16.67%
+                                        currentPercentage = ((selectedLevelToAdd[skillType] + 1) / 6) * 100;
+                                      } else {
+                                        // 5 zones égales : chaque niveau = 20%
+                                        currentPercentage = (selectedLevelToAdd[skillType] / 5) * 100;
+                                      }
+                                    }
+                                  }
+
+                                  // Dégradés correspondant aux couleurs des sections
+                                  if (skillType === 'professional') {
+                                    // Dégradé vert clair vers vert foncé (pour correspondre à l'icône verte)
+                                    return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${currentPercentage * 0.2}%, #86efac ${currentPercentage * 0.4}%, #22c55e ${currentPercentage * 0.6}%, #16a34a ${currentPercentage * 0.8}%, #15803d ${currentPercentage}%, #14532d 100%)`;
+                                  } else if (skillType === 'technical') {
+                                    // Dégradé violet clair vers violet foncé (pour correspondre à l'icône violette)
+                                    return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${currentPercentage * 0.2}%, #a78bfa ${currentPercentage * 0.4}%, #8b5cf6 ${currentPercentage * 0.6}%, #7c3aed ${currentPercentage * 0.8}%, #6d28d9 ${currentPercentage}%, #4c1d95 100%)`;
+                                  } else if (skillType === 'languages') {
+                                    // Dégradé bleu clair vers bleu foncé (pour correspondre à l'icône bleue)
+                                    return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${currentPercentage * 0.2}%, #93c5fd ${currentPercentage * 0.4}%, #60a5fa ${currentPercentage * 0.6}%, #3b82f6 ${currentPercentage * 0.8}%, #2563eb ${currentPercentage}%, #1d4ed8 100%)`;
+                                  } else {
+                                    // Dégradé orange clair vers orange foncé (pour correspondre à l'icône orange)
+                                    return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${currentPercentage * 0.2}%, #fb923c ${currentPercentage * 0.4}%, #f97316 ${currentPercentage * 0.6}%, #ea580c ${currentPercentage * 0.8}%, #dc2626 ${currentPercentage}%, #b91c1c 100%)`;
+                                  }
+                                })()
+                              }}
+                            />
+                          </div>
+                          <div
+                            className="absolute inset-0 h-2 cursor-pointer"
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const clickX = e.clientX - rect.left;
+                              const percentage = (clickX / rect.width) * 100;
+
+                              // Stocker la position exacte du clic
+                              setSelectedExactPosition(prev => ({ ...prev, [skillType]: percentage }));
+
+                              if (skillType === "languages") {
+                                // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                let levelIndex = 0; // A1
+                                if (percentage >= 83.33) levelIndex = 5; // C2
+                                else if (percentage >= 66.67) levelIndex = 4; // C1
+                                else if (percentage >= 50) levelIndex = 3; // B2
+                                else if (percentage >= 33.33) levelIndex = 2; // B1
+                                else if (percentage >= 16.67) levelIndex = 1; // A2
+                                else levelIndex = 0; // A1
+
+                                setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: levelIndex }));
+                              } else {
+                                // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                let level = 1;
+                                if (percentage >= 80) level = 5;
+                                else if (percentage >= 60) level = 4;
+                                else if (percentage >= 40) level = 3;
+                                else if (percentage >= 20) level = 2;
+                                else level = 1;
+
+                                setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: level }));
+                              }
+
+                              // Note: La compétence est déjà ajoutée dès la sélection dans le dropdown
+                            }}
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const mouseX = e.clientX - rect.left;
+                              const percentage = (mouseX / rect.width) * 100;
+
+                              setHoveredLevel(prev => ({ ...prev, [skillType]: Math.round(percentage) }));
+                            }}
+                            onMouseLeave={(e) => {
+                              // Reset le hover seulement (pas de sauvegarde automatique)
+                              setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Column 3: Level name */}
+                      <div className="flex items-center">
+                        <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                          {(() => {
+                            if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
+                              // Convertir le pourcentage en description du niveau
+                              if (skillType === "languages") {
+                                // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
+                                let languageLevel;
+                                if (hoveredLevel[skillType] >= 83.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C2');
+                                else if (hoveredLevel[skillType] >= 66.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'C1');
+                                else if (hoveredLevel[skillType] >= 50) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B2');
+                                else if (hoveredLevel[skillType] >= 33.33) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'B1');
+                                else if (hoveredLevel[skillType] >= 16.67) languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A2');
+                                else languageLevel = LANGUAGE_LEVELS.find(l => l.value === 'A1');
+                                // Extraire seulement la description après le " - "
+                                const description = languageLevel?.label?.split(' - ')[1] || 'Beginner';
+                                return description;
+                              } else {
+                                // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
+                                let level = 1;
+                                if (hoveredLevel[skillType] >= 80) level = 5;
+                                else if (hoveredLevel[skillType] >= 60) level = 4;
+                                else if (hoveredLevel[skillType] >= 40) level = 3;
+                                else if (hoveredLevel[skillType] >= 20) level = 2;
+                                else level = 1;
+                                return getLevelLabel(level, skillType);
+                              }
+                            }
+
+                            if (skillType === "languages") {
+                              const currentLevel = LANGUAGE_LEVELS[selectedLevelToAdd[skillType]];
+                              const description = currentLevel?.label?.split(' - ')[1] || 'Intermediate';
+                              return description;
+                            } else {
+                              return getLevelLabel(selectedLevelToAdd[skillType] || 1, skillType);
+                            }
+                          })()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {!skillsLoading && skillOptions.length === 0 && currentItems.length === 0 && (
-                <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
-                  ⚠️ No {skillType} available. Please check API connection.
-                </div>
-              )}
-
+              </div>
             </div>
-          );
-        };
+          )}
 
-        return (
-          <div className="space-y-8">
-            {renderSkillCard(
-              "languages",
-              suggestions.skills?.languages || [],
-              "Languages",
-              <Globe2 className="w-5 h-5 text-blue-600" />
-            )}
-            {renderSkillCard(
-              "professional",
-              suggestions.skills?.professional || [],
-              "Professional Skills",
-              <Briefcase className="w-5 h-5 text-green-600" />
-            )}
-            {renderSkillCard(
-              "technical",
-              suggestions.skills?.technical || [],
-              "Technical Skills",
-              <Target className="w-5 h-5 text-purple-600" />
-            )}
-            {renderSkillCard(
-              "soft",
-              suggestions.skills?.soft || [],
-              "Soft Skills",
-              <Users className="w-5 h-5 text-orange-600" />
-            )}
-          </div>
-        );
+          {!skillsLoading && skillOptions.length === 0 && currentItems.length === 0 && (
+            <div className="text-center py-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200">
+              ⚠️ No {skillType} available. Please check API connection.
+            </div>
+          )}
+
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-8">
+        {renderSkillCard(
+          "languages",
+          suggestions.skills?.languages || [],
+          "Languages",
+          <Globe2 className="w-5 h-5 text-blue-600" />
+        )}
+        {renderSkillCard(
+          "professional",
+          suggestions.skills?.professional || [],
+          "Professional Skills",
+          <Briefcase className="w-5 h-5 text-green-600" />
+        )}
+        {renderSkillCard(
+          "technical",
+          suggestions.skills?.technical || [],
+          "Technical Skills",
+          <Target className="w-5 h-5 text-purple-600" />
+        )}
+        {renderSkillCard(
+          "soft",
+          suggestions.skills?.soft || [],
+          "Soft Skills",
+          <Users className="w-5 h-5 text-orange-600" />
+        )}
+      </div>
+    );
+  };
+
+  const renderTeamSection = () => {
+    if (!suggestions) return null;
+
+    const addTeamRole = () => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) {
+        newSuggestions.team = {
+          size: 1,
+          structure: [],
+          territories: [],
+          reporting: {
+            to: "Project Manager",
+            frequency: "Weekly",
+          },
+          collaboration: ["Daily standups", "Weekly reviews"],
+        };
+      }
+
+      const newRole = {
+        roleId: "Agent",
+        count: 1,
+        seniority: {
+          level: "Mid-Level",
+          yearsExperience: 3,
+        },
       };
 
-      const renderTeamSection = () => {
-        if (!suggestions) return null;
+      newSuggestions.team.structure.push(newRole);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
+      setSuggestions(newSuggestions);
+    };
 
-        const addTeamRole = () => {
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.team) {
-            newSuggestions.team = {
-              size: 1,
-              structure: [],
-              territories: [],
-              reporting: {
-                to: "Project Manager",
-                frequency: "Weekly",
+    const updateTeamRole = (index: number, field: string, value: string | number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) return;
+
+      // Ensure the role exists and has proper structure
+      if (!newSuggestions.team.structure[index]) {
+        newSuggestions.team.structure[index] = {
+          roleId: "Agent",
+          count: 1,
+          seniority: {
+            level: "Mid-Level",
+            yearsExperience: 3,
+          },
+        };
+      } else {
+        // Check if role is a string and convert it to proper object structure
+        const currentRole = newSuggestions.team.structure[index];
+        if (typeof currentRole === 'string') {
+          newSuggestions.team.structure[index] = {
+            roleId: currentRole,
+            count: 1,
+            seniority: {
+              level: "Mid-Level",
+              yearsExperience: 3,
+            },
+          };
+        } else if (typeof currentRole === 'object' && currentRole !== null) {
+          // Ensure role has required properties
+          if (!currentRole.roleId) {
+            newSuggestions.team.structure[index] = {
+              ...currentRole,
+              roleId: "Agent",
+              count: currentRole.count || 1,
+              seniority: currentRole.seniority || {
+                level: "Mid-Level",
+                yearsExperience: 3,
               },
-              collaboration: ["Daily standups", "Weekly reviews"],
+            };
+          } else if (!currentRole.seniority) {
+            newSuggestions.team.structure[index] = {
+              ...currentRole,
+              seniority: {
+                level: "Mid-Level",
+                yearsExperience: 3,
+              },
             };
           }
-
-          const newRole = {
+        } else {
+          // If role is null, undefined, or invalid, replace with default structure
+          newSuggestions.team.structure[index] = {
             roleId: "Agent",
             count: 1,
             seniority: {
@@ -5573,683 +5624,617 @@ export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggesti
               yearsExperience: 3,
             },
           };
+        }
+      }
 
-          newSuggestions.team.structure.push(newRole);
-          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum: any, role: { count: any; } | null) => {
-            const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-            return sum + roleCount;
-          }, 0);
-          setSuggestions(newSuggestions);
+      if (field.includes(".")) {
+        const [parent, child] = field.split(".");
+        if (child === "yearsExperience") {
+          (newSuggestions.team.structure[index] as any)[parent][child] = parseInt(value as string) || 0;
+        } else {
+          (newSuggestions.team.structure[index] as any)[parent][child] = value;
+        }
+      } else {
+        if (field === "count") {
+          newSuggestions.team.structure[index].count = parseInt(value as string) || 1;
+        } else {
+          newSuggestions.team.structure[index].roleId = value as string;
+        }
+      }
+
+      // Recalculate total team size
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const deleteTeamRole = (index: number) => {
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) return;
+
+      newSuggestions.team.structure.splice(index, 1);
+      newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+        const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+        return sum + roleCount;
+      }, 0);
+      setSuggestions(newSuggestions);
+    };
+
+    const addTerritory = (territory: string) => {
+      if (!suggestions || !territory) return;
+
+      const newSuggestions = { ...suggestions };
+      if (!newSuggestions.team) {
+        newSuggestions.team = {
+          size: 1,
+          structure: [],
+          territories: [],
+          reporting: {
+            to: "Project Manager",
+            frequency: "Weekly",
+          },
+          collaboration: ["Daily standups", "Weekly reviews"],
         };
+      }
 
-        const updateTeamRole = (index: number, field: string, value: string | number) => {
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.team) return;
+      // Ensure territories array exists
+      if (!newSuggestions.team.territories) {
+        newSuggestions.team.territories = [];
+      }
 
-          // Ensure the role exists and has proper structure
-          if (!newSuggestions.team.structure[index]) {
-            newSuggestions.team.structure[index] = {
-              roleId: "Agent",
-              count: 1,
-              seniority: {
-                level: "Mid-Level",
-                yearsExperience: 3,
-              },
-            };
-          } else {
-            // Check if role is a string and convert it to proper object structure
-            const currentRole = newSuggestions.team.structure[index];
-            if (typeof currentRole === 'string') {
-              newSuggestions.team.structure[index] = {
-                roleId: currentRole,
-                count: 1,
-                seniority: {
-                  level: "Mid-Level",
-                  yearsExperience: 3,
-                },
-              };
-            } else if (typeof currentRole === 'object' && currentRole !== null) {
-              // Ensure role has required properties
-              if (!currentRole.roleId) {
-                newSuggestions.team.structure[index] = {
-                  ...currentRole,
-                  roleId: "Agent",
-                  count: currentRole.count || 1,
-                  seniority: currentRole.seniority || {
-                    level: "Mid-Level",
-                    yearsExperience: 3,
-                  },
-                };
-              } else if (!currentRole.seniority) {
-                newSuggestions.team.structure[index] = {
-                  ...currentRole,
-                  seniority: {
-                    level: "Mid-Level",
-                    yearsExperience: 3,
-                  },
-                };
-              }
-            } else {
-              // If role is null, undefined, or invalid, replace with default structure
-              newSuggestions.team.structure[index] = {
-                roleId: "Agent",
-                count: 1,
-                seniority: {
-                  level: "Mid-Level",
-                  yearsExperience: 3,
-                },
-              };
-            }
-          }
+      // Only add if not already present
+      if (!newSuggestions.team.territories.includes(territory)) {
+        newSuggestions.team.territories.push(territory);
+        setSuggestions(newSuggestions);
+      }
+    };
 
-          if (field.includes(".")) {
-            const [parent, child] = field.split(".");
-            if (child === "yearsExperience") {
-              (newSuggestions.team.structure[index] as any)[parent][child] = parseInt(value as string) || 0;
-            } else {
-              (newSuggestions.team.structure[index] as any)[parent][child] = value;
-            }
-          } else {
-            if (field === "count") {
-              newSuggestions.team.structure[index].count = parseInt(value as string) || 1;
-            } else {
-              newSuggestions.team.structure[index].roleId = value as string;
-            }
-          }
+    const removeTerritory = (territoryToRemove: string) => {
+      if (!suggestions) return;
+      const newSuggestions = { ...suggestions };
+      if (newSuggestions.team && newSuggestions.team.territories) {
+        newSuggestions.team.territories = newSuggestions.team.territories.filter(
+          (territory) => territory !== territoryToRemove
+        );
+        setSuggestions(newSuggestions);
+      }
+    };
 
-          // Recalculate total team size
-          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum: any, role: { count: any; } | null) => {
-            const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-            return sum + roleCount;
-          }, 0);
-          setSuggestions(newSuggestions);
-        };
-
-        const deleteTeamRole = (index: number) => {
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.team) return;
-
-          newSuggestions.team.structure.splice(index, 1);
-          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum: any, role: { count: any; } | null) => {
-            const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-            return sum + roleCount;
-          }, 0);
-          setSuggestions(newSuggestions);
-        };
-
-        const addTerritory = (territory: string) => {
-          if (!suggestions || !territory) return;
-
-          const newSuggestions = { ...suggestions };
-          if (!newSuggestions.team) {
-            newSuggestions.team = {
-              size: 1,
-              structure: [],
-              territories: [],
-              reporting: {
-                to: "Project Manager",
-                frequency: "Weekly",
-              },
-              collaboration: ["Daily standups", "Weekly reviews"],
-            };
-          }
-
-          // Ensure territories array exists
-          if (!newSuggestions.team.territories) {
-            newSuggestions.team.territories = [];
-          }
-
-          // Only add if not already present
-          if (!newSuggestions.team.territories.includes(territory)) {
-            newSuggestions.team.territories.push(territory);
-            setSuggestions(newSuggestions);
-          }
-        };
-
-        const removeTerritory = (territoryToRemove: string) => {
-          if (!suggestions) return;
-          const newSuggestions = { ...suggestions };
-          if (newSuggestions.team && newSuggestions.team.territories) {
-            newSuggestions.team.territories = newSuggestions.team.territories.filter(
-              (territory: string) => territory !== territoryToRemove
-            );
-            setSuggestions(newSuggestions);
-          }
-        };
-
-        return (
-          <div className="space-y-4">
-            {/* Team Roles */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Team Roles</h4>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm font-medium text-blue-600">Total:</span>
-                    <span className="text-md font-bold text-indigo-700 bg-white border border-blue-300 rounded-md px-2 py-1">
-                      {suggestions.team?.size || 0}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={addTeamRole}
-                  className="flex items-center space-x-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-3 py-1 rounded-md shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Role</span>
-                </button>
+    return (
+      <div className="space-y-4">
+        {/* Team Roles */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <h4 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Team Roles</h4>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm font-medium text-blue-600">Total:</span>
+                <span className="text-md font-bold text-indigo-700 bg-white border border-blue-300 rounded-md px-2 py-1">
+                  {suggestions.team?.size || 0}
+                </span>
               </div>
-
-              {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {suggestions.team.structure.map((role: { roleId: any; count: any; seniority: { level: any; yearsExperience: any; }; } | null, index: number) => {
-                    // Handle case where role might be a string
-                    const roleId = typeof role === 'string' ? role : (role?.roleId || 'Agent');
-                    const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
-                    const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Mid-Level') : 'Mid-Level';
-                    const yearsExperience = typeof role === 'object' && role !== null ? (role.seniority?.yearsExperience || 3) : 3;
-
-                    return (
-                      <div
-                        key={index}
-                        className="bg-white rounded-lg p-2 border border-blue-100 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] hover:border-indigo-300"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="text-md font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Role #{index + 1}</h5>
-                          <button
-                            onClick={() => deleteTeamRole(index)}
-                            className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all transform hover:scale-110 shadow-sm"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-
-                        <div className="space-y-2">
-                          <div>
-                            <label className="text-xs font-bold text-indigo-700 mb-1 block">
-                              Role Type
-                            </label>
-                            <select
-                              value={roleId}
-                              onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "roleId", e.target.value)}
-                              className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
-                            >
-                              {TEAM_ROLES.map((teamRole) => (
-                                <option key={teamRole} value={teamRole}>
-                                  {teamRole}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="text-xs font-bold text-indigo-700 mb-1 block">
-                              Number of Members
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={roleCount}
-                              onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "count", e.target.value)}
-                              className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-xs font-bold text-indigo-700 mb-1 block">
-                                Seniority Level
-                              </label>
-                              <select
-                                value={seniorityLevel}
-                                onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "seniority.level", e.target.value)}
-                                className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
-                              >
-                                {predefinedOptions.basic.seniorityLevels.map((level) => (
-                                  <option key={level} value={level}>
-                                    {level}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="text-xs font-bold text-indigo-700 mb-1 block">
-                                Years Experience
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="50"
-                                value={yearsExperience}
-                                onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
-                                placeholder="e.g. 3"
-                                className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-xl border-2 border-dashed border-indigo-300">
-                  <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 bg-clip-text text-transparent mb-2">
-                    No Team Roles Defined
-                  </h3>
-                  <p className="text-indigo-600 font-medium mb-4 max-w-md mx-auto text-sm">
-                    Add team roles to define the structure and responsibilities of your team members.
-                  </p>
-                  <button
-                    onClick={addTeamRole}
-                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Team Role</span>
-                  </button>
-                </div>
-              )}
             </div>
+            <button
+              onClick={addTeamRole}
+              className="flex items-center space-x-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-3 py-1 rounded-md shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Role</span>
+            </button>
+          </div>
 
-            {/* Territories */}
-            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-lg p-3 border border-blue-200 shadow-md mb-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <h4 className="text-md font-semibold text-gray-900">Territories</h4>
-              </div>
+          {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {suggestions.team.structure.map((role, index) => {
+                // Handle case where role might be a string
+                const roleId = typeof role === 'string' ? role : (role?.roleId || 'Agent');
+                const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
+                const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Mid-Level') : 'Mid-Level';
+                const yearsExperience = typeof role === 'object' && role !== null ? (role.seniority?.yearsExperience || 3) : 3;
 
-              <select
-                onChange={(e: { target: { value: string; }; }) => {
-                  if (e.target.value) {
-                    addTerritory(e.target.value);
-                    e.target.value = ""; // Reset select
-                  }
-                }}
-                className="w-full p-2 rounded-md border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-1 text-sm"
-                defaultValue=""
-                disabled={territoriesLoading}
-              >
-                <option value="" disabled>
-                  {territoriesLoading ? "Loading territories..." : "Add territory..."}
-                </option>
-                {territoriesFromAPI.filter(
-                  (country: Country) => !suggestions.team?.territories?.includes(country._id)
-                ).map((country: Country) => (
-                  <option key={country._id} value={country._id}>
-                    {country.name.common}
-                  </option>
-                ))}
-              </select>
-
-              {/* Territories badges - displayed below the select */}
-              {suggestions.team?.territories && suggestions.team.territories.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-1 border-t border-blue-200">
-                  {suggestions.team.territories.map((territory: string) => (
-                    <span
-                      key={territory}
-                      className="group relative flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-medium pl-2 pr-1 py-1 rounded-full cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-colors"
-                    >
-                      <span>{getTerritoryName(territory)}</span>
+                return (
+                  <div
+                    key={index}
+                    className="bg-white rounded-lg p-2 border border-blue-100 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] hover:border-indigo-300"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-md font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Role #{index + 1}</h5>
                       <button
-                        onClick={() => removeTerritory(territory)}
-                        className="ml-1 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove"
+                        onClick={() => deleteTeamRole(index)}
+                        className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all transform hover:scale-110 shadow-sm"
                       >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Trash2 className="w-3 h-3" />
                       </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <p className="text-xs text-gray-500 italic text-center mt-1">
-                {territoriesLoading
-                  ? 'Loading countries from API...'
-                  : `${territoriesFromAPI.filter((country: Country) => !suggestions.team?.territories?.includes(country._id)).length} countries available for selection`
-                }
-              </p>
-            </div>
-          </div>
-        );
-      };
-
-      if (loading && !props.initialSuggestions) {
-        return (
-          <div className="fixed inset-0 flex items-center justify-center">
-            <div className="flex flex-col items-center space-y-8">
-              {/* Logo */}
-              <div className="animate-fade-in">
-                <Logo />
-              </div>
-
-              {/* AI Loading Animation */}
-              <div className="relative flex items-center justify-center">
-                {/* Animated rings */}
-                <div className="absolute w-16 h-16 border-4 border-blue-300/30 rounded-full animate-ping"></div>
-                <div className="absolute w-14 h-14 border-4 border-indigo-400/40 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
-                <div className="absolute w-12 h-12 border-4 border-violet-500/50 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-
-                {/* Central AI icon */}
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Brain className="w-8 h-8 text-white animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      if (error) {
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
-            <div className="text-center max-w-lg mx-auto px-4">
-              <div className="mb-8">
-                <Logo className="mb-6" />
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
-                <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
-                  <AlertCircle className="w-8 h-8 text-red-600" />
-                </div>
-
-                <div className="space-y-3">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    Error Generating Suggestions
-                  </h2>
-                  <p className="text-gray-600 leading-relaxed">
-                    {error}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-gray-100">
-                  <button
-                    onClick={props.onBack}
-                    className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Input
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      if (!suggestions) {
-        return (
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
-            <div className="text-center max-w-lg mx-auto px-4">
-              <div className="mb-8">
-                <Logo className="mb-6" />
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
-                <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-                  <Brain className="w-8 h-8 text-gray-400" />
-                </div>
-
-                <div className="space-y-3">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    No Suggestions Available
-                  </h2>
-                  <p className="text-gray-600 leading-relaxed">
-                    We couldn't generate suggestions based on your input. Please try again with different requirements.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-gray-100">
-                  <button
-                    onClick={props.onBack}
-                    className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Input
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-violet-50 border-b border-gray-200 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="text-center mb-8">
-                <Logo className="mb-6" />
-                <div className="space-y-4">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight">
-                    AI-Powered Gig Creation
-                  </h1>
-                  <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
-                    Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
-                  </p>
-                </div>
-              </div>
-
-              {/* Navigation Bar */}
-              <div className="flex items-center justify-between bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                <button
-                  onClick={props.onBack}
-                  className="group inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                  Back to Input
-                </button>
-
-                <div className="text-center">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Review & Refine Suggestions
-                  </h2>
-                  {/* Mock Data Indicator */}
-                  {import.meta.env.VITE_USE_MOCK_DATA === 'true' && (
-                    <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      🎭 Mock Mode Active
                     </div>
-                  )}
-                </div>
 
-                <button
-                  onClick={handleConfirm}
-                  className="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-lg transition-colors shadow-sm"
-                >
-                  Confirm & Continue
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="max-w-7xl mx-auto py-8">
-            <div className="space-y-8">
-
-              {/* Basic Information Section */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
-                      <Briefcase className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Basic Information</h3>
-                      <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3 space-y-6">
-                  {/* Job Titles */}
-                  <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg p-3 border border-blue-200 shadow-md">
                     <div className="space-y-2">
-                      {renderJobTitlesSection()}
-                    </div>
-                  </div>
-
-                  {/* Highlights */}
-                  <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-lg p-3 border border-green-200 shadow-md">
-                    <div className="space-y-2">
-                      {renderHighlightsSection()}
-                    </div>
-                  </div>
-
-                  {/* Job Description - Full Width */}
-                  <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-lg p-3 border border-orange-200 shadow-md">
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
+                      <div>
+                        <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                          Role Type
+                        </label>
+                        <select
+                          value={roleId}
+                          onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
+                          className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
+                        >
+                          {TEAM_ROLES.map((teamRole) => (
+                            <option key={teamRole} value={teamRole}>
+                              {teamRole}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                      {renderDescriptionSection()}
+
+                      <div>
+                        <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                          Number of Members
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={roleCount}
+                          onChange={(e) => updateTeamRole(index, "count", e.target.value)}
+                          className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                            Seniority Level
+                          </label>
+                          <select
+                            value={seniorityLevel}
+                            onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
+                            className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
+                          >
+                            {predefinedOptions.basic.seniorityLevels.map((level) => (
+                              <option key={level} value={level}>
+                                {level}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                            Years Experience
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="50"
+                            value={yearsExperience}
+                            onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                            placeholder="e.g. 3"
+                            className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Sectors - After Description */}
-                  <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 rounded-lg p-3 border border-purple-200 shadow-md">
-                    <div className="space-y-2">
-                      {renderSectorsSection()}
-                    </div>
-                  </div>
-
-                  {/* Industries */}
-                  <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 rounded-lg p-3 border border-rose-200 shadow-md">
-                    <div>
-                      {renderIndustriesSection()}
-                    </div>
-                  </div>
-
-                  {/* Activities */}
-                  <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-lg p-3 border border-cyan-200 shadow-md">
-                    <div>
-                      {renderActivitiesSection()}
-                    </div>
-                  </div>
-
-                  {/* Deliverables */}
-                  <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 rounded-lg p-3 border border-blue-200 shadow-md">
-                    <div className="space-y-2">
-                      {renderDeliverablesSection()}
-                    </div>
-                  </div>
-
-                  {/* Destination Zones */}
-                  <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 rounded-lg p-3 border border-slate-200 shadow-md">
-                    <div>
-                      {renderDestinationZonesSection()}
-                    </div>
-                  </div>
-
-                  {/* Seniority */}
-                  <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-lg p-3 border border-amber-200 shadow-md">
-                    <div>
-                      {renderSenioritySection()}
-                    </div>
-                  </div>
-
-                </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-xl border-2 border-dashed border-indigo-300">
+              <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                <Users className="w-8 h-8 text-white" />
               </div>
+              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 bg-clip-text text-transparent mb-2">
+                No Team Roles Defined
+              </h3>
+              <p className="text-indigo-600 font-medium mb-4 max-w-md mx-auto text-sm">
+                Add team roles to define the structure and responsibilities of your team members.
+              </p>
+              <button
+                onClick={addTeamRole}
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Team Role</span>
+              </button>
+            </div>
+          )}
+        </div>
 
-              {/* Schedule Section */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-700 to-indigo-700 px-6 py-4">
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
-                      <Clock className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Schedule & Availability</h3>
-                      <p className="text-purple-100 text-sm">Working hours, timezones, and flexibility options</p>
-                    </div>
-                  </div>
-                </div>
+        {/* Territories */}
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-lg p-3 border border-blue-200 shadow-md mb-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <h4 className="text-md font-semibold text-gray-900">Territories</h4>
+          </div>
 
-                <div className="p-3 space-y-4">
-                  <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200 shadow-md">
-                    {renderEditableSchedules()}
-                  </div>
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                addTerritory(e.target.value);
+                e.target.value = ""; // Reset select
+              }
+            }}
+            className="w-full p-2 rounded-md border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-1 text-sm"
+            defaultValue=""
+            disabled={territoriesLoading}
+          >
+            <option value="" disabled>
+              {territoriesLoading ? "Loading territories..." : "Add territory..."}
+            </option>
+            {territoriesFromAPI.filter(
+              (country: Country) => !suggestions.team?.territories?.includes(country._id)
+            ).map((country: Country) => (
+              <option key={country._id} value={country._id}>
+                {country.name.common}
+              </option>
+            ))}
+          </select>
 
-                  <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-50 rounded-lg p-3 border border-teal-200 shadow-md">
-                    {renderMinimumHoursSection()}
-                  </div>
+          {/* Territories badges - displayed below the select */}
+          {suggestions.team?.territories && suggestions.team.territories.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-1 border-t border-blue-200">
+              {suggestions.team.territories.map((territory) => (
+                <span
+                  key={territory}
+                  className="group relative flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-medium pl-2 pr-1 py-1 rounded-full cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                >
+                  <span>{getTerritoryName(territory)}</span>
+                  <button
+                    onClick={() => removeTerritory(territory)}
+                    className="ml-1 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Remove"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
-                  <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-lg p-3 border border-violet-200 shadow-md">
-                    {renderTimezoneSection()}
-                  </div>
+          <p className="text-xs text-gray-500 italic text-center mt-1">
+            {territoriesLoading
+              ? 'Loading countries from API...'
+              : `${territoriesFromAPI.filter((country: Country) => !suggestions.team?.territories?.includes(country._id)).length} countries available for selection`
+            }
+          </p>
+        </div>
+      </div>
+    );
+  };
 
-                  <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 rounded-lg p-3 border border-yellow-200 shadow-md">
-                    {renderFlexibilitySection()}
-                  </div>
-                </div>
-              </div>
+  if (loading && !props.initialSuggestions) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-8">
+          {/* Logo */}
+          <div className="animate-fade-in">
+            <Logo />
+          </div>
 
-              {/* Commission Section */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
-                      <DollarSign className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Commission Structure</h3>
-                      <p className="text-green-100 text-sm">Compensation details and performance incentives</p>
-                    </div>
-                  </div>
-                </div>
+          {/* AI Loading Animation */}
+          <div className="relative flex items-center justify-center">
+            {/* Animated rings */}
+            <div className="absolute w-16 h-16 border-4 border-blue-300/30 rounded-full animate-ping"></div>
+            <div className="absolute w-14 h-14 border-4 border-indigo-400/40 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute w-12 h-12 border-4 border-violet-500/50 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
 
-                <div className="p-6">
-                  {renderCommissionSection()}
-                </div>
-              </div>
-
-              {/* Skills Section */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
-                      <Award className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Skills & Qualifications</h3>
-                      <p className="text-purple-100 text-sm">Required technical, professional, and soft skills</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  {renderSkillsSection()}
-                </div>
-              </div>
-
-              {/* Team Section */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
-                      <Users className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Team Structure</h3>
-                      <p className="text-blue-100 text-sm">Team composition, roles, and territories</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  {renderTeamSection()}
-                </div>
-              </div>
+            {/* Central AI icon */}
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
+              <Brain className="w-8 h-8 text-white animate-pulse" />
             </div>
           </div>
         </div>
-      );
-    };
+      </div>
+    );
   }
-}
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Error Generating Suggestions
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                {error}
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <button
+                onClick={props.onBack}
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Input
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!suggestions) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+        <div className="text-center max-w-lg mx-auto px-4">
+          <div className="mb-8">
+            <Logo className="mb-6" />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+              <Brain className="w-8 h-8 text-gray-400" />
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900">
+                No Suggestions Available
+              </h2>
+              <p className="text-gray-600 leading-relaxed">
+                We couldn't generate suggestions based on your input. Please try again with different requirements.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100">
+              <button
+                onClick={props.onBack}
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Input
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-violet-50 border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center mb-8">
+            <Logo className="mb-6" />
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight">
+                AI-Powered Gig Creation
+              </h1>
+              <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                Review and refine the AI-generated suggestions for your gig. Customize each section to match your specific requirements.
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation Bar */}
+          <div className="flex items-center justify-between bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+            <button
+              onClick={props.onBack}
+              className="group inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+              Back to Input
+            </button>
+
+            <div className="text-center">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Review & Refine Suggestions
+              </h2>
+              {/* Mock Data Indicator */}
+              {import.meta.env.VITE_USE_MOCK_DATA === 'true' && (
+                <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  🎭 Mock Mode Active
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleConfirm}
+              className="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-lg transition-colors shadow-sm"
+            >
+              Confirm & Continue
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto py-8">
+        <div className="space-y-8">
+
+          {/* Basic Information Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Briefcase className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Basic Information</h3>
+                  <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 space-y-6">
+              {/* Job Titles */}
+              <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg p-3 border border-blue-200 shadow-md">
+                <div className="space-y-2">
+                  {renderJobTitlesSection()}
+                </div>
+              </div>
+
+              {/* Highlights */}
+              <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-lg p-3 border border-green-200 shadow-md">
+                <div className="space-y-2">
+                  {renderHighlightsSection()}
+                </div>
+              </div>
+
+              {/* Job Description - Full Width */}
+              <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-lg p-3 border border-orange-200 shadow-md">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
+                  </div>
+                  {renderDescriptionSection()}
+                </div>
+              </div>
+
+              {/* Sectors - After Description */}
+              <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 rounded-lg p-3 border border-purple-200 shadow-md">
+                <div className="space-y-2">
+                  {renderSectorsSection()}
+                </div>
+              </div>
+
+              {/* Industries */}
+              <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 rounded-lg p-3 border border-rose-200 shadow-md">
+                <div>
+                  {renderIndustriesSection()}
+                </div>
+              </div>
+
+              {/* Activities */}
+              <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-lg p-3 border border-cyan-200 shadow-md">
+                <div>
+                  {renderActivitiesSection()}
+                </div>
+              </div>
+
+              {/* Deliverables */}
+              <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 rounded-lg p-3 border border-blue-200 shadow-md">
+                <div className="space-y-2">
+                  {renderDeliverablesSection()}
+                </div>
+              </div>
+
+              {/* Destination Zones */}
+              <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 rounded-lg p-3 border border-slate-200 shadow-md">
+                <div>
+                  {renderDestinationZonesSection()}
+                </div>
+              </div>
+
+              {/* Seniority */}
+              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-lg p-3 border border-amber-200 shadow-md">
+                <div>
+                  {renderSenioritySection()}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Schedule Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-700 to-indigo-700 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Schedule & Availability</h3>
+                  <p className="text-purple-100 text-sm">Working hours, timezones, and flexibility options</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 space-y-4">
+              <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200 shadow-md">
+                {renderEditableSchedules()}
+              </div>
+
+              <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-50 rounded-lg p-3 border border-teal-200 shadow-md">
+                {renderMinimumHoursSection()}
+              </div>
+
+              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-lg p-3 border border-violet-200 shadow-md">
+                {renderTimezoneSection()}
+              </div>
+
+              <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 rounded-lg p-3 border border-yellow-200 shadow-md">
+                {renderFlexibilitySection()}
+              </div>
+            </div>
+          </div>
+
+          {/* Commission Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <DollarSign className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Commission Structure</h3>
+                  <p className="text-green-100 text-sm">Compensation details and performance incentives</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {renderCommissionSection()}
+            </div>
+          </div>
+
+          {/* Skills Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Skills & Qualifications</h3>
+                  <p className="text-purple-100 text-sm">Required technical, professional, and soft skills</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {renderSkillsSection()}
+            </div>
+          </div>
+
+          {/* Team Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Team Structure</h3>
+                  <p className="text-blue-100 text-sm">Team composition, roles, and territories</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {renderTeamSection()}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
