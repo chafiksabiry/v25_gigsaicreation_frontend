@@ -977,7 +977,7 @@ export async function fetchActivities(): Promise<{ data: Activity[]; error?: Err
     if (!result.success) {
       throw new Error(result.message || 'Failed to fetch activities');
     }
-    return { data: result.data };
+    return { data: result.data || [] };
   } catch (error) {
     console.error('Error fetching activities:', error);
     return { data: [], error: error as Error };
@@ -994,7 +994,7 @@ export async function fetchIndustries(): Promise<{ data: Industry[]; error?: Err
     if (!result.success) {
       throw new Error(result.message || 'Failed to fetch industries');
     }
-    return { data: result.data };
+    return { data: result.data || [] };
   } catch (error) {
     console.error('Error fetching industries:', error);
     return { data: [], error: error as Error };
@@ -1011,7 +1011,7 @@ export async function fetchLanguages(): Promise<{ data: Language[]; error?: Erro
     if (!result.success) {
       throw new Error(result.message || 'Failed to fetch languages');
     }
-    return { data: result.data };
+    return { data: result.data || [] };
   } catch (error) {
     console.error('Error fetching languages:', error);
     return { data: [], error: error as Error };

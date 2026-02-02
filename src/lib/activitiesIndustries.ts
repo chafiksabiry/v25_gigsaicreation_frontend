@@ -4,9 +4,9 @@ import type { Activity, Industry, Language } from '../types';
 let activitiesCache: Activity[] = [];
 let industriesCache: Industry[] = [];
 let languagesCache: Language[] = [];
-let softSkillsCache: Array<{_id: string, name: string, description: string, category: string}> = [];
-let technicalSkillsCache: Array<{_id: string, name: string, description: string, category: string}> = [];
-let professionalSkillsCache: Array<{_id: string, name: string, description: string, category: string}> = [];
+let softSkillsCache: Array<{ _id: string, name: string, description: string, category: string }> = [];
+let technicalSkillsCache: Array<{ _id: string, name: string, description: string, category: string }> = [];
+let professionalSkillsCache: Array<{ _id: string, name: string, description: string, category: string }> = [];
 let isActivitiesLoaded = false;
 let isIndustriesLoaded = false;
 let isLanguagesLoaded = false;
@@ -24,9 +24,9 @@ export async function loadActivities(): Promise<Activity[]> {
       console.error('❌ Error loading activities:', error);
       return [];
     }
-    activitiesCache = data;
+    activitiesCache = data || [];
     isActivitiesLoaded = true;
-    return data;
+    return activitiesCache;
   } catch (error) {
     console.error('❌ Error loading activities:', error);
     return [];
@@ -43,9 +43,9 @@ export async function loadIndustries(): Promise<Industry[]> {
       console.error('❌ Error loading industries:', error);
       return [];
     }
-    industriesCache = data;
+    industriesCache = data || [];
     isIndustriesLoaded = true;
-    return data;
+    return industriesCache;
   } catch (error) {
     console.error('❌ Error loading industries:', error);
     return [];
@@ -62,9 +62,9 @@ export async function loadLanguages(): Promise<Language[]> {
       console.error('❌ Error loading languages:', error);
       return [];
     }
-    languagesCache = data;
+    languagesCache = data || [];
     isLanguagesLoaded = true;
-    return data;
+    return languagesCache;
   } catch (error) {
     console.error('❌ Error loading languages:', error);
     return [];
@@ -146,13 +146,13 @@ export function getLanguageById(id: string): Language | undefined {
 export function getLanguageNameById(id: string): string {
   const language = languagesCache.find(language => language._id === id);
   if (!language) return '';
-  
+
   // Handle case where name might be an object with common/official properties
   if (typeof language.name === 'object' && language.name !== null) {
     // If name is an object, try to get the common name first, then official, then fallback to nativeName
     return (language.name as any).common || (language.name as any).official || language.nativeName || 'Unknown Language';
   }
-  
+
   return language.name;
 }
 
@@ -164,7 +164,10 @@ export function getLanguageCodeById(id: string): string {
 export function convertLanguageNamesToIds(names: string[]): string[] {
   const ids: string[] = [];
   for (const name of names) {
-    const language = languagesCache.find(l => l.name.toLowerCase() === name.toLowerCase());
+    const language = languagesCache.find(l => {
+      const langName = typeof l.name === 'string' ? l.name : (l.name as any).common || '';
+      return langName.toLowerCase() === name.toLowerCase();
+    });
     if (language) {
       ids.push(language._id);
     } else {
@@ -177,12 +180,10 @@ export function convertLanguageNamesToIds(names: string[]): string[] {
 export function getLanguageOptions(): Array<{ value: string; label: string; code: string }> {
   const options = languagesCache.map(language => {
     // Handle case where name might be an object with common/official properties
-    let languageName = language.name;
-    if (typeof language.name === 'object' && language.name !== null) {
-      // If name is an object, try to get the common name first, then official, then fallback to nativeName
-      languageName = (language.name as any).common || (language.name as any).official || language.nativeName || 'Unknown Language';
-    }
-    
+    const languageName = typeof language.name === 'string'
+      ? language.name
+      : (language.name as any).common || (language.name as any).official || language.nativeName || 'Unknown Language';
+
     return {
       value: language._id,
       label: languageName,
@@ -193,7 +194,7 @@ export function getLanguageOptions(): Array<{ value: string; label: string; code
 }
 
 // Load soft skills from API
-export async function loadSoftSkills(): Promise<Array<{_id: string, name: string, description: string, category: string}>> {
+export async function loadSoftSkills(): Promise<Array<{ _id: string, name: string, description: string, category: string }>> {
   if (isSoftSkillsLoaded && softSkillsCache.length > 0) {
     return softSkillsCache;
   }
@@ -213,7 +214,7 @@ export async function loadSoftSkills(): Promise<Array<{_id: string, name: string
 }
 
 // Load technical skills from API
-export async function loadTechnicalSkills(): Promise<Array<{_id: string, name: string, description: string, category: string}>> {
+export async function loadTechnicalSkills(): Promise<Array<{ _id: string, name: string, description: string, category: string }>> {
   if (isTechnicalSkillsLoaded && technicalSkillsCache.length > 0) {
     return technicalSkillsCache;
   }
@@ -233,7 +234,7 @@ export async function loadTechnicalSkills(): Promise<Array<{_id: string, name: s
 }
 
 // Load professional skills from API
-export async function loadProfessionalSkills(): Promise<Array<{_id: string, name: string, description: string, category: string}>> {
+export async function loadProfessionalSkills(): Promise<Array<{ _id: string, name: string, description: string, category: string }>> {
   if (isProfessionalSkillsLoaded && professionalSkillsCache.length > 0) {
     return professionalSkillsCache;
   }
@@ -243,13 +244,13 @@ export async function loadProfessionalSkills(): Promise<Array<{_id: string, name
       console.error('❌ Error loading professional skills:', response.error);
       return [];
     }
-    
+
     // Update global cache
     professionalSkillsCache = response.data;
     isProfessionalSkillsLoaded = true;
-    
-    
-    
+
+
+
     return response.data;
   } catch (error) {
     console.error('❌ Error loading professional skills:', error);
@@ -258,17 +259,17 @@ export async function loadProfessionalSkills(): Promise<Array<{_id: string, name
 }
 
 // Get soft skill by ID
-export function getSoftSkillById(id: string): {_id: string, name: string, description: string, category: string} | undefined {
+export function getSoftSkillById(id: string): { _id: string, name: string, description: string, category: string } | undefined {
   return softSkillsCache.find(skill => skill._id === id);
 }
 
 // Get technical skill by ID
-export function getTechnicalSkillById(id: string): {_id: string, name: string, description: string, category: string} | undefined {
+export function getTechnicalSkillById(id: string): { _id: string, name: string, description: string, category: string } | undefined {
   return technicalSkillsCache.find(skill => skill._id === id);
 }
 
 // Get professional skill by ID
-export function getProfessionalSkillById(id: string): {_id: string, name: string, description: string, category: string} | undefined {
+export function getProfessionalSkillById(id: string): { _id: string, name: string, description: string, category: string } | undefined {
   return professionalSkillsCache.find(skill => skill._id === id);
 }
 
@@ -372,5 +373,5 @@ export async function initializeData() {
     loadTechnicalSkills(),
     loadProfessionalSkills()
   ]);
-  
+
 } 
