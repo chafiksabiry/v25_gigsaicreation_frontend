@@ -727,7 +727,7 @@ const PrompAI: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="absolute bottom-3 right-3 p-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all duration-200"
+                  className="absolute bottom-3 right-3 p-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
                 >
                   <ArrowUp className="w-5 h-5" />
                 </button>
