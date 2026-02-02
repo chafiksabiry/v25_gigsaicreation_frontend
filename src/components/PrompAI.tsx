@@ -707,7 +707,7 @@ const PrompAI: React.FC = () => {
                   id="description"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Message ChatGPT..."
+                  placeholder="Example: I need a sales campaign targeting Spanish-speaking customers in Europe, with a focus on insurance products..."
                   className="w-full h-32 pl-6 pr-14 py-4 bg-[#f4f4f4] border-none rounded-[26px] focus:ring-0 text-gray-900 placeholder-gray-500 text-lg resize-none shadow-sm"
                 />
                 <button
