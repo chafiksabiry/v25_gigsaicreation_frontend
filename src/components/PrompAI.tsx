@@ -26,6 +26,7 @@ const sections = [
 ];
 
 const PrompAI: React.FC = () => {
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -129,6 +130,17 @@ const PrompAI: React.FC = () => {
   }, [currentSection]);
 
   // Check for edit mode parameters on component mount
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // Reset height to auto to correctly calculate scrollHeight
+      textarea.style.height = 'auto';
+      // Set new height based on scrollHeight
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [input]);
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const editParam = urlParams.get('edit');
@@ -704,11 +716,13 @@ const PrompAI: React.FC = () => {
 
               <div className="relative">
                 <textarea
+                  ref={textareaRef}
                   id="description"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  rows={1}
                   placeholder="Example: I need a sales campaign targeting Spanish-speaking customers in Europe, with a focus on insurance products..."
-                  className="w-full h-32 pl-6 pr-14 py-4 bg-[#f4f4f4] border-none rounded-[26px] focus:ring-0 text-gray-900 placeholder-gray-500 text-lg resize-none shadow-sm"
+                  className="w-full min-h-[88px] max-h-[172px] pl-6 pr-14 py-4 bg-[#f4f4f4] border-none rounded-[26px] focus:ring-0 text-gray-900 placeholder-gray-500 text-lg resize-none shadow-sm overflow-y-auto"
                 />
                 <button
                   type="submit"
