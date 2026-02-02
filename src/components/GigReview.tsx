@@ -257,46 +257,46 @@ export function GigReview({
       // Let onSubmit handle the saving (it already calls saveGigData)
       await onSubmit();
 
-      const result = await Swal.fire({
-        title: "Success!",
-        text: isEditMode ? "Your gig has been updated successfully." : "Your gig has been published successfully.",
-        icon: "success",
-        showCancelButton: true,
-        confirmButtonText: "OK",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#667eea",
-        cancelButtonColor: "#6b7280",
-
-
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+        didOpen: (toast: { addEventListener: (arg0: string, arg1: any) => void; }) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
       });
 
-      if (result.isConfirmed) {
-        // Rediriger vers le dashboard en mode édition
-        if (isEditMode && editGigId) {
-          // Redirection vers la page de détails du gig
-          const gigUrl = `company#/gigs/${editGigId}`;
-          console.log('Redirecting to:', gigUrl);
-          window.location.href = gigUrl;
-        } else {
-          window.location.href = "/app11";
-        }
+      await Toast.fire({
+        icon: 'success',
+        title: isEditMode ? "Gig updated successfully" : "Gig published successfully"
+      });
+
+      // Redirect after toast
+      if (isEditMode && editGigId) {
+        const gigUrl = `company#/gigs/${editGigId}`;
+        console.log('Redirecting to:', gigUrl);
+        window.location.href = gigUrl;
+      } else {
+        window.location.href = "/app11";
       }
+
     } catch (error) {
       console.error('Error publishing gig:', error);
-      const result = await Swal.fire({
-        title: "Error!",
-        text: error instanceof Error ? error.message : "An unknown error occurred.",
-        icon: "error",
-        showCancelButton: true,
-        confirmButtonText: "Try Again",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#dc2626",
-        cancelButtonColor: "#6b7280",
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
       });
 
-      if (result.isConfirmed) {
-        handlePublish(); // Retry publishing
-      }
+      Toast.fire({
+        icon: "error",
+        title: error instanceof Error ? error.message : "An unknown error occurred."
+      });
     }
   };
 
