@@ -2346,26 +2346,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       field: "start" | "end",
       value: string
     ) => {
-      // Prevent End < Start
-      if (field === "end" && value < group.hours.start) return;
+      // Strict validation: Start must be strictly less than End
+      if (field === "end" && value <= group.hours.start) return;
+      if (field === "start" && value >= group.hours.end) return;
 
       const newSuggestions = JSON.parse(JSON.stringify(suggestions));
-
-      // If Start > End, we will also update End
-      let shouldUpdateEnd = false;
-      if (field === "start" && value > group.hours.end) {
-        shouldUpdateEnd = true;
-      }
-
       group.days.forEach((day: string) => {
         const schedule = newSuggestions.schedule.schedules.find(
           (s: ScheduleEntry) => s.day === day
         );
         if (schedule) {
           schedule.hours[field] = value;
-          if (shouldUpdateEnd) {
-            schedule.hours.end = value;
-          }
         }
       });
       setSuggestions(newSuggestions);
@@ -2415,8 +2406,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const handleEmptyScheduleHoursChange = (emptySchedule: ScheduleEntry, field: "start" | "end", value: string) => {
-      // Prevent End < Start
-      if (field === "end" && value < emptySchedule.hours.start) return;
+      // Strict validation: Start must be strictly less than End
+      if (field === "end" && value <= emptySchedule.hours.start) return;
+      if (field === "start" && value >= emptySchedule.hours.end) return;
 
       const newSuggestions = JSON.parse(JSON.stringify(suggestions));
       const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
@@ -2425,10 +2417,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       if (scheduleIndex > -1) {
         newSuggestions.schedule.schedules[scheduleIndex].hours[field] = value;
-        // If Start > End, update End as well
-        if (field === "start" && value > newSuggestions.schedule.schedules[scheduleIndex].hours.end) {
-          newSuggestions.schedule.schedules[scheduleIndex].hours.end = value;
-        }
       }
       setSuggestions(newSuggestions);
     };
