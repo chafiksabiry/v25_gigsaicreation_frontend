@@ -503,96 +503,137 @@ export function GigReview({
               "Commission Structure",
               "commission",
               <DollarSign className="w-6 h-6 text-gray-600" />,
-              <div className="space-y-6">
-                {/* Per Call Commission */}
-                {data.commission.commission_per_call > 0 && (
-                  <div className="bg-gradient-to-r from-[#667eea]/10 to-[#667eea]/20 rounded-xl p-6 border border-[#667eea]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-3">
-                      <CheckCircle className="w-6 h-6 text-[#667eea]" />
-                      Per Call Compensation
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {getCurrencySymbol()}
-                        {data.commission.commission_per_call}
+              <div className="space-y-8">
+
+                {/* Commission Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                  {/* Currency Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <DollarSign className="w-6 h-6 text-white" />
                       </div>
-                      <div className="text-gray-700 text-lg mb-4">
-                        Fixed amount per successful call
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Currency</h3>
+                        <p className="text-sm text-gray-500">Base currency for payments</p>
                       </div>
-                      {data.commission.minimumVolume && (
-                        <div className="pt-4 border-t border-[#667eea]/20">
-                          <div className="text-base font-semibold text-gray-700 mb-3">
-                            Minimum Requirements:
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <span className="px-4 py-2 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
-                              {data.commission.minimumVolume.amount}{" "}
-                              {data.commission.minimumVolume.unit}
-                            </span>
-                            <span className="text-gray-600 text-sm">
-                              per {data.commission.minimumVolume.period}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                    </div>
+                    <div className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold flex items-center justify-center text-center">
+                      {/* Display Currency Name */}
+                      {(() => {
+                        // Use safe access or fallback for currencies
+                        const currencies = (predefinedOptions.commission as any)?.currencies || [];
+                        const curr = data.commission.currency ? currencies.find((c: any) => c.code === data.commission.currency || c._id === data.commission.currency) : null;
+                        return curr ? `${curr.symbol} ${curr.name} (${curr.code})` : (data.commission.currency || 'Not selected');
+                      })()}
                     </div>
                   </div>
-                )}
 
-                {/* Transaction Commission */}
-                {data.commission.transactionCommission > 0 && (
-                  <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f093fb] to-[#667eea] mb-4 flex items-center gap-3">
-                      <Coins className="w-6 h-6 text-[#f093fb]" />
-                      Transaction Commission
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {getCurrencySymbol()}
-                        {data.commission.transactionCommission}
+                  {/* Per call compensation Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
                       </div>
-                      <div className="text-gray-700 text-lg">
-                        Per Successful Transaction
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Per call compensation</h3>
+                        <p className="text-sm text-gray-500">Amount per completed call</p>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="w-full px-4 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center">
+                        {data.commission.commission_per_call || 0}
+                        <span className="ml-1 text-green-600 text-lg">{getCurrencySymbol()}</span>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Performance Bonus */}
-                {data.commission.bonusAmount && data.commission.bonusAmount !== "0" && (
-                  <div className="bg-gradient-to-r from-[#764ba2]/10 to-[#764ba2]/20 rounded-xl p-6 border border-[#764ba2]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#764ba2] to-[#f093fb] mb-4 flex items-center gap-3">
-                      <Star className="w-6 h-6 text-[#764ba2]" />
-                      Performance Bonus
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <div className="text-3xl font-bold text-gray-900 mb-3">
-                        {getCurrencySymbol()}
-                        {data.commission.bonusAmount}
+                  {/* Transaction Commission Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <Coins className="w-6 h-6 text-white" />
                       </div>
-                      <div className="text-gray-700 text-lg">
-                        Performance Incentives
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
+                        <p className="text-sm text-gray-500">Commission per transaction</p>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="w-full px-4 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center">
+                        {data.commission.transactionCommission || 0}
+                        <span className="ml-1 text-purple-600 text-lg">{getCurrencySymbol()}</span>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Additional Details */}
+                  {/* Bonus & Incentives Card */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <Star className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
+                        <p className="text-sm text-gray-500">Performance bonus amount</p>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="w-full px-4 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center">
+                        {data.commission.bonusAmount || 0}
+                        <span className="ml-1 text-amber-600 text-lg">{getCurrencySymbol()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Minimum Volume Requirements Section */}
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+                      <Target className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
+                      <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center flex items-center justify-center gap-2">
+                      <span className="text-2xl font-bold">{data?.commission?.minimumVolume?.amount || 0}</span>
+                      <span>{data?.commission?.minimumVolume?.unit || 'Units'}</span>
+                    </div>
+                    <div className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center flex items-center justify-center">
+                      per {data?.commission?.minimumVolume?.period || 'Period'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Details Section */}
                 {data?.commission?.additionalDetails && (
-                  <div className="bg-gradient-to-r from-slate-100 to-gray-100 rounded-xl p-6 border border-slate-200">
-                    <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-3">
-                      <svg className="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Additional Details
-                    </h3>
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-sm border border-white/20">
-                      <p className="text-gray-700 whitespace-pre-wrap text-lg leading-relaxed">
-                        {data?.commission?.additionalDetails}
-                      </p>
+                  <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex items-center mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
+                        <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 whitespace-pre-wrap">
+                      {data.commission.additionalDetails}
                     </div>
                   </div>
                 )}
+
               </div>
             )}
 
