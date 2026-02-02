@@ -229,7 +229,7 @@ const FLEXIBILITY_SELECT_OPTIONS = [
   "Shift Swapping Allowed",
 ];
 
-export const Suggestions: React.FC<SuggestionsProps> = (props) => {
+export const Suggestions: React.FC<SuggestionsProps> = (props: { initialSuggestions: any; input: string; onConfirm: (arg0: GigSuggestion) => void; onBack: any; }) => {
   const [suggestions, setSuggestions] = useState<GigSuggestion | null>(props.initialSuggestions || null);
   const [loading, setLoading] = useState(!props.initialSuggestions);
   const [error, setError] = useState<string | null>(null);
@@ -343,11 +343,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         if (showAddSkillInterface[skillType] && addInterfaceRefs.current[skillType]) {
           if (!addInterfaceRefs.current[skillType]!.contains(event.target as Node)) {
             // Fermer l'interface sans sauvegarder
-            setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
-            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
-            setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-            setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
-            setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
+            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
+            setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
+            setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+            setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
+            setHoveredLevel((prev: any) => ({ ...prev, [skillType]: null }));
             // Plus besoin de reset searchTerm
           }
         }
@@ -385,14 +385,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   // Helper function to get currency symbol by ID
   const getCurrencySymbol = (currencyId: string): string => {
-    const currency = currencies.find(c => c._id === currencyId);
+    const currency = currencies.find((c: { _id: string; }) => c._id === currencyId);
     return currency?.symbol || '€';
   };
 
   // Helper function to get default currency (EUR if available, otherwise first in list)
   const getDefaultCurrencyId = (): string => {
     if (currencies.length === 0) return '';
-    const eurCurrency = currencies.find(c => c.code === 'EUR');
+    const eurCurrency = currencies.find((c: { code: string; }) => c.code === 'EUR');
     return eurCurrency?._id || currencies[0]._id;
   };
 
@@ -424,7 +424,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
       // Set default currency for main commission if not already set
       if (!suggestions.commission.currency) {
-        setSuggestions(prev => prev ? {
+        setSuggestions((prev: { commission: any; }) => prev ? {
           ...prev,
           commission: {
             ...prev.commission,
@@ -512,7 +512,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     let needsUpdate = false;
     const newSuggestions = { ...suggestions };
 
-    newSuggestions.team.structure.forEach((role, index) => {
+    newSuggestions.team.structure.forEach((role: { roleId: any; count: any; seniority: { level: any; yearsExperience: any; }; } | null, index: string | number) => {
       // Check if role is a string and convert it to proper object structure
       if (typeof role === 'string') {
         newSuggestions.team.structure[index] = {
@@ -571,7 +571,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     });
 
     if (needsUpdate) {
-      setSuggestions(prev => prev ? newSuggestions : null);
+      setSuggestions((prev: any) => prev ? newSuggestions : null);
     }
   };
 
@@ -656,14 +656,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     try {
       // Process all timezones from the API
       const processedTimezones = allTimezones
-        .map(tz => ({
+        .map((tz: { _id: any; zoneName: string; gmtOffset: number; countryName: any; }) => ({
           _id: tz._id,
           name: tz.zoneName,
           offset: tz.gmtOffset / 3600, // Convert seconds to hours
           abbreviation: tz.zoneName.split('/').pop() || '',
           countryName: tz.countryName
         }))
-        .sort((a, b) => a.offset - b.offset);
+        .sort((a: { offset: number; }, b: { offset: number; }) => a.offset - b.offset);
 
       setAvailableTimezones(processedTimezones);
     } catch (error) {
@@ -687,14 +687,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     if (allTimezones && allTimezones.length > 0 && availableTimezones.length === 0) {
       const processedTimezones = allTimezones
-        .map(tz => ({
+        .map((tz: { _id: any; zoneName: string; gmtOffset: number; countryName: any; }) => ({
           _id: tz._id,
           name: tz.zoneName,
           offset: tz.gmtOffset / 3600,
           abbreviation: tz.zoneName.split('/').pop() || '',
           countryName: tz.countryName
         }))
-        .sort((a, b) => a.offset - b.offset);
+        .sort((a: { offset: number; }, b: { offset: number; }) => a.offset - b.offset);
       setAvailableTimezones(processedTimezones);
     }
   }, [allTimezones, availableTimezones.length]);
@@ -799,7 +799,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         });
 
         if (needsUpdate) {
-          setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
+          setSuggestions((prev: any) => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
 
@@ -850,7 +850,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         });
 
         if (needsUpdate) {
-          setSuggestions(prev => prev ? { ...prev, skills: migratedSkills } : null);
+          setSuggestions((prev: any) => prev ? { ...prev, skills: migratedSkills } : null);
         }
       };
 
@@ -1124,7 +1124,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             // If it's "Global", replace with France's MongoDB ObjectId
             if (typeof zone === 'string' && zone.toLowerCase() === 'global') {
               // Find France in allCountriesFromAPI
-              const franceCountry = allCountriesFromAPI.find(c =>
+              const franceCountry = allCountriesFromAPI.find((c: { name: { common: string; }; cca2: string; }) =>
                 c.name.common.toLowerCase() === 'france' ||
                 c.cca2 === 'FR'
               );
@@ -1133,13 +1133,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             // If it's an alpha-2 code, convert to MongoDB ObjectId
             if (typeof zone === 'string' && zone.length === 2 && /^[A-Z]{2}$/.test(zone)) {
-              const country = allCountriesFromAPI.find(c => c.cca2 === zone);
+              const country = allCountriesFromAPI.find((c: { cca2: string; }) => c.cca2 === zone);
               return country ? country._id : zone;
             }
 
             // If it's a country name, convert to MongoDB ObjectId
             if (typeof zone === 'string') {
-              const country = allCountriesFromAPI.find(c =>
+              const country = allCountriesFromAPI.find((c: { name: { common: string; official: string; }; }) =>
                 c.name.common.toLowerCase() === zone.toLowerCase() ||
                 c.name.official.toLowerCase() === zone.toLowerCase()
               );
@@ -1152,7 +1152,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           result.destinationZones = convertedZones;
         } else {
           // If no destination zones are provided, default to France's MongoDB ObjectId
-          const franceCountry = allCountriesFromAPI.find(c =>
+          const franceCountry = allCountriesFromAPI.find((c: { name: { common: string; }; cca2: string; }) =>
             c.name.common.toLowerCase() === 'france' ||
             c.cca2 === 'FR'
           );
@@ -1183,7 +1183,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   // Memoized timezone options for the UI
   const timezoneOptions = React.useMemo(() => {
     return availableTimezones.length > 0
-      ? availableTimezones.map(tz => ({
+      ? availableTimezones.map((tz: { _id: any; name: any; countryName: any; offset: any; }) => ({
         _id: tz._id,
         zoneName: tz.name,
         countryName: tz.countryName,
@@ -1201,7 +1201,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   useEffect(() => {
     if (!suggestions?.schedule || availableTimezones.length === 0) return;
 
-    setSuggestions(prev => {
+    setSuggestions((prev: { schedule: any; }) => {
       if (!prev || !prev.schedule) return prev;
       return {
         ...prev,
@@ -1227,7 +1227,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (!suggestions?.skills) return;
     if (professionalSkills.length > 0 && technicalSkills.length > 0 && softSkills.length > 0) {
 
-      setSuggestions(prev => {
+      setSuggestions((prev: { skills: any; }) => {
         if (!prev || !prev.skills) return prev;
 
         const newSuggestions = { ...prev };
@@ -1255,7 +1255,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Validate and migrate professional skills
         if (newSuggestions.skills.professional && newSuggestions.skills.professional.length > 0) {
-          const validProfessional = newSuggestions.skills.professional.map(skill => {
+          const validProfessional = newSuggestions.skills.professional.map((skill: { skill: { $oid: any; }; level: any; details: any; }) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, professionalSkills);
             if (found) {
@@ -1274,7 +1274,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Validate and migrate technical skills
         if (newSuggestions.skills.technical && newSuggestions.skills.technical.length > 0) {
-          const validTechnical = newSuggestions.skills.technical.map(skill => {
+          const validTechnical = newSuggestions.skills.technical.map((skill: { skill: { $oid: any; }; level: any; details: any; }) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, technicalSkills);
             if (found) {
@@ -1293,7 +1293,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Validate and migrate soft skills
         if (newSuggestions.skills.soft && newSuggestions.skills.soft.length > 0) {
-          const validSoft = newSuggestions.skills.soft.map(skill => {
+          const validSoft = newSuggestions.skills.soft.map((skill: { skill: { $oid: any; }; level: any; }) => {
             const skillName = typeof skill === 'string' ? skill : (typeof skill.skill === 'string' ? skill.skill : skill.skill.$oid);
             const found = findBestSkillMatch(skillName, softSkills);
             if (found) {
@@ -1414,7 +1414,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const getCountryName = (countryId: string): string => {
     // First check if it's an API ID (MongoDB ObjectId format)
     if (countryId && countryId.length === 24) {
-      const country = allCountriesFromAPI.find(c => c._id === countryId);
+      const country = allCountriesFromAPI.find((c: { _id: string; }) => c._id === countryId);
       if (country) {
         return country.name.common;
       }
@@ -1426,7 +1426,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
 
     // Then check the fetched countries by cca2 (for backward compatibility)
-    const country = allCountries.find(c => c.cca2 === countryId);
+    const country = allCountries.find((c: { cca2: string; }) => c.cca2 === countryId);
     if (country) {
       return country.name.common;
     }
@@ -1443,7 +1443,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     // Then check if it's an API ID (MongoDB ObjectId format) in loaded territories
     if (territoryId && territoryId.length === 24) {
-      const country = territoriesFromAPI.find(c => c._id === territoryId);
+      const country = territoriesFromAPI.find((c: { _id: string; }) => c._id === territoryId);
       if (country) {
         return country.name.common;
       }
@@ -1496,7 +1496,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
 
     // Then check the fetched countries
-    const country = allCountries.find(c => c.name.common === countryName);
+    const country = allCountries.find((c: { name: { common: string; }; }) => c.name.common === countryName);
     if (country) {
       return country.cca2;
     }
@@ -1516,7 +1516,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     }
 
     // Then check the fetched countries
-    const country = allCountries.find(c => c.name.common === countryName);
+    const country = allCountries.find((c: { name: { common: string; }; }) => c.name.common === countryName);
     if (country) {
       return country.cca2;
     }
@@ -1562,7 +1562,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "industries":
         // Convert industry name to ID
-        const industryId = industries.find(i => i.label === item)?.value;
+        const industryId = industries.find((i: { label: string; }) => i.label === item)?.value;
         if (industryId) {
           newSuggestions.industries = [...(newSuggestions.industries || []), industryId];
         } else {
@@ -1571,7 +1571,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "activities":
         // Convert activity name to ID
-        const activityId = activities.find(a => a.label === item)?.value;
+        const activityId = activities.find((a: { label: string; }) => a.label === item)?.value;
         if (activityId) {
           newSuggestions.activities = [...(newSuggestions.activities || []), activityId];
         } else {
@@ -1580,7 +1580,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "languages":
         // Convert language name to ID
-        const languageId = languages.find(l => l.label === item)?.value;
+        const languageId = languages.find((l: { label: string; }) => l.label === item)?.value;
         if (languageId) {
           newSuggestions.skills.languages = [
             ...(newSuggestions.skills.languages || []),
@@ -1610,11 +1610,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         let countryId = item;
         if (item.length === 2) {
           // It's an alpha-2 code, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find(c => c.cca2 === item);
+          const country = allCountriesFromAPI.find((c: { cca2: string; }) => c.cca2 === item);
           countryId = country ? country._id : item;
         } else {
           // It's a country name, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find(c =>
+          const country = allCountriesFromAPI.find((c: { name: { common: string; official: string; }; }) =>
             c.name.common.toLowerCase() === item.toLowerCase() ||
             c.name.official.toLowerCase() === item.toLowerCase()
           );
@@ -1679,7 +1679,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "industries":
         // Convert industry name to ID
-        const industryId = industries.find(i => i.label === newValue)?.value;
+        const industryId = industries.find((i: { label: string; }) => i.label === newValue)?.value;
         if (industryId) {
           newSuggestions.industries[index] = industryId;
         } else {
@@ -1688,7 +1688,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         break;
       case "activities":
         // Convert activity name to ID
-        const activityId = activities.find(a => a.label === newValue)?.value;
+        const activityId = activities.find((a: { label: string; }) => a.label === newValue)?.value;
         if (activityId) {
           newSuggestions.activities[index] = activityId;
         } else {
@@ -1715,11 +1715,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         let countryId = newValue;
         if (newValue.length === 2) {
           // It's an alpha-2 code, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find(c => c.cca2 === newValue);
+          const country = allCountriesFromAPI.find((c: { cca2: string; }) => c.cca2 === newValue);
           countryId = country ? country._id : newValue;
         } else {
           // It's a country name, find the corresponding MongoDB ObjectId
-          const country = allCountriesFromAPI.find(c =>
+          const country = allCountriesFromAPI.find((c: { name: { common: string; official: string; }; }) =>
             c.name.common.toLowerCase() === newValue.toLowerCase() ||
             c.name.official.toLowerCase() === newValue.toLowerCase()
           );
@@ -1767,58 +1767,58 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     switch (section) {
       case "highlights":
         newSuggestions.highlights = newSuggestions.highlights.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "jobTitles":
         newSuggestions.jobTitles = newSuggestions.jobTitles.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "deliverables":
         newSuggestions.deliverables = newSuggestions.deliverables.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "industries":
         newSuggestions.industries = newSuggestions.industries.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "activities":
         newSuggestions.activities = newSuggestions.activities.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "sectors":
         newSuggestions.sectors = newSuggestions.sectors.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "destinationZones":
         newSuggestions.destinationZones =
-          newSuggestions.destinationZones.filter((_, i) => i !== index);
+          newSuggestions.destinationZones.filter((_: any, i: number) => i !== index);
         break;
       case "requirements.essential":
         newSuggestions.requirements.essential =
-          newSuggestions.requirements.essential.filter((_, i) => i !== index);
+          newSuggestions.requirements.essential.filter((_: any, i: number) => i !== index);
         break;
       case "requirements.preferred":
         newSuggestions.requirements.preferred =
-          newSuggestions.requirements.preferred.filter((_, i) => i !== index);
+          newSuggestions.requirements.preferred.filter((_: any, i: number) => i !== index);
         break;
       case "skills.technical":
         newSuggestions.skills.technical =
-          newSuggestions.skills.technical.filter((_, i) => i !== index);
+          newSuggestions.skills.technical.filter((_: any, i: number) => i !== index);
         break;
       case "skills.soft":
         newSuggestions.skills.soft = newSuggestions.skills.soft.filter(
-          (_, i) => i !== index
+          (_: any, i: number) => i !== index
         );
         break;
       case "skills.languages":
         newSuggestions.skills.languages =
-          newSuggestions.skills.languages.filter((_, i) => i !== index);
+          newSuggestions.skills.languages.filter((_: any, i: number) => i !== index);
         break;
     }
 
@@ -1896,7 +1896,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <input
                           type="text"
                           value={editValue}
-                          onChange={async (e) => {
+                          onChange={async (e: { target: { value: any; }; }) => {
                             const value = e.target.value;
                             setEditValue(value);
 
@@ -1917,7 +1917,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             setEditValue("");
                             setSearchResults([]);
                           }}
-                          onKeyDown={(e) => {
+                          onKeyDown={(e: { key: string; }) => {
                             if (e.key === 'Enter') {
                               if (editValue.trim()) {
                                 updateItem(section, index, editValue);
@@ -1942,7 +1942,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         )}
                         {searchResults.length > 0 && (
                           <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white">
-                            {searchResults.map((country) => (
+                            {searchResults.map((country: { cca2: any; name: { common: string; }; }) => (
                               <button
                                 key={country.cca2}
                                 type="button"
@@ -1966,7 +1966,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     ) : section === "sectors" || section === "industries" || section === "activities" ? (
                       <select
                         value={editValue}
-                        onChange={(e) => {
+                        onChange={(e: { target: { value: any; }; }) => {
                           const value = e.target.value;
                           setEditValue(value);
                           if (value) {
@@ -2002,7 +2002,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <input
                         type="text"
                         value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
+                        onChange={(e: { target: { value: any; }; }) => setEditValue(e.target.value)}
                         onBlur={() => {
                           if (editValue.trim()) {
                             updateItem(section, index, editValue);
@@ -2011,7 +2011,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           setEditingIndex(null);
                           setEditValue("");
                         }}
-                        onKeyDown={(e) => {
+                        onKeyDown={(e: { key: string; }) => {
                           if (e.key === 'Enter') {
                             if (editValue.trim()) {
                               updateItem(section, index, editValue);
@@ -2079,7 +2079,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <input
                   type="text"
                   value={editValue}
-                  onChange={async (e) => {
+                  onChange={async (e: { target: { value: any; }; }) => {
                     const value = e.target.value;
                     setEditValue(value);
 
@@ -2100,7 +2100,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     setEditingIndex(null);
                     setSearchResults([]);
                   }}
-                  onKeyDown={(e) => {
+                  onKeyDown={(e: { key: string; }) => {
                     if (e.key === 'Enter') {
                       if (editValue.trim()) {
                         addItem(section, editValue.trim());
@@ -2125,7 +2125,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 )}
                 {searchResults.length > 0 && (
                   <div className="mt-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white">
-                    {searchResults.map((country) => (
+                    {searchResults.map((country: { cca2: any; name: { common: string; }; }) => (
                       <button
                         key={country.cca2}
                         type="button"
@@ -2148,7 +2148,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ) : section === "sectors" || section === "industries" || section === "activities" ? (
               <select
                 value={editValue}
-                onChange={(e) => {
+                onChange={(e: { target: { value: any; }; }) => {
                   const value = e.target.value;
                   setEditValue(value);
                   if (value) {
@@ -2186,7 +2186,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <input
                 type="text"
                 value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
+                onChange={(e: { target: { value: any; }; }) => setEditValue(e.target.value)}
                 onBlur={() => {
                   if (editValue.trim()) {
                     addItem(section, editValue.trim());
@@ -2195,7 +2195,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   setEditingSection(null);
                   setEditingIndex(null);
                 }}
-                onKeyDown={(e) => {
+                onKeyDown={(e: { key: string; }) => {
                   if (e.key === 'Enter') {
                     if (editValue.trim()) {
                       addItem(section, editValue.trim());
@@ -2235,7 +2235,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     if (!suggestions?.schedule) return null;
 
     const groupedSchedules = (suggestions.schedule.schedules || []).reduce(
-      (groups, schedule) => {
+      (groups: { [x: string]: { days: any[]; }; }, schedule: { day: string; hours: { start: any; end: any; }; }) => {
         // Ignorer les schedules avec des jours vides
         if (!schedule.day || schedule.day.trim() === "") return groups;
 
@@ -2261,13 +2261,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
     // Trouver les groupes vides (schedules avec des jours vides)
     const emptySchedules = suggestions.schedule.schedules.filter(
-      schedule => !schedule.day || schedule.day.trim() === ""
+      (      schedule: { day: string; }) => !schedule.day || schedule.day.trim() === ""
     );
 
     // Vérifier si tous les jours sont déjà sélectionnés
     const selectedDays = suggestions.schedule.schedules
-      .filter(schedule => schedule.day && schedule.day.trim() !== "")
-      .map(schedule => schedule.day);
+      .filter((schedule: { day: string; }) => schedule.day && schedule.day.trim() !== "")
+      .map((schedule: { day: any; }) => schedule.day);
 
     const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
 
@@ -2281,7 +2281,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         { start: "11:00", end: "19:00" },
         { start: "14:00", end: "22:00" },
       ];
-      const usedHours = suggestions.schedule.schedules.map(s => `${s.hours.start}-${s.hours.end}`);
+      const usedHours = suggestions.schedule.schedules.map((s: { hours: { start: any; end: any; }; }) => `${s.hours.start}-${s.hours.end}`);
       const availableHours = defaultHoursList.find(
         h => !usedHours.includes(`${h.start}-${h.end}`)
       ) || { start: "09:00", end: "17:00" };
@@ -2522,7 +2522,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <div className="flex gap-1 flex-wrap border-b border-gray-200 pb-2 mb-3">
                     {allWeekDays.map((day) => {
                       const isSelected = group.days.includes(day);
-                      const isInOtherGroup = !isSelected && suggestions.schedule.schedules.some((s) => s.day === day);
+                      const isInOtherGroup = !isSelected && suggestions.schedule.schedules.some((s: { day: string; }) => s.day === day);
                       return (
                         <button
                           key={day}
@@ -2553,7 +2553,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <input
                           type="time"
                           value={group.hours.start}
-                          onChange={(e) =>
+                          onChange={(e: { target: { value: string; }; }) =>
                             handleHoursChange(group, "start", e.target.value)
                           }
                           className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2567,7 +2567,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         <input
                           type="time"
                           value={group.hours.end}
-                          onChange={(e) =>
+                          onChange={(e: { target: { value: string; }; }) =>
                             handleHoursChange(group, "end", e.target.value)
                           }
                           onBlur={() => {
@@ -2631,7 +2631,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             ) : null}
 
             {/* Afficher les groupes vides */}
-            {emptySchedules.map((emptySchedule, index) => (
+            {emptySchedules.map((emptySchedule: { day: any; hours: any; _id?: { $oid: string; } | undefined; }, index: any) => (
               <div
                 key={`empty-schedule-${index}`}
                 className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
@@ -2651,7 +2651,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <div className="flex gap-1 mb-4">
                   {allWeekDays.map((day) => {
                     const isSelected = emptySchedule.day === day;
-                    const isInOtherGroup = suggestions.schedule.schedules.some((s) => s.day === day);
+                    const isInOtherGroup = suggestions.schedule.schedules.some((s: { day: string; }) => s.day === day);
                     return (
                       <button
                         key={day}
@@ -2682,7 +2682,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <input
                         type="time"
                         value={emptySchedule.hours.start}
-                        onChange={(e) =>
+                        onChange={(e: { target: { value: string; }; }) =>
                           handleEmptyScheduleHoursChange(emptySchedule, "start", e.target.value)
                         }
                         className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2696,7 +2696,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       <input
                         type="time"
                         value={emptySchedule.hours.end}
-                        onChange={(e) =>
+                        onChange={(e: { target: { value: string; }; }) =>
                           handleEmptyScheduleHoursChange(emptySchedule, "end", e.target.value)
                         }
                         onBlur={() => {
@@ -2836,7 +2836,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         min="0"
                         max="24"
                         value={suggestions.schedule.minimumHours?.daily || ''}
-                        onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
+                        onChange={(e: { target: { value: string; }; }) => handleMinimumHoursChange('daily', e.target.value)}
                         placeholder="e.g. 8"
                         className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                       />
@@ -2855,7 +2855,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         min="0"
                         max="168"
                         value={suggestions.schedule.minimumHours?.weekly || ''}
-                        onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
+                        onChange={(e: { target: { value: string; }; }) => handleMinimumHoursChange('weekly', e.target.value)}
                         placeholder="e.g. 40"
                         className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                       />
@@ -2874,7 +2874,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         min="0"
                         max="744"
                         value={suggestions.schedule.minimumHours?.monthly || ''}
-                        onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
+                        onChange={(e: { target: { value: string; }; }) => handleMinimumHoursChange('monthly', e.target.value)}
                         placeholder="e.g. 160"
                         className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
                       />
@@ -2900,7 +2900,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           if (value) {
             // Find the selected timezone to get the _id
-            const selectedTimezone = filteredTimezones.find(tz => tz._id === value);
+            const selectedTimezone = filteredTimezones.find((tz: { _id: any; }) => tz._id === value);
             if (selectedTimezone) {
               newSuggestions.schedule.timeZones = [selectedTimezone._id];
               newSuggestions.schedule.time_zone = selectedTimezone._id;
@@ -2917,7 +2917,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         };
 
         // Filter timezones based on search
-        const filteredTimezones = availableTimezones.filter(tz =>
+        const filteredTimezones = availableTimezones.filter((tz: { name: string; _id: any; countryName: string; }) =>
           tz.name && tz._id && (
             tz.name.toLowerCase().includes(timezoneSearch.toLowerCase()) ||
             tz.countryName?.toLowerCase().includes(timezoneSearch.toLowerCase())
@@ -2942,7 +2942,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   type="text"
                   placeholder="Search timezones by name, country, or abbreviation..."
                   value={timezoneSearch}
-                  onChange={(e) => setTimezoneSearch(e.target.value)}
+                  onChange={(e: { target: { value: any; }; }) => setTimezoneSearch(e.target.value)}
                   className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
               </div>
@@ -2955,7 +2955,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               disabled={timezoneLoading}
             >
               <option value="">Select a timezone...</option>
-              {filteredTimezones.map((tz) => (
+              {filteredTimezones.map((tz: { _id: any; name: any; countryName: any; offset: number; }) => (
                 <option key={tz._id} value={tz._id}>
                   {tz.name} {tz.countryName ? `- ${tz.countryName}` : ''} (GMT{tz.offset >= 0 ? '+' : ''}{tz.offset})
                 </option>
@@ -2991,7 +2991,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveDestinationZone = (zone: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.destinationZones = newSuggestions.destinationZones.filter(z => z !== zone);
+          newSuggestions.destinationZones = newSuggestions.destinationZones.filter((z: string) => z !== zone);
           setSuggestions(newSuggestions);
         };
 
@@ -2999,8 +2999,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         // Get all available countries from API, excluding already selected ones
         const availableCountries = allCountriesFromAPI
-          .filter(country => !selected.includes(country._id))
-          .map(country => ({
+          .filter((country: { _id: any; }) => !selected.includes(country._id))
+          .map((country: { _id: any; name: { common: any; }; }) => ({
             code: country._id,  // Use MongoDB ObjectId as the value
             name: country.name.common
           }));
@@ -3030,7 +3030,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {/* Badges sélectionnés - displayed below the select */}
             {selected.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
-                {selected.map(zone => (
+                {selected.map((zone: string) => (
                   <span key={zone} className="group relative flex items-center bg-blue-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-blue-800 transition-colors">
                     <span>{getCountryName(zone)}</span>
                     <button
@@ -3096,7 +3096,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveJobTitle = (jobTitle: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.jobTitles = newSuggestions.jobTitles.filter(jt => jt !== jobTitle);
+          newSuggestions.jobTitles = newSuggestions.jobTitles.filter((jt: string) => jt !== jobTitle);
           setSuggestions(newSuggestions);
         };
 
@@ -3148,15 +3148,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {selected.map((title, index) => (
+                {selected.map((title: string, index: number) => (
                   <span key={index}>
                     {editingJobTitleIndex === index ? (
                       <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
                         <input
                           type="text"
                           value={newJobTitle}
-                          onChange={(e) => setNewJobTitle(e.target.value)}
-                          onKeyDown={(e) => {
+                          onChange={(e: { target: { value: any; }; }) => setNewJobTitle(e.target.value)}
+                          onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
                               handleUpdateJobTitle(index);
@@ -3196,12 +3196,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
                           : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
                           }`}
-                        onClick={(e) => {
+                        onClick={(e: { preventDefault: () => void; stopPropagation: () => void; }) => {
                           e.preventDefault();
                           e.stopPropagation();
                           setSelectedJobTitle(selectedJobTitle === title ? null : title);
                         }}
-                        onDoubleClick={(e) => {
+                        onDoubleClick={(e: { preventDefault: () => void; stopPropagation: () => void; }) => {
                           e.preventDefault();
                           e.stopPropagation();
                           // Disable double-click functionality
@@ -3214,7 +3214,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         {title}
                         <button
                           type="button"
-                          onClick={(e) => {
+                          onClick={(e: { stopPropagation: () => void; }) => {
                             e.stopPropagation();
                             handleEditClick(title, index);
                           }}
@@ -3226,7 +3226,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         </button>
                         <button
                           type="button"
-                          onClick={(e) => {
+                          onClick={(e: { stopPropagation: () => void; }) => {
                             e.stopPropagation();
                             handleRemoveJobTitle(title);
                             if (selectedJobTitle === title) {
@@ -3252,8 +3252,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     <input
                       type="text"
                       value={newJobTitle}
-                      onChange={(e) => setNewJobTitle(e.target.value)}
-                      onKeyDown={(e) => {
+                      onChange={(e: { target: { value: any; }; }) => setNewJobTitle(e.target.value)}
+                      onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           handleAddJobTitle();
@@ -3336,7 +3336,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveHighlight = (highlight: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.highlights = newSuggestions.highlights.filter(h => h !== highlight);
+          newSuggestions.highlights = newSuggestions.highlights.filter((h: string) => h !== highlight);
           setSuggestions(newSuggestions);
         };
 
@@ -3364,15 +3364,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             {/* Highlights list */}
             <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {selected.map((highlight, index) => (
+              {selected.map((highlight: string, index: number) => (
                 <span key={index}>
                   {editingHighlightIndex === index ? (
                     <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
                       <input
                         type="text"
                         value={newHighlight}
-                        onChange={(e) => setNewHighlight(e.target.value)}
-                        onKeyDown={(e) => {
+                        onChange={(e: { target: { value: any; }; }) => setNewHighlight(e.target.value)}
+                        onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             handleUpdateHighlight(index);
@@ -3413,7 +3413,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       {highlight}
                       <button
                         type="button"
-                        onClick={(e) => {
+                        onClick={(e: { stopPropagation: () => void; }) => {
                           e.stopPropagation();
                           handleEditClick(highlight, index);
                         }}
@@ -3441,8 +3441,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <input
                     type="text"
                     value={newHighlight}
-                    onChange={(e) => setNewHighlight(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={(e: { target: { value: any; }; }) => setNewHighlight(e.target.value)}
+                    onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         handleAddHighlight();
@@ -3524,7 +3524,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveDeliverable = (deliverable: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.deliverables = newSuggestions.deliverables.filter(d => d !== deliverable);
+          newSuggestions.deliverables = newSuggestions.deliverables.filter((d: string) => d !== deliverable);
           setSuggestions(newSuggestions);
         };
 
@@ -3552,15 +3552,15 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             {/* Deliverables list */}
             <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-              {selected.map((deliverable, index) => (
+              {selected.map((deliverable: string, index: number) => (
                 <span key={index}>
                   {editingDeliverableIndex === index ? (
                     <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
                       <input
                         type="text"
                         value={newDeliverable}
-                        onChange={(e) => setNewDeliverable(e.target.value)}
-                        onKeyDown={(e) => {
+                        onChange={(e: { target: { value: any; }; }) => setNewDeliverable(e.target.value)}
+                        onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             handleUpdateDeliverable(index);
@@ -3601,7 +3601,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       {deliverable}
                       <button
                         type="button"
-                        onClick={(e) => {
+                        onClick={(e: { stopPropagation: () => void; }) => {
                           e.stopPropagation();
                           handleEditClick(deliverable, index);
                         }}
@@ -3629,8 +3629,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <input
                     type="text"
                     value={newDeliverable}
-                    onChange={(e) => setNewDeliverable(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={(e: { target: { value: any; }; }) => setNewDeliverable(e.target.value)}
+                    onKeyDown={(e: { key: string; preventDefault: () => void; }) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         handleAddDeliverable();
@@ -3698,7 +3698,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveSector = (sector: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.sectors = newSuggestions.sectors.filter(s => s !== sector);
+          newSuggestions.sectors = newSuggestions.sectors.filter((s: string) => s !== sector);
           setSuggestions(newSuggestions);
         };
 
@@ -3728,7 +3728,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {selected.length > 0 && (
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                  {selected.map(sector => (
+                  {selected.map((sector: string) => (
                     <span
                       key={sector}
                       className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
@@ -3759,7 +3759,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           if (!value) return;
 
           // Find the activity by label and get its ID
-          const selectedActivity = activities.find(activity => activity.label === value);
+          const selectedActivity = activities.find((activity: { label: any; }) => activity.label === value);
           if (!selectedActivity) {
             console.error('❌ Activity not found:', value);
             return;
@@ -3777,12 +3777,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveActivity = (activity: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.activities = newSuggestions.activities.filter(a => a !== activity);
+          newSuggestions.activities = newSuggestions.activities.filter((a: string) => a !== activity);
           setSuggestions(newSuggestions);
         };
 
         const selected = suggestions.activities || [];
-        const available = activities.filter(activity => !selected.includes(activity.value));
+        const available = activities.filter((activity: { value: any; }) => !selected.includes(activity.value));
 
         return (
           <div className="space-y-4">
@@ -3804,7 +3804,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 onChange={handleAddActivity}
               >
                 <option value="" disabled>Select an activity...</option>
-                {available.map(activity => (
+                {available.map((activity: { value: any; label: any; }) => (
                   <option key={activity.value} value={activity.label}>{activity.label}</option>
                 ))}
               </select>
@@ -3819,7 +3819,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {/* Available activities */}
             {selected.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                {selected.map(activityId => {
+                {selected.map((activityId: string) => {
                   const activityName = getActivityNameById(activityId);
                   return activityName ? (
                     <span
@@ -3852,7 +3852,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           if (!value) return;
 
           // Find the industry by label and get its ID
-          const selectedIndustry = industries.find(industry => industry.label === value);
+          const selectedIndustry = industries.find((industry: { label: any; }) => industry.label === value);
           if (!selectedIndustry) {
             console.error('❌ Industry not found:', value);
             return;
@@ -3870,12 +3870,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveIndustry = (industry: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.industries = newSuggestions.industries.filter(i => i !== industry);
+          newSuggestions.industries = newSuggestions.industries.filter((i: string) => i !== industry);
           setSuggestions(newSuggestions);
         };
 
         const selected = suggestions.industries || [];
-        const available = industries.filter(industry => !selected.includes(industry.value));
+        const available = industries.filter((industry: { value: any; }) => !selected.includes(industry.value));
 
         return (
           <div className="space-y-4">
@@ -3897,7 +3897,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 onChange={handleAddIndustry}
               >
                 <option value="" disabled>Select an industry...</option>
-                {available.map(industry => (
+                {available.map((industry: { value: any; label: any; }) => (
                   <option key={industry.value} value={industry.label}>{industry.label}</option>
                 ))}
               </select>
@@ -3912,7 +3912,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {/* Selected badges - displayed below the select */}
             {selected.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-                {selected.map(industryId => {
+                {selected.map((industryId: string) => {
                   const industryName = getIndustryNameById(industryId);
                   return industryName ? (
                     <span
@@ -3955,7 +3955,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         const handleRemoveFlexibility = (option: string) => {
           const newSuggestions = { ...suggestions };
-          newSuggestions.schedule.flexibility = newSuggestions.schedule.flexibility.filter(f => f !== option);
+          newSuggestions.schedule.flexibility = newSuggestions.schedule.flexibility.filter((f: string) => f !== option);
           setSuggestions(newSuggestions);
         };
 
@@ -3984,7 +3984,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {/* Badges sélectionnés - displayed below the select */}
             {selected.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
-                {selected.map(option => (
+                {selected.map((option: string) => (
                   <span key={option} className="group relative flex items-center bg-purple-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
                     {option}
                     <button
@@ -4045,7 +4045,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </label>
                 <select
                   value={suggestions.seniority?.level || ""}
-                  onChange={(e) => handleSeniorityLevelChange(e.target.value)}
+                  onChange={(e: { target: { value: string; }; }) => handleSeniorityLevelChange(e.target.value)}
                   className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
                   <option value="">Select level...</option>
@@ -4063,7 +4063,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <input
                   type="number"
                   value={suggestions.seniority?.yearsExperience || ""}
-                  onChange={(e) => handleYearsExperienceChange(e.target.value)}
+                  onChange={(e: { target: { value: string; }; }) => handleYearsExperienceChange(e.target.value)}
                   placeholder="e.g. 5"
                   className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
@@ -4086,7 +4086,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="mb-8">
             <textarea
               value={suggestions.description || ""}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
+              onChange={(e: { target: { value: string; }; }) => handleDescriptionChange(e.target.value)}
               placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
               rows={8}
               className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
@@ -4192,12 +4192,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             value={(() => {
                               const currentVal = typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency;
                               // If currentVal matches an ID in the list, use it
-                              if (currencies.some(c => c._id === currentVal)) return currentVal;
+                              if (currencies.some((c: { _id: any; }) => c._id === currentVal)) return currentVal;
                               // If not, try to find a currency with this code
-                              const matchingCurrency = currencies.find(c => c.code === currentVal);
+                              const matchingCurrency = currencies.find((c: { code: any; }) => c.code === currentVal);
                               return matchingCurrency ? matchingCurrency._id : (currentVal || getDefaultCurrencyId());
                             })()}
-                            onChange={(e) =>
+                            onChange={(e: { target: { value: any; }; }) =>
                               updateCommissionOption(
                                 0,
                                 "currency",
@@ -4208,7 +4208,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all"
                           >
                             <option value="">Select currency...</option>
-                            {currencies.map((currency) => (
+                            {currencies.map((currency: { _id: any; symbol: any; name: any; code: any; }) => (
                               <option key={currency._id} value={currency._id}>
                                 {currency.symbol} {currency.name} ({currency.code})
                               </option>
@@ -4241,7 +4241,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               step="0.01"
                               min="0"
                               value={option.commission_per_call || option.baseAmount || ""}
-                              onChange={(e) => {
+                              onChange={(e: { target: { value: string | number; }; }) => {
                                 updateCommissionOption(
                                   0,
                                   "commission_per_call",
@@ -4275,7 +4275,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               step="0.01"
                               min="0"
                               value={typeof option.transactionCommission === 'object' ? (option.transactionCommission as any).amount : option.transactionCommission || ""}
-                              onChange={(e) => {
+                              onChange={(e: { target: { value: string | number; }; }) => {
                                 updateCommissionOption(
                                   0,
                                   "transactionCommission",
@@ -4315,7 +4315,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                     ? parseFloat(option.bonusAmount)
                                     : ""
                               }
-                              onChange={(e) =>
+                              onChange={(e: { target: { value: string | number; }; }) =>
                                 updateCommissionOption(
                                   0,
                                   "bonusAmount",
@@ -4356,7 +4356,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   ? option.minimumVolume.amount
                                   : parseFloat(option.minimumVolume?.amount) || ""
                               }
-                              onChange={(e) =>
+                              onChange={(e: { target: { value: string | number; }; }) =>
                                 updateCommissionOption(
                                   0,
                                   "minimumVolume.amount",
@@ -4370,7 +4370,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
                           <select
                             value={option.minimumVolume?.period || ""}
-                            onChange={(e) =>
+                            onChange={(e: { target: { value: string | number; }; }) =>
                               updateCommissionOption(
                                 0,
                                 "minimumVolume.period",
@@ -4403,7 +4403,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
                         <textarea
                           value={option.additionalDetails || ""}
-                          onChange={(e) =>
+                          onChange={(e: { target: { value: string | number; }; }) =>
                             updateCommissionOption(
                               0,
                               "additionalDetails",
@@ -4480,7 +4480,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           switch (skillType) {
             case "languages":
               // Find the language by ID to get the code
-              const selectedLanguage = languages.find(l => l.value === skill);
+              const selectedLanguage = languages.find((l: { value: string; }) => l.value === skill);
               if (selectedLanguage) {
                 const newLanguage: any = {
                   language: selectedLanguage.value, // Store ID
@@ -4549,7 +4549,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             case "languages":
               if (field === "language") {
                 // Find the language by ID to get the code
-                const selectedLanguage = languages.find(l => l.value === value);
+                const selectedLanguage = languages.find((l: { value: string | number; }) => l.value === value);
                 if (selectedLanguage) {
                   newSuggestions.skills.languages[index].language = selectedLanguage.value; // Store ID
                   newSuggestions.skills.languages[index].iso639_1 = selectedLanguage.code; // Update code
@@ -4640,7 +4640,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           const currentItems = items || [];
 
           const handleShowAddInterface = () => {
-            setShowAddSkillInterface(prev => ({ ...prev, [skillType]: true }));
+            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: true }));
           };
 
           const handleConfirmAddSkill = () => {
@@ -4651,22 +4651,22 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             addSkill(skillType, skillId, selectedLevelToAdd[skillType], exactPos);
 
             // Reset states
-            setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
-            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
-            setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-            setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
+            setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
+            setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+            setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
           };
 
           const handleCancelAddSkill = () => {
-            setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
-            setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
-            setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-            setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+            setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
+            setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
+            setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+            setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
           };
 
           // Fonction pour commencer l'édition d'une compétence existante
           const handleStartEditSkill = (index: number) => {
-            setEditingSkill(prev => ({ ...prev, [skillType]: index }));
+            setEditingSkill((prev: any) => ({ ...prev, [skillType]: index }));
 
             // Pré-remplir le terme de recherche avec le nom actuel
             if (currentItems && currentItems[index]) {
@@ -4675,18 +4675,18 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
               if (skillType === 'languages') {
                 const languageItem = item as any;
-                const language = languages.find(l => l.value === languageItem.language);
+                const language = languages.find((l: { value: any; }) => l.value === languageItem.language);
                 skillName = language?.label || '';
               } else {
                 const skillItem = item as any;
                 // Utiliser la liste complète selon le type de compétence
                 let allSkills: any[] = [];
                 if (skillType === 'professional') {
-                  allSkills = professionalSkills.map(s => ({ id: s._id, name: s.name }));
+                  allSkills = professionalSkills.map((s: { _id: any; name: any; }) => ({ id: s._id, name: s.name }));
                 } else if (skillType === 'technical') {
-                  allSkills = technicalSkills.map(s => ({ id: s._id, name: s.name }));
+                  allSkills = technicalSkills.map((s: { _id: any; name: any; }) => ({ id: s._id, name: s.name }));
                 } else if (skillType === 'soft') {
-                  allSkills = softSkills.map(s => ({ id: s._id, name: s.name }));
+                  allSkills = softSkills.map((s: { _id: any; name: any; }) => ({ id: s._id, name: s.name }));
                 }
 
                 const skillId = typeof skillItem.skill === 'string'
@@ -4713,7 +4713,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   ...currentLanguage,
                   language: newSkillId
                 };
-                setSuggestions(prev => prev ? ({
+                setSuggestions((prev: { skills: any; }) => prev ? ({
                   ...prev,
                   skills: {
                     ...prev.skills,
@@ -4729,7 +4729,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   ...updatedSkills[index],
                   skill: newSkillId
                 };
-                setSuggestions(prev => prev ? ({
+                setSuggestions((prev: { skills: any; }) => prev ? ({
                   ...prev,
                   skills: {
                     ...prev.skills,
@@ -4740,12 +4740,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             }
 
             // Reset editing state
-            setEditingSkill(prev => ({ ...prev, [skillType]: null }));
+            setEditingSkill((prev: any) => ({ ...prev, [skillType]: null }));
           };
 
           // Fonction pour annuler l'édition
           const handleCancelEditSkill = () => {
-            setEditingSkill(prev => ({ ...prev, [skillType]: null }));
+            setEditingSkill((prev: any) => ({ ...prev, [skillType]: null }));
           };
 
 
@@ -4810,7 +4810,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             switch (skillType) {
               case "languages":
                 return languages
-                  .filter(lang => {
+                  .filter((lang: { value: any; }) => {
                     // Si on édite un élément, inclure l'élément actuel
                     if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].language === lang.value) {
                       return true;
@@ -4818,10 +4818,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     // Sinon, exclure les éléments déjà sélectionnés
                     return !currentItems.some(item => item.language === lang.value);
                   })
-                  .map(lang => ({ id: lang.value, name: lang.label }));
+                  .map((lang: { value: any; label: any; }) => ({ id: lang.value, name: lang.label }));
               case "professional":
                 return professionalSkills
-                  .filter(skill => {
+                  .filter((skill: { _id: any; }) => {
                     // Si on édite un élément, inclure l'élément actuel
                     if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
                       const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
@@ -4840,10 +4840,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       return skillId === skill._id;
                     });
                   })
-                  .map(skill => ({ id: skill._id, name: skill.name }));
+                  .map((skill: { _id: any; name: any; }) => ({ id: skill._id, name: skill.name }));
               case "technical":
                 return technicalSkills
-                  .filter(skill => {
+                  .filter((skill: { _id: any; }) => {
                     // Si on édite un élément, inclure l'élément actuel
                     if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
                       const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
@@ -4862,10 +4862,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       return skillId === skill._id;
                     });
                   })
-                  .map(skill => ({ id: skill._id, name: skill.name }));
+                  .map((skill: { _id: any; name: any; }) => ({ id: skill._id, name: skill.name }));
               case "soft":
                 return softSkills
-                  .filter(skill => {
+                  .filter((skill: { _id: any; }) => {
                     // Si on édite un élément, inclure l'élément actuel
                     if (editingIndex !== undefined && currentItems[editingIndex] && currentItems[editingIndex].skill) {
                       const currentSkillId = typeof currentItems[editingIndex].skill === 'string'
@@ -4884,7 +4884,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       return skillId === skill._id;
                     });
                   })
-                  .map(skill => ({ id: skill._id, name: skill.name }));
+                  .map((skill: { _id: any; name: any; }) => ({ id: skill._id, name: skill.name }));
               default:
                 return [];
             }
@@ -5073,12 +5073,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                       return skillId;
                                     }
                                   })()}
-                                  onChange={(e) => {
+                                  onChange={(e: { target: { value: string; }; }) => {
                                     if (e.target.value) {
                                       handleConfirmEditSkill(index, e.target.value);
                                     }
                                   }}
-                                  onKeyDown={(e) => {
+                                  onKeyDown={(e: { key: string; }) => {
                                     if (e.key === 'Escape') {
                                       handleCancelEditSkill();
                                     }
@@ -5092,7 +5092,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                         skillType === 'technical' ? 'Select a technical skill...' :
                                           'Select a soft skill...'}
                                   </option>
-                                  {editSkillOptions.map(option => (
+                                  {editSkillOptions.map((option: { id: any; name: any; }) => (
                                     <option key={option.id} value={option.id}>
                                       {option.name}
                                     </option>
@@ -5192,7 +5192,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                 </div>
                                 <div
                                   className="absolute inset-0 h-2 cursor-pointer"
-                                  onClick={(e) => {
+                                  onClick={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     const clickX = e.clientX - rect.left;
                                     const percentage = (clickX / rect.width) * 100;
@@ -5222,19 +5222,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                       updateSkill(skillType, index, 'level', level, percentage);
                                     }
                                   }}
-                                  onMouseMove={(e) => {
+                                  onMouseMove={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     const mouseX = e.clientX - rect.left;
                                     const percentage = (mouseX / rect.width) * 100;
 
-                                    setHoveredExistingLevel(prev => ({
+                                    setHoveredExistingLevel((prev: { [x: string]: any; }) => ({
                                       ...prev,
                                       [skillType]: { ...prev[skillType], [index]: Math.round(percentage) }
                                     }));
                                   }}
-                                  onMouseLeave={(e) => {
+                                  onMouseLeave={(e: any) => {
                                     // Reset le hover seulement (pas de sauvegarde automatique)
-                                    setHoveredExistingLevel(prev => ({
+                                    setHoveredExistingLevel((prev: { [x: string]: any; }) => ({
                                       ...prev,
                                       [skillType]: { ...prev[skillType], [index]: null }
                                     }));
@@ -5303,7 +5303,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     {/* Interface d'ajout intégrée dans la grille */}
                     {!skillsLoading && showAddSkillInterface[skillType] && (
                       <div
-                        ref={(el) => { addInterfaceRefs.current[skillType] = el; }}
+                        ref={(el: any) => { addInterfaceRefs.current[skillType] = el; }}
                         className={`group relative ${colors.bg} ${colors.text} text-sm font-medium p-3 rounded-xl border ${colors.border} ${colors.shadow} ${colors.hover} transition-all duration-300 h-14 flex items-center transform hover:scale-[1.02]`}
                       >
                         {/* 3 equal columns layout: Selector - Progress bar - Level */}
@@ -5312,8 +5312,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <div className="flex items-center">
                             <select
                               value={selectedSkillToAdd[skillType] || ''}
-                              onChange={(e) => {
-                                setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: e.target.value }));
+                              onChange={(e: { target: { value: string; }; }) => {
+                                setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: e.target.value }));
                                 // Sauvegarder automatiquement dès la sélection
                                 if (e.target.value) {
                                   // Utiliser le niveau par défaut et la position par défaut
@@ -5322,10 +5322,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   addSkill(skillType, e.target.value, defaultLevel, defaultPosition);
 
                                   // Reset states après ajout
-                                  setShowAddSkillInterface(prev => ({ ...prev, [skillType]: false }));
-                                  setSelectedSkillToAdd(prev => ({ ...prev, [skillType]: '' }));
-                                  setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
-                                  setSelectedExactPosition(prev => ({ ...prev, [skillType]: undefined }));
+                                  setShowAddSkillInterface((prev: any) => ({ ...prev, [skillType]: false }));
+                                  setSelectedSkillToAdd((prev: any) => ({ ...prev, [skillType]: '' }));
+                                  setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: skillType === "languages" ? 2 : 1 }));
+                                  setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: undefined }));
                                 }
                               }}
                               className={`w-full px-1 py-0.5 text-xs border ${colors.border} rounded bg-white transition-all duration-200`}
@@ -5336,7 +5336,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                     skillType === "technical" ? "Select a technical skill..." :
                                       "Select a soft skill..."}
                               </option>
-                              {skillOptions.map(option => (
+                              {skillOptions.map((option: { id: any; name: any; }) => (
                                 <option key={option.id} value={option.id}>
                                   {option.name}
                                 </option>
@@ -5411,13 +5411,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               </div>
                               <div
                                 className="absolute inset-0 h-2 cursor-pointer"
-                                onClick={(e) => {
+                                onClick={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
                                   const rect = e.currentTarget.getBoundingClientRect();
                                   const clickX = e.clientX - rect.left;
                                   const percentage = (clickX / rect.width) * 100;
 
                                   // Stocker la position exacte du clic
-                                  setSelectedExactPosition(prev => ({ ...prev, [skillType]: percentage }));
+                                  setSelectedExactPosition((prev: any) => ({ ...prev, [skillType]: percentage }));
 
                                   if (skillType === "languages") {
                                     // 6 zones : 0-16.67%, 16.67-33.33%, 33.33-50%, 50-66.67%, 66.67-83.33%, 83.33-100%
@@ -5429,7 +5429,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                     else if (percentage >= 16.67) levelIndex = 1; // A2
                                     else levelIndex = 0; // A1
 
-                                    setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: levelIndex }));
+                                    setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: levelIndex }));
                                   } else {
                                     // 5 zones : 0-20%, 20-40%, 40-60%, 60-80%, 80-100%
                                     let level = 1;
@@ -5439,21 +5439,21 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                     else if (percentage >= 20) level = 2;
                                     else level = 1;
 
-                                    setSelectedLevelToAdd(prev => ({ ...prev, [skillType]: level }));
+                                    setSelectedLevelToAdd((prev: any) => ({ ...prev, [skillType]: level }));
                                   }
 
                                   // Note: La compétence est déjà ajoutée dès la sélection dans le dropdown
                                 }}
-                                onMouseMove={(e) => {
+                                onMouseMove={(e: { currentTarget: { getBoundingClientRect: () => any; }; clientX: number; }) => {
                                   const rect = e.currentTarget.getBoundingClientRect();
                                   const mouseX = e.clientX - rect.left;
                                   const percentage = (mouseX / rect.width) * 100;
 
-                                  setHoveredLevel(prev => ({ ...prev, [skillType]: Math.round(percentage) }));
+                                  setHoveredLevel((prev: any) => ({ ...prev, [skillType]: Math.round(percentage) }));
                                 }}
-                                onMouseLeave={(e) => {
+                                onMouseLeave={(e: any) => {
                                   // Reset le hover seulement (pas de sauvegarde automatique)
-                                  setHoveredLevel(prev => ({ ...prev, [skillType]: null }));
+                                  setHoveredLevel((prev: any) => ({ ...prev, [skillType]: null }));
                                 }}
                               />
                             </div>
@@ -5575,7 +5575,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           };
 
           newSuggestions.team.structure.push(newRole);
-          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum: any, role: { count: any; } | null) => {
             const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
             return sum + roleCount;
           }, 0);
@@ -5658,7 +5658,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           }
 
           // Recalculate total team size
-          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum: any, role: { count: any; } | null) => {
             const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
             return sum + roleCount;
           }, 0);
@@ -5670,7 +5670,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           if (!newSuggestions.team) return;
 
           newSuggestions.team.structure.splice(index, 1);
-          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum, role) => {
+          newSuggestions.team.size = newSuggestions.team.structure.reduce((sum: any, role: { count: any; } | null) => {
             const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
             return sum + roleCount;
           }, 0);
@@ -5711,7 +5711,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           const newSuggestions = { ...suggestions };
           if (newSuggestions.team && newSuggestions.team.territories) {
             newSuggestions.team.territories = newSuggestions.team.territories.filter(
-              (territory) => territory !== territoryToRemove
+              (territory: string) => territory !== territoryToRemove
             );
             setSuggestions(newSuggestions);
           }
@@ -5742,7 +5742,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
               {suggestions.team?.structure && suggestions.team.structure.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                  {suggestions.team.structure.map((role, index) => {
+                  {suggestions.team.structure.map((role: { roleId: any; count: any; seniority: { level: any; yearsExperience: any; }; } | null, index: number) => {
                     // Handle case where role might be a string
                     const roleId = typeof role === 'string' ? role : (role?.roleId || 'Agent');
                     const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
@@ -5771,7 +5771,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             </label>
                             <select
                               value={roleId}
-                              onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
+                              onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "roleId", e.target.value)}
                               className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                             >
                               {TEAM_ROLES.map((teamRole) => (
@@ -5790,7 +5790,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               type="number"
                               min="1"
                               value={roleCount}
-                              onChange={(e) => updateTeamRole(index, "count", e.target.value)}
+                              onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "count", e.target.value)}
                               className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                             />
                           </div>
@@ -5802,7 +5802,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                               </label>
                               <select
                                 value={seniorityLevel}
-                                onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
+                                onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "seniority.level", e.target.value)}
                                 className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                               >
                                 {predefinedOptions.basic.seniorityLevels.map((level) => (
@@ -5822,7 +5822,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                 min="0"
                                 max="50"
                                 value={yearsExperience}
-                                onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
+                                onChange={(e: { target: { value: string | number; }; }) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
                                 placeholder="e.g. 3"
                                 className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                               />
@@ -5862,7 +5862,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               </div>
 
               <select
-                onChange={(e) => {
+                onChange={(e: { target: { value: string; }; }) => {
                   if (e.target.value) {
                     addTerritory(e.target.value);
                     e.target.value = ""; // Reset select
@@ -5887,7 +5887,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               {/* Territories badges - displayed below the select */}
               {suggestions.team?.territories && suggestions.team.territories.length > 0 && (
                 <div className="flex flex-wrap gap-1 pt-1 border-t border-blue-200">
-                  {suggestions.team.territories.map((territory) => (
+                  {suggestions.team.territories.map((territory: string) => (
                     <span
                       key={territory}
                       className="group relative flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-medium pl-2 pr-1 py-1 rounded-full cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-colors"
@@ -6251,5 +6251,5 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
       );
     };
-
-
+  }
+}
