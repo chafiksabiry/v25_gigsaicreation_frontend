@@ -2346,8 +2346,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       field: "start" | "end",
       value: string
     ) => {
-      // Prevent End < Start
-      if (field === "end" && value < group.hours.start) return;
+      // Allow free typing, validation happens later
+      // if (field === "end" && value < group.hours.start) return;
 
       const newSuggestions = JSON.parse(JSON.stringify(suggestions));
 
@@ -2415,8 +2415,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     };
 
     const handleEmptyScheduleHoursChange = (emptySchedule: ScheduleEntry, field: "start" | "end", value: string) => {
-      // Prevent End < Start
-      if (field === "end" && value < emptySchedule.hours.start) return;
+      // Allow free typing, validation happens on save/confirm if needed
+      // if (field === "end" && value < emptySchedule.hours.start) return;
 
       const newSuggestions = JSON.parse(JSON.stringify(suggestions));
       const scheduleIndex = newSuggestions.schedule.schedules.findIndex(
