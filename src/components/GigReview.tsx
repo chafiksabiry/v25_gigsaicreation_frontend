@@ -524,8 +524,12 @@ export function GigReview({
                       {(() => {
                         // Use safe access or fallback for currencies
                         const currencies = (predefinedOptions.commission as any)?.currencies || [];
-                        const curr = data.commission.currency ? currencies.find((c: any) => c.code === data.commission.currency || c._id === data.commission.currency) : null;
-                        return curr ? `${curr.symbol} ${curr.name} (${curr.code})` : (data.commission.currency || 'Not selected');
+                        const currencyVal = data.commission.currency;
+                        // Extract ID if it's an object
+                        const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
+
+                        const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
+                        return curr ? `${curr.symbol} ${curr.name} (${curr.code})` : (typeof currencyId === 'string' ? currencyId : 'Not selected');
                       })()}
                     </div>
                   </div>
@@ -546,7 +550,15 @@ export function GigReview({
                     <div className="relative">
                       <div className="w-full px-4 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center">
                         {data.commission.commission_per_call || 0}
-                        <span className="ml-1 text-green-600 text-lg">{getCurrencySymbol()}</span>
+                        <span className="ml-1 text-green-600 text-lg">
+                          {(() => {
+                            const currencies = (predefinedOptions.commission as any)?.currencies || [];
+                            const currencyVal = data.commission.currency;
+                            const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
+                            const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
+                            return curr?.symbol || '$';
+                          })()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -565,7 +577,15 @@ export function GigReview({
                     <div className="relative">
                       <div className="w-full px-4 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center">
                         {data.commission.transactionCommission || 0}
-                        <span className="ml-1 text-purple-600 text-lg">{getCurrencySymbol()}</span>
+                        <span className="ml-1 text-purple-600 text-lg">
+                          {(() => {
+                            const currencies = (predefinedOptions.commission as any)?.currencies || [];
+                            const currencyVal = data.commission.currency;
+                            const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
+                            const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
+                            return curr?.symbol || '$';
+                          })()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -584,7 +604,15 @@ export function GigReview({
                     <div className="relative">
                       <div className="w-full px-4 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center">
                         {data.commission.bonusAmount || 0}
-                        <span className="ml-1 text-amber-600 text-lg">{getCurrencySymbol()}</span>
+                        <span className="ml-1 text-amber-600 text-lg">
+                          {(() => {
+                            const currencies = (predefinedOptions.commission as any)?.currencies || [];
+                            const currencyVal = data.commission.currency;
+                            const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
+                            const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
+                            return curr?.symbol || '$';
+                          })()}
+                        </span>
                       </div>
                     </div>
                   </div>
