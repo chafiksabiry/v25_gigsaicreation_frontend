@@ -183,11 +183,13 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
 
             <select
-              value={
-                typeof data?.commission?.currency === 'object' && (data?.commission?.currency as any)?.$oid
-                  ? (data?.commission?.currency as any).$oid
-                  : data?.commission?.currency || ''
-              }
+              value={(() => {
+                const val = data?.commission?.currency;
+                if (typeof val === 'object' && (val as any)?.$oid) {
+                  return (val as any).$oid;
+                }
+                return val || '';
+              })()}
               onChange={(e) => onChange({
                 ...data,
                 commission: {

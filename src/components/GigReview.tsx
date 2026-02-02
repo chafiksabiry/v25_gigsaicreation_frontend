@@ -505,162 +505,96 @@ export function GigReview({
               <DollarSign className="w-6 h-6 text-gray-600" />,
               <div className="space-y-8">
 
-                {/* Commission Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl p-6 border border-blue-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
 
-                  {/* Currency Card */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                        <DollarSign className="w-6 h-6 text-white" />
+                    {/* Currency */}
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-blue-100/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                          <DollarSign className="w-5 h-5" />
+                        </div>
+                        <span className="text-gray-600 font-medium">Currency</span>
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-bold text-gray-900">Currency</h3>
-                        <p className="text-sm text-gray-500">Base currency for payments</p>
-                      </div>
+                      <span className="font-bold text-gray-900">
+                        {(() => {
+                          const currencies = (predefinedOptions.commission as any)?.currencies || [];
+                          const currencyVal = data.commission.currency;
+                          const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
+                          const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
+                          return curr ? `${curr.code}` : (typeof currencyId === 'string' ? currencyId : '-');
+                        })()}
+                      </span>
                     </div>
-                    <div className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold flex items-center justify-center text-center">
-                      {/* Display Currency Name */}
-                      {(() => {
-                        // Use safe access or fallback for currencies
-                        const currencies = (predefinedOptions.commission as any)?.currencies || [];
-                        const currencyVal = data.commission.currency;
-                        // Extract ID if it's an object
-                        const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
 
-                        const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
-                        return curr ? `${curr.symbol} ${curr.name} (${curr.code})` : (typeof currencyId === 'string' ? currencyId : 'Not selected');
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Per call compensation Card */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                    {/* Per call */}
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-green-100/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg text-green-600">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        </div>
+                        <span className="text-gray-600 font-medium">Per Call</span>
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-bold text-gray-900">Per call compensation</h3>
-                        <p className="text-sm text-gray-500">Amount per completed call</p>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full px-4 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center">
+                      <span className="font-bold text-gray-900">
                         {data.commission.commission_per_call || 0}
-                        <span className="ml-1 text-green-600 text-lg">
-                          {(() => {
-                            const currencies = (predefinedOptions.commission as any)?.currencies || [];
-                            const currencyVal = data.commission.currency;
-                            const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
-                            const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
-                            return curr?.symbol || '$';
-                          })()}
+                        <span className="ml-1 text-gray-500 text-sm">
+                          {getCurrencySymbol()}
                         </span>
-                      </div>
+                      </span>
                     </div>
-                  </div>
 
-                  {/* Transaction Commission Card */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                        <Coins className="w-6 h-6 text-white" />
+                    {/* Transaction */}
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-purple-100/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                          <Coins className="w-5 h-5" />
+                        </div>
+                        <span className="text-gray-600 font-medium">Transaction</span>
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-bold text-gray-900">Transaction Commission</h3>
-                        <p className="text-sm text-gray-500">Commission per transaction</p>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full px-4 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center">
+                      <span className="font-bold text-gray-900">
                         {data.commission.transactionCommission || 0}
-                        <span className="ml-1 text-purple-600 text-lg">
-                          {(() => {
-                            const currencies = (predefinedOptions.commission as any)?.currencies || [];
-                            const currencyVal = data.commission.currency;
-                            const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
-                            const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
-                            return curr?.symbol || '$';
-                          })()}
+                        <span className="ml-1 text-gray-500 text-sm">
+                          {getCurrencySymbol()}
                         </span>
-                      </div>
+                      </span>
                     </div>
-                  </div>
 
-                  {/* Bonus & Incentives Card */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                        <Star className="w-6 h-6 text-white" />
+                    {/* Bonus */}
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-amber-100/50">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                          <Star className="w-5 h-5" />
+                        </div>
+                        <span className="text-gray-600 font-medium">Bonus</span>
                       </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-bold text-gray-900">Bonus & Incentives</h3>
-                        <p className="text-sm text-gray-500">Performance bonus amount</p>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full px-4 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center">
+                      <span className="font-bold text-gray-900">
                         {data.commission.bonusAmount || 0}
-                        <span className="ml-1 text-amber-600 text-lg">
-                          {(() => {
-                            const currencies = (predefinedOptions.commission as any)?.currencies || [];
-                            const currencyVal = data.commission.currency;
-                            const currencyId = (typeof currencyVal === 'object' && currencyVal?.$oid) ? currencyVal.$oid : currencyVal;
-                            const curr = currencyId ? currencies.find((c: any) => c.code === currencyId || c._id === currencyId) : null;
-                            return curr?.symbol || '$';
-                          })()}
+                        <span className="ml-1 text-gray-500 text-sm">
+                          {getCurrencySymbol()}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Minimum Volume */}
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-orange-100/50 col-span-1 md:col-span-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                          <Target className="w-5 h-5" />
+                        </div>
+                        <span className="text-gray-600 font-medium">Min. Volume</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 text-lg">
+                          {data?.commission?.minimumVolume?.amount || 0}
+                        </span>
+                        <span className="text-gray-500 text-sm bg-gray-100 px-2 py-0.5 rounded">
+                          {data?.commission?.minimumVolume?.period || 'Period'}
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                </div>
-
-                {/* Minimum Volume Requirements Section */}
-                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                  <div className="flex items-center mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
-                      <Target className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-bold text-gray-900">Minimum Volume Requirements</h3>
-                      <p className="text-sm text-gray-500">Set minimum performance thresholds</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center flex items-center justify-center gap-2">
-                      <span className="text-2xl font-bold">{data?.commission?.minimumVolume?.amount || 0}</span>
-                      <span>{data?.commission?.minimumVolume?.unit || 'Units'}</span>
-                    </div>
-                    <div className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center flex items-center justify-center">
-                      per {data?.commission?.minimumVolume?.period || 'Period'}
-                    </div>
                   </div>
                 </div>
-
-                {/* Additional Details Section */}
-                {data?.commission?.additionalDetails && (
-                  <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                    <div className="flex items-center mb-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-gray-500 to-slate-600 rounded-xl flex items-center justify-center shadow-md">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <div className="ml-4">
-                        <h3 className="text-lg font-bold text-gray-900">Additional Details</h3>
-                        <p className="text-sm text-gray-500">Terms, conditions and special notes</p>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl text-gray-700 whitespace-pre-wrap">
-                      {data.commission.additionalDetails}
-                    </div>
-                  </div>
-                )}
 
               </div>
             )}
