@@ -133,14 +133,48 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
   const allDaysSelected = allWeekDays.every(day => selectedDays.includes(day));
 
   const addNewScheduleGroup = () => {
+    const currentSchedules = data.schedules || [];
+
+    // 1. Find first available day
+    const currentSelectedDays = currentSchedules
+      .filter(schedule => schedule.day && schedule.day.trim() !== "")
+      .map(schedule => schedule.day);
+
+    const firstAvailableDay = allWeekDays.find(day => !currentSelectedDays.includes(day));
+
+    if (!firstAvailableDay) {
+      return;
+    }
+
+    // 2. Find unique hours to avoid auto-merging with existing groups
+    let startHour = 9;
+    let endHour = 17;
+
+    const isHoursTaken = (s: number, e: number) => {
+      const sStr = `${s.toString().padStart(2, '0')}:00`;
+      const eStr = `${e.toString().padStart(2, '0')}:00`;
+      return currentSchedules.some(sch => sch.hours.start === sStr && sch.hours.end === eStr);
+    };
+
+    // Try to find a free slot (up to 12 attempts to shift by hour)
+    let attempts = 0;
+    while (isHoursTaken(startHour, endHour) && attempts < 12) {
+      startHour = (startHour + 1) % 24;
+      endHour = (endHour + 1) % 24;
+      attempts++;
+    }
+
     const newSchedule: DaySchedule = {
-      day: "", // Empty day will be filled when user selects days
-      hours: { start: "09:00", end: "17:00" },
+      day: firstAvailableDay,
+      hours: {
+        start: `${startHour.toString().padStart(2, '0')}:00`,
+        end: `${endHour.toString().padStart(2, '0')}:00`
+      },
     };
 
     onChange({
       ...data,
-      schedules: [...data.schedules, newSchedule]
+      schedules: [...currentSchedules, newSchedule]
     });
   };
 
