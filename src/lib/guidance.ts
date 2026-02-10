@@ -59,14 +59,9 @@ export const predefinedOptions = {
       'Multilingual Support'
     ],
     seniorityLevels: [
-      'Entry Level',
-      'Junior',
-      'Mid-Level',
-      'Senior',
-      'Team Lead',
-      'Supervisor',
-      'Manager',
-      'Director'
+      'Agent Senior',
+      'Agent',
+      'Agent Junior',
     ],
     timeZones: [
       'New York (EST/EDT)',
@@ -167,74 +162,19 @@ export const predefinedOptions = {
   team: {
     roles: [
       {
-        id: 'team_lead',
-        name: 'Team Lead',
-        description: 'Manages team performance and provides guidance'
-      },
-      {
-        id: 'agent_senior',
+        id: 'Agent Senior',
         name: 'Agent Senior',
         description: 'Experienced agent with advanced skills and mentoring capabilities'
       },
       {
-        id: 'agent',
+        id: 'Agent',
         name: 'Agent',
         description: 'Handles customer interactions and core responsibilities'
       },
       {
-        id: 'agent_junior',
+        id: 'Agent Junior',
         name: 'Agent Junior',
         description: 'Entry-level agent with basic responsibilities and learning focus'
-      },
-      {
-        id: 'supervisor',
-        name: 'Supervisor',
-        description: 'Oversees operations and ensures quality standards'
-      },
-      {
-        id: 'manager',
-        name: 'Manager',
-        description: 'Strategic planning and team development'
-      },
-      {
-        id: 'coordinator',
-        name: 'Coordinator',
-        description: 'Coordinates activities and communication'
-      },
-      {
-        id: 'specialist',
-        name: 'Specialist',
-        description: 'Expert in specific areas or processes'
-      },
-      {
-        id: 'consultant',
-        name: 'Consultant',
-        description: 'Provides expert advice and strategic guidance'
-      },
-      {
-        id: 'representative',
-        name: 'Representative',
-        description: 'Represents the company in customer interactions'
-      },
-      {
-        id: 'associate',
-        name: 'Associate',
-        description: 'Supports team operations and projects'
-      },
-      {
-        id: 'assistant',
-        name: 'Assistant',
-        description: 'Provides support and administrative tasks'
-      },
-      {
-        id: 'trainee',
-        name: 'Trainee',
-        description: 'Learning role with structured training program'
-      },
-      {
-        id: 'intern',
-        name: 'Intern',
-        description: 'Student or recent graduate gaining practical experience'
       }
     ],
     territories: [

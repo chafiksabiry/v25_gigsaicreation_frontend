@@ -186,20 +186,9 @@ const TRANSACTION_TYPES = [
 ];
 
 const TEAM_ROLES = [
-  "Team Lead",
   "Agent Senior",
   "Agent",
   "Agent Junior",
-  "Supervisor",
-  "Manager",
-  "Coordinator",
-  "Specialist",
-  "Consultant",
-  "Representative",
-  "Associate",
-  "Assistant",
-  "Trainee",
-  "Intern",
 ];
 
 // Territories will be loaded from API
