@@ -718,50 +718,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           )}
           {errors.destination_zone && <p className="mt-2 text-sm text-red-600">{errors.destination_zone.join(', ')}</p>}
         </div>
-
-        {/* --- Experience Level --- */}
-        <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <GraduationCap className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">Experience Level</h3>
-              <p className="text-sm text-gray-500">Define seniority and experience requirements</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Seniority Level</label>
-              <div className="flex items-center gap-2 relative mb-2">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <GraduationCap className="w-5 h-5 text-emerald-400" />
-                </span>
-                <select value={data.seniority?.level || ''} onChange={(e) => handleSeniorityChange('level', e.target.value)}
-                  className="mt-1 block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-gray-800 appearance-none transition-all">
-                  <option value="" disabled className="text-gray-400">Select seniority level</option>
-                  {predefinedOptions.basic.seniorityLevels.map(level => <option key={level} value={level} className="text-gray-800">{level}</option>)}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Years of Experience</label>
-              <input type="number" value={data.seniority?.yearsExperience || ''} onChange={(e) => handleSeniorityChange('years', e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white text-gray-800 placeholder-gray-400 py-2 px-4 transition-all"
-                placeholder="e.g., 2" />
-            </div>
-          </div>
-          {data.seniority?.level && (data.seniority?.yearsExperience || 0) > 0 && (
-            <div className="mt-4 flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-              <Brain className="h-5 w-5 text-emerald-600" />
-              <p className="text-sm font-medium text-gray-700">
-                {data.seniority.level}
-                <span className="mx-2 font-light text-gray-400">•</span>
-                {data.seniority.yearsExperience} years of experience
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Navigation Buttons */}

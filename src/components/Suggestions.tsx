@@ -5772,40 +5772,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
                         />
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs font-bold text-indigo-700 mb-1 block">
-                            Seniority Level
-                          </label>
-                          <select
-                            value={seniorityLevel}
-                            onChange={(e) => updateTeamRole(index, "seniority.level", e.target.value)}
-                            className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
-                          >
-                            {predefinedOptions.basic.seniorityLevels.map((level) => (
-                              <option key={level} value={level}>
-                                {level}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-bold text-indigo-700 mb-1 block">
-                            Years Experience
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="50"
-                            value={yearsExperience}
-                            onChange={(e) => updateTeamRole(index, "seniority.yearsExperience", e.target.value)}
-                            placeholder="e.g. 3"
-                            className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
-                          />
-                        </div>
-                      </div>
                     </div>
                   </div>
                 );

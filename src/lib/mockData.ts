@@ -134,7 +134,7 @@ export const MOCK_GIG_SUGGESTIONS: GigSuggestion = {
     size: 5,
     structure: [
       {
-        roleId: "Team Lead",
+        roleId: "Agent",
         count: 1,
         seniority: {
           level: "Senior-Level",
