@@ -172,8 +172,8 @@ export const predefinedOptions = {
         description: 'Manages team performance and provides guidance'
       },
       {
-        id: 'senior_agent',
-        name: 'Senior Agent',
+        id: 'agent_senior',
+        name: 'Agent Senior',
         description: 'Experienced agent with advanced skills and mentoring capabilities'
       },
       {
@@ -182,8 +182,8 @@ export const predefinedOptions = {
         description: 'Handles customer interactions and core responsibilities'
       },
       {
-        id: 'junior_agent',
-        name: 'Junior Agent',
+        id: 'agent_junior',
+        name: 'Agent Junior',
         description: 'Entry-level agent with basic responsibilities and learning focus'
       },
       {

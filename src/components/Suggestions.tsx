@@ -187,9 +187,9 @@ const TRANSACTION_TYPES = [
 
 const TEAM_ROLES = [
   "Team Lead",
-  "Senior Agent",
+  "Agent Senior",
   "Agent",
-  "Junior Agent",
+  "Agent Junior",
   "Supervisor",
   "Manager",
   "Coordinator",
@@ -383,9 +383,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   }, [showAddSkillInterface, selectedSkillToAdd, selectedLevelToAdd]);
 
 
-  // Helper function to get currency symbol by ID
+  // Helper function to get currency symbol by ID or code
   const getCurrencySymbol = (currencyId: string): string => {
-    const currency = currencies.find(c => c._id === currencyId);
+    if (!currencyId) return '€';
+    // Try to find by ID first, then by code (to handle potential ID mismatches)
+    const currency = currencies.find(c => c._id === currencyId || c.code === currencyId);
     return currency?.symbol || '€';
   };
 
@@ -393,7 +395,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   const getDefaultCurrencyId = (): string => {
     if (currencies.length === 0) return '';
     const eurCurrency = currencies.find(c => c.code === 'EUR');
-    return eurCurrency?._id || currencies[0]._id;
+    return eurCurrency?._id || currencies[0]?._id || '';
   };
 
 

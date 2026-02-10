@@ -86,7 +86,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   }, [data?.commission?.currency, currencies]);
 
   const getCurrencySymbol = () => {
-    return selectedCurrency?.symbol || '$';
+    return selectedCurrency?.symbol || '€';
   };
 
   // Log Commission Section data

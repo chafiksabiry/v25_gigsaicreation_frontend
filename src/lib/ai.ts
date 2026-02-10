@@ -89,7 +89,7 @@ export async function generateGigSuggestions(description: string): Promise<GigSu
           return {
             commission_per_call: rawCommission.baseAmount || 0, // Map baseAmount to commission_per_call
             bonusAmount: String(rawCommission.bonusAmount || "0"), // Convert to string
-            currency: { $oid: "68cae8918f8bb2a31a09b79f" }, // Default EUR ID as requested
+            currency: rawCommission.currency || null, // Let Suggestions.tsx set default if missing
             minimumVolume: {
               amount: String(rawCommission.minimumVolume?.amount || "0"), // Convert to string
               period: rawCommission.minimumVolume?.period || "Monthly",
