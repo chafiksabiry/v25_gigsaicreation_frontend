@@ -191,6 +191,7 @@ const TEAM_ROLES = [
   "Agent Senior",
   "Agent",
   "Agent Junior",
+  "Supervisor",
 ];
 
 // Territories will be loaded from API

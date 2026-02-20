@@ -56,7 +56,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
   // State for territories from API - now storing full country objects
   const [territoriesFromAPI, setTerritoriesFromAPI] = React.useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = React.useState(true);
-  const [territoryNames, setTerritoryNames] = React.useState<{[key: string]: string}>({});
+  const [territoryNames, setTerritoryNames] = React.useState<{ [key: string]: string }>({});
 
   // Fetch territories from API on component mount
   React.useEffect(() => {
@@ -64,9 +64,9 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
       try {
         const countries = await fetchAllCountries();
         setTerritoriesFromAPI(countries);
-        
+
         // Create a mapping of country IDs to names for quick lookup
-        const nameMapping: {[key: string]: string} = {};
+        const nameMapping: { [key: string]: string } = {};
         countries.forEach(country => {
           // If country.name is an object, try to use .common or .official, else fallback to string
           if (typeof country.name === 'string') {
@@ -78,7 +78,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
           }
         });
         setTerritoryNames(nameMapping);
-        
+
         setTerritoriesLoading(false);
       } catch (error) {
         console.error('Error fetching territories:', error);
@@ -171,7 +171,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
   const removeTerritory = (territoryToRemove: string) => {
     const currentTerritories = data.team?.territories || [];
     const updatedTerritories = currentTerritories.filter(territory => territory !== territoryToRemove);
-    
+
     const updatedData = {
       ...data,
       team: {
@@ -191,7 +191,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
       }
       return countryObj.name || 'Unknown Country';
     }
-    
+
     // Handle case where territoryId is a string ID
     return territoryNames[territoryId] || territoryId;
   };
@@ -200,7 +200,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
     <div className="w-full bg-white p-0">
       <div className="space-y-8">
         <div className="space-y-6 p-6 bg-gradient-to-br from-slate-50 via-white to-slate-50 rounded-2xl shadow-sm border border-slate-100">
-          
+
           {/* Team Structure Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className={`bg-gradient-to-r ${getHeaderGradient('blue')} px-6 py-4`}>
@@ -214,7 +214,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                     const roleCount = typeof role === 'object' && role !== null ? role.count : 1;
                     const seniorityLevel = typeof role === 'object' && role !== null ? (role.seniority?.level || 'Mid-Level') : 'Mid-Level';
                     const yearsExperience = typeof role === 'object' && role !== null ? (role.seniority?.yearsExperience || 3) : 3;
-                    
+
                     return (
                       <div
                         key={index}
@@ -302,8 +302,9 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                             <label className="block text-xs font-medium text-gray-700 mb-1">Seniority Level</label>
                             <select
                               value={seniorityLevel}
+                              disabled
                               onChange={(e) => updateTeamRole(index, 'seniority.level', e.target.value)}
-                              className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-3 py-2 text-sm bg-gray-100 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed opacity-70"
                             >
                               <option value="Junior">Junior</option>
                               <option value="Mid-Level">Mid-Level</option>
@@ -340,7 +341,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Add Territory</label>

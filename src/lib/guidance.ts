@@ -62,6 +62,7 @@ export const predefinedOptions = {
       'Agent Senior',
       'Agent',
       'Agent Junior',
+      'Supervisor',
     ],
     timeZones: [
       'New York (EST/EDT)',
@@ -175,6 +176,11 @@ export const predefinedOptions = {
         id: 'Agent Junior',
         name: 'Agent Junior',
         description: 'Entry-level agent with basic responsibilities and learning focus'
+      },
+      {
+        id: 'Supervisor',
+        name: 'Supervisor',
+        description: 'Oversees team operations and provides guidance'
       }
     ],
     territories: [
