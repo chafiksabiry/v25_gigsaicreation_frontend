@@ -4,7 +4,7 @@ import { predefinedOptions } from '../lib/guidance';
 import { fetchAllCurrencies, fetchCurrencyById, Currency } from "../lib/api";
 import {
   DollarSign, Target, AlertCircle, Coins,
-  Star, ArrowLeft, ArrowRight, Loader2
+  Star, ArrowLeft, ArrowRight, Loader2, Search, X, ChevronDown
 } from 'lucide-react';
 import { GigData } from '../types';
 
@@ -21,6 +21,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [currenciesLoading, setCurrenciesLoading] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Fetch all currencies on component mount
   useEffect(() => {
@@ -84,6 +87,31 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
 
     loadSelectedCurrency();
   }, [data?.commission?.currency, currencies]);
+
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const filteredCurrencies = React.useMemo(() => {
+    if (!searchTerm.trim()) return currencies;
+    const term = searchTerm.toLowerCase();
+    return currencies.filter(c =>
+      c.name.toLowerCase().includes(term) ||
+      c.code.toLowerCase().includes(term)
+    );
+  }, [currencies, searchTerm]);
 
   const getCurrencySymbol = () => {
     return selectedCurrency?.symbol || '€';
@@ -182,31 +210,93 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
               </div>
             </div>
 
-            <select
-              value={(() => {
-                const val = data?.commission?.currency;
-                if (typeof val === 'object' && (val as any)?.$oid) {
-                  return (val as any).$oid;
-                }
-                return val || '';
-              })()}
-              onChange={(e) => onChange({
-                ...data,
-                commission: {
-                  ...data.commission,
-                  currency: e.target.value // Save as string
-                }
-              })}
-              disabled={currenciesLoading}
-              className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <option value="">Select currency...</option>
-              {currencies.map((currency) => (
-                <option key={currency._id} value={currency._id}>
-                  {currency.symbol} {currency.name} ({currency.code})
-                </option>
-              ))}
-            </select>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => !currenciesLoading && setIsDropdownOpen(!isDropdownOpen)}
+                disabled={currenciesLoading}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+              >
+                <div className="flex items-center overflow-hidden">
+                  {selectedCurrency ? (
+                    <span className="truncate">
+                      {selectedCurrency.name} ({selectedCurrency.code}) {selectedCurrency.symbol}
+                    </span>
+                  ) : (
+                    <span className="text-blue-400 font-normal">Select currency...</span>
+                  )}
+                </div>
+                <ChevronDown className={`w-5 h-5 text-blue-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute z-50 mt-2 w-full bg-white border border-blue-100 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-3 border-b border-gray-100 bg-gray-50">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search currency..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                    {filteredCurrencies.length > 0 ? (
+                      filteredCurrencies.map((currency) => (
+                        <button
+                          key={currency._id}
+                          type="button"
+                          onClick={() => {
+                            onChange({
+                              ...data,
+                              commission: {
+                                ...data.commission,
+                                currency: currency._id
+                              }
+                            });
+                            setIsDropdownOpen(false);
+                            setSearchTerm("");
+                          }}
+                          className={`w-full px-4 py-3 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between group
+                            ${data?.commission?.currency === currency._id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-700'}
+                          `}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex flex-col">
+                              <span className="truncate">{currency.name}</span>
+                              <span className="text-[10px] text-gray-400 uppercase tracking-wider">{currency.code}</span>
+                            </div>
+                            <span className="font-bold text-blue-600 group-hover:scale-110 transition-transform ml-2">
+                              {currency.symbol}
+                            </span>
+                          </div>
+                          {data?.commission?.currency === currency._id && (
+                            <div className="w-2 h-2 rounded-full bg-blue-500 ml-2" />
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-8 text-center">
+                        <p className="text-gray-400 text-sm">No currencies found matching "{searchTerm}"</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             {currenciesLoading && (
               <div className="mt-2 flex items-center justify-center">
                 <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
