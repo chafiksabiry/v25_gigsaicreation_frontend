@@ -277,7 +277,7 @@ export function GigPreview({ isOpen, onClose, data, onSubmit, isSubmitting, onEd
             {/* Skills Required */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Brain className="w-5 h-5 text-purple-600" />
+                <Target className="w-5 h-5 text-purple-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Required Skills</h3>
               </div>
 

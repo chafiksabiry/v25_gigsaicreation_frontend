@@ -29,7 +29,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Brain className="w-5 h-5 text-indigo-600" />
+            <Target className="w-5 h-5 text-indigo-600" />
             Required Skills
           </h2>
         </div>

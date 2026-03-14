@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
-  Brain,
   Briefcase,
   Target,
   DollarSign,
@@ -5952,23 +5951,11 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-8">
-          {/* Logo */}
-          <div className="animate-fade-in">
+          {/* Mascot Logo - Enhanced Central focus */}
+          <div className="transform scale-150 transition-all duration-1000">
             <Logo />
           </div>
 
-          {/* AI Loading Animation */}
-          <div className="relative flex items-center justify-center">
-            {/* Animated rings */}
-            <div className="absolute w-16 h-16 border-4 border-blue-300/30 rounded-full animate-ping"></div>
-            <div className="absolute w-14 h-14 border-4 border-indigo-400/40 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
-            <div className="absolute w-12 h-12 border-4 border-violet-500/50 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-
-            {/* Central AI icon */}
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
-              <Brain className="w-8 h-8 text-white animate-pulse" />
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -6020,8 +6007,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
-            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-              <Brain className="w-8 h-8 text-gray-400" />
+            <div className="flex items-center justify-center mb-4">
+              <Logo className="scale-75" />
             </div>
 
             <div className="space-y-3">

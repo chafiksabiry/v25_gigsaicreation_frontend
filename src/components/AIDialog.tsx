@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Loader } from 'lucide-react';
+import { Sparkles, Loader } from 'lucide-react';
 import { Dialog } from './Dialog';
 
 interface AIDialogProps {
@@ -15,7 +15,7 @@ export function AIDialog({ isOpen, onClose, onProceed, analyzing }: AIDialogProp
       <div className="space-y-6">
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex items-start gap-3">
-            <Brain className="w-5 h-5 text-blue-600 mt-1" />
+            <Sparkles className="w-5 h-5 text-blue-600 mt-1" />
             <div>
               <h3 className="font-medium text-blue-900">Let AI Help You</h3>
               <p className="mt-1 text-sm text-blue-700">
@@ -51,7 +51,7 @@ export function AIDialog({ isOpen, onClose, onProceed, analyzing }: AIDialogProp
               </>
             ) : (
               <>
-                <Brain className="w-5 h-5" />
+                <Sparkles className="w-5 h-5" />
                 <span>Generate Suggestions</span>
               </>
             )}

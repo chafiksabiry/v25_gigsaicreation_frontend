@@ -6,7 +6,7 @@ import {
   CheckCircle,
   DollarSign,
   Users,
-  Brain,
+  Award,
   Star,
   Clock,
   Calendar,
@@ -723,7 +723,7 @@ export function GigReview({
             {renderEditableSection(
               "Skills & Qualifications",
               "skills",
-              <Brain className="w-6 h-6 text-gray-600" />,
+              <Award className="w-6 h-6 text-gray-600" />,
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">

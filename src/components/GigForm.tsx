@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { saveGigData } from '../lib/api';
 import {
   Calendar, Clock, DollarSign, Users, Globe2,
-  Brain, Briefcase, FileText, Building2
+  Award, Briefcase, FileText, Building2
 } from 'lucide-react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -551,7 +551,7 @@ export function GigForm() {
           {/* Skills */}
           <section className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
-              <Brain className="w-6 h-6 text-purple-600 mr-2" />
+              <Award className="w-6 h-6 text-purple-600 mr-2" />
               <h2 className="text-2xl font-semibold">Required Skills</h2>
             </div>
             <div className="space-y-6">

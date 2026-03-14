@@ -309,7 +309,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           {gig?.gig_skills && gig?.gig_skills?.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Brain className="w-5 h-5 text-indigo-600" />
+                <Target className="w-5 h-5 text-indigo-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Required Skills</h3>
               </div>
               <div className="space-y-6">

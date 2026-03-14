@@ -38,12 +38,27 @@ module.exports = {
       },
       animation: {
         'float': 'float 6s infinite ease-in-out',
+        'float-rotate': 'float-rotate 8s infinite ease-in-out',
+        'pulse-premium': 'pulse-premium 4s infinite ease-in-out',
+        'premium-glow': 'premium-glow 4s infinite ease-in-out',
       },
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-20px)' },
         },
+        'float-rotate': {
+          '0%, 100%': { transform: 'translateY(0) rotate(-2deg)' },
+          '50%': { transform: 'translateY(-25px) rotate(2deg)' },
+        },
+        'pulse-premium': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.05)', opacity: '0.9' },
+        },
+        'premium-glow': {
+          '0%, 100%': { filter: 'drop-shadow(0 0 20px rgba(255, 77, 77, 0.3))' },
+          '50%': { filter: 'drop-shadow(0 0 40px rgba(236, 72, 153, 0.6))' },
+        }
       },
     },
   },
