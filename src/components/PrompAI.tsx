@@ -194,7 +194,7 @@ const PrompAI: React.FC = () => {
           callTypes: data.callTypes || [],
           highlights: data.highlights || [],
           industries: Array.isArray(data.industries)
-            ? data.industries.map(industry =>
+            ? data.industries.map((industry: { _id: any; }) =>
               typeof industry === 'object' && industry?._id
                 ? industry._id
                 : industry
@@ -538,10 +538,8 @@ const PrompAI: React.FC = () => {
       return (
         <div className="min-h-screen bg-[#F8FAFC]">
           <div className="w-full h-full py-8 px-4">
-            <div className="w-full max-w-3xl mx-auto mb-8">
-              <div className="flex flex-col items-center bg-white border border-harx-100 rounded-xl shadow-sm py-6 px-4">
-                <Logo className="mb-4" />
-              </div>
+            <div className="w-full max-w-3xl mx-auto mb-8 flex justify-center">
+              <Logo />
             </div>
             <div className="backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden w-full h-full">
               <div>
@@ -571,11 +569,9 @@ const PrompAI: React.FC = () => {
             : 'w-full h-full py-8 px-4 mx-auto max-w-5xl'
         }>
           {/* Logo et Titre global en haut */}
-          <div className="w-full max-w-3xl mx-auto mb-8">
+          <div className="w-full max-w-3xl mx-auto mb-8 flex justify-center">
             {confirmedSuggestions && (
-              <div className="flex flex-col items-center bg-white border border-harx-100 rounded-xl shadow-sm py-6 px-4">
-                <Logo className="mb-4" />
-              </div>
+              <Logo />
             )}
           </div>
 
