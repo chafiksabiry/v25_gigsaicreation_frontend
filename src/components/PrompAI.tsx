@@ -114,13 +114,13 @@ const PrompAI: React.FC = () => {
       },
       collaboration: []
     },
-    activity: {
-      options: []
-    },
     documentation: {
       training: [],
       product: [],
       process: []
+    },
+    activity: {
+      options: []
     }
   });
 
@@ -201,7 +201,7 @@ const PrompAI: React.FC = () => {
             )
             : [],
           activities: Array.isArray(data.activities)
-            ? data.activities.map(activity =>
+            ? data.activities.map((activity: any) =>
               typeof activity === 'object' && activity?._id
                 ? activity._id
                 : activity
@@ -352,6 +352,7 @@ const PrompAI: React.FC = () => {
             reporting: data.team?.reporting || { to: "", frequency: "" },
             collaboration: data.team?.collaboration || []
           },
+          activity: data.activity || { options: [] },
           documentation: {
             training: data.documentation?.training || [],
             product: data.documentation?.product || [],
@@ -518,9 +519,9 @@ const PrompAI: React.FC = () => {
   // Show loading state when loading gig for edit
   if (isLoadingGig) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-harx-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading gig data for editing...</p>
         </div>
       </div>
@@ -535,10 +536,10 @@ const PrompAI: React.FC = () => {
     // Si showReview est true, afficher directement le GigReview
     if (showReview) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="min-h-screen bg-[#F8FAFC]">
           <div className="w-full h-full py-8 px-4">
             <div className="w-full max-w-3xl mx-auto mb-8">
-              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+              <div className="flex flex-col items-center bg-white border border-harx-100 rounded-xl shadow-sm py-6 px-4">
                 <Logo className="mb-4" />
               </div>
             </div>
@@ -563,7 +564,7 @@ const PrompAI: React.FC = () => {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen bg-[#F8FAFC]">
         <div className={
           effectiveSection === 'review'
             ? 'w-full h-full py-8 px-4'
@@ -572,7 +573,7 @@ const PrompAI: React.FC = () => {
           {/* Logo et Titre global en haut */}
           <div className="w-full max-w-3xl mx-auto mb-8">
             {confirmedSuggestions && (
-              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl shadow-sm py-6 px-4">
+              <div className="flex flex-col items-center bg-white border border-harx-100 rounded-xl shadow-sm py-6 px-4">
                 <Logo className="mb-4" />
               </div>
             )}
@@ -584,7 +585,7 @@ const PrompAI: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setIsManualMode(false)}
-                  className="flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200 py-2"
+                  className="flex items-center text-harx-500 hover:text-harx-600 transition-colors duration-200 py-2 font-bold"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -598,11 +599,11 @@ const PrompAI: React.FC = () => {
               </div>
               <div className="text-center mt-2">
                 <div className="flex items-center justify-center space-x-3 mb-2">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  <h1 className="text-4xl font-black bg-gradient-harx bg-clip-text text-transparent">
                     {isEditMode ? 'Edit Gig' : 'Create Gig Manually'}
                   </h1>
                 </div>
-                <p className="text-lg text-gray-600">
+                <p className="text-lg text-gray-500 font-medium">
                   {isEditMode ? 'Modify the sections below to update your gig' : 'Fill out the sections below to create your gig'}
                 </p>
               </div>
@@ -614,20 +615,20 @@ const PrompAI: React.FC = () => {
 
             {/* Navigation Tabs */}
             {effectiveSection !== 'review' && (
-              <nav className="border-b border-gray-200 bg-white px-4 py-3">
+              <nav className="border-b border-gray-100 bg-white px-4 py-3">
                 <div className="flex justify-center gap-2">
                   {sections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => handleSectionChange(section.id)}
-                      className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-all duration-200
+                      className={`flex items-center gap-2 px-4 py-2 text-base font-bold transition-all duration-200
                         ${section.id === effectiveSection
-                          ? "border-b-2 border-blue-600 text-blue-600"
-                          : "text-gray-600 hover:text-blue-600 border-b-2 border-transparent"
+                          ? "border-b-4 border-harx-500 text-harx-500 bg-harx-50/50"
+                          : "text-gray-500 hover:text-harx-500 border-b-4 border-transparent hover:bg-gray-50"
                         }`}
                       style={{ outline: "none" }}
                     >
-                      <section.icon className={`w-5 h-5 ${section.id === effectiveSection ? 'text-blue-600' : 'text-gray-400'}`} />
+                      <section.icon className={`w-5 h-5 ${section.id === effectiveSection ? 'text-harx-500' : 'text-gray-400'}`} />
                       {section.label}
                     </button>
                   ))}
@@ -656,18 +657,17 @@ const PrompAI: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <div className="w-full h-full py-6 px-4 mx-auto max-w-5xl">
-        <div className="text-center mb-12">
-          <Logo className="mb-8" />
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <h1 className="text-5xl font-bold text-black">
-              Create with AI Assistance
+        <div className="text-center mb-12 relative">
+          <Logo className="mb-4" />
+          <div className="flex items-center justify-center space-x-4 mb-2">
+            <h1 className="text-6xl font-black tracking-tighter text-black uppercase italic">
+              Create with <span className="bg-gradient-harx bg-clip-text text-transparent">AI Assistance</span>
             </h1>
           </div>
-          <p className="text-xl text-gray-600 w-full mx-auto">
-            Describe your needs naturally, and let AI help structure your
-            content
+          <p className="text-xl text-gray-500 font-medium w-full mx-auto italic tracking-wide">
+            Describe your needs naturally, and let AI help structure your content
           </p>
         </div>
 
@@ -685,7 +685,7 @@ const PrompAI: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowGuidance(!showGuidance)}
-                    className="text-blue-600 hover:text-blue-700 flex items-center text-sm"
+                    className="text-harx-500 hover:text-harx-600 flex items-center text-sm font-bold"
                   >
                     <HelpCircle className="w-4 h-4 mr-1" />
                     Writing Tips
@@ -727,9 +727,9 @@ const PrompAI: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="absolute bottom-3 right-3 p-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="absolute bottom-3 right-3 p-3 bg-gradient-harx text-white rounded-2xl hover:scale-105 disabled:bg-gray-200 disabled:scale-100 disabled:cursor-not-allowed transition-all duration-300 shadow-xl shadow-harx-500/20"
                 >
-                  <ArrowUp className="w-5 h-5" />
+                  <ArrowUp className="w-6 h-6 stroke-[3]" />
                 </button>
               </div>
             </div>
