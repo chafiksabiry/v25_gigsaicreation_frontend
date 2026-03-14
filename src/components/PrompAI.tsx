@@ -662,11 +662,11 @@ const PrompAI: React.FC = () => {
         <div className="text-center mb-12 relative">
           <Logo className="mb-4" />
           <div className="flex items-center justify-center space-x-4 mb-2">
-            <h1 className="text-6xl font-black tracking-tighter text-black uppercase italic">
+            <h1 className="text-4xl font-black tracking-tighter text-black uppercase italic">
               Create with <span className="bg-gradient-harx bg-clip-text text-transparent">AI Assistance</span>
             </h1>
           </div>
-          <p className="text-xl text-gray-500 font-medium w-full mx-auto italic tracking-wide">
+          <p className="text-lg text-gray-500 font-medium w-full mx-auto italic tracking-wide">
             Describe your needs naturally, and let AI help structure your content
           </p>
         </div>
