@@ -36,6 +36,15 @@ module.exports = {
         'gradient-harx': 'linear-gradient(to right, #ff4d4d, #ec4899)',
         'premium-gradient': 'radial-gradient(circle at top left, #fff5f5 0%, #ffffff 100%)',
       },
+      animation: {
+        'float': 'float 6s infinite ease-in-out',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+      },
     },
   },
   plugins: [],
