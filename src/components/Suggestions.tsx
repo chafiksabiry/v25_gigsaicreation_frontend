@@ -4005,71 +4005,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     );
   };
 
-  const renderSenioritySection = () => {
-    if (!suggestions) return null;
-
-    const handleSeniorityLevelChange = (level: string) => {
-      const newSuggestions = { ...suggestions };
-      newSuggestions.seniority = {
-        ...newSuggestions.seniority,
-        level: level,
-      };
-      setSuggestions(newSuggestions);
-    };
-
-    const handleYearsExperienceChange = (years: string) => {
-      const newSuggestions = { ...suggestions };
-      const numericValue = parseInt(years, 10);
-      if (!isNaN(numericValue)) {
-        newSuggestions.seniority = {
-          ...newSuggestions.seniority,
-          yearsExperience: numericValue,
-        };
-        setSuggestions(newSuggestions);
-      }
-    };
-
-    return (
-      <div className="mb-8">
-        <div className="flex items-center space-x-2 mb-4">
-          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
-          <h4 className="text-lg font-semibold text-gray-900">Seniority Level</h4>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-600 mb-1 block">
-              Level
-            </label>
-            <select
-              value={suggestions.seniority?.level || ""}
-              onChange={(e) => handleSeniorityLevelChange(e.target.value)}
-              className="w-full p-2.5 border border-harx-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-400"
-            >
-              <option value="">Select level...</option>
-              {predefinedOptions.basic.seniorityLevels.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-600 mb-1 block">
-              Years of Experience
-            </label>
-            <input
-              type="number"
-              value={suggestions.seniority?.yearsExperience || ""}
-              onChange={(e) => handleYearsExperienceChange(e.target.value)}
-              placeholder="e.g. 5"
-              className="w-full p-2.5 border border-harx-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-400"
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderDescriptionSection = () => {
     if (!suggestions) return null;
@@ -5954,7 +5889,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="transform scale-150 transition-all duration-1000">
             <Logo />
           </div>
-
+          <p className="mt-8 text-2xl font-bold bg-gradient-harx bg-clip-text text-transparent animate-pulse tracking-widest drop-shadow-sm border-2 border-harx-200 px-6 py-2 rounded-full shadow-inner bg-white/50 backdrop-blur-md">generating...</p>
         </div>
       </div>
     );
@@ -6156,12 +6091,6 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               </div>
 
-              {/* Seniority */}
-              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-lg p-3 border border-amber-200 shadow-md">
-                <div>
-                  {renderSenioritySection()}
-                </div>
-              </div>
 
             </div>
           </div>
