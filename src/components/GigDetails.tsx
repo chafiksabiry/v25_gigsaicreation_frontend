@@ -1,9 +1,7 @@
-import React from 'react';
 import {
-  DollarSign, Users, Globe2, Brain, Target, FileText,
-  ArrowRight, Star, TrendingUp, Clock, CheckCircle,
-  Calendar, Languages, Building2, Briefcase, Phone,
-  GraduationCap, Award, Laptop, Shield, BookOpen
+  DollarSign, Users, Target,
+  Languages,
+  Laptop, Shield, BookOpen, CheckCircle, Award
 } from 'lucide-react';
 import { GigData } from '../types';
 import Logo from './Logo';
@@ -13,7 +11,7 @@ interface GigDetailsProps {
   onApply?: () => void;
 }
 
-export function GigDetails({ data, onApply }: GigDetailsProps) {
+export function GigDetails({ data, onApply: _onApply }: GigDetailsProps) {
   // ... keep existing code ...
 
   return (
@@ -29,7 +27,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Target className="w-5 h-5 text-indigo-600" />
+            <Target className="w-5 h-5 text-harx-600" />
             Required Skills
           </h2>
         </div>
@@ -44,8 +42,8 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
               <div className="space-y-2">
                 {data.skills.languages.map((lang, index) => (
                   <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
-                    <span className="text-gray-900">{lang.name}</span>
-                    <span className="text-sm text-gray-600">{lang.level}</span>
+                    <span className="text-gray-900">{lang.language}</span>
+                    <span className="text-sm text-gray-600">{lang.proficiency}</span>
                   </div>
                 ))}
               </div>
@@ -63,7 +61,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
                 {data.skills.professional.map((skill, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-2 p-2 bg-indigo-50 text-indigo-700 rounded-lg"
+                    className="flex items-center gap-2 p-2 bg-harx-50 text-harx-700 rounded-lg"
                   >
                     <CheckCircle className="w-4 h-4" />
                     <span className="text-sm">{typeof skill === 'string' ? skill : skill.skill}</span>
@@ -82,7 +80,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {data.skills.technical.map((skill, index) => (
-                  <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  <span key={index} className="px-3 py-1 bg-harx-100 text-harx-800 rounded-full text-sm">
                     {typeof skill === 'string' ? skill : skill.skill}
                   </span>
                 ))}
@@ -99,8 +97,8 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {data.skills.soft.map((skill, index) => (
-                  <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                    {skill}
+                  <span key={index} className="px-3 py-1 bg-harx-alt-100 text-harx-alt-800 rounded-full text-sm">
+                    {typeof skill === 'string' ? skill : (skill as any).skill}
                   </span>
                 ))}
               </div>
@@ -118,8 +116,8 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
                 {data.skills.certifications.map((cert, index) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-yellow-50 text-yellow-700 rounded-lg">
                     <Shield className="w-4 h-4" />
-                    <span className="text-sm">{cert.name}</span>
-                    {cert.required && (
+                    <span className="text-sm">{typeof cert === 'string' ? cert : (cert as any).name}</span>
+                    {(cert as any).required && (
                       <span className="text-xs bg-yellow-200 px-2 py-0.5 rounded-full ml-auto">
                         Required
                       </span>
@@ -136,7 +134,7 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-green-600" />
+            <DollarSign className="w-5 h-5 text-harx-600" />
             Commission Structure
           </h2>
         </div>
@@ -144,13 +142,13 @@ export function GigDetails({ data, onApply }: GigDetailsProps) {
           <div>
             <div className="text-sm text-gray-500 mb-1">Per call compensation</div>
             <div className="text-lg font-semibold text-gray-900">
-              {typeof data.commission.currency === 'string' ? data.commission.currency : (data.commission.currency?.$oid || 'USD')} {data.commission.commission_per_call}
+              {typeof data.commission.currency === 'string' ? data.commission.currency : ((data.commission.currency as any)?.$oid || 'USD')} {data.commission.commission_per_call}
             </div>
           </div>
           <div>
             <div className="text-sm text-gray-500 mb-1">Performance Bonus</div>
             <div className="text-lg font-semibold text-gray-900">
-              {typeof data.commission.currency === 'string' ? data.commission.currency : (data.commission.currency?.$oid || 'USD')} {data.commission.bonusAmount}
+              {typeof data.commission.currency === 'string' ? data.commission.currency : ((data.commission.currency as any)?.$oid || 'USD')} {data.commission.bonusAmount}
             </div>
           </div>
           <div>

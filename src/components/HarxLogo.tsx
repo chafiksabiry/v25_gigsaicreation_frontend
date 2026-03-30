@@ -40,13 +40,12 @@ export const HarxLogo: React.FC<HarxLogoProps> = ({ size = 'md', className = '' 
           {/* Gradients */}
           <defs>
             <linearGradient id="harxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3B82F6"/>
-              <stop offset="50%" stopColor="#6366F1"/>
-              <stop offset="100%" stopColor="#8B5CF6"/>
+              <stop offset="0%" stopColor="#ff4d4d"/>
+              <stop offset="100%" stopColor="#ec4899"/>
             </linearGradient>
             <linearGradient id="harxBorder" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1E40AF"/>
-              <stop offset="100%" stopColor="#5B21B6"/>
+              <stop offset="0%" stopColor="#ff4d4d"/>
+              <stop offset="100%" stopColor="#ec4899"/>
             </linearGradient>
           </defs>
         </svg>

@@ -68,7 +68,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ onSave, predefinedSources, skipVa
                 max="100"
                 value={lead.percentage}
                 onChange={(e) => handleLeadChange(index, 'percentage', parseInt(e.target.value) || 0)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                 placeholder="e.g. 30"
               />
             </div>
@@ -78,7 +78,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ onSave, predefinedSources, skipVa
                 type="text"
                 value={lead.description}
                 onChange={(e) => handleLeadChange(index, 'description', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                 placeholder={`Describe ${lead.type} leads...`}
               />
             </div>
@@ -90,7 +90,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ onSave, predefinedSources, skipVa
                 max="100"
                 value={lead.conversionRate}
                 onChange={(e) => handleLeadChange(index, 'conversionRate', parseInt(e.target.value) || 0)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                 placeholder="e.g. 70"
               />
             </div>
@@ -110,7 +110,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ onSave, predefinedSources, skipVa
                 type="checkbox"
                 checked={selectedSources.includes(source)}
                 onChange={() => handleSourceToggle(source)}
-                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-5 h-5 rounded border-gray-300 text-harx-600 focus:ring-harx-500"
               />
               <span className="ml-3 text-gray-700 font-medium">{source}</span>
             </label>
@@ -121,7 +121,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ onSave, predefinedSources, skipVa
       <div className="flex justify-end">
         <button
           onClick={handleSubmit}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          className="px-6 py-2 bg-harx-500 hover:bg-harx-600 text-white rounded-lg transition-colors"
         >
           Save Leads Information
         </button>

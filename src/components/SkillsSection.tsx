@@ -53,21 +53,6 @@ const LANGUAGE_LEVELS = [
   { value: "C2", label: "C2 - Mastery" },
 ];
 
-// Function to get header gradient based on skill type
-const getHeaderGradient = (bgColor: string) => {
-  switch (bgColor) {
-    case 'blue':
-      return 'from-blue-500 via-indigo-500 to-violet-500';
-    case 'purple':
-      return 'from-purple-500 via-violet-500 to-indigo-500';
-    case 'emerald':
-      return 'from-emerald-500 via-green-500 to-teal-500';
-    case 'orange':
-      return 'from-orange-500 via-amber-500 to-yellow-500';
-    default:
-      return 'from-gray-500 to-gray-600';
-  }
-};
 
 export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSectionProps) {
   // API data states
@@ -75,7 +60,6 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
   const [softSkills, setSoftSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [technicalSkills, setTechnicalSkills] = useState<Array<{_id: string, name: string, description: string, category: string}>>([]);
   const [languages, setLanguages] = useState<Array<{ value: string; label: string; code: string }>>([]);
-  const [languagesLoading, setLanguagesLoading] = useState(true);
 
   // States for interactive progress bars (like in Suggestions.tsx)
   const [hoveredExistingLevel, setHoveredExistingLevel] = useState<{[key: string]: {[index: number]: number | null}}>({
@@ -108,13 +92,11 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
   useEffect(() => {
     const fetchSkillsAndLanguages = async () => {
       try {
-        setLanguagesLoading(true);
 
         // Load languages from API first to ensure cache is populated
         await loadLanguages();
         const languageOptions = getLanguageOptions();
         setLanguages(languageOptions);
-        setLanguagesLoading(false);
 
         // Load all professional skills from API
         try {
@@ -138,7 +120,6 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
         setTechnicalSkills(technicalSkillsData);
       } catch (error) {
         console.error('Error fetching skills and languages:', error);
-        setLanguagesLoading(false);
       }
     };
 
@@ -372,10 +353,10 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
             <button
               onClick={handleShowAddInterface}
               className={`w-8 h-8 rounded-full ${
-                skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : 
-                skillType === 'technical' ? 'bg-purple-500 hover:bg-purple-600' : 
-                skillType === 'languages' ? 'bg-blue-500 hover:bg-blue-600' : 
-                'bg-orange-500 hover:bg-orange-600'
+                skillType === 'professional' ? 'bg-harx-500 hover:bg-harx-600' : 
+                skillType === 'technical' ? 'bg-harx-alt-500 hover:bg-harx-alt-600' : 
+                skillType === 'languages' ? 'bg-harx-500 hover:bg-harx-600' : 
+                'bg-harx-alt-500 hover:bg-harx-alt-600'
               } text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
               title={`Add ${skillType === "languages" ? "language" : "skill"}`}
             >
@@ -587,17 +568,17 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                               
                               // Use same gradient logic as Suggestions.tsx
                               if (skillType === 'professional') {
-                                // Green gradient to match green icon
-                                return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${percentage * 0.2}%, #86efac ${percentage * 0.4}%, #22c55e ${percentage * 0.6}%, #16a34a ${percentage * 0.8}%, #15803d ${percentage}%, #14532d 100%)`;
+                                // HARX red gradient
+                                return `linear-gradient(90deg, #fff1f1 0%, #ffe4e4 ${percentage * 0.2}%, #fecaca ${percentage * 0.4}%, #fea3a3 ${percentage * 0.6}%, #ff7c7c ${percentage * 0.8}%, #ff4d4d ${percentage}%, #cc3d3d 100%)`;
                               } else if (skillType === 'technical') {
-                                // Purple gradient to match purple icon
-                                return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${percentage * 0.2}%, #a78bfa ${percentage * 0.4}%, #8b5cf6 ${percentage * 0.6}%, #7c3aed ${percentage * 0.8}%, #6d28d9 ${percentage}%, #4c1d95 100%)`;
+                                // HARX pink gradient
+                                return `linear-gradient(90deg, #fdf2f8 0%, #fce7f3 ${percentage * 0.2}%, #fbcfe8 ${percentage * 0.4}%, #f9a8d4 ${percentage * 0.6}%, #f472b6 ${percentage * 0.8}%, #ec4899 ${percentage}%, #be185d 100%)`;
                               } else if (skillType === 'languages') {
-                                // Blue gradient to match blue icon
-                                return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${percentage * 0.2}%, #93c5fd ${percentage * 0.4}%, #60a5fa ${percentage * 0.6}%, #3b82f6 ${percentage * 0.8}%, #2563eb ${percentage}%, #1d4ed8 100%)`;
+                                // HARX red-to-pink gradient
+                                return `linear-gradient(90deg, #fff1f1 0%, #ffe4e4 ${percentage * 0.2}%, #fecaca ${percentage * 0.4}%, #ec4899 ${percentage * 0.6}%, #db2777 ${percentage * 0.8}%, #be185d ${percentage}%, #9d174d 100%)`;
                               } else {
-                                // Orange gradient for soft skills to match orange icon
-                                return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${percentage * 0.2}%, #fb923c ${percentage * 0.4}%, #f97316 ${percentage * 0.6}%, #ea580c ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
+                                // HARX pink-to-red gradient
+                                return `linear-gradient(90deg, #fdf2f8 0%, #fbcfe8 ${percentage * 0.2}%, #f9a8d4 ${percentage * 0.4}%, #ff4d4d ${percentage * 0.6}%, #ef4444 ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
                               }
                             })()
                           }}
@@ -645,7 +626,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
 
             {/* Add Skill Interface */}
             {showAddSkillInterface[skillType] && (
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
+              <div className="bg-gradient-to-br from-harx-50 to-harx-alt-50 border-2 border-harx-100 rounded-xl p-4 shadow-sm">
                 <div className="grid grid-cols-3 gap-4 items-center">
                   {/* Skill Selection */}
                   <div>
@@ -669,7 +650,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                           });
                         }
                       }}
-                      className="w-full px-2 py-1 text-xs border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2 py-1 text-xs border border-harx-300 rounded-md focus:outline-none focus:ring-2 focus:ring-harx-500"
                     >
                       <option value="">Select {skillType === 'languages' ? 'language' : 'skill'}...</option>
                       {skillOptions.map(option => (
@@ -733,22 +714,21 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                           width: `${hoveredLevel[skillType + '_add'] !== null ? hoveredLevel[skillType + '_add'] : 
                             selectedExactPosition[skillType] || (skillType === 'languages' ? 83 : 80)}%`,
                           background: (() => {
-                            const percentage = hoveredLevel[skillType + '_add'] !== null ? hoveredLevel[skillType + '_add'] : 
-                              selectedExactPosition[skillType] || (skillType === 'languages' ? 83 : 80);
+                            const percentage = (hoveredLevel[skillType + '_add'] ?? selectedExactPosition[skillType] ?? (skillType === 'languages' ? 83 : 80));
                             
                             // Use same gradient logic as Suggestions.tsx
                             if (skillType === 'professional') {
-                              // Green gradient to match green icon
-                              return `linear-gradient(90deg, #dcfce7 0%, #bbf7d0 ${percentage * 0.2}%, #86efac ${percentage * 0.4}%, #22c55e ${percentage * 0.6}%, #16a34a ${percentage * 0.8}%, #15803d ${percentage}%, #14532d 100%)`;
+                              // HARX red gradient
+                              return `linear-gradient(90deg, #fff1f1 0%, #ffe4e4 ${percentage * 0.2}%, #fecaca ${percentage * 0.4}%, #fea3a3 ${percentage * 0.6}%, #ff7c7c ${percentage * 0.8}%, #ff4d4d ${percentage}%, #cc3d3d 100%)`;
                             } else if (skillType === 'technical') {
-                              // Purple gradient to match purple icon
-                              return `linear-gradient(90deg, #ddd6fe 0%, #c4b5fd ${percentage * 0.2}%, #a78bfa ${percentage * 0.4}%, #8b5cf6 ${percentage * 0.6}%, #7c3aed ${percentage * 0.8}%, #6d28d9 ${percentage}%, #4c1d95 100%)`;
+                              // HARX pink gradient
+                              return `linear-gradient(90deg, #fdf2f8 0%, #fce7f3 ${percentage * 0.2}%, #fbcfe8 ${percentage * 0.4}%, #f9a8d4 ${percentage * 0.6}%, #f472b6 ${percentage * 0.8}%, #ec4899 ${percentage}%, #be185d 100%)`;
                             } else if (skillType === 'languages') {
-                              // Blue gradient to match blue icon
-                              return `linear-gradient(90deg, #dbeafe 0%, #bfdbfe ${percentage * 0.2}%, #93c5fd ${percentage * 0.4}%, #60a5fa ${percentage * 0.6}%, #3b82f6 ${percentage * 0.8}%, #2563eb ${percentage}%, #1d4ed8 100%)`;
+                              // HARX red-to-pink gradient
+                              return `linear-gradient(90deg, #fff1f1 0%, #ffe4e4 ${percentage * 0.2}%, #fecaca ${percentage * 0.4}%, #ec4899 ${percentage * 0.6}%, #db2777 ${percentage * 0.8}%, #be185d ${percentage}%, #9d174d 100%)`;
                             } else {
-                              // Orange gradient for soft skills to match orange icon
-                              return `linear-gradient(90deg, #fed7aa 0%, #fdba74 ${percentage * 0.2}%, #fb923c ${percentage * 0.4}%, #f97316 ${percentage * 0.6}%, #ea580c ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
+                              // HARX pink-to-red gradient
+                              return `linear-gradient(90deg, #fdf2f8 0%, #fbcfe8 ${percentage * 0.2}%, #f9a8d4 ${percentage * 0.4}%, #ff4d4d ${percentage * 0.6}%, #ef4444 ${percentage * 0.8}%, #dc2626 ${percentage}%, #b91c1c 100%)`;
                             }
                           })()
                         }}
@@ -757,7 +737,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
                   </div>
 
                   {/* Level Display */}
-                  <div className="text-xs font-medium text-blue-600 text-right">
+                  <div className="text-xs font-medium text-harx-600 text-right">
                     {hoveredLevel[skillType + '_add'] !== null ? (
                       skillType === 'languages' ? (
                         (() => {
@@ -800,7 +780,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               'languages',
               safeData.languages,
               'Languages',
-              <Languages className="w-5 h-5 text-blue-500" />
+              <Languages className="w-5 h-5 text-harx-500" />
             )}
 
             {/* Professional Skills */}
@@ -808,7 +788,7 @@ export function SkillsSection({ data, onChange, onNext, onPrevious }: SkillsSect
               'professional',
               safeData.professional,
               'Professional Skills',
-              <BookOpen className="w-5 h-5 text-green-500" />
+              <BookOpen className="w-5 h-5 text-harx-500" />
             )}
 
             {/* Technical Skills */}

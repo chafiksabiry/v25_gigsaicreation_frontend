@@ -176,7 +176,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         showCancelButton: true,
         confirmButtonText: "OK",
         cancelButtonText: "Cancel",
-        confirmButtonColor: "#667eea",
+        confirmButtonColor: "#ff4d4d",
         cancelButtonColor: "#6b7280",
       });
 
@@ -208,7 +208,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
 
       <div className="space-y-4">
         <div className="flex items-start">
-          <CheckCircle className="h-6 w-6 text-green-500 mr-2 flex-shrink-0" />
+          <CheckCircle className="h-6 w-6 text-harx-500 mr-2 flex-shrink-0" />
           <div>
             <h3 className="font-semibold">{gig.title}</h3>
             <p className="text-gray-600">{gig.description}</p>
@@ -235,7 +235,7 @@ export const ConfirmGig: React.FC<ConfirmGigProps> = ({ gig, onConfirm, onCancel
         </button>
         <button
           onClick={handleConfirm}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-4 py-2 bg-harx-500 text-white rounded-md hover:bg-harx-600"
         >
           Confirm & Create
         </button>

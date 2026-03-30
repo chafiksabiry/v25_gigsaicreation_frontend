@@ -1,4 +1,3 @@
-import React from 'react';
 import { InfoText } from './InfoText';
 import { 
   Target, TrendingUp, Zap, Flame, 
@@ -23,7 +22,7 @@ interface LeadsSectionProps {
   onNext: () => void;
 }
 
-export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: LeadsSectionProps) {
+export function LeadsSection({ data, onChange, onPrevious, onNext }: LeadsSectionProps) {
   const handleSourceToggle = (source: string) => {
     const newSources = data.sources?.includes(source)
       ? data.sources.filter(s => s !== source)
@@ -49,11 +48,11 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
   const getLeadTypeIcon = (type: 'hot' | 'warm' | 'cold') => {
     switch (type) {
       case 'hot':
-        return <Flame className="w-5 h-5 text-red-600" />;
+        return <Flame className="w-5 h-5 text-harx-600" />;
       case 'warm':
-        return <Zap className="w-5 h-5 text-amber-600" />;
+        return <Zap className="w-5 h-5 text-harx-alt-600" />;
       case 'cold':
-        return <Snowflake className="w-5 h-5 text-blue-600" />;
+        return <Snowflake className="w-5 h-5 text-harx-600" />;
     }
   };
 
@@ -61,24 +60,24 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
     switch (type) {
       case 'hot':
         return {
-          bg: 'from-red-50 to-orange-50',
-          border: 'border-red-100',
-          text: 'text-red-700',
-          input: 'focus:ring-red-500 focus:border-red-500'
+          bg: 'from-harx-50 to-harx-alt-50',
+          border: 'border-harx-100',
+          text: 'text-harx-700',
+          input: 'focus:ring-harx-500 focus:border-harx-500'
         };
       case 'warm':
         return {
-          bg: 'from-amber-50 to-yellow-50',
-          border: 'border-amber-100',
-          text: 'text-amber-700',
-          input: 'focus:ring-amber-500 focus:border-amber-500'
+          bg: 'from-harx-50 to-yellow-50',
+          border: 'border-harx-100',
+          text: 'text-harx-700',
+          input: 'focus:ring-harx-500 focus:border-harx-500'
         };
       case 'cold':
         return {
-          bg: 'from-blue-50 to-indigo-50',
-          border: 'border-blue-100',
-          text: 'text-blue-700',
-          input: 'focus:ring-blue-500 focus:border-blue-500'
+          bg: 'from-harx-50 to-harx-alt-50',
+          border: 'border-harx-100',
+          text: 'text-harx-700',
+          input: 'focus:ring-harx-500 focus:border-harx-500'
         };
     }
   };
@@ -96,8 +95,8 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Target className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-harx-100 rounded-lg">
+              <Target className="w-5 h-5 text-harx-600" />
             </div>
             <div>
               <h3 className="text-lg font-medium text-gray-900">Lead Types</h3>
@@ -218,8 +217,8 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
       {/* Lead Sources */}
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <Globe2 className="w-5 h-5 text-emerald-600" />
+          <div className="p-2 bg-harx-alt-100 rounded-lg">
+            <Globe2 className="w-5 h-5 text-harx-alt-600" />
           </div>
           <div>
             <h3 className="text-lg font-medium text-gray-900">Lead Sources</h3>
@@ -234,13 +233,13 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
               onClick={() => handleSourceToggle(source)}
               className={`flex items-center gap-3 p-4 rounded-xl text-left transition-colors ${
                 data.sources?.includes(source)
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  ? 'bg-harx-50 text-harx-700 border border-harx-200'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
                 data.sources?.includes(source)
-                  ? 'bg-emerald-600'
+                  ? 'bg-harx-600'
                   : 'border-2 border-gray-300'
               }`}>
                 {data.sources?.includes(source) && (
@@ -249,7 +248,7 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
               </div>
               <span className="flex-1">{source}</span>
               {data.sources?.includes(source) && (
-                <Users className="w-4 h-4 text-emerald-600" />
+                <Users className="w-4 h-4 text-harx-600" />
               )}
             </button>
           ))}
@@ -276,7 +275,7 @@ export function LeadsSection({ data, onChange, errors, onPrevious, onNext }: Lea
         </button>
         <button
           onClick={onNext}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-harx-600 text-white hover:bg-blue-700"
         >
           Next
           <ArrowRight className="w-5 h-5" />

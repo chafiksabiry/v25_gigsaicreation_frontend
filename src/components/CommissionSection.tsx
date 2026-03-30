@@ -199,9 +199,9 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Currency Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-harx-100 hover:border-harx-200 group">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-gradient-harx rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <DollarSign className="w-6 h-6 text-white" />
               </div>
               <div className="ml-4">
@@ -215,7 +215,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 type="button"
                 onClick={() => !currenciesLoading && setIsDropdownOpen(!isDropdownOpen)}
                 disabled={currenciesLoading}
-                className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+                className="w-full px-4 py-3 bg-gradient-to-r from-harx-50 to-harx-alt-50 border-2 border-harx-200 rounded-xl text-harx-900 font-semibold focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
               >
                 <div className="flex items-center overflow-hidden">
                   {selectedCurrency ? (
@@ -223,14 +223,14 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                       {selectedCurrency.name} ({selectedCurrency.code}) {selectedCurrency.symbol}
                     </span>
                   ) : (
-                    <span className="text-blue-400 font-normal">Select currency...</span>
+                    <span className="text-harx-300 font-normal">Select currency...</span>
                   )}
                 </div>
-                <ChevronDown className={`w-5 h-5 text-blue-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-5 h-5 text-harx-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute z-50 mt-2 w-full bg-white border border-blue-100 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute z-50 mt-2 w-full bg-white border border-harx-100 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-3 border-b border-gray-100 bg-gray-50">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -240,7 +240,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                         placeholder="Search currency..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                        className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-harx-400 focus:border-transparent"
                       />
                       {searchTerm && (
                         <button
@@ -279,12 +279,12 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                               <span className="truncate">{currency.name}</span>
                               <span className="text-[10px] text-gray-400 uppercase tracking-wider">{currency.code}</span>
                             </div>
-                            <span className="font-bold text-blue-600 group-hover:scale-110 transition-transform ml-2">
+                            <span className="font-bold text-harx-500 group-hover:scale-110 transition-transform ml-2">
                               {currency.symbol}
                             </span>
                           </div>
                           {data?.commission?.currency === currency._id && (
-                            <div className="w-2 h-2 rounded-full bg-blue-500 ml-2" />
+                            <div className="w-2 h-2 rounded-full bg-harx-500 ml-2" />
                           )}
                         </button>
                       ))
@@ -299,14 +299,14 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
             {currenciesLoading && (
               <div className="mt-2 flex items-center justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                <span className="ml-2 text-sm text-blue-600">Loading...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-harx-500" />
+                <span className="ml-2 text-sm text-harx-600">Loading...</span>
               </div>
             )}
           </div>
 
           {/* Per call compensation Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-harx-200 group">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,7 +320,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
 
             <div className="relative">
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600 font-bold text-lg">
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-harx-600 font-bold text-lg">
                 {getCurrencySymbol()}
               </span>
               <input
@@ -330,15 +330,15 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 value={data?.commission?.commission_per_call || ''}
                 onChange={e => handleCommissionPerCallChange(e.target.value)}
                 placeholder="100"
-                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
+                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-harx-200 rounded-xl text-harx-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all"
               />
             </div>
           </div>
 
           {/* Transaction Commission Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-harx-alt-100 hover:border-harx-alt-200 group">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-gradient-harx rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <Coins className="w-6 h-6 text-white" />
               </div>
               <div className="ml-4">
@@ -348,7 +348,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
             </div>
 
             <div className="relative">
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-600 font-bold text-lg">
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-harx-alt-600 font-bold text-lg">
                 {getCurrencySymbol()}
               </span>
               <input
@@ -358,13 +358,13 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 value={data?.commission?.transactionCommission || ''}
                 onChange={e => handleTransactionChange(e.target.value)}
                 placeholder="50"
-                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-harx-alt-50 to-harx-alt-100 border-2 border-harx-alt-200 rounded-xl text-harx-alt-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-harx-alt-300 focus:border-harx-alt-400 transition-all"
               />
             </div>
           </div>
 
           {/* Bonus & Incentives Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-amber-200 group">
+          <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-100 hover:border-harx-200 group">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <Star className="w-6 h-6 text-white" />
@@ -386,7 +386,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 value={data?.commission?.bonusAmount || ''}
                 onChange={e => handleBonusChange(e.target.value)}
                 placeholder="150"
-                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl text-amber-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-amber-400 transition-all"
+                className="w-full pl-4 pr-12 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-harx-200 rounded-xl text-harx-900 font-bold text-2xl text-center focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-amber-400 transition-all"
               />
             </div>
           </div>
@@ -413,14 +413,14 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
                 value={data?.commission?.minimumVolume?.amount || ''}
                 onChange={e => handleMinimumVolumeChange('amount', e.target.value)}
                 placeholder="100"
-                className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-harx-200 rounded-xl text-harx-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
               />
             </div>
 
             <select
               value={data?.commission?.minimumVolume?.period || ''}
               onChange={e => handleMinimumVolumeChange('period', e.target.value)}
-              className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+              className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-harx-200 rounded-xl text-harx-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
             >
               <option value="">Select Period</option>
               <option value="Daily">Daily</option>
@@ -505,7 +505,7 @@ export function CommissionSection({ data, onChange, errors, warnings, onNext, on
           </div>
           <button
             onClick={onNext}
-            className="flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+            className="flex items-center gap-3 px-6 py-3 rounded-xl bg-harx-500 text-white hover:bg-harx-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
           >
             Next
             <ArrowRight className="w-5 h-5" />

@@ -96,10 +96,10 @@ export interface GigData {
   };
   commission: {
     commission_per_call: number;
-    bonusAmount: string;
+    bonusAmount: number | string;
     currency: string;
     minimumVolume: {
-      amount: string;
+      amount: number | string;
       period: string;
       unit: string;
     };
@@ -142,6 +142,7 @@ export interface GigData {
       skill: string;
       level: number;
     }>;
+    certifications: string[];
   };
   seniority: {
     level: string;
@@ -172,8 +173,40 @@ export interface GigData {
       requirements: string[];
     }>;
   };
-
-
+  tools: {
+    provided: string[];
+    required: string[];
+  };
+  training: {
+    initial: {
+      duration: string;
+      format: string;
+      topics: string[];
+    };
+    ongoing: {
+      frequency: string;
+      format: string;
+      topics: string[];
+    };
+    support: string[];
+  };
+  metrics: {
+    kpis: string[];
+    targets: any;
+    reporting: {
+      frequency: string;
+      metrics: string[];
+    };
+  };
+  compliance: {
+    requirements: string[];
+    certifications: string[];
+    policies: string[];
+  };
+  equipment: {
+    required: string[];
+    provided: string[];
+  };
 }
 
 export interface GigSuggestion {

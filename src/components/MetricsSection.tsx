@@ -1,4 +1,3 @@
-import React from 'react';
 import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 
@@ -19,7 +18,7 @@ export function MetricsSection({ data, onChange }: MetricsSectionProps) {
       </InfoText>
 
       <div className="space-y-4">
-        {predefinedOptions.metrics.kpis.map((kpi) => (
+        {(predefinedOptions as any).metrics.kpis.map((kpi: string) => (
           <div key={kpi} className="flex items-center gap-4">
             <input
               type="checkbox"
@@ -33,7 +32,7 @@ export function MetricsSection({ data, onChange }: MetricsSectionProps) {
                   kpis: newKpis
                 });
               }}
-              className="h-4 w-4 text-blue-600 rounded border-gray-300"
+              className="h-4 w-4 text-harx-600 rounded border-gray-300"
             />
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700">{kpi}</label>
@@ -52,7 +51,7 @@ export function MetricsSection({ data, onChange }: MetricsSectionProps) {
                     });
                   }}
                   placeholder="Enter target value"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-harx-500 focus:border-harx-500 text-sm"
                 />
               )}
             </div>

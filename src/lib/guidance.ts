@@ -158,7 +158,20 @@ export const predefinedOptions = {
   skills: {
     // Skills are now loaded from API endpoints
     // See: /api/skills/soft, /api/skills/professional, /api/skills/technical
-    skillLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    skillLevels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+    languages: [
+      { language: 'English', code: 'en' },
+      { language: 'French', code: 'fr' },
+      { language: 'Spanish', code: 'es' },
+      { language: 'German', code: 'de' },
+      { language: 'Italian', code: 'it' },
+      { language: 'Portuguese', code: 'pt' },
+      { language: 'Arabic', code: 'ar' },
+      { language: 'Mandarin', code: 'zh' }
+    ],
+    technical: [],
+    soft: [],
+    professional: []
   },
   team: {
     roles: [
@@ -219,6 +232,20 @@ export const predefinedOptions = {
       "Part-Time Options",
       "Compressed Work Week",
       "Shift Swapping Allowed"
+    ]
+  },
+  metrics: {
+    kpis: [
+      'Call Volume',
+      'Conversion Rate',
+      'Customer Satisfaction (CSAT)',
+      'Average Handle Time (AHT)',
+      'First Call Resolution (FCR)',
+      'Net Promoter Score (NPS)',
+      'Qualified Leads Generated',
+      'Sales Revenue',
+      'Attendance Rate',
+      'Quality Monitoring Score'
     ]
   }
 };

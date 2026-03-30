@@ -13,7 +13,6 @@ import {
   X,
   CheckCircle,
   ArrowRight,
-  XCircle,
   Plus,
   Trash2,
   Check,
@@ -32,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, fetchAllTimezones as fetchAllTimezonesNew, Timezone, getCountryNameById, fetchAllCurrencies, Currency } from "../lib/api";
+import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, getCountryNameById, fetchAllCurrencies, Currency } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import {
   loadActivities,
@@ -1887,7 +1886,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               setEditingIndex(-1);
               setEditValue("");
             }}
-            className="flex items-center space-x-1 text-blue-700 hover:text-blue-900 font-semibold text-sm transition-colors"
+            className="flex items-center space-x-1 text-harx-700 hover:text-harx-900 font-semibold text-sm transition-colors"
           >
             <Plus className="w-4 h-4" />
             <span>Add</span>
@@ -1943,7 +1942,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             }
                           }}
                           placeholder="Type to search countries..."
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                           autoFocus
                         />
                         {searching && (
@@ -1993,7 +1992,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           setEditingIndex(null);
                           setEditValue("");
                         }}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                         autoFocus
                       >
                         <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
@@ -2035,7 +2034,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             cancelEditing();
                           }
                         }}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                         autoFocus
                       />
                     )}
@@ -2126,7 +2125,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     }
                   }}
                   placeholder="Type to search countries..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                   autoFocus
                 />
                 {searching && (
@@ -2175,7 +2174,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   setEditingIndex(null);
                   setEditValue("");
                 }}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                 autoFocus
               >
                 <option value="">Select a {section === "sectors" ? "sector" : section === "industries" ? "industry" : "activity"}...</option>
@@ -2220,7 +2219,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   }
                 }}
                 placeholder={`Add a new ${title.toLowerCase()}`}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                 autoFocus
               />
             )}
@@ -2515,7 +2514,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             >
               <div className="flex items-center justify-between mb-3">
                 <h5 className="text-sm font-semibold text-gray-800 flex items-center">
-                  <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                  <Calendar className="w-4 h-4 mr-2 text-harx-500" />
                   Working Days
                 </h5>
                 <button
@@ -2536,7 +2535,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       onClick={() => handleDayToggle(day, group.hours)}
                       disabled={isInOtherGroup}
                       className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                        ${isSelected ? 'bg-purple-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700'}
+                        ${isSelected ? 'bg-harx-alt-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-harx-alt-100 hover:text-harx-alt-700'}
                       `}
                     >
                       {day}
@@ -2547,14 +2546,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
                 <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                  <Clock className="w-4 h-4 mr-2 text-blue-600" />
+                  <Clock className="w-4 h-4 mr-2 text-harx-600" />
                   Working Hours
                 </h5>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                      <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
+                      <Sunrise className="w-3 h-3 mr-1 text-harx-400" />
                       Start Time
                     </label>
                     <input
@@ -2563,12 +2562,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       onChange={(e) =>
                         handleHoursChange(group, "start", e.target.value)
                       }
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500"
                     />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                      <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
+                      <Sunset className="w-3 h-3 mr-1 text-harx-alt-400" />
                       End Time
                     </label>
                     <input
@@ -2578,7 +2577,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         handleHoursChange(group, "end", e.target.value)
                       }
                       min={group.hours.start}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500"
                     />
                   </div>
                 </div>
@@ -2593,7 +2592,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <button
                     onClick={() => handlePresetClick(group, "9-5")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                   >
                     <Sun className="w-4 h-4 text-yellow-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
@@ -2602,27 +2601,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Early")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                   >
-                    <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
+                    <Sunrise className="w-4 h-4 text-harx-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
                       Early
                     </span>
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Late")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                   >
-                    <Clock className="w-4 h-4 text-indigo-500 mb-1" />
+                    <Clock className="w-4 h-4 text-harx-alt-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
                       Late
                     </span>
                   </button>
                   <button
                     onClick={() => handlePresetClick(group, "Evening")}
-                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                    className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                   >
-                    <Moon className="w-4 h-4 text-purple-500 mb-1" />
+                    <Moon className="w-4 h-4 text-harx-alt-500 mb-1" />
                     <span className="text-xs font-medium text-gray-600">
                       Evening
                     </span>
@@ -2661,7 +2660,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     onClick={() => handleEmptyScheduleDayToggle(day, emptySchedule)}
                     disabled={isInOtherGroup}
                     className={`rounded-full px-4 py-1.5 font-semibold text-sm transition-all duration-200 shadow-sm
-                      ${isSelected ? 'bg-blue-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+                      ${isSelected ? 'bg-harx-600 text-white shadow' : isInOtherGroup ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-harx-100 hover:text-harx-700'}
                     `}
                   >
                     {day}
@@ -2672,14 +2671,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
               <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                <Clock className="w-4 h-4 mr-2 text-blue-600" />
+                <Clock className="w-4 h-4 mr-2 text-harx-600" />
                 Working Hours
               </h5>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                    <Sunrise className="w-3 h-3 mr-1 text-orange-400" />
+                    <Sunrise className="w-3 h-3 mr-1 text-harx-400" />
                     Start Time
                   </label>
                   <input
@@ -2688,12 +2687,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     onChange={(e) =>
                       handleEmptyScheduleHoursChange(emptySchedule, "start", e.target.value)
                     }
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 flex items-center">
-                    <Sunset className="w-3 h-3 mr-1 text-indigo-400" />
+                    <Sunset className="w-3 h-3 mr-1 text-harx-alt-400" />
                     End Time
                   </label>
                   <input
@@ -2703,7 +2702,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       handleEmptyScheduleHoursChange(emptySchedule, "end", e.target.value)
                     }
                     min={emptySchedule.hours.start}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500"
                   />
                 </div>
               </div>
@@ -2718,7 +2717,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "9-5")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                 >
                   <Sun className="w-4 h-4 text-yellow-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
@@ -2727,27 +2726,27 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Early")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                 >
-                  <Sunrise className="w-4 h-4 text-orange-500 mb-1" />
+                  <Sunrise className="w-4 h-4 text-harx-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
                     Early
                   </span>
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Late")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                 >
-                  <Clock className="w-4 h-4 text-indigo-500 mb-1" />
+                  <Clock className="w-4 h-4 text-harx-alt-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
                     Late
                   </span>
                 </button>
                 <button
                   onClick={() => handleEmptySchedulePresetClick(emptySchedule, "Evening")}
-                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-purple-400 hover:bg-purple-50 transition-colors shadow-sm"
+                  className="flex flex-col items-center justify-center py-2 px-1 bg-white rounded-lg border border-gray-200 hover:border-harx-alt-400 hover:bg-harx-alt-50 transition-colors shadow-sm"
                 >
-                  <Moon className="w-4 h-4 text-purple-500 mb-1" />
+                  <Moon className="w-4 h-4 text-harx-alt-500 mb-1" />
                   <span className="text-xs font-medium text-gray-600">
                     Evening
                   </span>
@@ -2769,7 +2768,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           <div className="flex justify-center mt-8">
             <button
               onClick={addNewScheduleGroup}
-              className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-300 focus:ring-opacity-50"
+              className="group relative inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-harx-alt-600 to-harx-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-harx-alt-700 hover:to-harx-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-300 focus:ring-opacity-50"
             >
               <div className="flex items-center space-x-3">
                 <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg">
@@ -2777,7 +2776,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-bold">Add Schedule Group</div>
-                  <div className="text-xs text-purple-100 opacity-90">Create a new time slot</div>
+                  <div className="text-xs text-harx-alt-100 opacity-90">Create a new time slot</div>
                 </div>
               </div>
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
@@ -2787,8 +2786,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         {/* Message quand tous les jours sont sélectionnés ET qu'il n'y a pas de groupes vides */}
         {allDaysSelected && emptySchedules.length === 0 && (
-          <div className="text-center mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center justify-center space-x-2 text-green-700">
+          <div className="text-center mt-6 p-4 bg-harx-50 border border-harx-200 rounded-lg">
+            <div className="flex items-center justify-center space-x-2 text-harx-700">
               <CheckCircle className="w-5 h-5" />
               <span className="font-medium">All week days are scheduled!</span>
             </div>
@@ -2818,7 +2817,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="mb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <Clock className="w-5 h-5 text-purple-500" />
+          <Clock className="w-5 h-5 text-harx-alt-500" />
           <h4 className="text-lg font-semibold text-gray-900">Minimum Hours Requirements</h4>
         </div>
 
@@ -2837,7 +2836,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     value={suggestions.schedule.minimumHours?.daily || ''}
                     onChange={(e) => handleMinimumHoursChange('daily', e.target.value)}
                     placeholder="e.g. 8"
-                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-alt-500 focus:border-harx-alt-500 bg-white transition-all duration-200"
                   />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
                     hrs
@@ -2856,7 +2855,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     value={suggestions.schedule.minimumHours?.weekly || ''}
                     onChange={(e) => handleMinimumHoursChange('weekly', e.target.value)}
                     placeholder="e.g. 40"
-                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-alt-500 focus:border-harx-alt-500 bg-white transition-all duration-200"
                   />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
                     hrs
@@ -2875,7 +2874,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     value={suggestions.schedule.minimumHours?.monthly || ''}
                     onChange={(e) => handleMinimumHoursChange('monthly', e.target.value)}
                     placeholder="e.g. 160"
-                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200"
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-alt-500 focus:border-harx-alt-500 bg-white transition-all duration-200"
                   />
                   <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium text-sm">
                     hrs
@@ -2930,7 +2929,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="mb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <Globe2 className="w-5 h-5 text-purple-500" />
+          <Globe2 className="w-5 h-5 text-harx-alt-500" />
           <h4 className="text-lg font-semibold text-gray-900">Time Zone</h4>
         </div>
 
@@ -2942,13 +2941,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               placeholder="Search timezones by name, country, or abbreviation..."
               value={timezoneSearch}
               onChange={(e) => setTimezoneSearch(e.target.value)}
-              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 focus:outline-none focus:ring-2 focus:ring-harx-alt-400"
             />
           </div>
         )}
 
         <select
-          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
+          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-harx-alt-400 mb-2"
           value={suggestions.schedule.time_zone || ''}
           onChange={handleTimezoneChange}
           disabled={timezoneLoading}
@@ -3007,13 +3006,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="mb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Destination Zones</h4>
         </div>
 
         {/* Select pour ajouter */}
         <select
-          className="w-full p-3 rounded-lg border border-blue-300 bg-white text-blue-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
+          className="w-full p-3 rounded-lg border border-harx-300 bg-white text-harx-900 font-semibold focus:outline-none focus:ring-2 focus:ring-harx-400 mb-2"
           defaultValue=""
           onChange={handleAddDestinationZone}
           disabled={destinationCountriesLoading}
@@ -3028,14 +3027,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
         {/* Badges sélectionnés - displayed below the select */}
         {selected.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-200">
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-harx-200">
             {selected.map(zone => (
-              <span key={zone} className="group relative flex items-center bg-blue-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-blue-800 transition-colors">
+              <span key={zone} className="group relative flex items-center bg-harx-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-harx-800 transition-colors">
                 <span>{getCountryName(zone)}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveDestinationZone(zone)}
-                  className="ml-2 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="ml-2 text-white hover:text-harx-200 rounded-full focus:outline-none focus:bg-harx-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Remove"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -3116,23 +3115,23 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-sm">
+          <div className="p-2 bg-gradient-harx rounded-lg shadow-sm">
             <Briefcase className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h4 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Position Details</h4>
+            <h4 className="text-xl font-bold bg-gradient-harx bg-clip-text text-transparent">Position Details</h4>
             <p className="text-sm text-gray-500">Define the role title and main responsibilities</p>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+        <div className="bg-gradient-to-r from-harx-50 to-harx-alt-50 border border-harx-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-start space-x-3">
-            <div className="p-1 bg-blue-100 rounded-full mt-0.5">
-              <AlertCircle className="w-4 h-4 text-blue-600" />
+            <div className="p-1 bg-harx-100 rounded-full mt-0.5">
+              <AlertCircle className="w-4 h-4 text-harx-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-900">
+              <p className="text-sm font-medium text-harx-900">
                 Start by providing the basic information about the contact center role. Be specific and clear about the position's requirements and responsibilities.
               </p>
             </div>
@@ -3150,7 +3149,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {selected.map((title, index) => (
               <span key={index}>
                 {editingJobTitleIndex === index ? (
-                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl shadow-sm">
+                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-harx-50 to-harx-alt-50 border-2 border-harx-300 rounded-xl shadow-sm">
                     <input
                       type="text"
                       value={newJobTitle}
@@ -3170,13 +3169,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           handleCancelEdit();
                         }
                       }}
-                      className="bg-transparent border-none outline-none text-sm font-semibold text-blue-800 min-w-0 flex-1"
+                      className="bg-transparent border-none outline-none text-sm font-semibold text-harx-800 min-w-0 flex-1"
                       style={{ width: `${Math.max(newJobTitle.length, 10)}ch` }}
                       autoFocus
                     />
                     <button
                       onClick={() => handleUpdateJobTitle(index)}
-                      className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                      className="p-1 text-green-600 hover:text-harx-700 hover:bg-harx-50 rounded transition-colors"
                       title="Save"
                     >
                       <Check className="w-4 h-4" />
@@ -3192,8 +3191,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 ) : (
                   <span
                     className={`group relative inline-flex items-center px-4 py-3 rounded-xl text-sm font-semibold border-2 cursor-pointer transition-all duration-200 ${selectedJobTitle === title
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-500 shadow-lg transform scale-105'
-                      : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 border-blue-200 hover:border-blue-300 hover:shadow-md hover:scale-102'
+                      ? 'bg-gradient-harx text-white border-harx-500 shadow-lg transform scale-105'
+                      : 'bg-gradient-to-r from-harx-50 to-harx-alt-50 text-harx-800 border-harx-200 hover:border-harx-300 hover:shadow-md hover:scale-102'
                       }`}
                     onClick={(e) => {
                       e.preventDefault();
@@ -3217,7 +3216,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         e.stopPropagation();
                         handleEditClick(title, index);
                       }}
-                      className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-blue-600 hover:bg-blue-100'
+                      className={`ml-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 ${selectedJobTitle === title ? 'text-white hover:bg-white/20' : 'text-harx-600 hover:bg-harx-100'
                         }`}
                       title="Click to edit"
                     >
@@ -3232,9 +3231,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           setSelectedJobTitle(null);
                         }
                       }}
-                      className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity ${selectedJobTitle === title
-                        ? 'text-white hover:bg-blue-700'
-                        : 'text-blue-600 hover:bg-blue-200 hover:text-blue-800'
+                      className={`ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full focus:outline-none focus:ring-2 focus:ring-harx-500 opacity-0 group-hover:opacity-100 transition-opacity ${selectedJobTitle === title
+                        ? 'text-white hover:bg-harx-700'
+                        : 'text-harx-600 hover:bg-harx-200 hover:text-harx-800'
                         }`}
                       title="Remove"
                     >
@@ -3247,7 +3246,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             {/* Add button/input at the end */}
             {showJobTitleForm ? (
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-harx-100 border border-harx-300 rounded-full">
                 <input
                   type="text"
                   value={newJobTitle}
@@ -3268,14 +3267,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     }
                   }}
                   placeholder="Enter job title..."
-                  className="bg-transparent border-none outline-none text-sm font-medium text-blue-800 min-w-0 flex-1"
+                  className="bg-transparent border-none outline-none text-sm font-medium text-harx-800 min-w-0 flex-1"
                   style={{ width: `${Math.max(newJobTitle.length || 15, 15)}ch` }}
                   autoFocus
                 />
                 <button
                   onClick={handleAddJobTitle}
                   disabled={!newJobTitle.trim()}
-                  className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                  className="text-harx-600 hover:text-harx-800 disabled:opacity-50"
                   title="Add"
                 >
                   <Check className="w-3 h-3" />
@@ -3356,7 +3355,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Key Highlights</h4>
         </div>
 
@@ -3366,7 +3365,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           {selected.map((highlight, index) => (
             <span key={index}>
               {editingHighlightIndex === index ? (
-                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
+                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-harx-100 border border-harx-200 rounded-full">
                   <input
                     type="text"
                     value={newHighlight}
@@ -3386,13 +3385,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         handleCancelEdit();
                       }
                     }}
-                    className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
+                    className="bg-transparent border-none outline-none text-sm font-medium text-harx-800 min-w-0 flex-1"
                     style={{ width: `${Math.max(newHighlight.length, 10)}ch` }}
                     autoFocus
                   />
                   <button
                     onClick={() => handleUpdateHighlight(index)}
-                    className="text-green-600 hover:text-green-800"
+                    className="text-harx-600 hover:text-harx-800"
                     title="Save"
                   >
                     <Check className="w-3 h-3" />
@@ -3407,7 +3406,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               ) : (
                 <span
-                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-700 text-white border border-harx-600 hover:bg-harx-800 transition-colors"
                 >
                   {highlight}
                   <button
@@ -3424,7 +3423,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <button
                     type="button"
                     onClick={() => handleRemoveHighlight(highlight)}
-                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-harx-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-harx-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3436,7 +3435,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Add button/input at the end */}
           {showHighlightForm ? (
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-green-100 border border-green-300 rounded-full">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-harx-100 border border-harx-200 rounded-full">
               <input
                 type="text"
                 value={newHighlight}
@@ -3457,14 +3456,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   }
                 }}
                 placeholder="Enter highlight..."
-                className="bg-transparent border-none outline-none text-sm font-medium text-green-800 min-w-0 flex-1"
+                className="bg-transparent border-none outline-none text-sm font-medium text-harx-800 min-w-0 flex-1"
                 style={{ width: `${Math.max(newHighlight.length || 15, 15)}ch` }}
                 autoFocus
               />
               <button
                 onClick={handleAddHighlight}
                 disabled={!newHighlight.trim()}
-                className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                className="text-harx-600 hover:text-harx-800 disabled:opacity-50"
                 title="Add"
               >
                 <Check className="w-3 h-3" />
@@ -3544,7 +3543,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-alt-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Deliverables</h4>
         </div>
 
@@ -3554,7 +3553,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           {selected.map((deliverable, index) => (
             <span key={index}>
               {editingDeliverableIndex === index ? (
-                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
+                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-harx-alt-100 border border-harx-alt-200 rounded-full">
                   <input
                     type="text"
                     value={newDeliverable}
@@ -3574,13 +3573,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                         handleCancelEdit();
                       }
                     }}
-                    className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
+                    className="bg-transparent border-none outline-none text-sm font-medium text-harx-alt-800 min-w-0 flex-1"
                     style={{ width: `${Math.max(newDeliverable.length, 10)}ch` }}
                     autoFocus
                   />
                   <button
                     onClick={() => handleUpdateDeliverable(index)}
-                    className="text-purple-600 hover:text-purple-800"
+                    className="text-harx-alt-600 hover:text-harx-alt-800"
                     title="Save"
                   >
                     <Check className="w-3 h-3" />
@@ -3595,7 +3594,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 </div>
               ) : (
                 <span
-                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-700 text-white border border-harx-600 hover:bg-harx-800 transition-colors"
                 >
                   {deliverable}
                   <button
@@ -3612,7 +3611,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <button
                     type="button"
                     onClick={() => handleRemoveDeliverable(deliverable)}
-                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-harx-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-harx-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3624,7 +3623,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Add button/input at the end */}
           {showDeliverableForm ? (
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-purple-100 border border-purple-300 rounded-full">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-harx-alt-100 border border-harx-alt-200 rounded-full">
               <input
                 type="text"
                 value={newDeliverable}
@@ -3645,14 +3644,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   }
                 }}
                 placeholder="Enter deliverable..."
-                className="bg-transparent border-none outline-none text-sm font-medium text-purple-800 min-w-0 flex-1"
+                className="bg-transparent border-none outline-none text-sm font-medium text-harx-alt-800 min-w-0 flex-1"
                 style={{ width: `${Math.max(newDeliverable.length || 15, 15)}ch` }}
                 autoFocus
               />
               <button
                 onClick={handleAddDeliverable}
                 disabled={!newDeliverable.trim()}
-                className="text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                className="text-harx-alt-600 hover:text-harx-alt-800 disabled:opacity-50"
                 title="Add"
               >
                 <Check className="w-3 h-3" />
@@ -3707,13 +3706,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Sectors</h4>
         </div>
 
         {/* Add selector */}
         <select
-          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500 bg-white"
           defaultValue=""
           onChange={handleAddSector}
         >
@@ -3730,13 +3729,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               {selected.map(sector => (
                 <span
                   key={sector}
-                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-700 text-white border border-harx-600 hover:bg-harx-800 transition-colors"
                 >
                   {sector}
                   <button
                     type="button"
                     onClick={() => handleRemoveSector(sector)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-harx-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-harx-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3786,7 +3785,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Activities</h4>
         </div>
 
@@ -3798,7 +3797,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         ) : (
           <select
-            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500 bg-white"
             defaultValue=""
             onChange={handleAddActivity}
           >
@@ -3823,13 +3822,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               return activityName ? (
                 <span
                   key={activityId}
-                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-700 text-white border border-harx-600 hover:bg-harx-800 transition-colors"
                 >
                   {activityName}
                   <button
                     type="button"
                     onClick={() => handleRemoveActivity(activityId)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-harx-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-harx-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3879,7 +3878,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Industries</h4>
         </div>
 
@@ -3891,7 +3890,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         ) : (
           <select
-            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500 bg-white"
             defaultValue=""
             onChange={handleAddIndustry}
           >
@@ -3916,13 +3915,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               return industryName ? (
                 <span
                   key={industryId}
-                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-700 text-white border border-blue-600 hover:bg-blue-800 transition-colors"
+                  className="group relative inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-700 text-white border border-harx-600 hover:bg-harx-800 transition-colors"
                 >
                   {industryName}
                   <button
                     type="button"
                     onClick={() => handleRemoveIndustry(industryId)}
-                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-white hover:bg-harx-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-harx-500 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <X className="w-3 h-3" />
@@ -3964,13 +3963,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="mb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <Gauge className="w-5 h-5 text-purple-500" />
+          <Gauge className="w-5 h-5 text-harx-alt-500" />
           <h4 className="text-lg font-semibold text-gray-900">Schedule Flexibility</h4>
         </div>
 
         {/* Select pour ajouter */}
         <select
-          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 mb-2"
+          className="w-full p-3 rounded-lg border border-purple-300 bg-white text-purple-900 font-semibold focus:outline-none focus:ring-2 focus:ring-harx-alt-400 mb-2"
           defaultValue=""
           onChange={handleAddFlexibility}
         >
@@ -3984,12 +3983,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         {selected.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-200">
             {selected.map(option => (
-              <span key={option} className="group relative flex items-center bg-purple-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
+              <span key={option} className="group relative flex items-center bg-harx-alt-700 text-white text-sm font-medium pl-3 pr-2 py-1 rounded-full cursor-pointer hover:bg-purple-800 transition-colors">
                 {option}
                 <button
                   type="button"
                   onClick={() => handleRemoveFlexibility(option)}
-                  className="ml-2 text-white hover:text-purple-200 rounded-full focus:outline-none focus:bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="ml-2 text-white hover:text-purple-200 rounded-full focus:outline-none focus:bg-harx-alt-600 opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Remove"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -4033,7 +4032,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="mb-8">
         <div className="flex items-center space-x-2 mb-4">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
           <h4 className="text-lg font-semibold text-gray-900">Seniority Level</h4>
         </div>
 
@@ -4045,7 +4044,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <select
               value={suggestions.seniority?.level || ""}
               onChange={(e) => handleSeniorityLevelChange(e.target.value)}
-              className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2.5 border border-harx-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-400"
             >
               <option value="">Select level...</option>
               {predefinedOptions.basic.seniorityLevels.map((level) => (
@@ -4064,7 +4063,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               value={suggestions.seniority?.yearsExperience || ""}
               onChange={(e) => handleYearsExperienceChange(e.target.value)}
               placeholder="e.g. 5"
-              className="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2.5 border border-harx-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-400"
             />
           </div>
         </div>
@@ -4088,14 +4087,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           onChange={(e) => handleDescriptionChange(e.target.value)}
           placeholder="Enter a detailed description of the role, responsibilities, and what success looks like..."
           rows={8}
-          className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 leading-relaxed"
+          className="w-full p-4 bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500 resize-none text-gray-700 leading-relaxed"
         />
 
         <div className="mt-3 flex items-center justify-between">
           <div className="text-sm text-gray-500">
             {suggestions.description ? `${suggestions.description.length} characters` : "0 characters"}
           </div>
-          <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+          <div className="text-xs text-harx-600 bg-harx-100 px-2 py-1 rounded-full">
             Detailed description helps attract the right candidates
           </div>
         </div>
@@ -4142,13 +4141,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
     return (
       <div className="mb-8">
         {/* Commission Header */}
-        {/* <div className="flex items-center mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-md">
+        {/* <div className="flex items-center mb-6 p-4 bg-gradient-to-r from-harx-50 to-emerald-50 rounded-xl border-2 border-harx-200 shadow-md">
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-harx-500 to-emerald-600 rounded-xl shadow-lg">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent">Commission Structure</h3>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-harx-700 to-emerald-700 bg-clip-text text-transparent">Commission Structure</h3>
               <p className="text-sm text-green-600 font-medium">Compensation details and performance incentives</p>
             </div>
           </div>
@@ -4176,9 +4175,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* Currency Card */}
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-100 hover:border-blue-200 group">
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-harx-100 hover:border-blue-200 group">
                       <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-gradient-to-br from-harx-500 to-harx-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <DollarSign className="w-6 h-6 text-white" />
                         </div>
                         <div className="ml-4">
@@ -4192,7 +4191,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           type="button"
                           onClick={() => !currenciesLoading && setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
                           disabled={currenciesLoading}
-                          className="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all flex items-center justify-between"
+                          className="w-full px-4 py-3 bg-gradient-to-r from-harx-50 to-harx-50 border-2 border-blue-200 rounded-xl text-blue-900 font-semibold focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all flex items-center justify-between"
                         >
                           <div className="flex items-center overflow-hidden">
                             {(() => {
@@ -4205,14 +4204,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   </span>
                                 );
                               }
-                              return <span className="text-blue-400 font-normal">Select currency...</span>;
+                              return <span className="text-harx-400 font-normal">Select currency...</span>;
                             })()}
                           </div>
-                          <ChevronDown className={`w-5 h-5 text-blue-400 transition-transform ${isCurrencyDropdownOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-5 h-5 text-harx-400 transition-transform ${isCurrencyDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {isCurrencyDropdownOpen && (
-                          <div className="absolute z-50 mt-2 w-full bg-white border border-blue-100 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="absolute z-50 mt-2 w-full bg-white border border-harx-100 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                             <div className="p-3 border-b border-gray-100 bg-gray-50">
                               <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -4222,7 +4221,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                   placeholder="Search currency..."
                                   value={currencySearchTerm}
                                   onChange={(e) => setCurrencySearchTerm(e.target.value)}
-                                  className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                                  className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-harx-400 focus:border-transparent"
                                 />
                                 {currencySearchTerm && (
                                   <button
@@ -4250,8 +4249,8 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                       setIsCurrencyDropdownOpen(false);
                                       setCurrencySearchTerm("");
                                     }}
-                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between group
-                                    ${(typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) === currency._id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-700'}
+                                    className={`w-full px-4 py-3 text-left text-sm hover:bg-harx-50 transition-colors flex items-center justify-between group
+                                    ${(typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) === currency._id ? 'bg-harx-50 text-harx-700 font-bold' : 'text-gray-700'}
                                   `}
                                   >
                                     <div className="flex items-center justify-between w-full">
@@ -4259,12 +4258,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                                         <span className="truncate">{currency.name}</span>
                                         <span className="text-[10px] text-gray-400 uppercase tracking-wider">{currency.code}</span>
                                       </div>
-                                      <span className="font-bold text-blue-600 group-hover:scale-110 transition-transform ml-2">
+                                      <span className="font-bold text-harx-600 group-hover:scale-110 transition-transform ml-2">
                                         {currency.symbol}
                                       </span>
                                     </div>
                                     {(typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) === currency._id && (
-                                      <div className="w-2 h-2 rounded-full bg-blue-500 ml-2" />
+                                      <div className="w-2 h-2 rounded-full bg-harx-500 ml-2" />
                                     )}
                                   </button>
                                 ))
@@ -4279,7 +4278,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       </div>
 
                       {currenciesLoading && (
-                        <div className="flex items-center mt-3 text-sm text-blue-600">
+                        <div className="flex items-center mt-3 text-sm text-harx-600">
                           <Loader2 className="w-4 h-4 animate-spin mr-2" />
                           Loading currencies...
                         </div>
@@ -4287,9 +4286,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     </div>
 
                     {/* Per call compensation Card */}
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-green-100 hover:border-green-200 group">
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-harx-100 hover:border-harx-200 group">
                       <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-gradient-to-br from-harx-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <Briefcase className="w-6 h-6 text-white" />
                         </div>
                         <div className="ml-4">
@@ -4312,7 +4311,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             );
                           }}
                           placeholder="2500"
-                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-harx-50 to-emerald-50 border-2 border-harx-200 rounded-xl text-green-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-green-300 focus:border-green-400 transition-all"
                         />
                         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-600 text-lg font-bold">
                           {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
@@ -4321,9 +4320,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     </div>
 
                     {/* Transaction Commission Card */}
-                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-purple-100 hover:border-purple-200 group">
+                    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-harx-alt-100 hover:border-purple-200 group">
                       <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-gradient-to-br from-harx-alt-500 to-harx-alt-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                           <DollarSign className="w-6 h-6 text-white" />
                         </div>
                         <div className="ml-4">
@@ -4346,9 +4345,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             );
                           }}
                           placeholder="25.50"
-                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-purple-400 transition-all"
+                          className="w-full px-4 py-3 pr-12 bg-gradient-to-r from-harx-alt-50 to-violet-50 border-2 border-purple-200 rounded-xl text-purple-900 font-bold text-xl text-center focus:outline-none focus:ring-3 focus:ring-purple-300 focus:border-harx-alt-400 transition-all"
                         />
-                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-600 text-lg font-bold">
+                        <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-harx-alt-600 text-lg font-bold">
                           {getCurrencySymbol((typeof option.currency === 'object' ? (option.currency as any).$oid : option.currency) || getDefaultCurrencyId())}
                         </span>
                       </div>
@@ -4399,7 +4398,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                   {/* Volume Requirements Section */}
                   <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-orange-100">
                     <div className="flex items-center mb-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
+                      <div className="w-12 h-12 bg-gradient-to-br from-harx-500 to-red-500 rounded-xl flex items-center justify-center shadow-md">
                         <Gauge className="w-6 h-6 text-white" />
                       </div>
                       <div className="ml-4">
@@ -4427,7 +4426,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             )
                           }
                           placeholder="100"
-                          className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                          className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold text-center focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-harx-400 transition-all"
                         />
                       </div>
 
@@ -4440,7 +4439,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                             e.target.value
                           )
                         }
-                        className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-orange-400 transition-all"
+                        className="w-full px-4 py-3 bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl text-orange-900 font-semibold focus:outline-none focus:ring-3 focus:ring-orange-300 focus:border-harx-400 transition-all"
                       >
                         <option value="">Select Period</option>
                         <option value="Daily">Daily</option>
@@ -4485,7 +4484,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           </div>
         ) : (
           <div className="text-center py-16 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border-2 border-dashed border-gray-300 shadow-lg">
-            <div className="p-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <div className="p-6 bg-gradient-to-br from-harx-100 to-emerald-100 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
               <DollarSign className="w-10 h-10 text-green-600" />
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">
@@ -4835,32 +4834,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         // Couleurs progressives selon le type de compétence
         const colorSchemes = {
           languages: [
-            'bg-blue-200 border-blue-300',    // A1 - Très clair
-            'bg-blue-300 border-blue-400',    // A2 - Clair
-            'bg-blue-400 border-blue-500',    // B1 - Moyen clair
-            'bg-blue-500 border-blue-600',    // B2 - Moyen
-            'bg-blue-600 border-blue-700',    // C1 - Foncé
-            'bg-blue-700 border-blue-800'     // C2 - Très foncé
+            'bg-blue-200 border-harx-300',    // A1 - Très clair
+            'bg-harx-300 border-harx-400',    // A2 - Clair
+            'bg-harx-400 border-harx-500',    // B1 - Moyen clair
+            'bg-harx-500 border-harx-600',    // B2 - Moyen
+            'bg-harx-600 border-harx-700',    // C1 - Foncé
+            'bg-harx-700 border-blue-800'     // C2 - Très foncé
           ],
           professional: [
-            'bg-green-200 border-green-300',  // Niveau 1
+            'bg-harx-200 border-green-300',  // Niveau 1
             'bg-green-300 border-green-400',  // Niveau 2
-            'bg-green-400 border-green-500',  // Niveau 3
-            'bg-green-500 border-green-600',  // Niveau 4
-            'bg-green-600 border-green-700'   // Niveau 5
+            'bg-green-400 border-harx-500',  // Niveau 3
+            'bg-harx-500 border-green-600',  // Niveau 4
+            'bg-green-600 border-harx-700'   // Niveau 5
           ],
           technical: [
             'bg-purple-200 border-purple-300', // Niveau 1
-            'bg-purple-300 border-purple-400', // Niveau 2
-            'bg-purple-400 border-purple-500', // Niveau 3
-            'bg-purple-500 border-purple-600', // Niveau 4
-            'bg-purple-600 border-purple-700'  // Niveau 5
+            'bg-purple-300 border-harx-alt-400', // Niveau 2
+            'bg-harx-alt-400 border-harx-alt-500', // Niveau 3
+            'bg-harx-alt-500 border-harx-alt-600', // Niveau 4
+            'bg-harx-alt-600 border-harx-alt-700'  // Niveau 5
           ],
           soft: [
             'bg-orange-200 border-orange-300', // Niveau 1
-            'bg-orange-300 border-orange-400', // Niveau 2
-            'bg-orange-400 border-orange-500', // Niveau 3
-            'bg-orange-500 border-orange-600', // Niveau 4
+            'bg-orange-300 border-harx-400', // Niveau 2
+            'bg-harx-400 border-harx-500', // Niveau 3
+            'bg-harx-500 border-orange-600', // Niveau 4
             'bg-orange-600 border-orange-700'  // Niveau 5
           ]
         };
@@ -4962,28 +4961,28 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           case "languages":
             return {
               border: "border-blue-200",
-              focus: "focus:ring-indigo-400 focus:border-indigo-400",
-              bg: "bg-gradient-to-br from-indigo-50 via-blue-50 to-indigo-100",
-              text: "text-indigo-900",
-              hover: "hover:from-indigo-100 hover:to-blue-100 hover:shadow-lg hover:shadow-indigo-100",
-              shadow: "shadow-md shadow-indigo-50"
+              focus: "focus:ring-harx-alt-400 focus:border-harx-alt-400",
+              bg: "bg-gradient-to-br from-harx-50 via-harx-50 to-indigo-100",
+              text: "text-harx-900",
+              hover: "hover:from-indigo-100 hover:to-harx-100 hover:shadow-lg hover:shadow-indigo-100",
+              shadow: "shadow-md shadow-harx-50"
             };
           case "professional":
             return {
               border: "border-blue-200",
               focus: "focus:ring-emerald-400 focus:border-emerald-400",
-              bg: "bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-100",
+              bg: "bg-gradient-to-br from-emerald-50 via-harx-50 to-emerald-100",
               text: "text-emerald-900",
-              hover: "hover:from-emerald-100 hover:to-green-100 hover:shadow-lg hover:shadow-emerald-100",
+              hover: "hover:from-emerald-100 hover:to-harx-100 hover:shadow-lg hover:shadow-emerald-100",
               shadow: "shadow-md shadow-emerald-50"
             };
           case "technical":
             return {
               border: "border-violet-200",
               focus: "focus:ring-violet-400 focus:border-violet-400",
-              bg: "bg-gradient-to-br from-violet-50 via-purple-50 to-violet-100",
+              bg: "bg-gradient-to-br from-violet-50 via-harx-alt-50 to-violet-100",
               text: "text-violet-900",
-              hover: "hover:from-violet-100 hover:to-purple-100 hover:shadow-lg hover:shadow-violet-100",
+              hover: "hover:from-violet-100 hover:to-harx-alt-100 hover:shadow-lg hover:shadow-violet-100",
               shadow: "shadow-md shadow-violet-50"
             };
           case "soft":
@@ -5023,7 +5022,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             {!showAddSkillInterface[skillType] && (
               <button
                 onClick={handleShowAddInterface}
-                className={`w-8 h-8 rounded-full ${skillType === 'professional' ? 'bg-green-500 hover:bg-green-600' : skillType === 'technical' ? 'bg-purple-500 hover:bg-purple-600' : skillType === 'languages' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-orange-500 hover:bg-orange-600'} text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
+                className={`w-8 h-8 rounded-full ${skillType === 'professional' ? 'bg-harx-500 hover:bg-green-600' : skillType === 'technical' ? 'bg-harx-alt-500 hover:bg-harx-alt-600' : skillType === 'languages' ? 'bg-harx-500 hover:bg-harx-600' : 'bg-harx-500 hover:bg-orange-600'} text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center group`}
                 title={`Add ${skillType === "languages" ? "language" : "skill"}`}
               >
                 <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -5063,9 +5062,9 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                     skillName = getLanguageNameById(item.language);
                     levelDisplay = (
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.proficiency?.includes("C")
-                        ? "bg-green-100 text-green-800"
+                        ? "bg-harx-100 text-green-800"
                         : item.proficiency?.includes("B")
-                          ? "bg-blue-100 text-blue-800"
+                          ? "bg-harx-100 text-blue-800"
                           : "bg-yellow-100 text-yellow-800"
                         }`}>
                         {LANGUAGE_LEVELS.find(l => l.value === item.proficiency)?.label || "B1"}
@@ -5308,7 +5307,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
                         {/* Column 3: Level name + Delete button */}
                         <div className="flex items-center justify-between">
-                          <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                          <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-harx-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-harx-700' : 'text-amber-700'}`}>
                             {(() => {
                               const hoveredLevel = hoveredExistingLevel[skillType][index];
 
@@ -5352,7 +5351,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           <button
                             type="button"
                             onClick={() => handleRemoveSkill(index)}
-                            className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-indigo-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
+                            className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${skillType === 'professional' ? 'bg-emerald-100 hover:bg-emerald-200 text-harx-700' : skillType === 'technical' ? 'bg-violet-100 hover:bg-violet-200 text-violet-700' : skillType === 'languages' ? 'bg-indigo-100 hover:bg-indigo-200 text-harx-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-700'} focus:outline-none opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0 ml-2 hover:scale-110`}
                             title="Remove"
                           >
                             <X className="w-3 h-3" />
@@ -5524,7 +5523,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
                       {/* Column 3: Level name */}
                       <div className="flex items-center">
-                        <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-indigo-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-indigo-700' : 'text-amber-700'}`}>
+                        <span className={`text-xs font-semibold ${skillType === 'professional' ? 'text-harx-700' : skillType === 'technical' ? 'text-violet-700' : skillType === 'languages' ? 'text-harx-700' : 'text-amber-700'}`}>
                           {(() => {
                             if (hoveredLevel[skillType] !== null && hoveredLevel[skillType] !== undefined) {
                               // Convertir le pourcentage en description du niveau
@@ -5586,25 +5585,25 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
           "languages",
           suggestions.skills?.languages || [],
           "Languages",
-          <Globe2 className="w-5 h-5 text-blue-600" />
+          <Globe2 className="w-5 h-5 text-harx-500" />
         )}
         {renderSkillCard(
           "professional",
           suggestions.skills?.professional || [],
           "Professional Skills",
-          <Briefcase className="w-5 h-5 text-green-600" />
+          <Briefcase className="w-5 h-5 text-harx-alt-500" />
         )}
         {renderSkillCard(
           "technical",
           suggestions.skills?.technical || [],
           "Technical Skills",
-          <Target className="w-5 h-5 text-purple-600" />
+          <Target className="w-5 h-5 text-harx-500" />
         )}
         {renderSkillCard(
           "soft",
           suggestions.skills?.soft || [],
           "Soft Skills",
-          <Users className="w-5 h-5 text-orange-600" />
+          <Users className="w-5 h-5 text-harx-alt-500" />
         )}
       </div>
     );
@@ -5786,17 +5785,17 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              <h4 className="text-lg font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Team Roles</h4>
+              <h4 className="text-lg font-bold bg-gradient-to-r from-harx-600 via-harx-600 to-harx-alt-600 bg-clip-text text-transparent">Team Roles</h4>
               <div className="flex items-center space-x-1">
-                <span className="text-sm font-medium text-blue-600">Total:</span>
-                <span className="text-md font-bold text-indigo-700 bg-white border border-blue-300 rounded-md px-2 py-1">
+                <span className="text-sm font-medium text-harx-600">Total:</span>
+                <span className="text-md font-bold text-harx-700 bg-white border border-harx-300 rounded-md px-2 py-1">
                   {suggestions.team?.size || 0}
                 </span>
               </div>
             </div>
             <button
               onClick={addTeamRole}
-              className="flex items-center space-x-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-3 py-1 rounded-md shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+              className="flex items-center space-x-1 bg-gradient-harx hover:opacity-90 text-white font-bold px-3 py-1 rounded-md shadow-md hover:shadow-lg transition-all transform hover:scale-105"
             >
               <Plus className="w-4 h-4" />
               <span>Add Role</span>
@@ -5815,10 +5814,10 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 return (
                   <div
                     key={index}
-                    className="bg-white rounded-lg p-2 border border-blue-100 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] hover:border-indigo-300"
+                    className="bg-white rounded-lg p-2 border border-harx-500/20 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] hover:border-harx-500/50"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <h5 className="text-md font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">Role #{index + 1}</h5>
+                      <h5 className="text-md font-bold bg-gradient-harx bg-clip-text text-transparent">Role #{index + 1}</h5>
                       <button
                         onClick={() => deleteTeamRole(index)}
                         className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all transform hover:scale-110 shadow-sm"
@@ -5829,13 +5828,13 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
                     <div className="space-y-2">
                       <div>
-                        <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                        <label className="text-xs font-bold text-harx-700 mb-1 block">
                           Role Type
                         </label>
                         <select
                           value={roleId}
                           onChange={(e) => updateTeamRole(index, "roleId", e.target.value)}
-                          className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
+                          className="w-full p-2 border border-blue-200 rounded-md bg-harx-50 focus:outline-none focus:ring-1 focus:ring-harx-alt-500 focus:border-harx-alt-500 font-medium text-harx-700 transition-all text-sm"
                         >
                           {TEAM_ROLES.map((teamRole) => (
                             <option key={teamRole} value={teamRole}>
@@ -5846,7 +5845,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                       </div>
 
                       <div>
-                        <label className="text-xs font-bold text-indigo-700 mb-1 block">
+                        <label className="text-xs font-bold text-harx-500 mb-1 block">
                           Number of Members
                         </label>
                         <input
@@ -5854,7 +5853,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                           min="1"
                           value={roleCount}
                           onChange={(e) => updateTeamRole(index, "count", e.target.value)}
-                          className="w-full p-2 border border-blue-200 rounded-md bg-blue-50 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 font-medium text-indigo-700 transition-all text-sm"
+                          className="w-full p-2 border border-harx-500/20 rounded-md bg-harx-50 focus:outline-none focus:ring-1 focus:ring-harx-500 focus:border-harx-500 font-medium text-harx-500 transition-all text-sm"
                         />
                       </div>
                     </div>
@@ -5863,19 +5862,19 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-xl border-2 border-dashed border-indigo-300">
-              <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <div className="text-center py-8 bg-gradient-to-br from-harx-50 via-harx-50 to-violet-50 rounded-xl border-2 border-dashed border-harx-300">
+              <div className="p-4 bg-gradient-to-br from-harx-500 via-harx-alt-500 to-harx-alt-500 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center shadow-lg">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 bg-clip-text text-transparent mb-2">
+              <h3 className="text-lg font-bold bg-gradient-to-r from-harx-700 via-harx-700 to-violet-700 bg-clip-text text-transparent mb-2">
                 No Team Roles Defined
               </h3>
-              <p className="text-indigo-600 font-medium mb-4 max-w-md mx-auto text-sm">
+              <p className="text-harx-600 font-medium mb-4 max-w-md mx-auto text-sm">
                 Add team roles to define the structure and responsibilities of your team members.
               </p>
               <button
                 onClick={addTeamRole}
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 hover:from-blue-600 hover:via-indigo-600 hover:to-violet-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-harx-500 via-harx-alt-500 to-harx-alt-500 hover:from-harx-600 hover:via-harx-600 hover:to-harx-alt-600 text-white font-bold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Team Role</span>
@@ -5885,7 +5884,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
         </div>
 
         {/* Territories */}
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 rounded-lg p-3 border border-blue-200 shadow-md mb-4">
+        <div className="bg-gradient-to-br from-harx-50 via-harx-50 to-violet-50 rounded-lg p-3 border border-blue-200 shadow-md mb-4">
           <div className="flex items-center space-x-2 mb-2">
             <h4 className="text-md font-semibold text-gray-900">Territories</h4>
           </div>
@@ -5897,7 +5896,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
                 e.target.value = ""; // Reset select
               }
             }}
-            className="w-full p-2 rounded-md border border-indigo-300 bg-white text-indigo-900 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-1 text-sm"
+            className="w-full p-2 rounded-md border border-harx-300 bg-white text-harx-900 font-semibold focus:outline-none focus:ring-1 focus:ring-harx-alt-400 mb-1 text-sm"
             defaultValue=""
             disabled={territoriesLoading}
           >
@@ -5919,12 +5918,12 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
               {suggestions.team.territories.map((territory) => (
                 <span
                   key={territory}
-                  className="group relative flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-medium pl-2 pr-1 py-1 rounded-full cursor-pointer hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                  className="group relative flex items-center bg-gradient-to-r from-harx-600 to-harx-600 text-white text-xs font-medium pl-2 pr-1 py-1 rounded-full cursor-pointer hover:from-harx-700 hover:to-harx-700 transition-colors"
                 >
                   <span>{getTerritoryName(territory)}</span>
                   <button
                     onClick={() => removeTerritory(territory)}
-                    className="ml-1 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="ml-1 text-white hover:text-blue-200 rounded-full focus:outline-none focus:bg-harx-600 opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Remove"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -5963,7 +5962,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-harx-50/30 to-harx-50/20 flex flex-col justify-center items-center">
         <div className="text-center max-w-lg mx-auto px-4">
           <div className="mb-8">
             <Logo className="mb-6" />
@@ -6000,7 +5999,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
   if (!suggestions) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 flex flex-col justify-center items-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-harx-50/30 to-harx-50/20 flex flex-col justify-center items-center">
         <div className="text-center max-w-lg mx-auto px-4">
           <div className="mb-8">
             <Logo className="mb-6" />
@@ -6023,7 +6022,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
             <div className="pt-4 border-t border-gray-100">
               <button
                 onClick={props.onBack}
-                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-colors"
+                className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-harx-600 border border-transparent rounded-lg hover:bg-harx-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-harx-500 shadow-sm transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Input
@@ -6036,14 +6035,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+    <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-violet-50 border-b border-gray-200 shadow-sm">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-8">
             <Logo className="mb-6" />
             <div className="space-y-4">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight">
+              <h1 className="text-4xl font-bold bg-gradient-harx bg-clip-text text-transparent tracking-tight">
                 AI-Powered Gig Creation
               </h1>
               <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
@@ -6076,7 +6075,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
             <button
               onClick={handleConfirm}
-              className="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-lg transition-colors shadow-sm"
+              className="group inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-harx-500 hover:bg-harx-600 border border-transparent rounded-lg transition-colors shadow-sm"
             >
               Confirm & Continue
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
@@ -6091,67 +6090,60 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Basic Information Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+            <div className="bg-gradient-harx px-6 py-4">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                   <Briefcase className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Basic Information</h3>
-                  <p className="text-blue-100 text-sm">Core details and requirements for your gig</p>
+                  <p className="text-harx-100 text-sm">Core details and requirements for your gig</p>
                 </div>
               </div>
             </div>
 
             <div className="p-3 space-y-6">
-              {/* Job Titles */}
-              <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-lg p-3 border border-blue-200 shadow-md">
+              <div className="bg-harx-50/50 rounded-lg p-3 border border-harx-500/20 shadow-md">
                 <div className="space-y-2">
                   {renderJobTitlesSection()}
                 </div>
               </div>
 
-              {/* Highlights */}
-              <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-lg p-3 border border-green-200 shadow-md">
+              <div className="bg-harx-alt-50/50 rounded-lg p-3 border border-harx-alt-500/20 shadow-md">
                 <div className="space-y-2">
                   {renderHighlightsSection()}
                 </div>
               </div>
 
-              {/* Job Description - Full Width */}
-              <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-lg p-3 border border-orange-200 shadow-md">
+              <div className="bg-harx-50/50 rounded-lg p-3 border border-harx-500/20 shadow-md">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-harx-500 rounded-full"></div>
                     <h4 className="text-lg font-semibold text-gray-900">Job Description</h4>
                   </div>
                   {renderDescriptionSection()}
                 </div>
               </div>
 
-              {/* Sectors - After Description */}
-              <div className="bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 rounded-lg p-3 border border-purple-200 shadow-md">
+              <div className="bg-harx-alt-50/50 rounded-lg p-3 border border-harx-alt-500/20 shadow-md">
                 <div className="space-y-2">
                   {renderSectorsSection()}
                 </div>
               </div>
 
-              {/* Industries */}
-              <div className="bg-gradient-to-br from-rose-50 via-pink-50 to-red-50 rounded-lg p-3 border border-rose-200 shadow-md">
+              <div className="bg-harx-50/50 rounded-lg p-3 border border-harx-500/20 shadow-md">
                 <div>
                   {renderIndustriesSection()}
                 </div>
               </div>
 
-              {/* Activities */}
-              <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-lg p-3 border border-cyan-200 shadow-md">
+              <div className="bg-harx-alt-50/50 rounded-lg p-3 border border-harx-alt-500/20 shadow-md">
                 <div>
                   {renderActivitiesSection()}
                 </div>
               </div>
 
-              {/* Deliverables */}
-              <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 rounded-lg p-3 border border-blue-200 shadow-md">
+              <div className="bg-harx-50/50 rounded-lg p-3 border border-harx-500/20 shadow-md">
                 <div className="space-y-2">
                   {renderDeliverablesSection()}
                 </div>
@@ -6176,32 +6168,32 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Schedule Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-700 to-indigo-700 px-6 py-4">
+            <div className="bg-gradient-harx px-6 py-4">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Schedule & Availability</h3>
-                  <p className="text-purple-100 text-sm">Working hours, timezones, and flexibility options</p>
+                  <p className="text-harx-alt-100 text-sm">Working hours, timezones, and flexibility options</p>
                 </div>
               </div>
             </div>
 
             <div className="p-3 space-y-4">
-              <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200 shadow-md">
+              <div className="bg-harx-50/50 rounded-lg p-3 border border-harx-500/20 shadow-md">
                 {renderEditableSchedules()}
               </div>
 
-              <div className="bg-gradient-to-br from-teal-50 via-emerald-50 to-green-50 rounded-lg p-3 border border-teal-200 shadow-md">
+              <div className="bg-harx-alt-50/50 rounded-lg p-3 border border-harx-alt-500/20 shadow-md">
                 {renderMinimumHoursSection()}
               </div>
 
-              <div className="bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-lg p-3 border border-violet-200 shadow-md">
+              <div className="bg-harx-50/50 rounded-lg p-3 border border-harx-500/20 shadow-md">
                 {renderTimezoneSection()}
               </div>
 
-              <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 rounded-lg p-3 border border-yellow-200 shadow-md">
+              <div className="bg-harx-alt-50/50 rounded-lg p-3 border border-harx-alt-500/20 shadow-md">
                 {renderFlexibilitySection()}
               </div>
             </div>
@@ -6209,14 +6201,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Commission Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4">
+            <div className="bg-gradient-harx px-6 py-4">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Commission Structure</h3>
-                  <p className="text-green-100 text-sm">Compensation details and performance incentives</p>
+                  <p className="text-harx-100 text-sm">Compensation details and performance incentives</p>
                 </div>
               </div>
             </div>
@@ -6228,14 +6220,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Skills Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+            <div className="bg-gradient-harx px-6 py-4">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                   <Award className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Skills & Qualifications</h3>
-                  <p className="text-purple-100 text-sm">Required technical, professional, and soft skills</p>
+                  <p className="text-harx-alt-100 text-sm">Required technical, professional, and soft skills</p>
                 </div>
               </div>
             </div>
@@ -6247,14 +6239,14 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
 
           {/* Team Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
+            <div className="bg-gradient-harx px-6 py-4">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Team Structure</h3>
-                  <p className="text-blue-100 text-sm">Team composition, roles, and territories</p>
+                  <p className="text-harx-100 text-sm">Team composition, roles, and territories</p>
                 </div>
               </div>
             </div>

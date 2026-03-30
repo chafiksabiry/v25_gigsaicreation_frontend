@@ -1,4 +1,3 @@
-import React from 'react';
 import { Plus, X } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 
@@ -16,11 +15,11 @@ export function SkillSelector({ skills, onChange, type, showLevel = false }: Ski
       case 'language':
         return predefinedOptions.skills.languages.map(lang => lang.language);
       case 'technical':
-        return predefinedOptions.skills.technical.map(skill => skill.skill);
+        return (predefinedOptions.skills as any).technical.map((skill: any) => skill.skill);
       case 'soft':
-        return predefinedOptions.skills.soft.map(skill => skill.skill);
+        return (predefinedOptions.skills as any).soft.map((skill: any) => skill.skill);
       case 'professional':
-        return predefinedOptions.skills.professional.map(skill => skill.skill);
+        return (predefinedOptions.skills as any).professional.map((skill: any) => skill.skill);
       default:
         return [];
     }
@@ -51,10 +50,10 @@ export function SkillSelector({ skills, onChange, type, showLevel = false }: Ski
             <select
               value={skill.name}
               onChange={(e) => handleChange(index, 'name', e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-harx-500 focus:border-harx-500"
             >
               <option value="">Select {type}</option>
-              {options.map((option) => (
+              {options.map((option: string) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
@@ -67,7 +66,7 @@ export function SkillSelector({ skills, onChange, type, showLevel = false }: Ski
               <select
                 value={skill.level}
                 onChange={(e) => handleChange(index, 'level', e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-harx-500 focus:border-harx-500"
               >
                 <option value="">Select level</option>
                 {levels.map((level) => (
@@ -90,7 +89,7 @@ export function SkillSelector({ skills, onChange, type, showLevel = false }: Ski
 
       <button
         onClick={handleAdd}
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+        className="flex items-center gap-2 text-harx-600 hover:text-harx-800"
       >
         <Plus className="w-5 h-5" />
         <span>Add {type}</span>

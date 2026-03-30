@@ -28,7 +28,6 @@ export function SectionContent({
   onChange,
   errors,
   onSectionChange,
-  isAIMode = false,
   isEditMode = false,
   editGigId = null,
 }: SectionContentProps) {
@@ -346,7 +345,6 @@ export function SectionContent({
             onBack={() => {
               onSectionChange?.('team');
             }}
-            skipValidation={false}
             onSubmit={async () => {
 
               try {
@@ -373,7 +371,7 @@ export function SectionContent({
     }
   };
   return (
-    <div className="bg-white border border-gray-100/50 p-8">
+    <div className="bg-white/90 backdrop-blur-sm border border-white/20 p-8 rounded-xl shadow-lg">
       <SectionGuidance section={section} />
       {renderContent()}
     </div>

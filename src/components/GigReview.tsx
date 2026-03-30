@@ -3,7 +3,6 @@ import Swal from "sweetalert2";
 import Cookies from "js-cookie";
 import axios from "axios";
 import {
-  CheckCircle,
   DollarSign,
   Users,
   Award,
@@ -21,7 +20,6 @@ import {
 } from "lucide-react";
 import { GigData } from "../types";
 import { predefinedOptions } from "../lib/guidance";
-import { validateGigData } from "../lib/validation";
 import { groupSchedules } from "../lib/scheduleUtils";
 import { fetchAllTimezones, fetchCompanyById, getCountryNameById, fetchCurrencyById } from '../lib/api';
 // import { GigStatusBadge } from './GigStatusBadge';
@@ -37,7 +35,6 @@ interface GigReviewProps {
   onSubmit: () => Promise<void>;
   isSubmitting: boolean;
   onBack: () => void;
-  skipValidation?: boolean;
   isEditMode?: boolean;
   editGigId?: string | null;
 }
@@ -48,12 +45,9 @@ export function GigReview({
   onSubmit,
   isSubmitting,
   onBack,
-  skipValidation = false,
   isEditMode = false,
   editGigId = null,
 }: GigReviewProps) {
-  const validation = skipValidation ? { isValid: true, errors: {}, warnings: {} } : validateGigData(data);
-
   // State for skills data
   const [softSkills, setSoftSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
   const [professionalSkills, setProfessionalSkills] = useState<Array<{ _id: string, name: string, description: string, category: string }>>([]);
@@ -120,9 +114,9 @@ export function GigReview({
       // Fetch timezones
       try {
         const tzRes = await fetchAllTimezones();
-        if (tzRes.data && Array.isArray(tzRes.data)) {
+        if (tzRes && Array.isArray(tzRes)) {
           const tzMap: { [key: string]: string } = {};
-          tzRes.data.forEach((tz: any) => {
+          tzRes.forEach((tz: any) => {
             tzMap[tz._id] = tz.name || tz.label || tz.tz || tz._id;
           });
           setTimezoneMap(tzMap);
@@ -393,14 +387,14 @@ export function GigReview({
 
   const renderEditableSection = (title: string, section: string, icon: React.ReactNode, children: React.ReactNode) => (
     <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300">
-      <div className="border-b border-white/20 px-6 py-5 flex items-center justify-between bg-gradient-to-r from-[#667eea]/5 to-[#764ba2]/5">
-        <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] flex items-center gap-3">
+      <div className="border-b border-white/20 px-6 py-5 flex items-center justify-between bg-gradient-to-r from-harx-500/5 to-harx-alt-500/5">
+        <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-harx flex items-center gap-3">
           {icon}
           {title}
         </h2>
         <button
           onClick={() => onEdit(section)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#5a6fd8] hover:to-[#6a4190] text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-harx hover:opacity-90 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <Edit3 className="w-4 h-4" />
           Edit
@@ -418,7 +412,7 @@ export function GigReview({
   const destinationZoneName = countryName || getTimeZoneName(data.destination_zone);
 
   return (
-    <div className="min-h-screen w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+    <div className="min-h-screen w-full h-full bg-gradient-to-br from-white via-harx-50/30 to-harx-alt-50/30 flex items-center justify-center">
       <div className="w-full h-full px-8 py-6 max-w-7xl mx-auto">
 
         {/* Page Header with Title and Description */}
@@ -437,7 +431,7 @@ export function GigReview({
             <button
               onClick={handlePublish}
               disabled={isSubmitting}
-              className="px-8 py-3 bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#5a6fd8] hover:to-[#6a4190] disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+              className="px-8 py-3 bg-gradient-harx hover:opacity-90 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -473,17 +467,17 @@ export function GigReview({
 
                   <div className="flex flex-wrap gap-3 mb-6">
                     {data?.category && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
+                      <span className="px-4 py-2 bg-harx-500/10 text-harx-500 rounded-full text-sm font-semibold border border-harx-500/30">
                         {data.category}
                       </span>
                     )}
                     {data?.seniority?.level && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-[#764ba2]/20 to-[#764ba2]/30 text-[#764ba2] rounded-full text-sm font-semibold border border-[#764ba2]/30">
+                      <span className="px-4 py-2 bg-harx-alt-500/10 text-harx-alt-500 rounded-full text-sm font-semibold border border-harx-alt-500/30">
                         {data.seniority.level}
                       </span>
                     )}
                     {data?.seniority?.yearsExperience && (
-                      <span className="px-4 py-2 bg-gradient-to-r from-[#f093fb]/20 to-[#f093fb]/30 text-[#f093fb] rounded-full text-sm font-semibold border border-[#f093fb]/30">
+                      <span className="px-4 py-2 bg-harx-alt-500/10 text-harx-alt-500 rounded-full text-sm font-semibold border border-harx-alt-500/30">
                         {data.seniority.yearsExperience} Years Experience
                       </span>
                     )}
@@ -493,21 +487,21 @@ export function GigReview({
                   {/* Industries Section */}
                   {data?.industries && data.industries.length > 0 && (
                     <div className="mb-6">
-                      <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+                      <div className="bg-gradient-to-r from-harx-50 to-harx-alt-50 rounded-xl p-4 border border-harx-100">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="p-2 bg-indigo-100 rounded-lg">
-                            <Target className="w-5 h-5 text-indigo-600" />
+                          <div className="p-2 bg-harx-100 rounded-lg">
+                            <Target className="w-5 h-5 text-harx-500" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-medium text-indigo-900">Industries</h3>
-                            <p className="text-sm text-indigo-700">Relevant industries for this position</p>
+                            <h3 className="text-lg font-medium text-harx-900">Industries</h3>
+                            <p className="text-sm text-harx-700">Relevant industries for this position</p>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {data.industries.map((industry, index) => {
                             const industryName = getIndustryNameById(industry);
                             return industryName ? (
-                              <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full border border-indigo-200">
+                              <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-harx-100 text-harx-700 text-sm rounded-full border border-harx-200">
                                 {industryName}
                               </span>
                             ) : null;
@@ -521,10 +515,10 @@ export function GigReview({
                 {/* Additional Details Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {data?.destination_zone && (
-                    <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
+                    <div className="bg-gradient-to-br from-harx-500/5 to-harx-alt-500/5 rounded-lg p-4 border border-harx-500/20">
                       <div className="flex items-center gap-3 mb-2">
-                        <MapPin className="w-5 h-5 text-[#667eea]" />
-                        <h3 className="font-semibold text-[#667eea]">Destination Zone</h3>
+                        <MapPin className="w-5 h-5 text-harx-500" />
+                        <h3 className="font-semibold text-harx-500">Destination Zone</h3>
                       </div>
                       <p className="text-gray-700">{destinationZoneName}</p>
                       {/* Show selected schedule time zones if available */}
@@ -540,10 +534,10 @@ export function GigReview({
                   )}
 
                   {data?.companyId && (
-                    <div className="bg-gradient-to-br from-[#764ba2]/5 to-[#f093fb]/5 rounded-lg p-4 border border-[#764ba2]/20">
+                    <div className="bg-gradient-to-br from-harx-alt-500/5 to-pink-500/5 rounded-lg p-4 border border-harx-alt-500/20">
                       <div className="flex items-center gap-3 mb-2">
-                        <Building className="w-5 h-5 text-[#764ba2]" />
-                        <h3 className="font-semibold text-[#764ba2]">Company</h3>
+                        <Building className="w-5 h-5 text-harx-alt-500" />
+                        <h3 className="font-semibold text-harx-alt-500">Company</h3>
                       </div>
                       <p className="text-gray-700">{getCompanyName(data.companyId)}</p>
                     </div>
@@ -559,13 +553,13 @@ export function GigReview({
               <DollarSign className="w-6 h-6 text-gray-600" />,
               <div className="space-y-8">
 
-                <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-xl p-6 border border-blue-100">
+                <div className="bg-gradient-to-r from-harx-50/50 to-harx-alt-50/50 rounded-xl p-6 border border-harx-100">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
 
                     {/* Per call compensation */}
-                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-green-100/50">
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-harx-100/50">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg text-green-600">
+                        <div className="p-2 bg-harx-100 rounded-lg text-harx-600">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                         </div>
                         <span className="text-gray-600 font-medium">Per call compensation</span>
@@ -579,9 +573,9 @@ export function GigReview({
                     </div>
 
                     {/* Transaction Commission */}
-                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-purple-100/50">
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-harx-alt-100/50">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                        <div className="p-2 bg-harx-alt-100 rounded-lg text-harx-alt-600">
                           <Coins className="w-5 h-5" />
                         </div>
                         <span className="text-gray-600 font-medium">Transaction Commission</span>
@@ -595,9 +589,9 @@ export function GigReview({
                     </div>
 
                     {/* Bonus & Incentives */}
-                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-amber-100/50">
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-harx-100/50">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                        <div className="p-2 bg-harx-100 rounded-lg text-harx-600">
                           <Star className="w-5 h-5" />
                         </div>
                         <span className="text-gray-600 font-medium">Bonus & Incentives</span>
@@ -611,9 +605,9 @@ export function GigReview({
                     </div>
 
                     {/* Minimum Volume Requirements */}
-                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-orange-100/50 col-span-1 md:col-span-2">
+                    <div className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-harx-alt-100/50 col-span-1 md:col-span-2">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                        <div className="p-2 bg-harx-alt-100 rounded-lg text-harx-alt-600">
                           <Target className="w-5 h-5" />
                         </div>
                         <span className="text-gray-600 font-medium">Minimum Volume Requirements</span>
@@ -643,9 +637,9 @@ export function GigReview({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {data.schedule.schedules && data.schedule.schedules.length > 0 && (
                     <>
-                      <div className="bg-gradient-to-r from-[#667eea]/10 to-[#667eea]/20 rounded-xl p-6 border border-[#667eea]/30">
-                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-3">
-                          <Calendar className="w-6 h-6 text-[#667eea]" />
+                      <div className="bg-harx-500/5 rounded-xl p-6 border border-harx-500/30">
+                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-harx mb-4 flex items-center gap-3">
+                          <Calendar className="w-6 h-6 text-harx-500" />
                           Working Days
                         </h3>
                         <div className="space-y-4">
@@ -658,13 +652,13 @@ export function GigReview({
                                 {group.days.map((day, dayIndex) => (
                                   <span
                                     key={dayIndex}
-                                    className="px-3 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30"
+                                    className="px-3 py-1 bg-harx-500/10 text-harx-500 rounded-full text-sm font-semibold border border-harx-500/30"
                                   >
                                     {day}
                                   </span>
                                 ))}
                               </div>
-                              <div className="flex items-center gap-2 text-[#667eea] font-semibold">
+                              <div className="flex items-center gap-2 text-harx-500 font-semibold">
                                 <Clock className="w-4 h-4" />
                                 {group.hours.start} - {group.hours.end}
                               </div>
@@ -696,16 +690,16 @@ export function GigReview({
                 )} */}
 
                 {data.schedule.flexibility && data.schedule.flexibility.length > 0 && (
-                  <div className="bg-gradient-to-r from-[#f093fb]/10 to-[#f093fb]/20 rounded-xl p-6 border border-[#f093fb]/30">
-                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f093fb] to-[#667eea] mb-4 flex items-center gap-3">
-                      <Clock className="w-6 h-6 text-[#f093fb]" />
+                  <div className="bg-harx-alt-500/5 rounded-xl p-6 border border-harx-alt-500/30">
+                    <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-harx-alt-500 to-pink-500 mb-4 flex items-center gap-3">
+                      <Clock className="w-6 h-6 text-harx-alt-500" />
                       Flexibility Options
                     </h3>
                     <div className="flex flex-wrap gap-3">
                       {data.schedule.flexibility.map((option) => (
                         <span
                           key={option}
-                          className="px-4 py-2 bg-gradient-to-r from-[#f093fb]/20 to-[#f093fb]/30 text-[#f093fb] rounded-full text-sm font-semibold border border-[#f093fb]/30"
+                          className="px-4 py-2 bg-harx-alt-500/10 text-harx-alt-500 rounded-full text-sm font-semibold border border-harx-alt-500/30"
                         >
                           {option}
                         </span>
@@ -726,20 +720,20 @@ export function GigReview({
               <Award className="w-6 h-6 text-gray-600" />,
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
+                  <div className="bg-gradient-to-br from-harx-500/5 to-harx-alt-500/5 rounded-lg p-4 border border-harx-500/20">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Languages className="w-5 h-5 text-[#667eea]" />
-                        <span className="text-sm font-semibold text-[#667eea]">Languages:</span>
+                        <Languages className="w-5 h-5 text-harx-500" />
+                        <span className="text-sm font-semibold text-harx-500">Languages:</span>
                       </div>
-                      <span className="px-3 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded-full text-sm font-semibold border border-[#667eea]/30">
+                      <span className="px-3 py-1 bg-harx-500/10 text-harx-500 rounded-full text-sm font-semibold border border-harx-500/30">
                         {data.skills?.languages?.length || 0}
                       </span>
                     </div>
                     {data.skills?.languages && data.skills.languages.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {data.skills.languages.map((lang, index) => (
-                          <span key={index} className="px-2 py-1 bg-gradient-to-r from-[#667eea]/20 to-[#667eea]/30 text-[#667eea] rounded text-xs font-medium border border-[#667eea]/30">
+                          <span key={index} className="px-2 py-1 bg-harx-500/10 text-harx-500 rounded text-xs font-medium border border-harx-500/30">
                             {getLanguageName(lang.language)} ({lang.proficiency})
                           </span>
                         ))}
@@ -753,10 +747,10 @@ export function GigReview({
                   {/* Technical Skills */}
                   {data.skills?.technical && data.skills.technical.length > 0 && (
                     <div>
-                      <div className="font-semibold text-[#667eea] mb-1">Technical Skills:</div>
+                      <div className="font-semibold text-harx-500 mb-1">Technical Skills:</div>
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.technical.map((s, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#667eea]/10 rounded text-sm">
+                          <li key={i} className="px-3 py-1 bg-harx-500/10 text-harx-500 rounded text-sm">
                             {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'technical')}
                           </li>
                         ))}
@@ -766,10 +760,10 @@ export function GigReview({
                   {/* Professional Skills */}
                   {data.skills?.professional && data.skills.professional.length > 0 && (
                     <div>
-                      <div className="font-semibold text-[#764ba2] mb-1">Professional Skills:</div>
+                      <div className="font-semibold text-harx-alt-500 mb-1">Professional Skills:</div>
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.professional.map((s, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#764ba2]/10 rounded text-sm">
+                          <li key={i} className="px-3 py-1 bg-harx-alt-500/10 text-harx-alt-500 rounded text-sm">
                             {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'professional')}
                           </li>
                         ))}
@@ -779,10 +773,10 @@ export function GigReview({
                   {/* Soft Skills */}
                   {data.skills?.soft && data.skills.soft.length > 0 && (
                     <div>
-                      <div className="font-semibold text-[#f093fb] mb-1">Soft Skills:</div>
+                      <div className="font-semibold text-harx-alt-500 mb-1">Soft Skills:</div>
                       <ul className="flex flex-wrap gap-2">
                         {data.skills.soft.map((s, i) => (
-                          <li key={i} className="px-3 py-1 bg-[#f093fb]/10 rounded text-sm">
+                          <li key={i} className="px-3 py-1 bg-harx-alt-500/10 text-harx-alt-500 rounded text-sm">
                             {skillsLoading ? 'Loading...' : getSkillName(s.skill, 'soft')}
                           </li>
                         ))}
@@ -800,23 +794,23 @@ export function GigReview({
               "team",
               <Users className="w-6 h-6 text-gray-600" />,
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/20 rounded-lg p-6 text-center border border-[#667eea]/30">
-                  <Users className="w-10 h-10 text-[#667eea] mx-auto mb-3" />
+                <div className="bg-gradient-to-r from-harx-500/5 to-harx-alt-500/10 rounded-lg p-6 text-center border border-harx-500/30">
+                  <Users className="w-10 h-10 text-harx-500 mx-auto mb-3" />
                   <div className="text-3xl font-bold text-gray-900 mb-2">{data.team.size}</div>
                   <div className="text-base text-gray-600 font-semibold">Team Members</div>
                 </div>
 
                 {data.team.structure && data.team.structure.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] mb-4 flex items-center gap-2">
-                      <Target className="w-5 h-5 text-[#667eea]" />
+                    <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-harx mb-4 flex items-center gap-2">
+                      <Target className="w-5 h-5 text-harx-500" />
                       Team Roles
                     </h3>
                     <div className="space-y-3">
                       {data.team.structure.map((role, index) => {
                         const roleInfo = predefinedOptions.team.roles.find(r => r.id === role.roleId);
                         return (
-                          <div key={index} className="bg-gradient-to-br from-[#667eea]/5 to-[#764ba2]/5 rounded-lg p-4 border border-[#667eea]/20">
+                          <div key={index} className="bg-gradient-to-br from-harx-500/5 to-harx-alt-500/5 rounded-lg p-4 border border-harx-500/20">
                             <div className="flex items-center justify-between mb-2">
                               <div className="font-semibold text-gray-900">
                                 {roleInfo ? roleInfo.name : role.roleId}

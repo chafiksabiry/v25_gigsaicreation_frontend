@@ -67,13 +67,13 @@ const timePresets = [
 const getHeaderGradient = (bgColor: string) => {
   switch (bgColor) {
     case 'blue':
-      return 'from-blue-500 via-indigo-500 to-violet-500';
+      return 'from-harx-500 via-harx-600 to-harx-alt-500';
     case 'purple':
-      return 'from-purple-500 via-violet-500 to-indigo-500';
+      return 'from-harx-alt-500 via-harx-alt-600 to-harx-500';
     case 'emerald':
-      return 'from-emerald-500 via-green-500 to-teal-500';
+      return 'from-harx-400 via-harx-500 to-harx-600';
     case 'orange':
-      return 'from-orange-500 via-amber-500 to-yellow-500';
+      return 'from-harx-alt-400 via-harx-alt-500 to-pink-500';
     default:
       return 'from-gray-500 to-gray-600';
   }
@@ -340,14 +340,14 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-700">Schedule Groups</span>
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                  <span className="bg-harx-100 text-harx-800 text-xs font-semibold px-2 py-1 rounded-full">
                     {Object.keys(groupedSchedules).length}
                   </span>
                 </div>
                 {!allDaysSelected && (
                   <button
                     onClick={addNewScheduleGroup}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                    className="flex items-center gap-2 px-3 py-2 bg-harx-500 text-white rounded-lg hover:bg-harx-600 transition-colors text-sm font-medium"
                   >
                     <Plus className="w-4 h-4" />
                     Add Schedule
@@ -360,10 +360,10 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                   {Object.entries(groupedSchedules).map(([key, group]) => (
                     <div
                       key={key}
-                      className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200 shadow-sm"
+                      className="bg-gradient-to-br from-harx-50 to-harx-alt-50 rounded-xl p-4 border-2 border-harx-100 shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-sm font-semibold text-blue-800">
+                        <h4 className="text-sm font-semibold text-harx-700">
                           {formatTime24(group.hours.start)} - {formatTime24(group.hours.end)}
                         </h4>
                         <button
@@ -388,10 +388,10 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                                 onClick={() => !isAlreadySelected && handleDayToggle(day, group.hours)}
                                 disabled={isAlreadySelected}
                                 className={`px-2 py-1 text-xs font-medium rounded-md transition-all ${isSelected
-                                  ? 'bg-blue-500 text-white'
+                                  ? 'bg-harx-500 text-white'
                                   : isAlreadySelected
                                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-harx-50 hover:border-harx-300'
                                   }`}
                               >
                                 {day.slice(0, 3)}
@@ -419,7 +419,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                             value={group.hours.end}
                             onChange={(e) => handleHoursChange(group, 'end', e.target.value)}
                             min={group.hours.start}
-                            className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 text-sm bg-white border border-harx-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                           />
                         </div>
                       </div>
@@ -430,7 +430,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                           <button
                             key={preset.label}
                             onClick={() => handlePresetClick(group, preset.label)}
-                            className="px-2 py-1 text-xs bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                            className="px-2 py-1 text-xs bg-white border border-harx-200 text-harx-600 rounded-md hover:bg-harx-50 transition-colors"
                           >
                             {preset.label}
                           </button>
@@ -524,7 +524,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                 value={data.time_zone || ''}
                 onChange={(e) => handleTimezoneChange(e.target.value)}
                 disabled={timezonesLoading}
-                className="w-full px-4 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl text-emerald-900 font-medium focus:outline-none focus:ring-3 focus:ring-emerald-300 focus:border-emerald-400 transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 bg-gradient-to-r from-harx-50 to-harx-alt-50 border-2 border-harx-200 rounded-xl text-harx-900 font-medium focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all disabled:opacity-50"
               >
                 <option value="">
                   {timezonesLoading ? 'Loading timezones...' : 'Select a timezone'}
@@ -543,8 +543,8 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
               </select>
               {timezonesLoading && (
                 <div className="mt-2 flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-                  <span className="ml-2 text-sm text-emerald-600">Loading timezones...</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-harx-500" />
+                  <span className="ml-2 text-sm text-harx-600">Loading timezones...</span>
                 </div>
               )}
             </div>
@@ -573,12 +573,12 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
                       key={option}
                       onClick={() => handleFlexibilityToggle(option)}
                       className={`p-3 rounded-xl border-2 text-left transition-all duration-200 ${isSelected
-                        ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 text-orange-800'
-                        : 'bg-white border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-200'
+                        ? 'bg-gradient-to-br from-harx-50 to-harx-alt-50 border-harx-200 text-harx-800'
+                        : 'bg-white border-gray-200 text-gray-600 hover:bg-harx-50 hover:border-harx-200'
                         }`}
                     >
                       <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-harx-500 border-harx-500' : 'border-gray-300'
                           }`}>
                           {isSelected && <span className="text-white text-xs">✓</span>}
                         </div>
@@ -604,7 +604,7 @@ export function ScheduleSection({ data, onChange, onNext, onPrevious }: Schedule
             </div>
             <button
               onClick={onNext}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-harx-500 text-white hover:bg-harx-600 shadow-md hover:shadow-lg transition-all"
             >
               Next
               <ArrowRight className="w-5 h-5" />

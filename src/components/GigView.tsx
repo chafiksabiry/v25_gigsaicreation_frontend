@@ -107,6 +107,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
         unit: ''
       },
       transactionCommission: gig.transaction_commission || 0,
+      kpis: gig.commission_kpis || [],
       additionalDetails: gig.additional_details || ''
     },
     leads: {
@@ -199,13 +200,16 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
     equipment: {
       required: [],
       provided: []
-    }
-  });
+    },
+    documentation: gig.documentation || {},
+    activities: gig.activities || [],
+    activity: gig.activity || { options: [] }
+  } as GigData);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        <Loader2 className="w-12 h-12 text-harx-600 animate-spin" />
       </div>
     );
   }
@@ -245,13 +249,13 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
                   <p className="text-gray-600 line-clamp-2">{gig.description}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-harx-100 text-harx-800 px-3 py-1 rounded-full text-sm">
                     {gig.category}
                   </span>
-                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-harx-alt-100 text-harx-alt-800 px-3 py-1 rounded-full text-sm">
                     {gig.seniority_level}
                   </span>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                  <span className="bg-harx-100 text-harx-800 px-3 py-1 rounded-full text-sm">
                     {gig.team_size}
                   </span>
                 </div>
@@ -263,7 +267,7 @@ const GigView: React.FC<GigViewProps> = ({ selectedGigId, onSelectGig }) => {
                 {typeof gig.commission_currency === 'string' ? gig.commission_currency : (gig.commission_currency?.$oid || 'USD')} {gig.commission_per_call}
               </div>
               {gig.commission_bonus && (
-                <div className="mt-1 text-sm text-green-600">
+                <div className="mt-1 text-sm text-harx-600">
                   + Performance Bonus
                 </div>
               )}

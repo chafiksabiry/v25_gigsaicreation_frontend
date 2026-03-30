@@ -148,13 +148,10 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
   const handleSyncPredefinedSkills = async () => {
     try {
       setLoading(true);
-      setMessage('Syncing predefined skills with database...');
+      setMessage({ type: 'success', text: 'Syncing predefined skills with database...' });
       
       const { syncPredefinedSkills } = await import('../lib/skillsManager');
       await syncPredefinedSkills();
-      
-      setMessage('Predefined skills synced successfully!');
-      setMessage({ type: 'success', text: 'Predefined skills synced successfully!' });
       
       // Refresh the skills list
       await loadSkills();
@@ -170,9 +167,9 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'soft': return 'text-orange-600 bg-orange-100';
-      case 'technical': return 'text-purple-600 bg-purple-100';
-      case 'professional': return 'text-green-600 bg-green-100';
+      case 'soft': return 'text-harx-alt-600 bg-harx-alt-100';
+      case 'technical': return 'text-harx-600 bg-harx-100';
+      case 'professional': return 'text-harx-alt-700 bg-harx-alt-50';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -190,7 +187,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
             <button
               onClick={loadSkills}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-harx-500 text-white rounded-lg hover:bg-harx-600 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -198,7 +195,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
             <button
               onClick={handleSyncPredefinedSkills}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-harx-alt-500 text-white rounded-lg hover:bg-harx-alt-600 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Sync Predefined Skills
@@ -215,7 +212,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
         {/* Message */}
         {message && (
           <div className={`mx-6 mt-4 p-3 rounded-lg ${
-            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            message.type === 'success' ? 'bg-harx-50 text-harx-700' : 'bg-red-50 text-red-700'
           }`}>
             {message.text}
           </div>
@@ -231,7 +228,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   placeholder="Search skills..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                 />
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
               </div>
@@ -239,7 +236,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value as any)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
             >
               <option value="soft">Soft Skills</option>
               <option value="technical">Technical Skills</option>
@@ -248,13 +245,13 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-harx-500 text-white rounded-lg hover:bg-harx-600 disabled:opacity-50"
             >
               Search
             </button>
             <button
               onClick={() => setShowAddForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="flex items-center gap-2 px-4 py-2 bg-harx-alt-500 text-white rounded-lg hover:bg-harx-alt-600"
             >
               <Plus className="w-4 h-4" />
               Add Skill
@@ -267,7 +264,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="flex items-center gap-2">
-                <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+                <RefreshCw className="w-6 h-6 animate-spin text-harx-500" />
                 <span className="text-gray-600">Loading...</span>
               </div>
             </div>
@@ -288,7 +285,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setEditingSkill(skill)}
-                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                        className="p-1 text-harx-600 hover:text-harx-800 hover:bg-harx-50 rounded"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -327,7 +324,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                     type="text"
                     value={newSkill.name}
                     onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                     placeholder="Skill name"
                   />
                 </div>
@@ -336,7 +333,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   <textarea
                     value={newSkill.description}
                     onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                     rows={3}
                     placeholder="Skill description"
                   />
@@ -346,7 +343,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   <textarea
                     value={newSkill.details}
                     onChange={(e) => setNewSkill({ ...newSkill, details: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                     rows={2}
                     placeholder="Additional details about the skill"
                   />
@@ -356,7 +353,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   <select
                     value={newSkill.category}
                     onChange={(e) => setNewSkill({ ...newSkill, category: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                   >
                     <option value="soft">Soft Skills</option>
                     <option value="technical">Technical Skills</option>
@@ -371,7 +368,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                     max="5"
                     value={newSkill.level}
                     onChange={(e) => setNewSkill({ ...newSkill, level: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                   />
                 </div>
               </div>
@@ -379,7 +376,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                 <button
                   onClick={handleSaveSkill}
                   disabled={loading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-harx-500 text-white rounded-lg hover:bg-harx-600 disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   Save
@@ -407,7 +404,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                     type="text"
                     value={editingSkill.name}
                     onChange={(e) => setEditingSkill({ ...editingSkill, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                   />
                 </div>
                 <div>
@@ -415,7 +412,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   <textarea
                     value={editingSkill.description}
                     onChange={(e) => setEditingSkill({ ...editingSkill, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                     rows={3}
                   />
                 </div>
@@ -424,7 +421,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   <textarea
                     value={editingSkill.details || ''}
                     onChange={(e) => setEditingSkill({ ...editingSkill, details: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                     rows={2}
                     placeholder="Additional details about the skill"
                   />
@@ -434,7 +431,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                   <select
                     value={editingSkill.category}
                     onChange={(e) => setEditingSkill({ ...editingSkill, category: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                   >
                     <option value="soft">Soft Skills</option>
                     <option value="technical">Technical Skills</option>
@@ -449,7 +446,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                     max="5"
                     value={editingSkill.level}
                     onChange={(e) => setEditingSkill({ ...editingSkill, level: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                   />
                 </div>
               </div>
@@ -457,7 +454,7 @@ export const SkillsDatabaseManager: React.FC<SkillsDatabaseManagerProps> = ({ on
                 <button
                   onClick={handleUpdateSkill}
                   disabled={loading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-harx-500 text-white rounded-lg hover:bg-harx-600 disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   Update

@@ -13,15 +13,15 @@ export function AIDialog({ isOpen, onClose, onProceed, analyzing }: AIDialogProp
   return (
     <Dialog isOpen={isOpen} onClose={onClose} title="AI-Powered Suggestions">
       <div className="space-y-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-harx-50 p-4 rounded-lg">
           <div className="flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-blue-600 mt-1" />
+            <Sparkles className="w-5 h-5 text-harx-500 mt-1" />
             <div>
-              <h3 className="font-medium text-blue-900">Let AI Help You</h3>
-              <p className="mt-1 text-sm text-blue-700">
+              <h3 className="font-medium text-harx-900">Let AI Help You</h3>
+              <p className="mt-1 text-sm text-harx-700">
                 Based on the title and description you provided, our AI can suggest appropriate values for:
               </p>
-              <ul className="mt-2 space-y-1 text-sm text-blue-700">
+              <ul className="mt-2 space-y-1 text-sm text-harx-700">
                 <li>• Category and seniority level</li>
                 <li>• Required skills and qualifications</li>
                 <li>• Commission structure</li>
@@ -42,7 +42,7 @@ export function AIDialog({ isOpen, onClose, onProceed, analyzing }: AIDialogProp
           <button
             onClick={onProceed}
             disabled={analyzing}
-            className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 text-white bg-harx-500 rounded-md hover:bg-harx-600 disabled:opacity-50 flex items-center gap-2"
           >
             {analyzing ? (
               <>

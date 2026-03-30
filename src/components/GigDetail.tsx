@@ -1,9 +1,7 @@
-import React from 'react';
 import { 
-  Calendar, Clock, DollarSign, Users, Globe2, 
-  Brain, Briefcase, FileText, Building2, Target,
-  ArrowLeft, Phone, Languages, TrendingUp, Check,
-  ExternalLink
+  Calendar, Clock, DollarSign, Users, 
+  Building2, Target,
+  ArrowLeft, Phone, Languages
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -72,13 +70,13 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{gig?.title || 'Untitled Gig'}</h1>
               <div className="mt-2 flex flex-wrap gap-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-100 text-harx-800">
                   {gig?.category || 'Uncategorized'}
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-alt-100 text-harx-alt-800">
                   {gig?.seniority_level || 'Not Specified'}
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-harx-100 text-harx-800">
                   {gig?.years_experience || '0'} Experience
                 </span>
               </div>
@@ -103,7 +101,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           {/* Schedule */}
           <section className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center gap-2 mb-6">
-              <Calendar className="w-6 h-6 text-blue-600" />
+              <Calendar className="w-6 h-6 text-harx-600" />
               <h2 className="text-xl font-semibold text-gray-900">Schedule</h2>
             </div>
             <div className="space-y-6">
@@ -140,7 +138,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           {/* Commission Structure */}
           <section className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center gap-2 mb-6">
-              <DollarSign className="w-6 h-6 text-green-600" />
+              <DollarSign className="w-6 h-6 text-harx-600" />
               <h2 className="text-xl font-semibold text-gray-900">Commission Structure</h2>
             </div>
             <div className="space-y-6">
@@ -222,7 +220,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
                     <div key={lead?.lead_type} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-medium text-gray-900 capitalize">{lead?.lead_type} Leads</h3>
-                        <span className="text-sm font-semibold text-blue-600">{lead?.percentage}%</span>
+                        <span className="text-sm font-semibold text-harx-600">{lead?.percentage}%</span>
                       </div>
                       <p className="text-sm text-gray-600">{lead?.description}</p>
                     </div>
@@ -248,7 +246,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           {/* Team Structure */}
           <section className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center gap-2 mb-6">
-              <Users className="w-6 h-6 text-purple-600" />
+              <Users className="w-6 h-6 text-harx-alt-600" />
               <h2 className="text-xl font-semibold text-gray-900">Team Structure</h2>
             </div>
             <div className="space-y-6">
@@ -309,7 +307,7 @@ export function GigDetail({ gig, onBack }: GigDetailProps) {
           {gig?.gig_skills && gig?.gig_skills?.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Target className="w-5 h-5 text-indigo-600" />
+                <Target className="w-5 h-5 text-harx-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Required Skills</h3>
               </div>
               <div className="space-y-6">

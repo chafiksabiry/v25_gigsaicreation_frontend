@@ -27,7 +27,7 @@ export const GIG_STATUS_LABELS_FR: Record<GigStatus, string> = {
 // Status colors for UI
 export const GIG_STATUS_COLORS: Record<GigStatus, string> = {
   [GIG_STATUS.TO_ACTIVATE]: 'bg-yellow-100 text-yellow-800',
-  [GIG_STATUS.ACTIVE]: 'bg-green-100 text-green-800',
+  [GIG_STATUS.ACTIVE]: 'bg-harx-100 text-harx-800',
   [GIG_STATUS.INACTIVE]: 'bg-gray-100 text-gray-800',
   [GIG_STATUS.ARCHIVED]: 'bg-red-100 text-red-800'
 };

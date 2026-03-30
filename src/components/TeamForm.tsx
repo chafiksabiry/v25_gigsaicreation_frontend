@@ -102,7 +102,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
         <select
           value={teamData.size}
           onChange={(e) => setTeamData(prev => ({ ...prev, size: Number(e.target.value) }))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-harx-500 focus:border-harx-500"
           required
         >
           <option value="">Select team size...</option>
@@ -126,7 +126,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
                   <select
                     value={role.roleId}
                     onChange={(e) => handleRoleChange(index, 'roleId', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-harx-500 focus:border-harx-500"
                     required
                   >
                     <option value="">Select role...</option>
@@ -145,7 +145,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
                         min="1"
                         value={role.count}
                         onChange={(e) => handleRoleChange(index, 'count', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-harx-500 focus:border-harx-500"
                         required
                       />
                     </div>
@@ -160,7 +160,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
                           ...role.seniority,
                           level: e.target.value
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-harx-500 focus:border-harx-500"
                         required
                       >
                         <option value="">Select seniority level</option>
@@ -205,7 +205,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
                 type="checkbox"
                 checked={teamData.territories.includes(territory)}
                 onChange={() => handleTerritoriesChange(territory)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-gray-300 text-harx-600 focus:ring-harx-500"
               />
               <span className="text-sm text-gray-700">{territory}</span>
             </label>
@@ -216,7 +216,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
       <div className="flex justify-end space-x-3">
         <button
           type="submit"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-harx-500 hover:bg-harx-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-harx-500"
         >
           <Save className="w-4 h-4 mr-2" />
           Save Team Structure

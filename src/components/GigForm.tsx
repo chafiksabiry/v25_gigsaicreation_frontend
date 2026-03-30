@@ -506,7 +506,7 @@ export function GigForm() {
                 <input
                   type="text"
                   {...register('title', { required: true })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-harx-500 focus:ring-harx-500"
                 />
               </div>
               <div>
@@ -514,7 +514,7 @@ export function GigForm() {
                 <textarea
                   {...register('description', { required: true })}
                   rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-harx-500 focus:ring-harx-500"
                 />
               </div>
             </div>
@@ -523,7 +523,7 @@ export function GigForm() {
           {/* Schedule */}
           <section className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
-              <Calendar className="w-6 h-6 text-blue-600 mr-2" />
+              <Calendar className="w-6 h-6 text-harx-500 mr-2" />
               <h2 className="text-2xl font-semibold">Schedule</h2>
             </div>
             <div className="space-y-4">
@@ -533,7 +533,7 @@ export function GigForm() {
                   type="text"
                   {...register('schedule.schedules.0.hours.start', { required: true })}
                   placeholder="e.g., 08h00 - 17h00 EST"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-harx-500 focus:ring-harx-500"
                 />
               </div>
               <div>
@@ -542,7 +542,7 @@ export function GigForm() {
                   type="text"
                   {...register('schedule.timeZones', { required: true })}
                   placeholder="e.g., EST, CST, PST"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-harx-500 focus:ring-harx-500"
                 />
               </div>
             </div>
@@ -551,7 +551,7 @@ export function GigForm() {
           {/* Skills */}
           <section className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
-              <Award className="w-6 h-6 text-purple-600 mr-2" />
+              <Award className="w-6 h-6 text-harx-alt-500 mr-2" />
               <h2 className="text-2xl font-semibold">Required Skills</h2>
             </div>
             <div className="space-y-6">
@@ -585,7 +585,7 @@ export function GigForm() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              className="bg-harx-500 text-white py-2 px-4 rounded-lg hover:bg-harx-600 transition-colors"
             >
               Create Gig
             </button>

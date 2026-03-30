@@ -3,13 +3,11 @@ import { InfoText } from './InfoText';
 import { predefinedOptions } from '../lib/guidance';
 import { getCountryNameById } from '../lib/api';
 import {
-  Brain,
   Briefcase,
   Globe2,
   Target,
   ArrowRight,
   ArrowLeft,
-  GraduationCap,
   CheckCircle,
   X,
 } from "lucide-react";
@@ -18,7 +16,6 @@ import i18n from 'i18n-iso-countries';
 import fr from 'i18n-iso-countries/langs/fr.json';
 import en from 'i18n-iso-countries/langs/en.json';
 import { countryToAlpha2, alpha2ToCountry } from '../lib/countryCodes';
-// import { GigStatusSelector } from './GigStatusSelector';
 import {
   loadActivities,
   loadIndustries,
@@ -75,7 +72,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
   const [countries, setCountries] = useState<Country[]>([]);
   const [countryName, setCountryName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // Load activities and industries data from external API ONLY
   useEffect(() => {
@@ -83,20 +79,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
       try {
         setIsLoading(true);
         // Load data from external API with error handling
-        const [activitiesData, industriesData, countriesData] = await Promise.all([
-          loadActivities().catch(error => {
-            console.error('❌ Failed to load activities from API:', error);
-            throw new Error(`Cannot load activities: ${error.message}`);
-          }),
-          loadIndustries().catch(error => {
-            console.error('❌ Failed to load industries from API:', error);
-            throw new Error(`Cannot load industries: ${error.message}`);
-          }),
-          fetchAllCountries().catch(error => {
-            console.error('❌ Failed to load countries from API:', error);
-            throw new Error(`Cannot load countries: ${error.message}`);
-          })
+        const results = await Promise.all([
+          loadActivities(),
+          loadIndustries(),
+          fetchAllCountries()
         ]);
+        const countriesData = results[2] as Country[];
 
         const activityOptions = getActivityOptions();
         const industryOptions = getIndustryOptions();
@@ -108,14 +96,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         if (industryOptions.length === 0) {
           throw new Error('No industries available from external API');
         }
-        if (countriesData.length === 0) {
+        if (!countriesData || countriesData.length === 0) {
           throw new Error('No countries available from external API');
         }
 
         setActivities(activityOptions);
         setIndustries(industryOptions);
         setCountries(countriesData);
-        setIsDataLoaded(true);
       } catch (error) {
         console.error('❌ Critical error loading data from API:', error);
         // Show user-friendly error message but don't block the UI
@@ -123,7 +110,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
         // Set empty arrays to allow the form to work even without external data
         setActivities([]);
         setIndustries([]);
-        setIsDataLoaded(true);
       } finally {
         setIsLoading(false);
       }
@@ -318,30 +304,6 @@ const BasicSection: React.FC<BasicSectionProps> = ({
    * @param {string} field - Le champ modifié (level, years, yearsExperience)
    * @param {string} value - La nouvelle valeur
    */
-  const handleSeniorityChange = (field: 'level' | 'years' | 'yearsExperience', value: string) => {
-    const newData = { ...data };
-
-    if (!newData.seniority) {
-      newData.seniority = {
-        level: '',
-        yearsExperience: 0,
-      };
-    }
-
-    if (field === 'level') {
-      // Vérifier que le niveau est dans la liste prédéfinie
-      if (!predefinedOptions.basic.seniorityLevels.includes(value)) {
-        return; // Ignorer les niveaux non prédéfinis
-      }
-      newData.seniority.level = value;
-    } else if (field === 'years' || field === 'yearsExperience') {
-      // Nettoyer la valeur pour n'avoir que des chiffres
-      const cleanValue = value.replace(/[^0-9]/g, '');
-      newData.seniority.yearsExperience = parseInt(cleanValue) || 0;
-    }
-
-    onChange(newData);
-  };
 
   // Log Basic Section data
   useEffect(() => {
@@ -372,14 +334,14 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
         {/* --- Position Details --- */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 px-6 py-4">
+          <div className="bg-gradient-harx px-6 py-4">
             <div className="flex items-center">
               <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                 <Briefcase className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Position Details</h3>
-                <p className="text-blue-100 text-sm">Define the role title and main responsibilities</p>
+                <p className="text-white/80 text-sm">Define the role title and main responsibilities</p>
               </div>
             </div>
           </div>
@@ -391,7 +353,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 type="text"
                 value={data.title || ''}
                 onChange={(e) => onChange({ ...data, title: e.target.value })}
-                className={`w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 rounded-xl text-blue-900 font-medium focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all ${errors.title ? 'border-red-300 focus:ring-red-300' : 'border-blue-200'}`}
+                className={`w-full px-4 py-3 bg-gradient-to-r from-harx-50 to-harx-alt-50 border-2 rounded-xl text-harx-900 font-medium focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all ${errors.title ? 'border-red-300 focus:ring-red-300' : 'border-harx-200'}`}
                 placeholder="e.g., Senior Customer Service Representative"
               />
               {errors.title && <p className="mt-2 text-sm text-red-600 font-medium">{errors.title.join(', ')}</p>}
@@ -403,7 +365,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 value={data.description || ''}
                 onChange={(e) => onChange({ ...data, description: e.target.value })}
                 rows={5}
-                className={`w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 rounded-xl text-blue-900 font-medium focus:outline-none focus:ring-3 focus:ring-blue-300 focus:border-blue-400 transition-all resize-none ${errors.description ? 'border-red-300 focus:ring-red-300' : 'border-blue-200'}`}
+                className={`w-full px-4 py-3 bg-gradient-to-r from-harx-50 to-harx-alt-50 border-2 rounded-xl text-harx-900 font-medium focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all resize-none ${errors.description ? 'border-red-300 focus:ring-red-300' : 'border-harx-200'}`}
                 placeholder="Describe the role, key responsibilities, and what success looks like in this position. Be specific about daily tasks, required skills, and performance expectations..."
               />
               {errors.description && <p className="mt-2 text-sm text-red-600 font-medium">{errors.description.join(', ')}</p>}
@@ -413,14 +375,14 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
         {/* --- Role Category --- */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-500 via-violet-500 to-indigo-500 px-6 py-4">
+          <div className="bg-gradient-harx px-6 py-4">
             <div className="flex items-center">
               <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-3">
                 <Target className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Role Category</h3>
-                <p className="text-purple-100 text-sm">Select the primary focus area</p>
+                <p className="text-white/80 text-sm">Select the primary focus area</p>
               </div>
             </div>
           </div>
@@ -428,13 +390,13 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           <div className="p-6">
             {/* Affichage de la catégorie sélectionnée */}
             {data.category && (
-              <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+              <div className="mb-4 p-3 bg-harx-50 border border-harx-100 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-800">Selected Category:</span>
-                  <span className="text-sm text-purple-700">{data.category}</span>
+                  <CheckCircle className="w-4 h-4 text-harx-500" />
+                  <span className="text-sm font-medium text-harx-900">Selected Category:</span>
+                  <span className="text-sm text-harx-700">{data.category}</span>
                   {!predefinedOptions.basic.categories.includes(data.category) && (
-                    <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">Custom</span>
+                    <span className="text-xs text-harx-500 bg-harx-100 px-2 py-1 rounded-full">Custom</span>
                   )}
                 </div>
               </div>
@@ -445,12 +407,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
               <div className="flex items-center gap-2 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Target className="w-5 h-5 text-purple-400" />
+                  <Target className="w-5 h-5 text-harx-400" />
                 </span>
                 <select
                   value={data.category || ''}
                   onChange={e => onChange({ ...data, category: e.target.value })}
-                  className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-gray-800 appearance-none transition-all"
+                  className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-harx-500 focus:border-harx-500 bg-white text-gray-800 appearance-none transition-all"
                 >
                   <option value="" disabled className="text-gray-400">Select a category</option>
                   {allCategories.map(category => (
@@ -459,7 +421,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 </select>
                 {/* Badge Custom à côté du select si catégorie personnalisée */}
                 {data.category && !predefinedOptions.basic.categories.includes(data.category) && (
-                  <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full ml-2">Custom</span>
+                  <span className="text-xs text-harx-500 bg-harx-100 px-2 py-1 rounded-full ml-2">Custom</span>
                 )}
               </div>
             </div>
@@ -471,8 +433,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           {/* --- Industries --- */}
           <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Target className="w-5 h-5 text-indigo-600" />
+              <div className="p-2 bg-harx-alt-100 rounded-lg">
+                <Target className="w-5 h-5 text-harx-alt-600" />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Industries</h3>
@@ -482,16 +444,16 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
             {/* Affichage des industries sélectionnées */}
             {(data.industries || []).length > 0 && (
-              <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+              <div className="mb-4 p-3 bg-harx-alt-50 border border-harx-alt-100 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="w-4 h-4 text-indigo-600" />
-                  <span className="text-sm font-medium text-indigo-800">Selected Industries:</span>
+                  <CheckCircle className="w-4 h-4 text-harx-alt-600" />
+                  <span className="text-sm font-medium text-harx-alt-900">Selected Industries:</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(data.industries || []).map((industryId, index) => {
                     const industryName = getIndustryNameById(industryId);
                     return industryName ? (
-                      <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-full">
+                      <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-harx-alt-100 text-harx-alt-700 text-sm rounded-full">
                         {industryName}
                         <button
                           onClick={() => {
@@ -499,7 +461,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                             const updatedIndustries = currentIndustries.filter((_, i) => i !== index);
                             onChange({ ...data, industries: updatedIndustries });
                           }}
-                          className="ml-1 text-indigo-500 hover:text-indigo-700"
+                          className="ml-1 text-harx-alt-500 hover:text-harx-alt-700"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -515,12 +477,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Add Industry
                 {isLoading && <span className="ml-2 text-xs text-gray-500">(Loading...)</span>}
-                {!isLoading && <span className="ml-2 text-xs text-blue-500">({industries.length} available)</span>}
+                {!isLoading && <span className="ml-2 text-xs text-harx-500">({industries.length} available)</span>}
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Target className="w-5 h-5 text-indigo-400" />
+                    <Target className="w-5 h-5 text-harx-alt-400" />
                   </span>
                   <select
                     value={selectedIndustry}
@@ -536,7 +498,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                         }
                       }
                     }}
-                    className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-800 appearance-none transition-all"
+                    className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-harx-alt-500 focus:border-harx-alt-500 bg-white text-gray-800 appearance-none transition-all"
                   >
                     <option value="" className="text-gray-400">
                       {isLoading ? 'Loading industries...' : 'Select an industry'}
@@ -564,7 +526,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <p className="mt-2 text-sm text-gray-500">No industries selected yet</p>
               )}
               {isLoading && (
-                <p className="mt-2 text-sm text-blue-500">Loading industries from API...</p>
+                <p className="mt-2 text-sm text-harx-500">Loading industries from API...</p>
               )}
             </div>
             {errors.industries && <p className="mt-2 text-sm text-red-600">{errors.industries.join(', ')}</p>}
@@ -573,8 +535,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           {/* --- Activities --- */}
           <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Target className="w-5 h-5 text-green-600" />
+              <div className="p-2 bg-harx-100 rounded-lg">
+                <Target className="w-5 h-5 text-harx-600" />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Activities</h3>
@@ -584,16 +546,16 @@ const BasicSection: React.FC<BasicSectionProps> = ({
 
             {/* Affichage des activités sélectionnées */}
             {(data.activities || []).length > 0 && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="mb-4 p-3 bg-harx-50 border border-harx-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-800">Selected Activities:</span>
+                  <CheckCircle className="w-4 h-4 text-harx-600" />
+                  <span className="text-sm font-medium text-harx-800">Selected Activities:</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {(data.activities || []).map((activityId, index) => {
                     const activityName = getActivityNameById(activityId);
                     return activityName ? (
-                      <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
+                      <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-harx-100 text-harx-700 text-sm rounded-full">
                         {activityName}
                         <button
                           onClick={() => {
@@ -601,7 +563,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                             const updatedActivities = currentActivities.filter((_, i) => i !== index);
                             onChange({ ...data, activities: updatedActivities });
                           }}
-                          className="ml-1 text-green-500 hover:text-green-700"
+                          className="ml-1 text-harx-500 hover:text-harx-700"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -617,12 +579,12 @@ const BasicSection: React.FC<BasicSectionProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Add Activity
                 {isLoading && <span className="ml-2 text-xs text-gray-500">(Loading...)</span>}
-                {!isLoading && <span className="ml-2 text-xs text-blue-500">({activities.length} available)</span>}
+                {!isLoading && <span className="ml-2 text-xs text-harx-500">({activities.length} available)</span>}
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <Target className="w-5 h-5 text-green-400" />
+                    <Target className="w-5 h-5 bg-harx-400" />
                   </span>
                   <select
                     value={selectedActivity}
@@ -638,7 +600,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                         }
                       }
                     }}
-                    className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-800 appearance-none transition-all"
+                    className="block w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-harx-500 focus:border-harx-500 bg-white text-gray-800 appearance-none transition-all"
                   >
                     <option value="" className="text-gray-400">
                       {isLoading ? 'Loading activities...' : 'Select an activity'}
@@ -666,7 +628,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <p className="mt-2 text-sm text-gray-500">No activities selected yet</p>
               )}
               {isLoading && (
-                <p className="mt-2 text-sm text-blue-500">Loading activities from API...</p>
+                <p className="mt-2 text-sm text-harx-500">Loading activities from API...</p>
               )}
             </div>
             {errors.activities && <p className="mt-2 text-sm text-red-600">{errors.activities.join(', ')}</p>}
@@ -675,8 +637,8 @@ const BasicSection: React.FC<BasicSectionProps> = ({
           {/* --- Destination Zone --- */}
           <div className="bg-gray-50/50 rounded-xl p-6 border border-gray-200">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Globe2 className="w-5 h-5 text-amber-600" />
+              <div className="p-2 bg-harx-100 rounded-lg">
+                <Globe2 className="w-5 h-5 text-harx-600" />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Destination Zone</h3>
@@ -686,10 +648,10 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             <label className="block text-sm font-medium text-gray-700">Country</label>
             <div className="flex items-center gap-2 relative mb-2">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <Globe2 className="w-5 h-5 text-amber-400" />
+                <Globe2 className="w-5 h-5 text-harx-400" />
               </span>
               <select value={data.destination_zone || ''} onChange={(e) => handleCountrySelect(e.target.value)}
-                className="mt-1 block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm appearance-none transition-all">
+                className="mt-1 block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500 shadow-sm appearance-none transition-all">
                 <option value="" disabled className="text-gray-400">Select a country</option>
                 {countries.length > 0 ? (
                   countries
@@ -712,7 +674,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
                 <Globe2 className="w-4 h-4" />
                 <span>Selected: {countryName || getCountryName(data.destination_zone)}</span>
                 {data.destination_zone.length === 24 && !countryName && (
-                  <span className="text-xs text-blue-500">(Loading country name...)</span>
+                  <span className="text-xs text-harx-500">(Loading country name...)</span>
                 )}
               </div>
             )}
@@ -730,7 +692,7 @@ const BasicSection: React.FC<BasicSectionProps> = ({
             </button>
           </div>
           <button onClick={onNext}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-harx-500 text-white hover:bg-harx-600 transition-colors">
             Next
             <ArrowRight className="w-5 h-5" />
           </button>

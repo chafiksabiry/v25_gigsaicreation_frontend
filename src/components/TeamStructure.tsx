@@ -1,8 +1,8 @@
 import React from 'react';
-import { Plus, Trash2, Globe, Users, Building2, Briefcase, GraduationCap, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Globe, Users, ArrowLeft, ArrowRight } from 'lucide-react';
 import { predefinedOptions } from '../lib/guidance';
 import { GigData } from '../types';
-import { fetchAllCountries, Country, getCountryNameById } from '../lib/api';
+import { fetchAllCountries, Country } from '../lib/api';
 
 interface TeamRoleOption {
   id: string;
@@ -40,19 +40,19 @@ interface TeamStructureProps {
 const getHeaderGradient = (bgColor: string) => {
   switch (bgColor) {
     case 'blue':
-      return 'from-blue-500 via-indigo-500 to-violet-500';
+      return 'from-harx-500 via-harx-600 to-harx-alt-500';
     case 'purple':
-      return 'from-purple-500 via-violet-500 to-indigo-500';
+      return 'from-harx-alt-500 via-harx-alt-600 to-harx-500';
     case 'emerald':
-      return 'from-emerald-500 via-green-500 to-teal-500';
+      return 'from-harx-400 via-harx-500 to-harx-600';
     case 'orange':
-      return 'from-orange-500 via-amber-500 to-yellow-500';
+      return 'from-harx-alt-400 via-harx-alt-500 to-harx-alt-500';
     default:
       return 'from-gray-500 to-gray-600';
   }
 };
 
-export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: TeamStructureProps) {
+export function TeamStructure({ data, onChange, onPrevious, onNext }: TeamStructureProps) {
   // State for territories from API - now storing full country objects
   const [territoriesFromAPI, setTerritoriesFromAPI] = React.useState<Country[]>([]);
   const [territoriesLoading, setTerritoriesLoading] = React.useState(true);
@@ -219,13 +219,13 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-700">Team Roles</span>
-                  <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                  <span className="bg-harx-100 text-harx-800 text-xs font-semibold px-2 py-1 rounded-full">
                     {data.team?.structure?.length || 0}
                   </span>
                 </div>
                 <button
                   onClick={addTeamRole}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                  className="flex items-center gap-2 px-3 py-2 bg-harx-500 text-white rounded-lg hover:bg-harx-600 transition-colors text-sm font-medium shadow-sm hover:shadow-md"
                 >
                   <Plus className="w-4 h-4" />
                   Add Role
@@ -244,10 +244,10 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                     return (
                       <div
                         key={index}
-                        className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200 shadow-sm hover:shadow-md transition-all duration-200 group"
+                        className="bg-gradient-to-br from-harx-50 to-harx-alt-50 rounded-xl p-4 border-2 border-harx-100 shadow-sm hover:shadow-md transition-all duration-200 group"
                       >
                         <div className="flex items-center justify-between mb-3">
-                          <h5 className="text-sm font-bold text-blue-800">Role #{index + 1}</h5>
+                          <h5 className="text-sm font-bold text-harx-800">Role #{index + 1}</h5>
                           <button
                             onClick={() => deleteTeamRole(index)}
                             className="p-1 text-red-500 hover:text-white hover:bg-red-500 rounded-md transition-all opacity-0 group-hover:opacity-100"
@@ -262,7 +262,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                             <select
                               value={roleId}
                               onChange={(e) => updateTeamRole(index, 'roleId', e.target.value)}
-                              className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full px-3 py-2 text-sm bg-white border border-harx-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                             >
                               {teamRoles.map((roleOption) => (
                                 <option key={roleOption.id} value={roleOption.id}>
@@ -281,7 +281,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                                 max="50"
                                 value={roleCount}
                                 onChange={(e) => updateTeamRole(index, 'count', parseInt(e.target.value) || 1)}
-                                className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 text-sm bg-white border border-harx-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                               />
                             </div>
 
@@ -293,7 +293,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                                 max="20"
                                 value={yearsExperience}
                                 onChange={(e) => updateTeamRole(index, 'seniority.yearsExperience', parseInt(e.target.value) || 0)}
-                                className="w-full px-3 py-2 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 text-sm bg-white border border-harx-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500"
                               />
                             </div>
                           </div>
@@ -304,7 +304,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                               value={seniorityLevel}
                               disabled
                               onChange={(e) => updateTeamRole(index, 'seniority.level', e.target.value)}
-                              className="w-full px-3 py-2 text-sm bg-gray-100 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed opacity-70"
+                              className="w-full px-3 py-2 text-sm bg-gray-100 border border-harx-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-harx-500 focus:border-harx-500 cursor-not-allowed opacity-70"
                             >
                               <option value="Junior">Junior</option>
                               <option value="Mid-Level">Mid-Level</option>
@@ -353,7 +353,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                     }
                   }}
                   disabled={territoriesLoading}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl text-emerald-900 font-medium focus:outline-none focus:ring-3 focus:ring-emerald-300 focus:border-emerald-400 transition-all disabled:opacity-50"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-harx-50 to-harx-alt-50 border-2 border-harx-200 rounded-xl text-harx-900 font-medium focus:outline-none focus:ring-3 focus:ring-harx-300 focus:border-harx-400 transition-all disabled:opacity-50"
                 >
                   <option value="">
                     {territoriesLoading ? 'Loading territories...' : 'Select a territory'}
@@ -373,9 +373,9 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
                   {data.team.territories.map((territory, index) => (
                     <div
                       key={index}
-                      className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-3 flex items-center justify-between group hover:shadow-md transition-all duration-200"
+                      className="bg-gradient-to-br from-harx-50 to-harx-alt-50 border-2 border-harx-100 rounded-xl p-3 flex items-center justify-between group hover:shadow-md transition-all duration-200"
                     >
-                      <span className="text-sm font-medium text-emerald-800 truncate">
+                      <span className="text-sm font-medium text-harx-800 truncate">
                         {getTerritoryName(territory)}
                       </span>
                       <button
@@ -410,7 +410,7 @@ export function TeamStructure({ data, onChange, errors, onPrevious, onNext }: Te
             </div>
             <button
               onClick={onNext}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-harx-500 text-white hover:bg-harx-600 shadow-md hover:shadow-lg transition-all font-medium"
             >
               Next
               <ArrowRight className="w-5 h-5" />
