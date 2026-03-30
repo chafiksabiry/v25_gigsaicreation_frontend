@@ -31,7 +31,7 @@ import i18n from "i18n-iso-countries";
 import fr from "i18n-iso-countries/langs/fr.json";
 import en from "i18n-iso-countries/langs/en.json";
 import { generateGigSuggestions } from "../lib/ai";
-import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, getCountryNameById, fetchAllCurrencies, Currency } from "../lib/api";
+import { fetchSoftSkills, fetchTechnicalSkills, fetchProfessionalSkills, fetchAllCountries, Country, getCountryNameById, fetchAllCurrencies, Currency, fetchAllTimezones } from "../lib/api";
 import { predefinedOptions } from "../lib/guidance";
 import {
   loadActivities,
@@ -633,7 +633,7 @@ export const Suggestions: React.FC<SuggestionsProps> = (props) => {
       if (!timezonesLoaded) {
         setTimezoneLoading(true);
         try {
-          const data = await fetchAllTimezonesNew();
+          const data = await fetchAllTimezones();
           if (data.length > 0) {
             setAllTimezones(data);
             setTimezonesLoaded(true);
